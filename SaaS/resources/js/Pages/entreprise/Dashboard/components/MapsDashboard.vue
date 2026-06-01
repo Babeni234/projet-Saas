@@ -314,40 +314,31 @@ const initGlobe = () => {
     console.log('Container element:', container);
 
     try {
-        // Correct globe.gl API
+        // Correct globe.gl API with full configuration
         globeInstance = Globe()(container)
             .width(width)
             .height(height)
-            .globeColor('#3b82f6')
-            .pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+            .globeImageUrl(settings.value.nightMode 
+                ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
+                : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+            )
+            .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+            .backgroundImageUrl(settings.value.nightMode
+                ? 'https://unpkg.com/three-globe/example/img/night-sky.png'
+                : 'https://unpkg.com/three-globe/example/img/night-sky.png'
+            )
+            .pointOfView({ lat: 20, lng: 0, altitude: 2.5 })
+            .controlsAutoRotate(settings.value.autoRotate)
+            .controlsAutoRotateSpeed(settings.value.rotationSpeed);
 
-        console.log('Globe instance created with minimal config:', globeInstance);
+        console.log('Globe instance created with full config:', globeInstance);
         
-        // Try to add images after globe is created
+        // Update data after globe is ready
         setTimeout(() => {
-            try {
-                globeInstance
-                    .globeImageUrl(settings.value.nightMode 
-                        ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
-                        : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
-                    )
-                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-                    .backgroundImageUrl(settings.value.nightMode
-                        ? 'https://unpkg.com/three-globe/example/img/night-sky.png'
-                        : 'https://unpkg.com/three-globe/example/img/night-sky.png'
-                    );
-                
-                console.log('Images added to globe');
-                updateGlobeData();
-                loading.value = false;
-                console.log('Globe fully initialized');
-            } catch (error) {
-                console.error('Error adding images to globe:', error);
-                // Continue without images
-                updateGlobeData();
-                loading.value = false;
-            }
-        }, 500);
+            updateGlobeData();
+            loading.value = false;
+            console.log('Globe fully initialized');
+        }, 1000);
     } catch (error) {
         console.error('Error initializing globe:', error);
         console.error('Error details:', error.message, error.stack);
