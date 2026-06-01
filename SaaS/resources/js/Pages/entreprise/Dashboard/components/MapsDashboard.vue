@@ -185,8 +185,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import Globe from 'globe.gl';
 
 const globeContainer = ref(null);
 const loading = ref(true);
@@ -206,9 +205,7 @@ const onlineLocations = ref(142);
 const recentActivity = ref(28);
 const countries = ref(23);
 
-let mapInstance = null;
-let markers = [];
-let polylines = [];
+let globeInstance = null;
 
 const toggleSettings = () => {
     showSettings.value = !showSettings.value;
@@ -224,9 +221,9 @@ const refreshLocations = () => {
         countries.value = Math.floor(Math.random() * 10) + 20;
         loading.value = false;
         
-        // Update map data
-        if (mapInstance) {
-            updateMapData();
+        // Update globe data
+        if (globeInstance) {
+            updateGlobeData();
         }
     }, 1000);
 };
@@ -252,7 +249,7 @@ const generateLocationData = () => {
         { name: 'Hong Kong', lat: 22.3193, lng: 114.1694 }
     ];
 
-    for (let i = 0; i < totalLocations.value; i++) {
+    for (let i = 0; i < Math.min(totalLocations.value, 50); i++) {
         const city = cities[i % cities.length];
         const offset = (Math.random() - 0.5) * 0.5;
         locations.push({
@@ -266,122 +263,139 @@ const generateLocationData = () => {
     return locations;
 };
 
-const updateMapData = () => {
-    if (!mapInstance) return;
+const updateGlobeData = () => {
+    if (!globeInstance) return;
     
-    // Clear existing markers and polylines
-    markers.forEach(marker => mapInstance.removeLayer(marker));
-    polylines.forEach(polyline => mapInstance.removeLayer(polyline));
-    markers = [];
-    polylines = [];
-
     const locations = generateLocationData();
     
     if (settings.value.showPoints) {
-        locations.forEach(location => {
-            const marker = L.circleMarker([location.lat, location.lng], {
-                radius: location.size * 3,
-                fillColor: location.color,
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            }).addTo(mapInstance);
-            markers.push(marker);
-        });
+        globeInstance
+            .pointsData(locations)
+            .pointAltitude(0.02)
+            .pointRadius('size')
+            .pointColor('color');
+    } else {
+        globeInstance.pointsData([]);
     }
 
     if (settings.value.showLines) {
+        const arcs = [];
         for (let i = 0; i < locations.length - 1; i++) {
-            const polyline = L.polyline([
-                [locations[i].lat, locations[i].lng],
-                [locations[i + 1].lat, locations[i + 1].lng]
-            ], {
-                color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
-                weight: 1,
-                opacity: 0.5
-            }).addTo(mapInstance);
-            polylines.push(polyline);
+            arcs.push({
+                startLat: locations[i].lat,
+                startLng: locations[i].lng,
+                endLat: locations[i + 1].lat,
+                endLng: locations[i + 1].lng,
+                color: settings.value.nightMode ? '#60a5fa' : '#3b82f6'
+            });
         }
+        globeInstance
+            .arcsData(arcs)
+            .arcColor('color')
+            .arcAltitude(0.1)
+            .arcStroke(0.5);
+    } else {
+        globeInstance.arcsData([]);
     }
 };
 
-const initMap = () => {
+const initGlobe = () => {
     if (!globeContainer.value) {
-        console.error('Map container not found');
+        console.error('Globe container not found');
+        loading.value = false;
         return;
     }
 
+    const container = globeContainer.value;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    console.log('Initializing globe with dimensions:', width, height);
+    console.log('Container element:', container);
+
     try {
-        // Initialize Leaflet map
-        mapInstance = L.map(globeContainer.value, {
-            center: [20, 0],
-            zoom: 2,
-            minZoom: 1,
-            maxZoom: 18,
-            zoomControl: true
-        });
+        // Correct globe.gl API
+        globeInstance = Globe()(container)
+            .width(width)
+            .height(height)
+            .globeColor('#3b82f6')
+            .pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
 
-        // Add tile layer
-        const tileUrl = settings.value.nightMode
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        console.log('Globe instance created with minimal config:', globeInstance);
         
-        L.tileLayer(tileUrl, {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(mapInstance);
-
-        console.log('Map initialized successfully');
-        updateMapData();
-        loading.value = false;
+        // Try to add images after globe is created
+        setTimeout(() => {
+            try {
+                globeInstance
+                    .globeImageUrl(settings.value.nightMode 
+                        ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
+                        : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+                    )
+                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl(settings.value.nightMode
+                        ? 'https://unpkg.com/three-globe/example/img/night-sky.png'
+                        : 'https://unpkg.com/three-globe/example/img/night-sky.png'
+                    );
+                
+                console.log('Images added to globe');
+                updateGlobeData();
+                loading.value = false;
+                console.log('Globe fully initialized');
+            } catch (error) {
+                console.error('Error adding images to globe:', error);
+                // Continue without images
+                updateGlobeData();
+                loading.value = false;
+            }
+        }, 500);
     } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error('Error initializing globe:', error);
+        console.error('Error details:', error.message, error.stack);
         loading.value = false;
     }
 };
 
 // Watch for settings changes
 watch(() => settings.value.nightMode, () => {
-    if (mapInstance) {
-        // Remove existing tile layer and add new one
-        mapInstance.eachLayer((layer) => {
-            if (layer instanceof L.TileLayer) {
-                mapInstance.removeLayer(layer);
-            }
-        });
-        
-        const tileUrl = settings.value.nightMode
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        
-        L.tileLayer(tileUrl, {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(mapInstance);
-        
-        updateMapData();
+    if (globeInstance) {
+        globeInstance.globeImageUrl(settings.value.nightMode 
+            ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
+            : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+        );
+        updateGlobeData();
+    }
+});
+
+watch(() => settings.value.autoRotate, () => {
+    if (globeInstance) {
+        globeInstance.controlsAutoRotate(settings.value.autoRotate);
+    }
+});
+
+watch(() => settings.value.rotationSpeed, () => {
+    if (globeInstance) {
+        globeInstance.controlsAutoRotateSpeed(settings.value.rotationSpeed);
     }
 });
 
 watch(() => settings.value.showPoints, () => {
-    updateMapData();
+    updateGlobeData();
 });
 
 watch(() => settings.value.showLines, () => {
-    updateMapData();
+    updateGlobeData();
 });
 
 onMounted(() => {
-    // Initialize map
+    // Initialize globe with a delay to ensure container is ready
     setTimeout(() => {
-        initMap();
-    }, 100);
+        initGlobe();
+    }, 200);
 });
 
 onUnmounted(() => {
-    if (mapInstance) {
-        mapInstance.remove();
+    if (globeInstance) {
+        globeInstance();
     }
 });
 </script>
