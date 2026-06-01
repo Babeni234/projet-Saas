@@ -186,6 +186,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import Globe from 'globe.gl';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const globeContainer = ref(null);
 const loading = ref(true);
@@ -206,6 +208,9 @@ const recentActivity = ref(28);
 const countries = ref(23);
 
 let globeInstance = null;
+let mapInstance = null;
+let mapMarkers = [];
+let mapPolylines = [];
 
 const toggleSettings = () => {
     showSettings.value = !showSettings.value;
@@ -221,9 +226,11 @@ const refreshLocations = () => {
         countries.value = Math.floor(Math.random() * 10) + 20;
         loading.value = false;
         
-        // Update globe data
-        if (globeInstance) {
+        // Update data based on current mode
+        if (settings.value.displayMode === 'globe' && globeInstance) {
             updateGlobeData();
+        } else if (settings.value.displayMode === 'map' && mapInstance) {
+            updateMapData();
         }
     }, 1000);
 };
@@ -232,21 +239,21 @@ const refreshLocations = () => {
 const generateLocationData = () => {
     const locations = [];
     const cities = [
-        { name: 'Paris', lat: 48.8566, lng: 2.3522 },
-        { name: 'New York', lat: 40.7128, lng: -74.0060 },
-        { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
-        { name: 'London', lat: 51.5074, lng: -0.1278 },
-        { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
-        { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
-        { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
-        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
-        { name: 'Berlin', lat: 52.5200, lng: 13.4050 },
-        { name: 'Shanghai', lat: 31.2304, lng: 121.4737 },
-        { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-        { name: 'São Paulo', lat: -23.5505, lng: -46.6333 },
-        { name: 'Moscow', lat: 55.7558, lng: 37.6173 },
-        { name: 'Toronto', lat: 43.6532, lng: -79.3832 },
-        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694 }
+        { name: 'Paris', lat: 48.8566, lng: 2.3522, type: 'hotel' },
+        { name: 'New York', lat: 40.7128, lng: -74.0060, type: 'building' },
+        { name: 'Tokyo', lat: 35.6762, lng: 139.6503, type: 'hotel' },
+        { name: 'London', lat: 51.5074, lng: -0.1278, type: 'building' },
+        { name: 'Dubai', lat: 25.2048, lng: 55.2708, type: 'hotel' },
+        { name: 'Singapore', lat: 1.3521, lng: 103.8198, type: 'building' },
+        { name: 'Sydney', lat: -33.8688, lng: 151.2093, type: 'hotel' },
+        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, type: 'building' },
+        { name: 'Berlin', lat: 52.5200, lng: 13.4050, type: 'hotel' },
+        { name: 'Shanghai', lat: 31.2304, lng: 121.4737, type: 'building' },
+        { name: 'Mumbai', lat: 19.0760, lng: 72.8777, type: 'hotel' },
+        { name: 'São Paulo', lat: -23.5505, lng: -46.6333, type: 'building' },
+        { name: 'Moscow', lat: 55.7558, lng: 37.6173, type: 'hotel' },
+        { name: 'Toronto', lat: 43.6532, lng: -79.3832, type: 'building' },
+        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, type: 'hotel' }
     ];
 
     for (let i = 0; i < Math.min(totalLocations.value, 50); i++) {
@@ -256,7 +263,9 @@ const generateLocationData = () => {
             lat: city.lat + offset,
             lng: city.lng + offset,
             size: Math.random() * 2 + 0.5,
-            color: settings.value.nightMode ? '#60a5fa' : '#3b82f6'
+            color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
+            name: city.name,
+            type: city.type
         });
     }
 
@@ -297,6 +306,211 @@ const updateGlobeData = () => {
     } else {
         globeInstance.arcsData([]);
     }
+
+    // Add HTML labels with images for hotels and buildings
+    const htmlElements = locations.map(loc => ({
+        lat: loc.lat,
+        lng: loc.lng,
+        html: `
+            <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                pointer-events: none;
+                z-index: 1000;
+            ">
+                <div style="
+                    background: ${settings.value.nightMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+                    margin-bottom: 12px;
+                    text-align: center;
+                    min-width: 120px;
+                ">
+                    <div style="
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, ${loc.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${loc.type === 'hotel' ? '#d97706' : '#2563eb'});
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 8px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                    ">
+                        <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            ${loc.type === 'hotel' 
+                                ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
+                                : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
+                            }
+                        </svg>
+                    </div>
+                    <div style="
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: ${settings.value.nightMode ? '#e2e8f0' : '#1e293b'};
+                        white-space: nowrap;
+                        margin-bottom: 4px;
+                    ">
+                        ${loc.name}
+                    </div>
+                    <div style="
+                        font-size: 11px;
+                        color: ${settings.value.nightMode ? '#94a3b8' : '#64748b'};
+                        font-weight: 500;
+                    ">
+                        ${loc.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
+                    </div>
+                </div>
+                <div style="
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    border: 3px solid white;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                "></div>
+            </div>
+        `
+    }));
+
+    globeInstance.htmlElementsData(htmlElements);
+};
+
+// Initialize flat map with Leaflet
+const initMap = () => {
+    if (!globeContainer.value) {
+        console.error('Map container not found');
+        return;
+    }
+
+    const container = globeContainer.value;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    console.log('Initializing flat map with dimensions:', width, height);
+
+    try {
+        // Clear existing globe if any
+        if (globeInstance) {
+            globeInstance();
+            globeInstance = null;
+        }
+
+        // Initialize Leaflet map
+        mapInstance = L.map(container, {
+            center: [20, 0],
+            zoom: 2,
+            minZoom: 1,
+            maxZoom: 18,
+            zoomControl: true
+        });
+
+        // Add tile layer
+        const tileUrl = settings.value.nightMode
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        
+        L.tileLayer(tileUrl, {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(mapInstance);
+
+        console.log('Map initialized successfully');
+        updateMapData();
+        loading.value = false;
+    } catch (error) {
+        console.error('Error initializing map:', error);
+        loading.value = false;
+    }
+};
+
+// Update flat map data
+const updateMapData = () => {
+    if (!mapInstance) return;
+    
+    // Clear existing markers and polylines
+    mapMarkers.forEach(marker => mapInstance.removeLayer(marker));
+    mapPolylines.forEach(polyline => mapInstance.removeLayer(polyline));
+    mapMarkers = [];
+    mapPolylines = [];
+
+    const locations = generateLocationData();
+    
+    if (settings.value.showPoints) {
+        locations.forEach(location => {
+            // Create custom icon based on type
+            const iconHtml = `
+                <div style="
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${location.type === 'hotel' ? '#d97706' : '#2563eb'});
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                ">
+                    <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        ${location.type === 'hotel' 
+                            ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
+                            : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
+                        }
+                    </svg>
+                </div>
+            `;
+
+            const customIcon = L.divIcon({
+                html: iconHtml,
+                className: 'custom-marker',
+                iconSize: [48, 48],
+                iconAnchor: [24, 48],
+                popupAnchor: [0, -48]
+            });
+
+            const marker = L.marker([location.lat, location.lng], { icon: customIcon })
+                .bindPopup(`
+                    <div style="
+                        text-align: center;
+                        padding: 8px;
+                        min-width: 150px;
+                    ">
+                        <div style="
+                            font-size: 14px;
+                            font-weight: 700;
+                            color: #1e293b;
+                            margin-bottom: 4px;
+                        ">
+                            ${location.name}
+                        </div>
+                        <div style="
+                            font-size: 12px;
+                            color: #64748b;
+                        ">
+                            ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
+                        </div>
+                    </div>
+                `)
+                .addTo(mapInstance);
+            
+            mapMarkers.push(marker);
+        });
+    }
+
+    if (settings.value.showLines) {
+        for (let i = 0; i < locations.length - 1; i++) {
+            const polyline = L.polyline([
+                [locations[i].lat, locations[i].lng],
+                [locations[i + 1].lat, locations[i + 1].lng]
+            ], {
+                color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
+                weight: 2,
+                opacity: 0.6
+            }).addTo(mapInstance);
+            mapPolylines.push(polyline);
+        }
+    }
 };
 
 const initGlobe = () => {
@@ -314,6 +528,12 @@ const initGlobe = () => {
     console.log('Container element:', container);
 
     try {
+        // Clear existing map if any
+        if (mapInstance) {
+            mapInstance.remove();
+            mapInstance = null;
+        }
+
         // Correct globe.gl API with full configuration
         globeInstance = Globe()(container)
             .width(width)
@@ -327,9 +547,11 @@ const initGlobe = () => {
                 ? 'https://unpkg.com/three-globe/example/img/night-sky.png'
                 : 'https://unpkg.com/three-globe/example/img/night-sky.png'
             )
-            .pointOfView({ lat: 20, lng: 0, altitude: 2.5 })
+            .pointOfView({ lat: 20, lng: 0, altitude: 3 })
             .controlsAutoRotate(settings.value.autoRotate)
-            .controlsAutoRotateSpeed(settings.value.rotationSpeed);
+            .controlsAutoRotateSpeed(settings.value.rotationSpeed)
+            .controlsMinDistance(1.2) // Allow zoom even closer
+            .controlsMaxDistance(10); // Allow zoom further
 
         console.log('Globe instance created with full config:', globeInstance);
         
@@ -346,14 +568,46 @@ const initGlobe = () => {
     }
 };
 
+// Watch for display mode changes
+watch(() => settings.value.displayMode, (newMode) => {
+    loading.value = true;
+    console.log('Switching to mode:', newMode);
+    
+    setTimeout(() => {
+        if (newMode === 'globe') {
+            initGlobe();
+        } else if (newMode === 'map') {
+            initMap();
+        }
+    }, 100);
+});
+
 // Watch for settings changes
 watch(() => settings.value.nightMode, () => {
-    if (globeInstance) {
+    if (settings.value.displayMode === 'globe' && globeInstance) {
         globeInstance.globeImageUrl(settings.value.nightMode 
             ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
             : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
         );
         updateGlobeData();
+    } else if (settings.value.displayMode === 'map' && mapInstance) {
+        // Remove existing tile layer and add new one
+        mapInstance.eachLayer((layer) => {
+            if (layer instanceof L.TileLayer) {
+                mapInstance.removeLayer(layer);
+            }
+        });
+        
+        const tileUrl = settings.value.nightMode
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        
+        L.tileLayer(tileUrl, {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(mapInstance);
+        
+        updateMapData();
     }
 });
 
@@ -370,23 +624,41 @@ watch(() => settings.value.rotationSpeed, () => {
 });
 
 watch(() => settings.value.showPoints, () => {
-    updateGlobeData();
+    if (settings.value.displayMode === 'globe') {
+        updateGlobeData();
+    } else if (settings.value.displayMode === 'map') {
+        updateMapData();
+    }
 });
 
 watch(() => settings.value.showLines, () => {
-    updateGlobeData();
+    if (settings.value.displayMode === 'globe') {
+        updateGlobeData();
+    } else if (settings.value.displayMode === 'map') {
+        updateMapData();
+    }
 });
 
 onMounted(() => {
-    // Initialize globe with a delay to ensure container is ready
+    // Initialize based on current display mode
     setTimeout(() => {
-        initGlobe();
+        if (settings.value.displayMode === 'globe') {
+            initGlobe();
+        } else if (settings.value.displayMode === 'map') {
+            initMap();
+        }
     }, 200);
 });
 
 onUnmounted(() => {
+    // Clean up both instances
     if (globeInstance) {
         globeInstance();
+        globeInstance = null;
+    }
+    if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
     }
 });
 </script>
