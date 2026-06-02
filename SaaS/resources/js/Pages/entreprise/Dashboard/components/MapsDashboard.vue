@@ -7,6 +7,29 @@
                 <p class="text-slate-500">Carte interactive en temps réel des emplacements mondiaux</p>
             </div>
             <div class="flex items-center gap-3">
+                <select 
+                    v-model="selectedLocation" 
+                    @change="centerOnLocation"
+                    class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                    <option value="">Sélectionner une ville</option>
+                    <option value="Paris">Paris</option>
+                    <option value="New York">New York</option>
+                    <option value="Tokyo">Tokyo</option>
+                    <option value="London">Londres</option>
+                    <option value="Dubai">Dubaï</option>
+                    <option value="Singapore">Singapour</option>
+                    <option value="Sydney">Sydney</option>
+                    <option value="Los Angeles">Los Angeles</option>
+                    <option value="Berlin">Berlin</option>
+                    <option value="Shanghai">Shanghai</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="São Paulo">São Paulo</option>
+                    <option value="Moscow">Moscou</option>
+                    <option value="Toronto">Toronto</option>
+                    <option value="Hong Kong">Hong Kong</option>
+                    <option value="Douala">Douala</option>
+                </select>
                 <button 
                     @click="toggleSettings" 
                     class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-200 shadow-sm"
@@ -188,10 +211,13 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import Globe from 'globe.gl';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const globeContainer = ref(null);
 const loading = ref(true);
 const showSettings = ref(false);
+const selectedLocation = ref('');
 
 const settings = ref({
     displayMode: 'globe',
@@ -202,6 +228,26 @@ const settings = ref({
     nightMode: false
 });
 
+// City coordinates for centering
+const cityCoordinates = {
+    'Paris': { lat: 48.8566, lng: 2.3522 },
+    'New York': { lat: 40.7128, lng: -74.0060 },
+    'Tokyo': { lat: 35.6762, lng: 139.6503 },
+    'London': { lat: 51.5074, lng: -0.1278 },
+    'Dubai': { lat: 25.2048, lng: 55.2708 },
+    'Singapore': { lat: 1.3521, lng: 103.8198 },
+    'Sydney': { lat: -33.8688, lng: 151.2093 },
+    'Los Angeles': { lat: 34.0522, lng: -118.2437 },
+    'Berlin': { lat: 52.5200, lng: 13.4050 },
+    'Shanghai': { lat: 31.2304, lng: 121.4737 },
+    'Mumbai': { lat: 19.0760, lng: 72.8777 },
+    'São Paulo': { lat: -23.5505, lng: -46.6333 },
+    'Moscow': { lat: 55.7558, lng: 37.6173 },
+    'Toronto': { lat: 43.6532, lng: -79.3832 },
+    'Hong Kong': { lat: 22.3193, lng: 114.1694 },
+    'Douala': { lat: 4.0483, lng: 9.7043 }
+};
+
 const totalLocations = ref(156);
 const onlineLocations = ref(142);
 const recentActivity = ref(28);
@@ -209,11 +255,37 @@ const countries = ref(23);
 
 let globeInstance = null;
 let mapInstance = null;
+let satelliteInstance = null;
 let mapMarkers = [];
 let mapPolylines = [];
 
 const toggleSettings = () => {
     showSettings.value = !showSettings.value;
+};
+
+const centerOnLocation = () => {
+    if (!selectedLocation.value) return;
+    
+    const coords = cityCoordinates[selectedLocation.value];
+    if (!coords) return;
+    
+    if (settings.value.displayMode === 'map' && mapInstance) {
+        mapInstance.setView([coords.lat, coords.lng], 12);
+    } else if (settings.value.displayMode === 'globe' && globeInstance) {
+        globeInstance.pointOfView({ lat: coords.lat, lng: coords.lng, altitude: 1.5 });
+    } else if (settings.value.displayMode === 'satellite' && satelliteInstance) {
+        if (satelliteInstance instanceof mapboxgl.Map) {
+            satelliteInstance.flyTo({
+                center: [coords.lng, coords.lat],
+                zoom: 18, // Increased zoom to see buildings in detail
+                pitch: 45,
+                bearing: 0,
+                speed: 1.2
+            });
+        } else {
+            satelliteInstance.setView([coords.lat, coords.lng], 18);
+        }
+    }
 };
 
 const refreshLocations = () => {
@@ -231,6 +303,8 @@ const refreshLocations = () => {
             updateGlobeData();
         } else if (settings.value.displayMode === 'map' && mapInstance) {
             updateMapData();
+        } else if (settings.value.displayMode === 'satellite' && satelliteInstance) {
+            updateSatelliteMapData();
         }
     }, 1000);
 };
@@ -253,7 +327,10 @@ const generateLocationData = () => {
         { name: 'São Paulo', lat: -23.5505, lng: -46.6333, type: 'building' },
         { name: 'Moscow', lat: 55.7558, lng: 37.6173, type: 'hotel' },
         { name: 'Toronto', lat: 43.6532, lng: -79.3832, type: 'building' },
-        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, type: 'hotel' }
+        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, type: 'hotel' },
+        { name: 'Douala - Hotel 1', lat: 4.0483, lng: 9.7043, type: 'hotel' },
+        { name: 'Douala - Hotel 2', lat: 4.0583, lng: 9.7143, type: 'hotel' },
+        { name: 'Douala - Hotel 3', lat: 4.0383, lng: 9.6943, type: 'hotel' }
     ];
 
     for (let i = 0; i < Math.min(totalLocations.value, 50); i++) {
@@ -378,7 +455,286 @@ const updateGlobeData = () => {
     globeInstance.htmlElementsData(htmlElements);
 };
 
-// Initialize flat map with Leaflet
+// Initialize satellite map with 3D buildings using Mapbox GL JS
+const initSatelliteMap = () => {
+    if (!globeContainer.value) {
+        console.error('Satellite map container not found');
+        return;
+    }
+
+    const container = globeContainer.value;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    console.log('Initializing satellite map with 3D buildings, dimensions:', width, height);
+
+    try {
+        // Clear existing instances
+        if (globeInstance) {
+            globeInstance();
+            globeInstance = null;
+        }
+        if (mapInstance) {
+            mapInstance.remove();
+            mapInstance = null;
+        }
+        if (satelliteInstance) {
+            satelliteInstance.remove();
+            satelliteInstance = null;
+        }
+
+        // Initialize Mapbox GL JS map with satellite imagery and 3D buildings
+        satelliteInstance = new mapboxgl.Map({
+            container: container,
+            style: 'mapbox://styles/mapbox/satellite-v9',
+            center: [0, 20],
+            zoom: 2,
+            pitch: 45, // Tilt the map for 3D effect
+            bearing: 0,
+            antialias: true,
+            minZoom: 0,
+            maxZoom: 22 // Increased zoom level to see buildings in detail
+        });
+
+        // Add 3D buildings layer with white style like Snapchat
+        satelliteInstance.on('load', () => {
+            // Add 3D buildings layer
+            satelliteInstance.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                    'fill-extrusion-color': '#ffffff', // White buildings like Snapchat
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-base': ['get', 'min_height'],
+                    'fill-extrusion-opacity': 0.9
+                }
+            });
+
+            console.log('3D buildings layer added');
+            updateSatelliteMapData();
+            loading.value = false;
+        });
+
+        satelliteInstance.on('error', (error) => {
+            console.error('Mapbox error:', error);
+            // Fallback to Leaflet if Mapbox fails
+            console.log('Falling back to Leaflet satellite map');
+            initSatelliteMapFallback();
+        });
+
+    } catch (error) {
+        console.error('Error initializing satellite map:', error);
+        // Fallback to Leaflet if Mapbox fails
+        initSatelliteMapFallback();
+    }
+};
+
+// Fallback to Leaflet if Mapbox fails
+const initSatelliteMapFallback = () => {
+    try {
+        satelliteInstance = L.map(globeContainer.value, {
+            center: [20, 0],
+            zoom: 3,
+            minZoom: 0,
+            maxZoom: 22, // Increased zoom level to see buildings in detail
+            zoomControl: true
+        });
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri',
+            maxZoom: 22
+        }).addTo(satelliteInstance);
+
+        updateSatelliteMapData();
+        loading.value = false;
+    } catch (error) {
+        console.error('Error initializing fallback satellite map:', error);
+        loading.value = false;
+    }
+};
+
+// Update satellite map data
+const updateSatelliteMapData = () => {
+    if (!satelliteInstance) return;
+    
+    // Clear existing markers
+    if (satelliteInstance instanceof mapboxgl.Map) {
+        // Mapbox GL JS markers
+        mapMarkers.forEach(marker => marker.remove());
+    } else {
+        // Leaflet markers (fallback)
+        mapMarkers.forEach(marker => satelliteInstance.removeLayer(marker));
+        mapPolylines.forEach(polyline => satelliteInstance.removeLayer(polyline));
+    }
+    mapMarkers = [];
+    mapPolylines = [];
+
+    const locations = generateLocationData();
+    
+    if (settings.value.showPoints) {
+        locations.forEach(location => {
+            // Create custom marker element
+            const markerElement = document.createElement('div');
+            markerElement.style.width = '48px';
+            markerElement.style.height = '48px';
+            markerElement.innerHTML = `
+                <div style="
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${location.type === 'hotel' ? '#d97706' : '#2563eb'});
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+                    border: 3px solid white;
+                ">
+                    <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        ${location.type === 'hotel' 
+                            ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
+                            : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
+                        }
+                    </svg>
+                </div>
+            `;
+
+            if (satelliteInstance instanceof mapboxgl.Map) {
+                // Mapbox GL JS marker
+                const marker = new mapboxgl.Marker(markerElement)
+                    .setLngLat([location.lng, location.lat])
+                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                        <div style="
+                            text-align: center;
+                            padding: 8px;
+                            min-width: 150px;
+                            background: rgba(255, 255, 255, 0.95);
+                            border-radius: 8px;
+                        ">
+                            <div style="
+                                font-size: 14px;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 4px;
+                            ">
+                                ${location.name}
+                            </div>
+                            <div style="
+                                font-size: 12px;
+                                color: #64748b;
+                            ">
+                                ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
+                            </div>
+                        </div>
+                    `))
+                    .addTo(satelliteInstance);
+                mapMarkers.push(marker);
+            } else {
+                // Leaflet marker (fallback)
+                const customIcon = L.divIcon({
+                    html: markerElement.innerHTML,
+                    className: 'custom-marker',
+                    iconSize: [48, 48],
+                    iconAnchor: [24, 48],
+                    popupAnchor: [0, -48]
+                });
+
+                const marker = L.marker([location.lat, location.lng], { icon: customIcon })
+                    .bindPopup(`
+                        <div style="
+                            text-align: center;
+                            padding: 8px;
+                            min-width: 150px;
+                            background: rgba(255, 255, 255, 0.95);
+                            border-radius: 8px;
+                        ">
+                            <div style="
+                                font-size: 14px;
+                                font-weight: 700;
+                                color: #1e293b;
+                                margin-bottom: 4px;
+                            ">
+                                ${location.name}
+                            </div>
+                            <div style="
+                                font-size: 12px;
+                                color: #64748b;
+                            ">
+                                ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
+                            </div>
+                        </div>
+                    `)
+                    .addTo(satelliteInstance);
+                mapMarkers.push(marker);
+            }
+        });
+    }
+
+    if (settings.value.showLines && satelliteInstance instanceof mapboxgl.Map) {
+        // Mapbox GL JS lines
+        const coordinates = locations.map(loc => [loc.lng, loc.lat]);
+        
+        if (satelliteInstance.getSource('lines')) {
+            satelliteInstance.getSource('lines').setData({
+                'type': 'FeatureCollection',
+                'features': [{
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coordinates
+                    }
+                }]
+            });
+        } else {
+            satelliteInstance.addSource('lines', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [{
+                        'type': 'Feature',
+                        'properties': {},
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': coordinates
+                        }
+                    }]
+                }
+            });
+
+            satelliteInstance.addLayer({
+                'id': 'lines',
+                'type': 'line',
+                'source': 'lines',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#f59e0b',
+                    'line-width': 3,
+                    'line-opacity': 0.8
+                }
+            });
+        }
+    } else if (settings.value.showLines && !(satelliteInstance instanceof mapboxgl.Map)) {
+        // Leaflet lines (fallback)
+        for (let i = 0; i < locations.length - 1; i++) {
+            const polyline = L.polyline([
+                [locations[i].lat, locations[i].lng],
+                [locations[i + 1].lat, locations[i + 1].lng]
+            ], {
+                color: '#f59e0b',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(satelliteInstance);
+            mapPolylines.push(polyline);
+        }
+    }
+};
 const initMap = () => {
     if (!globeContainer.value) {
         console.error('Map container not found');
@@ -578,6 +934,8 @@ watch(() => settings.value.displayMode, (newMode) => {
             initGlobe();
         } else if (newMode === 'map') {
             initMap();
+        } else if (newMode === 'satellite') {
+            initSatelliteMap();
         }
     }, 100);
 });
@@ -628,6 +986,8 @@ watch(() => settings.value.showPoints, () => {
         updateGlobeData();
     } else if (settings.value.displayMode === 'map') {
         updateMapData();
+    } else if (settings.value.displayMode === 'satellite') {
+        updateSatelliteMapData();
     }
 });
 
@@ -636,6 +996,8 @@ watch(() => settings.value.showLines, () => {
         updateGlobeData();
     } else if (settings.value.displayMode === 'map') {
         updateMapData();
+    } else if (settings.value.displayMode === 'satellite') {
+        updateSatelliteMapData();
     }
 });
 
@@ -646,12 +1008,14 @@ onMounted(() => {
             initGlobe();
         } else if (settings.value.displayMode === 'map') {
             initMap();
+        } else if (settings.value.displayMode === 'satellite') {
+            initSatelliteMap();
         }
     }, 200);
 });
 
 onUnmounted(() => {
-    // Clean up both instances
+    // Clean up all instances
     if (globeInstance) {
         globeInstance();
         globeInstance = null;
@@ -659,6 +1023,10 @@ onUnmounted(() => {
     if (mapInstance) {
         mapInstance.remove();
         mapInstance = null;
+    }
+    if (satelliteInstance) {
+        satelliteInstance.remove();
+        satelliteInstance = null;
     }
 });
 </script>
