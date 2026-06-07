@@ -1,3 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+}
+
+@layer components {
+    .enterprise-shell {
+        @apply text-slate-900;
+    }
+
+    .enterprise-card {
+        @apply rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-300/60;
+    }
+
+    .nav-item {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-600 transition-all duration-200 hover:bg-yellow-100 hover:text-slate-900;
+    }
+
+    .nav-item-active {
+        @apply bg-white text-slate-900 shadow-md border border-slate-200;
+    }
+
+    .nav-accent-indigo.nav-item-active {
+        @apply bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/40;
+    }
+
+    .nav-accent-emerald.nav-item-active {
+        @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30;
+    }
+
+    .nav-accent-amber.nav-item-active {
+        @apply bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30;
+    }
+
+    .nav-subitem {
+        @apply block rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-yellow-100 hover:text-slate-900;
+    }
+
+    .nav-subitem-active {
+        @apply bg-indigo-100 font-medium text-indigo-700;
+    }
+
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+    }
+}
+
+@layer utilities {
+    .page-enter-active,
+    .page-leave-active {
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .page-enter-from,
+    .page-leave-to {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.2s ease;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
+}

@@ -1,5 +1,54 @@
 <template>
     <div class="flex flex-col gap-8">
+        <!-- Ultra Premium Banner -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
+            <!-- Animated background elements -->
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+            </div>
+
+            <!-- Content -->
+            <div class="relative px-6 py-12 sm:px-8 lg:px-12 lg:py-16">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+                    <!-- Left section -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/40">
+                                <svg class="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-bold text-white">Tableau de Bord Enterprise</h2>
+                                <p class="text-sm text-slate-300 mt-1">Gestion intégrée de votre plateforme</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base max-w-md">Suivez en temps réel les performances globales avec des métriques détaillées et des analyses approfondies.</p>
+                    </div>
+
+                    <!-- Right section - Stats -->
+                    <div class="flex gap-4 flex-wrap lg:flex-nowrap lg:gap-6">
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                            <span class="text-2xl sm:text-3xl font-bold text-emerald-400">{{ countAgencies }}</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Agences</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                            <span class="text-2xl sm:text-3xl font-bold text-blue-400">{{ formattedReservations }}</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Réservations</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                            <span class="text-2xl sm:text-3xl font-bold text-amber-400">€{{ countRevenue }}K</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Revenu</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom accent line -->
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500 opacity-60"></div>
+            </div>
+        </div>
+
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Revenue Card -->
@@ -255,13 +304,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Chart } from 'chart.js/auto';
+
+// Counters for banner
+const countAgencies = ref(0);
+const countReservations = ref(0);
+const countRevenue = ref(0);
+
+// Formatted counters
+const formattedReservations = computed(() => countReservations.value.toLocaleString('fr-FR'));
+
+// Counter animation function
+const animateCounter = (ref, targetValue, duration = 1500) => {
+    const start = 0;
+    const startTime = Date.now();
+
+    const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        ref.value = Math.floor(start + (targetValue - start) * progress);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            ref.value = targetValue;
+        }
+    };
+
+    animate();
+};
 
 const revenueChart = ref(null);
 const distributionChart = ref(null);
 
 onMounted(() => {
+    // Animate counters when component mounts
+    animateCounter(countAgencies, 12, 1500);
+    animateCounter(countReservations, 1245, 1500);
+    animateCounter(countRevenue, 89, 1500);
+
     // Revenue Chart - Line Chart with Gradient
     const revenueCtx = document.getElementById('revenueChart');
     if (revenueCtx) {
