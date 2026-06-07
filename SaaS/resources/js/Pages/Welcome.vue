@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted } from 'vue';
 
 defineProps({
     canLogin: {
@@ -18,369 +19,856 @@ defineProps({
     },
 });
 
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
+const mobileMenuOpen = ref(false);
+const locale = ref('fr');
+
+const translations = {
+    en: {
+        meta: {
+            title: 'PropertyAI — Intelligent Property Management for Elite Portfolios',
+        },
+        nav: {
+            platform: 'Platform',
+            industries: 'Industries',
+            aiEngine: 'AI Engine',
+            results: 'Results',
+            dashboard: 'Dashboard',
+            signIn: 'Sign In',
+            requestAccess: 'Request Access',
+        },
+        hero: {
+            badge: 'AI-Native Property Intelligence',
+            titleLine1: 'Command your portfolio with',
+            titleHighlight: 'institutional precision',
+            description:
+                'PropertyAI is the operating system for elite real estate. Agencies, luxury hospitality groups, and private investors rely on our AI to automate operations, maximize yield, and deliver white-glove experiences—at scale.',
+            ctaPrimary: 'Start Your Free Trial',
+            ctaSecondary: 'Watch Platform Demo',
+        },
+        trustSignals: ['SOC 2 Type II', 'GDPR Compliant', '256-bit Encryption', '99.99% Uptime SLA'],
+        dashboard: {
+            title: 'PropertyAI Command Center',
+            portfolioValue: 'Portfolio Value',
+            occupancy: 'Occupancy',
+            aiSavings: 'AI Savings',
+            ytd: 'YTD',
+            revenueForecast: 'Revenue Forecast — AI Model v3',
+            live: 'Live',
+            aiInsight: 'AI Insight',
+            insightText: '3 lease renewals flagged for proactive outreach — projected retention +18%',
+        },
+        socialProof: 'Trusted by leading firms across Europe & the Middle East',
+        brands: ['Prestige Estates', 'Whitfield Group', 'Lumière Hotels', 'Atlas Capital', 'Maison & Co.'],
+        audiences: {
+            eyebrow: 'Built for discerning operators',
+            title: 'One platform. Three worlds of excellence.',
+            description:
+                'Whether you manage a global agency, a portfolio of boutique hotels, or private holdings—PropertyAI adapts to your operating model.',
+            items: [
+                {
+                    title: 'Real Estate Agencies',
+                    description:
+                        'Orchestrate multi-portfolio operations from a single command center. AI handles lead routing, lease renewals, and compliance—your team focuses on closing.',
+                    metric: '62% faster deal cycles',
+                },
+                {
+                    title: 'Luxury Hotels & Residences',
+                    description:
+                        'Deliver five-star guest experiences at scale. Dynamic pricing, concierge automation, and predictive housekeeping keep occupancy and NPS at peak.',
+                    metric: '28% RevPAR uplift',
+                },
+                {
+                    title: 'Private Investors',
+                    description:
+                        'Institutional-grade visibility across every asset class. Portfolio intelligence, automated reporting, and risk alerts—without the overhead.',
+                    metric: '40% lower operating costs',
+                },
+            ],
+        },
+        ai: {
+            eyebrow: 'The AI Engine',
+            title: 'Intelligence that never sleeps',
+            description:
+                'Proprietary models trained on millions of property transactions—working 24/7 to protect and grow your assets.',
+            explore: 'Explore the full platform',
+            capabilities: [
+                {
+                    title: 'Predictive Portfolio Intelligence',
+                    description:
+                        'Machine learning models forecast occupancy, cash flow, and market shifts 90 days ahead—so you act before competitors react.',
+                    span: 'lg:col-span-2',
+                },
+                {
+                    title: 'Autonomous Revenue Engine',
+                    description:
+                        'AI-driven dynamic pricing across short-term, long-term, and hybrid assets. Maximizes yield without manual rate tables.',
+                    span: '',
+                },
+                {
+                    title: 'Intelligent Tenant Lifecycle',
+                    description:
+                        'From AI-powered screening to automated lease workflows and sentiment-aware communications—every touchpoint, optimized.',
+                    span: '',
+                },
+                {
+                    title: 'Predictive Maintenance',
+                    description:
+                        'IoT and historical data combine to flag failures before they happen. Cut emergency repairs and protect asset value.',
+                    span: '',
+                },
+                {
+                    title: 'Document Intelligence',
+                    description:
+                        'OCR and NLP extract clauses, deadlines, and obligations from contracts instantly. Never miss a critical date again.',
+                    span: 'lg:col-span-2',
+                },
+            ],
+        },
+        stats: [
+            { value: '40%', label: 'Average cost reduction' },
+            { value: '3.5×', label: 'Operational velocity' },
+            { value: '98%', label: 'Tenant & guest satisfaction' },
+            { value: '500+', label: 'Premium properties managed' },
+        ],
+        testimonials: {
+            eyebrow: 'Client voices',
+            title: 'Results that speak for themselves',
+            items: [
+                {
+                    quote: 'PropertyAI transformed how we manage our €200M portfolio. What took our team weeks now happens overnight—with better accuracy.',
+                    author: 'Sophie Laurent',
+                    role: 'Managing Director, Prestige Estates Paris',
+                },
+                {
+                    quote: 'Our boutique hotel group saw RevPAR climb within the first quarter. The AI pricing alone paid for the platform ten times over.',
+                    author: 'James Whitfield',
+                    role: 'CEO, Whitfield Hospitality Group',
+                },
+            ],
+        },
+        cta: {
+            title: 'Elevate your portfolio today',
+            description:
+                "Join the operators who've replaced spreadsheets and guesswork with AI-driven certainty. Your 14-day trial includes full platform access—no credit card required.",
+            primary: 'Claim Your Free Trial',
+            secondary: 'Book a Private Demo',
+        },
+        footer: {
+            tagline:
+                'The AI-assisted property management platform for agencies, luxury hospitality, and private investors who demand excellence.',
+            product: 'Product',
+            company: 'Company',
+            legal: 'Legal',
+            aiEngine: 'AI Engine',
+            platform: 'Platform',
+            integrations: 'Integrations',
+            pricing: 'Pricing',
+            about: 'About',
+            careers: 'Careers',
+            press: 'Press',
+            contact: 'Contact',
+            privacy: 'Privacy',
+            terms: 'Terms',
+            security: 'Security',
+            rights: 'All rights reserved.',
+        },
+    },
+    fr: {
+        meta: {
+            title: 'PropertyAI — Gestion immobilière intelligente pour portfolios d\'exception',
+        },
+        nav: {
+            platform: 'Plateforme',
+            industries: 'Secteurs',
+            aiEngine: 'Moteur IA',
+            results: 'Résultats',
+            dashboard: 'Tableau de bord',
+            signIn: 'Connexion',
+            requestAccess: 'Demander l\'accès',
+        },
+        hero: {
+            badge: 'Intelligence immobilière native IA',
+            titleLine1: 'Pilotez votre portfolio avec une',
+            titleHighlight: 'précision institutionnelle',
+            description:
+                'PropertyAI est le système d\'exploitation de l\'immobilier d\'exception. Agences, groupes hôteliers de luxe et investisseurs privés s\'appuient sur notre IA pour automatiser les opérations, maximiser les rendements et offrir une expérience sur mesure — à grande échelle.',
+            ctaPrimary: 'Essai gratuit',
+            ctaSecondary: 'Voir la démo',
+        },
+        trustSignals: ['SOC 2 Type II', 'Conforme RGPD', 'Chiffrement 256 bits', 'SLA 99,99 % de disponibilité'],
+        dashboard: {
+            title: 'Centre de commande PropertyAI',
+            portfolioValue: 'Valeur du portfolio',
+            occupancy: 'Taux d\'occupation',
+            aiSavings: 'Économies IA',
+            ytd: 'Depuis le début de l\'année',
+            revenueForecast: 'Prévision de revenus — Modèle IA v3',
+            live: 'En direct',
+            aiInsight: 'Insight IA',
+            insightText: '3 renouvellements de bail identifiés pour une relance proactive — rétention projetée +18 %',
+        },
+        socialProof: 'Plébiscité par les leaders en Europe et au Moyen-Orient',
+        brands: ['Prestige Estates', 'Whitfield Group', 'Lumière Hotels', 'Atlas Capital', 'Maison & Co.'],
+        audiences: {
+            eyebrow: 'Conçu pour les opérateurs exigeants',
+            title: 'Une plateforme. Trois univers d\'excellence.',
+            description:
+                'Que vous dirigiez une agence internationale, un portfolio d\'hôtels boutique ou des actifs privés — PropertyAI s\'adapte à votre modèle opérationnel.',
+            items: [
+                {
+                    title: 'Agences immobilières',
+                    description:
+                        'Orchestrez vos opérations multi-portfolios depuis un centre de commande unique. L\'IA gère le routage des leads, les renouvellements et la conformité — votre équipe se concentre sur la conclusion.',
+                    metric: '62 % de cycles de vente accélérés',
+                },
+                {
+                    title: 'Hôtels & résidences de luxe',
+                    description:
+                        'Offrez une expérience cinq étoiles à grande échelle. Tarification dynamique, conciergerie automatisée et housekeeping prédictif maintiennent occupation et NPS au sommet.',
+                    metric: '+28 % de RevPAR',
+                },
+                {
+                    title: 'Investisseurs privés',
+                    description:
+                        'Visibilité de niveau institutionnel sur chaque classe d\'actifs. Intelligence portfolio, reporting automatisé et alertes risques — sans la lourdeur administrative.',
+                    metric: '40 % de coûts opérationnels en moins',
+                },
+            ],
+        },
+        ai: {
+            eyebrow: 'Le moteur IA',
+            title: 'Une intelligence qui ne dort jamais',
+            description:
+                'Des modèles propriétaires entraînés sur des millions de transactions immobilières — actifs 24 h/24 pour protéger et faire croître vos actifs.',
+            explore: 'Explorer la plateforme',
+            capabilities: [
+                {
+                    title: 'Intelligence portfolio prédictive',
+                    description:
+                        'Des modèles de machine learning anticipent l\'occupation, les flux de trésorerie et les évolutions du marché à 90 jours — pour agir avant vos concurrents.',
+                    span: 'lg:col-span-2',
+                },
+                {
+                    title: 'Moteur de revenus autonome',
+                    description:
+                        'Tarification dynamique pilotée par l\'IA sur actifs courte durée, longue durée et hybrides. Maximisez le rendement sans tableaux de tarifs manuels.',
+                    span: '',
+                },
+                {
+                    title: 'Cycle de vie locataire intelligent',
+                    description:
+                        'Du screening IA aux workflows de bail automatisés et communications sensibles au sentiment — chaque point de contact, optimisé.',
+                    span: '',
+                },
+                {
+                    title: 'Maintenance prédictive',
+                    description:
+                        'IoT et données historiques combinés pour signaler les pannes avant qu\'elles surviennent. Réduisez les réparations d\'urgence et protégez la valeur de vos actifs.',
+                    span: '',
+                },
+                {
+                    title: 'Intelligence documentaire',
+                    description:
+                        'OCR et NLP extraient instantanément clauses, échéances et obligations des contrats. Ne manquez plus jamais une date critique.',
+                    span: 'lg:col-span-2',
+                },
+            ],
+        },
+        stats: [
+            { value: '40 %', label: 'Réduction moyenne des coûts' },
+            { value: '3,5×', label: 'Vélocité opérationnelle' },
+            { value: '98 %', label: 'Satisfaction locataires & clients' },
+            { value: '500+', label: 'Biens premium gérés' },
+        ],
+        testimonials: {
+            eyebrow: 'Témoignages clients',
+            title: 'Des résultats qui parlent d\'eux-mêmes',
+            items: [
+                {
+                    quote: 'PropertyAI a transformé la gestion de notre portfolio de 200 M€. Ce qui prenait des semaines à notre équipe se fait désormais en une nuit — avec une précision accrue.',
+                    author: 'Sophie Laurent',
+                    role: 'Directrice générale, Prestige Estates Paris',
+                },
+                {
+                    quote: 'Notre groupe hôtelier boutique a vu son RevPAR grimper dès le premier trimestre. La tarification IA à elle seule a rentabilisé la plateforme dix fois.',
+                    author: 'James Whitfield',
+                    role: 'PDG, Whitfield Hospitality Group',
+                },
+            ],
+        },
+        cta: {
+            title: 'Élevez votre portfolio dès aujourd\'hui',
+            description:
+                'Rejoignez les opérateurs qui ont remplacé tableurs et approximations par la certitude de l\'IA. Votre essai de 14 jours inclut l\'accès complet — sans carte bancaire.',
+            primary: 'Commencer l\'essai gratuit',
+            secondary: 'Réserver une démo privée',
+        },
+        footer: {
+            tagline:
+                'La plateforme de gestion immobilière assistée par IA pour agences, hôtellerie de luxe et investisseurs privés exigeants.',
+            product: 'Produit',
+            company: 'Entreprise',
+            legal: 'Légal',
+            aiEngine: 'Moteur IA',
+            platform: 'Plateforme',
+            integrations: 'Intégrations',
+            pricing: 'Tarifs',
+            about: 'À propos',
+            careers: 'Carrières',
+            press: 'Presse',
+            contact: 'Contact',
+            privacy: 'Confidentialité',
+            terms: 'Conditions',
+            security: 'Sécurité',
+            rights: 'Tous droits réservés.',
+        },
+    },
+};
+
+const t = computed(() => translations[locale.value]);
+
+const dashboardStats = computed(() => [
+    { label: t.value.dashboard.portfolioValue, value: '€847M', change: '+12,4 %' },
+    { label: t.value.dashboard.occupancy, value: '94,2 %', change: '+3,1 %' },
+    { label: t.value.dashboard.aiSavings, value: '€2,1M', change: t.value.dashboard.ytd },
+]);
+
+function setLocale(lang) {
+    locale.value = lang;
+    mobileMenuOpen.value = false;
 }
+
+onMounted(() => {
+    const saved = localStorage.getItem('propertyai-locale');
+    if (saved === 'en' || saved === 'fr') {
+        locale.value = saved;
+    }
+    document.documentElement.lang = locale.value;
+});
+
+watch(locale, (val) => {
+    localStorage.setItem('propertyai-locale', val);
+    document.documentElement.lang = val;
+});
 </script>
 
 <template>
-    <Head title="Welcome" />
-    <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-        <img
-            id="background"
-            class="absolute -left-20 top-0 max-w-[877px]"
-            src="https://laravel.com/assets/img/welcome/background.svg"
+    <Head :title="t.meta.title">
+        <link rel="preconnect" href="https://fonts.bunny.net" />
+        <link
+            href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|playfair-display:500,600,700&display=swap"
+            rel="stylesheet"
         />
-        <div
-            class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
-        >
-            <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
-                >
-                    <div class="flex lg:col-start-2 lg:justify-center">
-                        <svg
-                            class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
-                            viewBox="0 0 62 65"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
-                                fill="currentColor"
-                            />
-                        </svg>
+    </Head>
+
+    <div
+        class="min-h-screen overflow-x-hidden bg-[#FAFAF8] text-slate-900 antialiased"
+        style="font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif"
+    >
+        <!-- Ambient background -->
+        <div class="pointer-events-none fixed inset-0 z-0">
+            <div class="absolute -right-32 top-0 h-[600px] w-[600px] rounded-full bg-amber-100/60 blur-[120px]" />
+            <div class="absolute -left-32 top-1/3 h-[500px] w-[500px] rounded-full bg-sky-100/50 blur-[100px]" />
+            <div class="absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full bg-rose-50/80 blur-[100px]" />
+            <div
+                class="absolute inset-0 opacity-[0.35]"
+                style="background-image: radial-gradient(circle at 1px 1px, #e2e8f0 1px, transparent 0); background-size: 32px 32px"
+            />
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sticky top-0 z-50 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl backdrop-saturate-150">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
+                <Link href="/" class="group flex shrink-0 items-center gap-3">
+                    <div
+                        class="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-md shadow-amber-500/20 transition-transform duration-300 group-hover:scale-105"
+                    >
+                        <span class="text-sm font-bold tracking-tight text-white">PA</span>
                     </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
+                    <span class="text-lg font-semibold tracking-tight text-slate-900">Property<span class="text-amber-600">AI</span></span>
+                </Link>
+
+                <div class="hidden items-center gap-8 lg:flex">
+                    <a href="#platform" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.platform }}</a>
+                    <a href="#audiences" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.industries }}</a>
+                    <a href="#ai" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.aiEngine }}</a>
+                    <a href="#results" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.results }}</a>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Language toggle -->
+                    <div
+                        class="flex items-center rounded-full border border-slate-200 bg-slate-50/80 p-0.5 shadow-sm"
+                        role="group"
+                        :aria-label="locale === 'fr' ? 'Changer de langue' : 'Change language'"
+                    >
+                        <button
+                            type="button"
+                            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200"
+                            :class="locale === 'fr' ? 'bg-white text-amber-700 shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-700'"
+                            @click="setLocale('fr')"
+                        >
+                            FR
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200"
+                            :class="locale === 'en' ? 'bg-white text-amber-700 shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-700'"
+                            @click="setLocale('en')"
+                        >
+                            EN
+                        </button>
+                    </div>
+
+                    <div v-if="canLogin" class="hidden items-center gap-4 md:flex">
                         <Link
                             v-if="$page.props.auth.user"
                             :href="route('dashboard')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                            class="text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-slate-900"
                         >
-                            Dashboard
+                            {{ t.nav.dashboard }}
                         </Link>
-
                         <template v-else>
                             <Link
                                 :href="route('login')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                                class="text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-slate-900"
                             >
-                                Log in
+                                {{ t.nav.signIn }}
                             </Link>
-
                             <Link
                                 v-if="canRegister"
                                 :href="route('register')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                                class="group relative overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/30"
                             >
-                                Register
+                                <span class="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 transition-opacity duration-300 group-hover:opacity-90" />
+                                <span class="relative">{{ t.nav.requestAccess }}</span>
                             </Link>
                         </template>
-                    </nav>
-                </header>
+                    </div>
 
-                <main class="mt-6">
-                    <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                        <a
-                            href="https://laravel.com/docs"
-                            id="docs-card"
-                            class="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
+                    <button
+                        class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden"
+                        :aria-label="locale === 'fr' ? 'Ouvrir le menu' : 'Toggle menu'"
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                    >
+                        <svg v-if="!mobileMenuOpen" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div
+                v-if="mobileMenuOpen"
+                class="border-t border-slate-200/70 bg-white/95 px-6 py-6 backdrop-blur-xl lg:hidden"
+            >
+                <div class="flex flex-col gap-4">
+                    <a href="#platform" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.platform }}</a>
+                    <a href="#audiences" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.industries }}</a>
+                    <a href="#ai" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.aiEngine }}</a>
+                    <a href="#results" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.results }}</a>
+                    <div v-if="canLogin" class="flex flex-col gap-3 border-t border-slate-200 pt-4">
+                        <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="text-sm font-medium">{{ t.nav.dashboard }}</Link>
+                        <template v-else>
+                            <Link :href="route('login')" class="text-sm font-medium text-slate-600">{{ t.nav.signIn }}</Link>
+                            <Link
+                                v-if="canRegister"
+                                :href="route('register')"
+                                class="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-md"
+                            >
+                                {{ t.nav.requestAccess }}
+                            </Link>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-16 lg:px-8 lg:pb-32 lg:pt-24">
+            <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+                <div class="flex flex-col gap-8">
+                    <div
+                        class="inline-flex w-fit items-center gap-2.5 rounded-full border border-amber-200/80 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-md"
+                    >
+                        <span class="relative flex h-2 w-2">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-40" />
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+                        </span>
+                        <span class="text-xs font-medium uppercase tracking-widest text-amber-700">{{ t.hero.badge }}</span>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h1
+                            class="text-4xl font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+                            style="font-family: 'Playfair Display', Georgia, serif"
                         >
-                            <div
-                                id="screenshot-container"
-                                class="relative flex w-full flex-1 items-stretch"
-                            >
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-light.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.06)] dark:hidden"
-                                    @error="handleImageError"
-                                />
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-dark.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
-                                />
-                                <div
-                                    class="absolute -bottom-16 -left-16 h-40 w-[calc(100%+8rem)] bg-gradient-to-b from-transparent via-white to-white dark:via-zinc-900 dark:to-zinc-900"
-                                ></div>
+                            {{ t.hero.titleLine1 }}
+                            <span class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 bg-clip-text text-transparent">
+                                {{ t.hero.titleHighlight }}
+                            </span>
+                        </h1>
+                        <p class="max-w-xl text-lg leading-relaxed text-slate-600">
+                            {{ t.hero.description }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <Link
+                            v-if="canRegister"
+                            :href="route('register')"
+                            class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/30"
+                        >
+                            <span class="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 transition-transform duration-300 group-hover:scale-105" />
+                            <span class="relative">{{ t.hero.ctaPrimary }}</span>
+                            <svg class="relative h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </Link>
+                        <a
+                            href="#demo"
+                            class="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-8 py-4 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:border-amber-300 hover:bg-amber-50/50 hover:text-amber-900"
+                        >
+                            <svg class="h-4 w-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                            {{ t.hero.ctaSecondary }}
+                        </a>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+                        <div v-for="signal in t.trustSignals" :key="signal" class="flex items-center gap-2 text-xs text-slate-500">
+                            <svg class="h-3.5 w-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            {{ signal }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard preview -->
+                <div id="demo" class="relative">
+                    <div class="absolute -inset-4 rounded-3xl bg-gradient-to-br from-amber-200/40 via-transparent to-sky-200/30 blur-2xl" />
+                    <div class="relative rounded-2xl bg-gradient-to-br from-amber-300/50 via-slate-200/50 to-sky-300/40 p-[1px] shadow-2xl shadow-slate-300/30">
+                        <div class="overflow-hidden rounded-2xl border border-white/80 bg-white/90 backdrop-blur-2xl">
+                            <div class="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-5 py-3">
+                                <div class="flex gap-1.5">
+                                    <div class="h-2.5 w-2.5 rounded-full bg-red-300/80" />
+                                    <div class="h-2.5 w-2.5 rounded-full bg-amber-300/80" />
+                                    <div class="h-2.5 w-2.5 rounded-full bg-emerald-300/80" />
+                                </div>
+                                <span class="ml-2 text-xs text-slate-400">{{ t.dashboard.title }}</span>
                             </div>
-
-                            <div
-                                class="relative flex items-center gap-6 lg:items-end"
-                            >
-                                <div
-                                    id="docs-card-content"
-                                    class="flex items-start gap-6 lg:flex-col"
-                                >
+                            <div class="space-y-4 p-5">
+                                <div class="grid grid-cols-3 gap-3">
                                     <div
-                                        class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
+                                        v-for="(stat, i) in dashboardStats"
+                                        :key="i"
+                                        class="rounded-xl border border-slate-100 bg-slate-50/80 p-3 transition-all duration-300 hover:border-amber-200 hover:bg-amber-50/40 hover:shadow-sm"
                                     >
-                                        <svg
-                                            class="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                fill="#FF2D20"
-                                                d="M23 4a1 1 0 0 0-1.447-.894L12.224 7.77a.5.5 0 0 1-.448 0L2.447 3.106A1 1 0 0 0 1 4v13.382a1.99 1.99 0 0 0 1.105 1.79l9.448 4.728c.14.065.293.1.447.1.154-.005.306-.04.447-.105l9.453-4.724a1.99 1.99 0 0 0 1.1-1.789V4ZM3 6.023a.25.25 0 0 1 .362-.223l7.5 3.75a.251.251 0 0 1 .138.223v11.2a.25.25 0 0 1-.362.224l-7.5-3.75a.25.25 0 0 1-.138-.22V6.023Zm18 11.2a.25.25 0 0 1-.138.224l-7.5 3.75a.249.249 0 0 1-.329-.099.249.249 0 0 1-.033-.12V9.772a.251.251 0 0 1 .138-.224l7.5-3.75a.25.25 0 0 1 .362.224v11.2Z"
-                                            />
-                                            <path
-                                                fill="#FF2D20"
-                                                d="m3.55 1.893 8 4.048a1.008 1.008 0 0 0 .9 0l8-4.048a1 1 0 0 0-.9-1.785l-7.322 3.706a.506.506 0 0 1-.452 0L4.454.108a1 1 0 0 0-.9 1.785H3.55Z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div class="pt-3 sm:pt-5 lg:pt-0">
-                                        <h2
-                                            class="text-xl font-semibold text-black dark:text-white"
-                                        >
-                                            Documentation
-                                        </h2>
-
-                                        <p class="mt-4 text-sm/relaxed">
-                                            Laravel has wonderful documentation
-                                            covering every aspect of the
-                                            framework. Whether you are a
-                                            newcomer or have prior experience
-                                            with Laravel, we recommend reading
-                                            our documentation from beginning to
-                                            end.
-                                        </p>
+                                        <p class="text-[10px] uppercase tracking-wider text-slate-400">{{ stat.label }}</p>
+                                        <p class="mt-1 text-lg font-semibold text-slate-900">{{ stat.value }}</p>
+                                        <p class="text-[10px] font-medium text-emerald-600">{{ stat.change }}</p>
                                     </div>
                                 </div>
-
-                                <svg
-                                    class="size-6 shrink-0 stroke-[#FF2D20]"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
-                            </div>
-                        </a>
-
-                        <a
-                            href="https://laracasts.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M24 8.25a.5.5 0 0 0-.5-.5H.5a.5.5 0 0 0-.5.5v12a2.5 2.5 0 0 0 2.5 2.5h19a2.5 2.5 0 0 0 2.5-2.5v-12Zm-7.765 5.868a1.221 1.221 0 0 1 0 2.264l-6.626 2.776A1.153 1.153 0 0 1 8 18.123v-5.746a1.151 1.151 0 0 1 1.609-1.035l6.626 2.776ZM19.564 1.677a.25.25 0 0 0-.177-.427H15.6a.106.106 0 0 0-.072.03l-4.54 4.543a.25.25 0 0 0 .177.427h3.783c.027 0 .054-.01.073-.03l4.543-4.543ZM22.071 1.318a.047.047 0 0 0-.045.013l-4.492 4.492a.249.249 0 0 0 .038.385.25.25 0 0 0 .14.042h5.784a.5.5 0 0 0 .5-.5v-2a2.5 2.5 0 0 0-1.925-2.432ZM13.014 1.677a.25.25 0 0 0-.178-.427H9.101a.106.106 0 0 0-.073.03l-4.54 4.543a.25.25 0 0 0 .177.427H8.4a.106.106 0 0 0 .073-.03l4.54-4.543ZM6.513 1.677a.25.25 0 0 0-.177-.427H2.5A2.5 2.5 0 0 0 0 3.75v2a.5.5 0 0 0 .5.5h1.4a.106.106 0 0 0 .073-.03l4.54-4.543Z"
+                                <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                                    <div class="mb-3 flex items-center justify-between">
+                                        <span class="text-xs font-medium text-slate-600">{{ t.dashboard.revenueForecast }}</span>
+                                        <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{{ t.dashboard.live }}</span>
+                                    </div>
+                                    <div class="flex h-24 items-end gap-1">
+                                        <div
+                                            v-for="(h, i) in [40, 55, 45, 70, 60, 85, 75, 90, 80, 95, 88, 100]"
+                                            :key="i"
+                                            class="flex-1 rounded-sm bg-gradient-to-t from-amber-200 to-amber-500 transition-all duration-500 hover:from-amber-300 hover:to-amber-600"
+                                            :style="{ height: `${h}%` }"
                                         />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laracasts
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laracasts offers thousands of video
-                                    tutorials on Laravel, PHP, and JavaScript
-                                    development. Check them out, see for
-                                    yourself, and massively level up your
-                                    development skills in the process.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <a
-                            href="https://laravel-news.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M8.75 4.5H5.5c-.69 0-1.25.56-1.25 1.25v4.75c0 .69.56 1.25 1.25 1.25h3.25c.69 0 1.25-.56 1.25-1.25V5.75c0-.69-.56-1.25-1.25-1.25Z"
-                                        />
-                                        <path
-                                            d="M24 10a3 3 0 0 0-3-3h-2V2.5a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2V20a3.5 3.5 0 0 0 3.5 3.5h17A3.5 3.5 0 0 0 24 20V10ZM3.5 21.5A1.5 1.5 0 0 1 2 20V3a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v17c0 .295.037.588.11.874a.5.5 0 0 1-.484.625L3.5 21.5ZM22 20a1.5 1.5 0 1 1-3 0V9.5a.5.5 0 0 1 .5-.5H21a1 1 0 0 1 1 1v10Z"
-                                        />
-                                        <path
-                                            d="M12.751 6.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 7.3v-.5a.75.75 0 0 1 .751-.753ZM12.751 10.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 11.3v-.5a.75.75 0 0 1 .751-.753ZM4.751 14.047h10a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-10A.75.75 0 0 1 4 15.3v-.5a.75.75 0 0 1 .751-.753ZM4.75 18.047h7.5a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-7.5A.75.75 0 0 1 4 19.3v-.5a.75.75 0 0 1 .75-.753Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laravel News
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel News is a community driven portal
-                                    and newsletter aggregating all of the latest
-                                    and most important news in the Laravel
-                                    ecosystem, including new package releases
-                                    and tutorials.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <div
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M16.597 12.635a.247.247 0 0 0-.08-.237 2.234 2.234 0 0 1-.769-1.68c.001-.195.03-.39.084-.578a.25.25 0 0 0-.09-.267 8.8 8.8 0 0 0-4.826-1.66.25.25 0 0 0-.268.181 2.5 2.5 0 0 1-2.4 1.824.045.045 0 0 0-.045.037 12.255 12.255 0 0 0-.093 3.86.251.251 0 0 0 .208.214c2.22.366 4.367 1.08 6.362 2.118a.252.252 0 0 0 .32-.079 10.09 10.09 0 0 0 1.597-3.733ZM13.616 17.968a.25.25 0 0 0-.063-.407A19.697 19.697 0 0 0 8.91 15.98a.25.25 0 0 0-.287.325c.151.455.334.898.548 1.328.437.827.981 1.594 1.619 2.28a.249.249 0 0 0 .32.044 29.13 29.13 0 0 0 2.506-1.99ZM6.303 14.105a.25.25 0 0 0 .265-.274 13.048 13.048 0 0 1 .205-4.045.062.062 0 0 0-.022-.07 2.5 2.5 0 0 1-.777-.982.25.25 0 0 0-.271-.149 11 11 0 0 0-5.6 2.815.255.255 0 0 0-.075.163c-.008.135-.02.27-.02.406.002.8.084 1.598.246 2.381a.25.25 0 0 0 .303.193 19.924 19.924 0 0 1 5.746-.438ZM9.228 20.914a.25.25 0 0 0 .1-.393 11.53 11.53 0 0 1-1.5-2.22 12.238 12.238 0 0 1-.91-2.465.248.248 0 0 0-.22-.187 18.876 18.876 0 0 0-5.69.33.249.249 0 0 0-.179.336c.838 2.142 2.272 4 4.132 5.353a.254.254 0 0 0 .15.048c1.41-.01 2.807-.282 4.117-.802ZM18.93 12.957l-.005-.008a.25.25 0 0 0-.268-.082 2.21 2.21 0 0 1-.41.081.25.25 0 0 0-.217.2c-.582 2.66-2.127 5.35-5.75 7.843a.248.248 0 0 0-.09.299.25.25 0 0 0 .065.091 28.703 28.703 0 0 0 2.662 2.12.246.246 0 0 0 .209.037c2.579-.701 4.85-2.242 6.456-4.378a.25.25 0 0 0 .048-.189 13.51 13.51 0 0 0-2.7-6.014ZM5.702 7.058a.254.254 0 0 0 .2-.165A2.488 2.488 0 0 1 7.98 5.245a.093.093 0 0 0 .078-.062 19.734 19.734 0 0 1 3.055-4.74.25.25 0 0 0-.21-.41 12.009 12.009 0 0 0-10.4 8.558.25.25 0 0 0 .373.281 12.912 12.912 0 0 1 4.826-1.814ZM10.773 22.052a.25.25 0 0 0-.28-.046c-.758.356-1.55.635-2.365.833a.25.25 0 0 0-.022.48c1.252.43 2.568.65 3.893.65.1 0 .2 0 .3-.008a.25.25 0 0 0 .147-.444c-.526-.424-1.1-.917-1.673-1.465ZM18.744 8.436a.249.249 0 0 0 .15.228 2.246 2.246 0 0 1 1.352 2.054c0 .337-.08.67-.23.972a.25.25 0 0 0 .042.28l.007.009a15.016 15.016 0 0 1 2.52 4.6.25.25 0 0 0 .37.132.25.25 0 0 0 .096-.114c.623-1.464.944-3.039.945-4.63a12.005 12.005 0 0 0-5.78-10.258.25.25 0 0 0-.373.274c.547 2.109.85 4.274.901 6.453ZM9.61 5.38a.25.25 0 0 0 .08.31c.34.24.616.561.8.935a.25.25 0 0 0 .3.127.631.631 0 0 1 .206-.034c2.054.078 4.036.772 5.69 1.991a.251.251 0 0 0 .267.024c.046-.024.093-.047.141-.067a.25.25 0 0 0 .151-.23A29.98 29.98 0 0 0 15.957.764a.25.25 0 0 0-.16-.164 11.924 11.924 0 0 0-2.21-.518.252.252 0 0 0-.215.076A22.456 22.456 0 0 0 9.61 5.38Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Vibrant Ecosystem
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel's robust library of first-party
-                                    tools and libraries, such as
-                                    <a
-                                        href="https://forge.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white dark:focus-visible:ring-[#FF2D20]"
-                                        >Forge</a
-                                    >,
-                                    <a
-                                        href="https://vapor.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Vapor</a
-                                    >,
-                                    <a
-                                        href="https://nova.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Nova</a
-                                    >,
-                                    <a
-                                        href="https://envoyer.io"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Envoyer</a
-                                    >, and
-                                    <a
-                                        href="https://herd.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Herd</a
-                                    >
-                                    help you take your projects to the next
-                                    level. Pair them with powerful open source
-                                    libraries like
-                                    <a
-                                        href="https://laravel.com/docs/billing"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Cashier</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/dusk"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Dusk</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/broadcasting"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Echo</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/horizon"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Horizon</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/sanctum"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Sanctum</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/telescope"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Telescope</a
-                                    >, and more.
-                                </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-3">
+                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+                                        <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-emerald-800">{{ t.dashboard.aiInsight }}</p>
+                                        <p class="text-[11px] text-emerald-700/80">{{ t.dashboard.insightText }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </main>
-
-                <footer
-                    class="py-16 text-center text-sm text-black dark:text-white/70"
-                >
-                    Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
-                </footer>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Social proof strip -->
+        <section class="relative z-10 border-y border-slate-200/70 bg-white/60 py-8 backdrop-blur-sm">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <p class="mb-6 text-center text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                    {{ t.socialProof }}
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
+                    <span
+                        v-for="brand in t.brands"
+                        :key="brand"
+                        class="text-sm font-semibold tracking-wide text-slate-300 transition-colors duration-300 hover:text-slate-500"
+                    >
+                        {{ brand }}
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Audiences -->
+        <section id="audiences" class="relative z-10 mx-auto max-w-7xl px-6 py-24 lg:px-8 lg:py-32">
+            <div class="mx-auto mb-16 max-w-2xl text-center">
+                <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-amber-600">{{ t.audiences.eyebrow }}</p>
+                <h2
+                    class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+                    style="font-family: 'Playfair Display', Georgia, serif"
+                >
+                    {{ t.audiences.title }}
+                </h2>
+                <p class="mt-4 text-lg text-slate-600">
+                    {{ t.audiences.description }}
+                </p>
+            </div>
+
+            <div id="platform" class="grid gap-6 md:grid-cols-3">
+                <div
+                    v-for="(audience, index) in t.audiences.items"
+                    :key="audience.title"
+                    class="group relative rounded-2xl bg-gradient-to-br from-amber-200/60 via-slate-200/40 to-sky-200/40 p-[1px] shadow-sm transition-all duration-500 hover:from-amber-300/70 hover:via-amber-100/50 hover:to-sky-200/50 hover:shadow-lg hover:shadow-amber-100/50"
+                >
+                    <div class="flex h-full flex-col rounded-2xl bg-white p-8 transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-white group-hover:to-amber-50/30">
+                        <span class="mb-6 text-5xl font-light text-slate-100 transition-colors duration-500 group-hover:text-amber-100">
+                            0{{ index + 1 }}
+                        </span>
+                        <h3 class="mb-3 text-xl font-semibold text-slate-900">{{ audience.title }}</h3>
+                        <p class="mb-6 flex-1 text-sm leading-relaxed text-slate-600">{{ audience.description }}</p>
+                        <div class="border-t border-slate-100 pt-4">
+                            <span class="text-sm font-semibold text-amber-700">{{ audience.metric }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Capabilities -->
+        <section id="ai" class="relative z-10 border-t border-slate-200/70 bg-white/50 py-24 lg:py-32">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mb-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="max-w-xl">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-amber-600">{{ t.ai.eyebrow }}</p>
+                        <h2
+                            class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+                            style="font-family: 'Playfair Display', Georgia, serif"
+                        >
+                            {{ t.ai.title }}
+                        </h2>
+                        <p class="mt-4 text-lg text-slate-600">
+                            {{ t.ai.description }}
+                        </p>
+                    </div>
+                    <Link
+                        v-if="canRegister"
+                        :href="route('register')"
+                        class="inline-flex w-fit items-center gap-2 text-sm font-semibold text-amber-700 transition-colors duration-200 hover:text-amber-800"
+                    >
+                        {{ t.ai.explore }}
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </Link>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div
+                        v-for="capability in t.ai.capabilities"
+                        :key="capability.title"
+                        :class="[
+                            capability.span,
+                            'group relative rounded-2xl bg-gradient-to-br from-slate-200/60 via-white to-amber-100/40 p-[1px] transition-all duration-500 hover:from-amber-200/60 hover:to-sky-100/50 hover:shadow-md hover:shadow-slate-200/60',
+                        ]"
+                    >
+                        <div class="flex h-full flex-col rounded-2xl bg-white/90 p-7 backdrop-blur-sm transition-all duration-500 group-hover:bg-white">
+                            <div
+                                class="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 ring-1 ring-amber-200/80 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-sm"
+                            >
+                                <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-900">{{ capability.title }}</h3>
+                            <p class="text-sm leading-relaxed text-slate-600">{{ capability.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section id="results" class="relative z-10 mx-auto max-w-7xl px-6 py-24 lg:px-8">
+            <div class="rounded-2xl bg-gradient-to-br from-amber-200/50 via-slate-100 to-sky-200/40 p-[1px] shadow-xl shadow-slate-200/40">
+                <div class="grid gap-px overflow-hidden rounded-2xl bg-slate-100 sm:grid-cols-2 lg:grid-cols-4">
+                    <div
+                        v-for="stat in t.stats"
+                        :key="stat.label"
+                        class="group bg-white p-8 text-center transition-all duration-300 hover:bg-amber-50/40"
+                    >
+                        <p
+                            class="bg-gradient-to-b from-amber-600 to-amber-800 bg-clip-text text-4xl font-semibold tracking-tight text-transparent transition-transform duration-300 group-hover:scale-105"
+                        >
+                            {{ stat.value }}
+                        </p>
+                        <p class="mt-2 text-sm text-slate-500">{{ stat.label }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="relative z-10 border-t border-slate-200/70 bg-[#FAFAF8] py-24 lg:py-32">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mb-16 text-center">
+                    <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-amber-600">{{ t.testimonials.eyebrow }}</p>
+                    <h2
+                        class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl"
+                        style="font-family: 'Playfair Display', Georgia, serif"
+                    >
+                        {{ t.testimonials.title }}
+                    </h2>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div
+                        v-for="testimonial in t.testimonials.items"
+                        :key="testimonial.author"
+                        class="group rounded-2xl bg-gradient-to-br from-amber-200/40 to-slate-200/30 p-[1px] transition-all duration-500 hover:from-amber-300/50 hover:shadow-lg hover:shadow-amber-100/40"
+                    >
+                        <div class="rounded-2xl bg-white p-8 shadow-sm">
+                            <svg class="mb-4 h-8 w-8 text-amber-200" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10H0z" />
+                            </svg>
+                            <p class="mb-6 text-base leading-relaxed text-slate-600 italic">
+                                <template v-if="locale === 'fr'">« {{ testimonial.quote }} »</template>
+                                <template v-else>"{{ testimonial.quote }}"</template>
+                            </p>
+                            <div>
+                                <p class="font-semibold text-slate-900">{{ testimonial.author }}</p>
+                                <p class="text-sm text-slate-500">{{ testimonial.role }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="relative z-10 mx-auto max-w-7xl px-6 pb-24 lg:px-8 lg:pb-32">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-300/40 via-amber-100/30 to-sky-200/40 p-[1px] shadow-2xl shadow-amber-100/50">
+                <div class="relative rounded-3xl bg-gradient-to-br from-white via-amber-50/30 to-white px-8 py-16 text-center backdrop-blur-sm sm:px-16 sm:py-20">
+                    <div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-amber-100/60 blur-3xl" />
+                    <div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-sky-100/60 blur-3xl" />
+
+                    <div class="relative space-y-6">
+                        <h2
+                            class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+                            style="font-family: 'Playfair Display', Georgia, serif"
+                        >
+                            {{ t.cta.title }}
+                        </h2>
+                        <p class="mx-auto max-w-xl text-lg text-slate-600">
+                            {{ t.cta.description }}
+                        </p>
+                        <div class="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+                            <Link
+                                v-if="canRegister"
+                                :href="route('register')"
+                                class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-10 py-4 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/35"
+                            >
+                                <span class="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 transition-transform duration-300 group-hover:scale-105" />
+                                <span class="relative">{{ t.cta.primary }}</span>
+                            </Link>
+                            <a
+                                href="#"
+                                class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-10 py-4 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:border-slate-300 hover:bg-slate-50"
+                            >
+                                {{ t.cta.secondary }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="relative z-10 border-t border-slate-200/70 bg-white/80 backdrop-blur-xl">
+            <div class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+                <div class="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
+                    <div class="lg:col-span-2">
+                        <div class="mb-4 flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 shadow-sm">
+                                <span class="text-xs font-bold text-white">PA</span>
+                            </div>
+                            <span class="text-lg font-semibold text-slate-900">Property<span class="text-amber-600">AI</span></span>
+                        </div>
+                        <p class="max-w-xs text-sm leading-relaxed text-slate-500">
+                            {{ t.footer.tagline }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="mb-4 text-sm font-semibold text-slate-900">{{ t.footer.product }}</h4>
+                        <ul class="space-y-3 text-sm text-slate-500">
+                            <li><a href="#ai" class="transition-colors hover:text-amber-700">{{ t.footer.aiEngine }}</a></li>
+                            <li><a href="#platform" class="transition-colors hover:text-amber-700">{{ t.footer.platform }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.integrations }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.pricing }}</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="mb-4 text-sm font-semibold text-slate-900">{{ t.footer.company }}</h4>
+                        <ul class="space-y-3 text-sm text-slate-500">
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.about }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.careers }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.press }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.contact }}</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="mb-4 text-sm font-semibold text-slate-900">{{ t.footer.legal }}</h4>
+                        <ul class="space-y-3 text-sm text-slate-500">
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.privacy }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.terms }}</a></li>
+                            <li><a href="#" class="transition-colors hover:text-amber-700">{{ t.footer.security }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 sm:flex-row">
+                    <p class="text-sm text-slate-400">© {{ new Date().getFullYear() }} PropertyAI. {{ t.footer.rights }}</p>
+                    <div class="flex items-center gap-5">
+                        <a href="#" class="text-slate-400 transition-colors hover:text-amber-700" aria-label="LinkedIn">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 114.128 0 2.063 2.063 0 01-2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                        </a>
+                        <a href="#" class="text-slate-400 transition-colors hover:text-amber-700" aria-label="X">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 </template>
