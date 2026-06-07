@@ -24,4 +24,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Route simple pour afficher le dashboard du locataire
+Route::get('/dashboard-locataire', function () {
+    return Inertia::render('Locataire/dashboard-loc'); // Ne pas mettre l'extension .vue
+})->name('dashboard.locataire')->middleware(['auth']); 
+// Le middleware 'auth' sécurise la route pour que seuls les locataires connectés y accèdent
+
 require __DIR__.'/auth.php';
+
