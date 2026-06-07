@@ -446,6 +446,7 @@ watch(locale, (val) => {
                         </template>
                     </div>
 
+<<<<<<< HEAD
                     <button
                         class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden"
                         :aria-label="locale === 'fr' ? 'Ouvrir le menu' : 'Toggle menu'"
@@ -505,6 +506,23 @@ watch(locale, (val) => {
                         <h1
                             class="text-4xl font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
                             style="font-family: 'Playfair Display', Georgia, serif"
+                        >
+                            {{ t.hero.titleLine1 }}
+                <main class="mt-6">
+                    <div class="mb-8 flex justify-center">
+                        <Link
+                            :href="route('dashboard')"
+                            class="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300"
+                        >
+                            Accéder au Dashboard
+                        </Link>
+                    </div>
+                    <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
+                        <a
+                            href="https://laravel.com/docs"
+                            id="docs-card"
+                            class="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
+
                         >
                             {{ t.hero.titleLine1 }}
                             <span class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 bg-clip-text text-transparent">

@@ -19,5 +19,13 @@
         "tailwindcss": "^3.2.1",
         "vite": "^7.0.7",
         "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "@vue-leaflet/vue-leaflet": "^0.10.1",
+        "chart.js": "^4.5.1",
+        "globe.gl": "^2.46.1",
+        "leaflet": "^1.9.4",
+        "mapbox-gl": "^3.24.0",
+        "vue-router": "^4.6.4"
     }
 }
