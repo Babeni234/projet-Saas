@@ -83,6 +83,14 @@ function handleImageError() {
                 </header>
 
                 <main class="mt-6">
+                    <div class="mb-8 flex justify-center">
+                        <Link
+                            :href="route('dashboard')"
+                            class="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300"
+                        >
+                            Accéder au Dashboard
+                        </Link>
+                    </div>
                     <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
                         <a
                             href="https://laravel.com/docs"
