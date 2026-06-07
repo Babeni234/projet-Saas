@@ -1,5 +1,6 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import DocumentAnalysisModal from '@/Components/DocumentAnalysisModal.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -16,6 +17,7 @@ const logoPreview = ref(null);
 const analyzing = ref(false);
 const analysisResult = ref(null);
 const analysisError = ref('');
+const showAnalysisModal = ref(false);
 
 const form = useForm({
     account_type: 'individual',
@@ -63,16 +65,12 @@ const canAnalyze = computed(() =>
         .every((d) => form[d.key] instanceof File),
 );
 
-const docStatusLabel = computed(() => ({
-    verified: locale.value === 'fr' ? 'Validé' : 'Verified',
-    needs_review: locale.value === 'fr' ? 'À vérifier' : 'Needs review',
-}));
-
 function setAccountType(type) {
     accountType.value = type;
     form.account_type = type;
     analysisResult.value = null;
     analysisError.value = '';
+    showAnalysisModal.value = false;
 }
 
 function handleFileChange(field, event) {
@@ -97,6 +95,7 @@ function handleLogoChange(event) {
 async function analyzeDocuments() {
     analysisError.value = '';
     analysisResult.value = null;
+    showAnalysisModal.value = false;
 
     if (!canAnalyze.value) {
         analysisError.value = t.value.analysisError;
@@ -110,6 +109,8 @@ async function analyzeDocuments() {
     payload.append('registration_number', form.registration_number);
     payload.append('tax_id', form.tax_id);
     payload.append('legal_representative_name', form.legal_representative_name);
+    payload.append('business_type', form.business_type);
+    payload.append('country', form.country);
 
     documentFields.forEach((doc) => {
         if (form[doc.key]) {
@@ -124,7 +125,13 @@ async function analyzeDocuments() {
     try {
         const { data } = await window.axios.post(route('register.analyze'), payload);
 
+        if (!data.success) {
+            analysisError.value = data.message || t.value.analysisApiError;
+            return;
+        }
+
         analysisResult.value = data;
+        showAnalysisModal.value = true;
 
         if (data.suggestions?.legal_name && !form.legal_name) {
             form.legal_name = data.suggestions.legal_name;
@@ -138,8 +145,8 @@ async function analyzeDocuments() {
         if (data.suggestions?.legal_representative_name && !form.legal_representative_name) {
             form.legal_representative_name = data.suggestions.legal_representative_name;
         }
-    } catch {
-        analysisError.value = t.value.analysisError;
+    } catch (error) {
+        analysisError.value = error.response?.data?.message || t.value.analysisApiError;
     } finally {
         analyzing.value = false;
     }
@@ -148,6 +155,7 @@ async function analyzeDocuments() {
 watch(accountType, () => {
     analysisResult.value = null;
     analysisError.value = '';
+    showAnalysisModal.value = false;
 });
 
 const submit = () => {
@@ -490,41 +498,6 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-slate-50
                             {{ analysisError }}
                         </p>
 
-                        <div
-                            v-if="analysisResult"
-                            class="rounded-xl border border-emerald-200/80 bg-white/80 p-3"
-                        >
-                            <div class="mb-2 flex items-center justify-between gap-2">
-                                <p class="text-xs font-semibold text-slate-900">{{ t.analysisComplete }}</p>
-                                <span
-                                    class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                                    :class="analysisResult.overall_status === 'compliant'
-                                        ? 'bg-emerald-100 text-emerald-700'
-                                        : 'bg-amber-100 text-amber-700'"
-                                >
-                                    {{ analysisResult.overall_status === 'compliant' ? t.analysisCompliant : t.analysisReview }}
-                                </span>
-                            </div>
-                            <p class="mb-2 text-[11px] text-slate-500">
-                                {{ t.analysisConfidence }}: {{ analysisResult.confidence }}%
-                            </p>
-                            <ul class="space-y-1.5">
-                                <li
-                                    v-for="doc in analysisResult.documents"
-                                    :key="doc.type"
-                                    class="flex items-center justify-between gap-2 text-[11px]"
-                                >
-                                    <span class="truncate text-slate-600">{{ doc.filename }}</span>
-                                    <span
-                                        class="shrink-0 font-medium"
-                                        :class="doc.status === 'verified' ? 'text-emerald-600' : 'text-amber-600'"
-                                    >
-                                        {{ docStatusLabel[doc.status] }} · {{ doc.confidence }}%
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-
                         <div class="grid gap-3 sm:grid-cols-2">
                             <div
                                 v-for="doc in documentFields"
@@ -630,5 +603,13 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-slate-50
                 {{ t.signIn }}
             </Link>
         </p>
+
+        <DocumentAnalysisModal
+            :show="showAnalysisModal"
+            :result="analysisResult"
+            :locale="locale"
+            :labels="t"
+            @close="showAnalysisModal = false"
+        />
     </GuestLayout>
 </template>

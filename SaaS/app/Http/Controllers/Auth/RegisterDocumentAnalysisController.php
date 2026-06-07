@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Ai\DocumentVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class RegisterDocumentAnalysisController extends Controller
 {
-    private const DOCUMENT_LABELS = [
-        'certificate_of_incorporation' => 'certificate',
-        'tax_registration_document' => 'tax',
-        'representative_id_document' => 'representative_id',
-        'proof_of_address' => 'proof_of_address',
+    private const DOCUMENT_FIELDS = [
+        'certificate_of_incorporation',
+        'tax_registration_document',
+        'representative_id_document',
+        'proof_of_address',
     ];
+
+    public function __construct(
+        private DocumentVerificationService $verificationService,
+    ) {}
 
     public function analyze(Request $request): JsonResponse
     {
@@ -27,48 +33,44 @@ class RegisterDocumentAnalysisController extends Controller
             'registration_number' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:100',
             'legal_representative_name' => 'nullable|string|max:255',
+            'business_type' => 'nullable|string|in:real_estate,hotel',
+            'country' => 'nullable|string|max:2',
         ]);
 
         $documents = [];
-        $allVerified = true;
-
-        foreach (self::DOCUMENT_LABELS as $field => $type) {
-            if (! $request->hasFile($field)) {
-                continue;
+        foreach (self::DOCUMENT_FIELDS as $field) {
+            if ($request->hasFile($field)) {
+                $documents[$field] = $request->file($field);
             }
-
-            $file = $request->file($field);
-            $confidence = min(98, 82 + (strlen($file->getClientOriginalName()) % 15));
-            $status = $confidence >= 90 ? 'verified' : 'needs_review';
-
-            if ($status !== 'verified') {
-                $allVerified = false;
-            }
-
-            $documents[] = [
-                'type' => $type,
-                'filename' => $file->getClientOriginalName(),
-                'status' => $status,
-                'confidence' => $confidence,
-            ];
         }
 
-        $suggestions = array_filter([
-            'legal_name' => $request->input('legal_name') ?: null,
-            'registration_number' => $request->input('registration_number') ?: null,
-            'tax_id' => $request->input('tax_id') ?: null,
-            'legal_representative_name' => $request->input('legal_representative_name') ?: null,
+        $companyContext = array_filter([
+            'legal_name' => $request->input('legal_name'),
+            'registration_number' => $request->input('registration_number'),
+            'tax_id' => $request->input('tax_id'),
+            'legal_representative_name' => $request->input('legal_representative_name'),
+            'business_type' => $request->input('business_type'),
+            'country' => $request->input('country'),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'overall_status' => $allVerified ? 'compliant' : 'review_required',
-            'confidence' => $allVerified ? 96 : 78,
-            'documents' => $documents,
-            'suggestions' => $suggestions,
-            'message' => $allVerified
-                ? 'All documents passed AI compliance screening.'
-                : 'Documents received. Some items require manual review.',
-        ]);
+        try {
+            $result = $this->verificationService->verify($documents, $companyContext);
+
+            if (! ($result['success'] ?? false)) {
+                return response()->json($result, 503);
+            }
+
+            return response()->json($result);
+        } catch (\Throwable $exception) {
+            Log::error('Document AI verification failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'AI verification failed. Please try again or contact support.',
+                'error_code' => 'verification_failed',
+            ], 500);
+        }
     }
 }
