@@ -97,6 +97,8 @@
                         <tr class="border-b border-slate-200 bg-slate-50">
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Référence</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Bâtiment</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Catégorie</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Sous-catégorie</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Étage</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Surface</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Loyer</th>
@@ -117,6 +119,8 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-slate-600">{{ logement.batiment }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ logement.categorie }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ logement.sousCategorie }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ logement.etage }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ logement.surface }}m²</td>
                             <td class="px-6 py-4 font-semibold text-blue-600">{{ logement.loyer }}€</td>
@@ -161,31 +165,61 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div>
+                    <div class="animate-slide-in" style="animation-delay: 0ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Référence</label>
-                        <input v-model="formData.reference" type="text" placeholder="Ex: APT-A101" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <input v-model="formData.reference" type="text" placeholder="Ex: APT-A101" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                     </div>
-                    <div>
+                    <div class="animate-slide-in" style="animation-delay: 50ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Bâtiment</label>
-                        <input v-model="formData.batiment" type="text" placeholder="Ex: Immeuble A" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <select v-model="formData.batiment" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
+                            <option value="">Sélectionner un bâtiment</option>
+                            <option value="Immeuble A">Immeuble A</option>
+                            <option value="Immeuble B">Immeuble B</option>
+                            <option value="Immeuble C">Immeuble C</option>
+                            <option value="Immeuble D">Immeuble D</option>
+                        </select>
                     </div>
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="animate-slide-in" style="animation-delay: 100ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
+                        <select v-model="formData.categorie" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
+                            <option value="">Sélectionner une catégorie</option>
+                            <option value="Appartement">Appartement</option>
+                            <option value="Burreau">Burreau</option>
+                            <option value="Magasin">Magasin</option>
+                            <option value="Studio">Studio</option>
+                            <option value="Loft">Loft</option>
+                            <option value="Duplex">Duplex</option>
+                            <option value="Penthouse">Penthouse</option>
+                        </select>
+                    </div>
+                    <div class="animate-slide-in" style="animation-delay: 150ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sous-catégorie</label>
+                        <select v-model="formData.sousCategorie" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
+                            <option value="">Sélectionner une sous-catégorie</option>
+                            <option value="T1">T1 (Studio)</option>
+                            <option value="T2">T2</option>
+                            <option value="T3">T3</option>
+                            <option value="T4">T4</option>
+                            <option value="T5">T5+</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 animate-slide-in" style="animation-delay: 200ms">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Étage</label>
-                            <input v-model="formData.etage" type="number" placeholder="1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <input v-model="formData.etage" type="number" placeholder="1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Surface (m²)</label>
-                            <input v-model="formData.surface" type="number" placeholder="65" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <input v-model="formData.surface" type="number" placeholder="65" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Loyer (€)</label>
-                            <input v-model="formData.loyer" type="number" placeholder="800" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <input v-model="formData.loyer" type="number" placeholder="800" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                         </div>
                     </div>
-                    <div>
+                    <div class="animate-slide-in" style="animation-delay: 250ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Statut</label>
-                        <select v-model="formData.statut" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <select v-model="formData.statut" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
                             <option value="Libre">Libre</option>
                             <option value="Occupé">Occupé</option>
                             <option value="Réservé">Réservé</option>
@@ -254,12 +288,12 @@
 import { ref, computed } from 'vue';
 
 const logements = ref([
-    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', etage: 1, surface: 65, loyer: 800, statut: 'Libre' },
-    { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', etage: 1, surface: 75, loyer: 900, statut: 'Occupé' },
-    { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', etage: 2, surface: 85, loyer: 1000, statut: 'Occupé' },
-    { id: 4, reference: 'APT-B101', batiment: 'Immeuble B', etage: 1, surface: 95, loyer: 1200, statut: 'Libre' },
-    { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', etage: 1, surface: 80, loyer: 950, statut: 'Occupé' },
-    { id: 6, reference: 'APT-C101', batiment: 'Immeuble C', etage: 1, surface: 70, loyer: 850, statut: 'Réservé' },
+    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T2', etage: 1, surface: 65, loyer: 800, statut: 'Libre' },
+    { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 75, loyer: 900, statut: 'Occupé' },
+    { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', categorie: 'Duplex', sousCategorie: 'T4', etage: 2, surface: 85, loyer: 1000, statut: 'Occupé' },
+    { id: 4, reference: 'APT-B101', batiment: 'Immeuble B', categorie: 'Studio', sousCategorie: 'T1', etage: 1, surface: 95, loyer: 1200, statut: 'Libre' },
+    { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 80, loyer: 950, statut: 'Occupé' },
+    { id: 6, reference: 'APT-C101', batiment: 'Immeuble C', categorie: 'Loft', sousCategorie: 'T4', etage: 1, surface: 70, loyer: 850, statut: 'Réservé' },
 ]);
 
 const searchQuery = ref('');
@@ -290,6 +324,8 @@ const errorMessage = ref('');
 const formData = ref({
     reference: '',
     batiment: '',
+    categorie: '',
+    sousCategorie: '',
     etage: '',
     surface: '',
     loyer: '',
@@ -298,7 +334,7 @@ const formData = ref({
 
 const openAddModal = () => {
     editingLogement.value = null;
-    formData.value = { reference: '', batiment: '', etage: '', surface: '', loyer: '' };
+    formData.value = { reference: '', batiment: '', categorie: '', sousCategorie: '', etage: '', surface: '', loyer: '', statut: 'Libre' };
     showModal.value = true;
 };
 
@@ -380,8 +416,24 @@ const closeError = () => {
     }
 }
 
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.4s ease-out forwards;
     opacity: 0;
 }
 

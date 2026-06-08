@@ -147,7 +147,7 @@
 
         <!-- Add/Edit Modal -->
         <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold text-slate-900">{{ editingBatiment ? 'Modifier' : 'Ajouter' }} un Bâtiment</h2>
                     <button @click="closeModal" class="text-slate-400 hover:text-slate-600">
@@ -157,28 +157,79 @@
                     </button>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="animate-slide-in" style="animation-delay: 0ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Nom du Bâtiment</label>
-                        <input v-model="formData.nom" type="text" placeholder="Ex: Immeuble A" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                        <input v-model="formData.nom" type="text" placeholder="Ex: Immeuble A" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                     </div>
-                    <div>
+                    <div class="animate-slide-in" style="animation-delay: 50ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Propriétaire</label>
+                        <select v-model="formData.proprietaire" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
+                            <option value="">Sélectionner un propriétaire</option>
+                            <option value="Jean Dupont">Jean Dupont</option>
+                            <option value="Marie Martin">Marie Martin</option>
+                            <option value="Pierre Bernard">Pierre Bernard</option>
+                            <option value="Sophie Petit">Sophie Petit</option>
+                            <option value="Michel Leroy">Michel Leroy</option>
+                        </select>
+                    </div>
+                    <div class="animate-slide-in" style="animation-delay: 100ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Pays</label>
+                        <select v-model="formData.pays" @change="onCountryChange" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
+                            <option value="">Sélectionner un pays</option>
+                            <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
+                        </select>
+                    </div>
+                    <div class="animate-slide-in" style="animation-delay: 125ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Ville</label>
+                        <div class="relative">
+                            <select 
+                                v-model="formData.ville" 
+                                @change="onCityChange"
+                                :disabled="!formData.pays || loadingCities"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="">{{ loadingCities ? 'Chargement...' : formData.pays ? 'Sélectionner une ville' : 'Sélectionnez d\'abord un pays' }}</option>
+                                <option v-for="city in cities" :key="city.geonameId" :value="city.name">{{ city.name }} ({{ city.lat.toFixed(4) }}, {{ city.lng.toFixed(4) }})</option>
+                            </select>
+                            <button 
+                                @click="detectLocation" 
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                title="Utiliser ma position"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="animate-slide-in col-span-2" style="animation-delay: 150ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Quartier</label>
+                        <select 
+                            v-model="formData.quartier" 
+                            :disabled="!formData.ville || loadingNeighborhoods"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
+                        >
+                            <option value="">{{ loadingNeighborhoods ? 'Chargement...' : formData.ville ? 'Sélectionner un quartier' : 'Sélectionnez d\'abord une ville' }}</option>
+                            <option v-for="quartier in neighborhoods" :key="quartier.geonameId" :value="quartier.name">{{ quartier.name }} ({{ quartier.lat.toFixed(4) }}, {{ quartier.lng.toFixed(4) }})</option>
+                        </select>
+                    </div>
+                    <div class="animate-slide-in col-span-2" style="animation-delay: 175ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
-                        <input v-model="formData.adresse" type="text" placeholder="Ex: 123 Rue de Paris" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                        <input v-model="formData.adresse" type="text" placeholder="Ex: 123 Rue de Paris" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Étages</label>
-                            <input v-model="formData.etages" type="number" placeholder="5" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Appartements</label>
-                            <input v-model="formData.appartements" type="number" placeholder="25" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
-                        </div>
+                    <div class="animate-slide-in" style="animation-delay: 200ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Étages</label>
+                        <input v-model="formData.etages" type="number" placeholder="5" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
                     </div>
-                    <div>
+                    <div class="animate-slide-in" style="animation-delay: 225ms">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Appartements</label>
+                        <input v-model="formData.appartements" type="number" placeholder="25" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
+                    </div>
+                    <div class="animate-slide-in col-span-2" style="animation-delay: 250ms">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Statut</label>
-                        <select v-model="formData.statut" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                        <select v-model="formData.statut" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
                             <option value="Actif">Actif</option>
                             <option value="Maintenance">Maintenance</option>
                         </select>
@@ -280,15 +331,276 @@ const errorMessage = ref('');
 
 const formData = ref({
     nom: '',
+    proprietaire: '',
+    pays: '',
+    ville: '',
+    quartier: '',
     adresse: '',
     etages: '',
     appartements: '',
     statut: 'Actif',
 });
 
+// Countries list
+const countries = ref([
+    { code: 'FR', name: 'France' },
+    { code: 'US', name: 'États-Unis' },
+    { code: 'GB', name: 'Royaume-Uni' },
+    { code: 'DE', name: 'Allemagne' },
+    { code: 'ES', name: 'Espagne' },
+    { code: 'IT', name: 'Italie' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'AU', name: 'Australie' },
+    { code: 'JP', name: 'Japon' },
+    { code: 'BR', name: 'Brésil' },
+    { code: 'IN', name: 'Inde' },
+    { code: 'CN', name: 'Chine' },
+    { code: 'RU', name: 'Russie' },
+    { code: 'MX', name: 'Mexique' },
+    { code: 'KR', name: 'Corée du Sud' },
+    { code: 'NL', name: 'Pays-Bas' },
+    { code: 'CH', name: 'Suisse' },
+    { code: 'BE', name: 'Belgique' },
+    { code: 'AT', name: 'Autriche' },
+    { code: 'SE', name: 'Suède' },
+    { code: 'NO', name: 'Norvège' },
+    { code: 'DK', name: 'Danemark' },
+    { code: 'FI', name: 'Finlande' },
+    { code: 'PL', name: 'Pologne' },
+    { code: 'PT', name: 'Portugal' },
+    { code: 'GR', name: 'Grèce' },
+    { code: 'TR', name: 'Turquie' },
+    { code: 'ZA', name: 'Afrique du Sud' },
+    { code: 'EG', name: 'Égypte' },
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'KE', name: 'Kenya' },
+    { code: 'MA', name: 'Maroc' },
+    { code: 'DZ', name: 'Algérie' },
+    { code: 'TN', name: 'Tunisie' },
+    { code: 'CM', name: 'Cameroun' },
+    { code: 'CI', name: 'Côte d\'Ivoire' },
+    { code: 'SN', name: 'Sénégal' },
+    { code: 'MG', name: 'Madagascar' },
+    { code: 'CD', name: 'République Démocratique du Congo' },
+    { code: 'ET', name: 'Éthiopie' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'TZ', name: 'Tanzanie' },
+    { code: 'UG', name: 'Ouganda' },
+    { code: 'ZW', name: 'Zimbabwe' },
+    { code: 'ZM', name: 'Zambie' },
+    { code: 'AO', name: 'Angola' },
+    { code: 'MU', name: 'Maurice' },
+    { code: 'AR', name: 'Argentine' },
+    { code: 'CL', name: 'Chili' },
+    { code: 'CO', name: 'Colombie' },
+    { code: 'PE', name: 'Pérou' },
+    { code: 'VE', name: 'Venezuela' },
+    { code: 'EC', name: 'Équateur' },
+    { code: 'BO', name: 'Bolivie' },
+    { code: 'PY', name: 'Paraguay' },
+    { code: 'UY', name: 'Uruguay' },
+    { code: 'TH', name: 'Thaïlande' },
+    { code: 'VN', name: 'Vietnam' },
+    { code: 'MY', name: 'Malaisie' },
+    { code: 'SG', name: 'Singapour' },
+    { code: 'ID', name: 'Indonésie' },
+    { code: 'PH', name: 'Philippines' },
+    { code: 'HK', name: 'Hong Kong' },
+    { code: 'TW', name: 'Taïwan' },
+    { code: 'NZ', name: 'Nouvelle-Zélande' },
+    { code: 'IL', name: 'Israël' },
+    { code: 'AE', name: 'Émirats Arabes Unis' },
+    { code: 'SA', name: 'Arabie Saoudite' },
+    { code: 'QA', name: 'Qatar' },
+    { code: 'KW', name: 'Koweït' },
+    { code: 'BH', name: 'Bahreïn' },
+    { code: 'OM', name: 'Oman' },
+    { code: 'JO', name: 'Jordanie' },
+    { code: 'LB', name: 'Liban' },
+    { code: 'PK', name: 'Pakistan' },
+    { code: 'BD', name: 'Bangladesh' },
+    { code: 'LK', name: 'Sri Lanka' },
+    { code: 'NP', name: 'Népal' },
+    { code: 'MM', name: 'Myanmar' },
+    { code: 'KH', name: 'Cambodge' },
+    { code: 'LA', name: 'Laos' },
+    { code: 'UA', name: 'Ukraine' },
+    { code: 'CZ', name: 'République Tchèque' },
+    { code: 'HU', name: 'Hongrie' },
+    { code: 'RO', name: 'Roumanie' },
+    { code: 'BG', name: 'Bulgarie' },
+    { code: 'HR', name: 'Croatie' },
+    { code: 'SI', name: 'Slovénie' },
+    { code: 'SK', name: 'Slovaquie' },
+    { code: 'EE', name: 'Estonie' },
+    { code: 'LV', name: 'Lettonie' },
+    { code: 'LT', name: 'Lituanie' },
+    { code: 'IE', name: 'Irlande' },
+    { code: 'IS', name: 'Islande' },
+    { code: 'LU', name: 'Luxembourg' },
+    { code: 'MC', name: 'Monaco' },
+    { code: 'AD', name: 'Andorre' },
+    { code: 'SM', name: 'Saint-Marin' },
+    { code: 'VA', name: 'Vatican' },
+    { code: 'MT', name: 'Malte' },
+    { code: 'CY', name: 'Chypre' },
+    { code: 'AL', name: 'Albanie' },
+    { code: 'MK', name: 'Macédoine du Nord' },
+    { code: 'RS', name: 'Serbie' },
+    { code: 'BA', name: 'Bosnie-Herzégovine' },
+    { code: 'ME', name: 'Monténégro' },
+    { code: 'XK', name: 'Kosovo' },
+]);
+
+const cities = ref([]);
+const neighborhoods = ref([]);
+const loadingCities = ref(false);
+const loadingNeighborhoods = ref(false);
+
+// Load cities based on selected country
+const onCountryChange = async () => {
+    if (!formData.value.pays) {
+        cities.value = [];
+        neighborhoods.value = [];
+        formData.value.ville = '';
+        formData.value.quartier = '';
+        return;
+    }
+
+    loadingCities.value = true;
+    formData.value.ville = '';
+    formData.value.quartier = '';
+    neighborhoods.value = [];
+
+    try {
+        // Using GeoNames API (free, no auth required for basic usage)
+        const response = await fetch(
+            `http://api.geonames.org/searchJSON?country=${formData.value.pays}&featureClass=P&maxRows=100&username=demo`
+        );
+        const data = await response.json();
+        
+        if (data.geonames) {
+            cities.value = data.geonames.map(city => ({
+                geonameId: city.geonameId,
+                name: city.name,
+                lat: city.lat,
+                lng: city.lng,
+            })).sort((a, b) => a.name.localeCompare(b.name));
+        }
+    } catch (error) {
+        console.error('Error loading cities:', error);
+        errorMessage.value = 'Erreur lors du chargement des villes';
+        showError.value = true;
+    } finally {
+        loadingCities.value = false;
+    }
+};
+
+// Load neighborhoods based on selected city
+const onCityChange = async () => {
+    if (!formData.value.ville) {
+        neighborhoods.value = [];
+        formData.value.quartier = '';
+        return;
+    }
+
+    loadingNeighborhoods.value = true;
+    formData.value.quartier = '';
+
+    try {
+        // Get the selected city's coordinates
+        const selectedCity = cities.value.find(c => c.name === formData.value.ville);
+        if (!selectedCity) return;
+
+        // Using GeoNames API to find nearby places (neighborhoods/districts)
+        const response = await fetch(
+            `http://api.geonames.org/searchJSON?lat=${selectedCity.lat}&lng=${selectedCity.lng}&radius=10&featureCode=PPL&featureCode=PPLA&featureCode=PPLA2&featureCode=PPLA3&featureCode=PPLA4&maxRows=50&username=demo`
+        );
+        const data = await response.json();
+        
+        if (data.geonames) {
+            // Filter out the city itself and get nearby districts/neighborhoods
+            neighborhoods.value = data.geonames
+                .filter(place => place.name !== selectedCity.name)
+                .map(place => ({
+                    geonameId: place.geonameId,
+                    name: place.name,
+                    lat: parseFloat(place.lat),
+                    lng: parseFloat(place.lng),
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }
+    } catch (error) {
+        console.error('Error loading neighborhoods:', error);
+        errorMessage.value = 'Erreur lors du chargement des quartiers';
+        showError.value = true;
+    } finally {
+        loadingNeighborhoods.value = false;
+    }
+};
+
+// Detect user's location using browser geolocation
+const detectLocation = async () => {
+    if (!navigator.geolocation) {
+        errorMessage.value = 'La géolocalisation n\'est pas supportée par votre navigateur';
+        showError.value = true;
+        return;
+    }
+
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            });
+        });
+
+        const { latitude, longitude } = position.coords;
+
+        // Reverse geocode to get country and city
+        const response = await fetch(
+            `http://api.geonames.org/findNearbyPlaceNameJSON?lat=${latitude}&lng=${longitude}&username=demo`
+        );
+        const data = await response.json();
+
+        if (data.geonames && data.geonames.length > 0) {
+            const place = data.geonames[0];
+            
+            // Set country code
+            if (place.countryCode) {
+                formData.value.pays = place.countryCode;
+                await onCountryChange();
+                
+                // Set city if available
+                if (place.name) {
+                    formData.value.ville = place.name;
+                    await onCityChange();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error detecting location:', error);
+        errorMessage.value = 'Impossible de détecter votre position. Veuillez sélectionner manuellement.';
+        showError.value = true;
+    }
+};
+
 const openAddModal = () => {
     editingBatiment.value = null;
-    formData.value = { nom: '', adresse: '', etages: '', appartements: '' };
+    formData.value = { 
+        nom: '', 
+        proprietaire: '',
+        pays: '',
+        ville: '',
+        quartier: '',
+        adresse: '', 
+        etages: '', 
+        appartements: '',
+        statut: 'Actif'
+    };
+    cities.value = [];
+    neighborhoods.value = [];
     showModal.value = true;
 };
 
@@ -370,8 +682,24 @@ const closeError = () => {
     }
 }
 
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.4s ease-out forwards;
     opacity: 0;
 }
 
