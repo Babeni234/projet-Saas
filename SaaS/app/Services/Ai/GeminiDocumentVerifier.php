@@ -46,9 +46,10 @@ class GeminiDocumentVerifier
     /**
      * @param  array<string, UploadedFile>  $documents
      * @param  array<string, mixed>  $companyContext
+     * @param  array<string, string>  $ocrTexts
      * @return array<int, array<string, mixed>>
      */
-    public function verifyDocuments(array $documents, array $companyContext): array
+    public function verifyDocuments(array $documents, array $companyContext, array $ocrTexts = []): array
     {
         if (! $this->isConfigured()) {
             throw new RuntimeException('GEMINI_API_KEY is not configured.');
@@ -62,8 +63,10 @@ class GeminiDocumentVerifier
                 'label' => $field,
             ];
 
+            $ocrText = $ocrTexts[$field] ?? '';
+
             try {
-                $results[] = $this->verifySingleDocument($file, $definition, $companyContext);
+                $results[] = $this->verifySingleDocument($file, $definition, $companyContext, $ocrText);
             } catch (\Throwable $exception) {
                 Log::error('Gemini document verification failed', [
                     'document' => $field,
@@ -80,6 +83,7 @@ class GeminiDocumentVerifier
                     'issues' => ['AI analysis could not be completed for this document.'],
                     'summary' => 'Manual review required.',
                     'extracted_data' => [],
+                    'ocr_text' => $ocrText,
                     'provider' => 'gemini',
                 ];
             }
@@ -93,9 +97,9 @@ class GeminiDocumentVerifier
      * @param  array<string, mixed>  $companyContext
      * @return array<string, mixed>
      */
-    private function verifySingleDocument(UploadedFile $file, array $definition, array $companyContext): array
+    private function verifySingleDocument(UploadedFile $file, array $definition, array $companyContext, string $ocrText): array
     {
-        $prompt = $this->buildPrompt($definition['label'], $companyContext);
+        $prompt = $this->buildPrompt($definition['label'], $companyContext, $ocrText);
 
         $response = Gemini::generativeModel(model: config('ai.gemini_model'))
             ->withGenerationConfig(new GenerationConfig(
@@ -152,6 +156,7 @@ class GeminiDocumentVerifier
             'issues' => array_values($analysis['issues'] ?? []),
             'summary' => (string) ($analysis['summary'] ?? ''),
             'extracted_data' => (array) ($analysis['extracted_data'] ?? []),
+            'ocr_text' => $ocrText,
             'provider' => 'gemini',
         ];
     }
@@ -159,23 +164,28 @@ class GeminiDocumentVerifier
     /**
      * @param  array<string, mixed>  $companyContext
      */
-    private function buildPrompt(string $documentLabel, array $companyContext): string
+    private function buildPrompt(string $documentLabel, array $companyContext, string $ocrText): string
     {
         $context = json_encode(array_filter($companyContext), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return <<<PROMPT
-You are a KYB/KYC compliance expert specialized in Cameroonian business regulations and document verification. Your expertise covers: Cameroonian commercial law, OHADA (Organisation pour l'Harmonisation en Afrique du Droit des Affaires) regulations, Cameroon tax regulations (DGFiP), Ministry of Commerce requirements, and local business registration procedures (RCCM). Analyze the uploaded document for authenticity and legal validity in the Cameroonian business environment.
+You are a KYB/KYC compliance expert specialized in Cameroonian business regulations and document verification. Your expertise covers: Cameroonian commercial law, OHADA (Organisation pour l'Harmonisation en Afrique du Droit des Affaires) regulations, Cameroon tax regulations (DGFiP), Ministry of Commerce requirements, and local business registration procedures (RCCM). Analyze the uploaded document and its OCR text for authenticity and legal validity in the Cameroonian business environment.
 
 Expected document type: {$documentLabel}
 
 Company data submitted by the applicant (cross-check when possible):
 {$context}
 
+Text extracted from the document using Tesseract OCR:
+\"\"\"
+{$ocrText}
+\"\"\"
+
 Tasks:
 1. Confirm the document type matches what is expected for Cameroonian businesses.
-2. Assess authenticity (signatures, stamps, format, tampering indicators) according to Cameroonian standards.
-3. Detect inconsistencies with the submitted company data and Cameroonian business records.
-4. Extract key legal fields when readable, focusing on Cameroonian-specific fields like RCCM number, ACF, etc.
+2. Assess authenticity (signatures, stamps, format, spelling errors in OCR text, tampering indicators) according to Cameroonian standards.
+3. Detect inconsistencies between the OCR text, the image layout/quality, and the submitted company data.
+4. Extract key legal fields from the OCR text/document, focusing on Cameroonian-specific fields like RCCM number, ACF, etc.
 
 Return JSON only with:
 - status: "verified" if authentic and consistent with Cameroonian regulations, "needs_review" if uncertain, "rejected" if clearly invalid or fraudulent

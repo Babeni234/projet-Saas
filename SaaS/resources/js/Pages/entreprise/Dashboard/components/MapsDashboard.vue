@@ -904,10 +904,12 @@ const initGlobe = () => {
                 : 'https://unpkg.com/three-globe/example/img/night-sky.png'
             )
             .pointOfView({ lat: 20, lng: 0, altitude: 3 })
-            .controlsAutoRotate(settings.value.autoRotate)
-            .controlsAutoRotateSpeed(settings.value.rotationSpeed)
-            .controlsMinDistance(1.2) // Allow zoom even closer
-            .controlsMaxDistance(10); // Allow zoom further
+            .controls({ 
+                autoRotate: settings.value.autoRotate,
+                autoRotateSpeed: settings.value.rotationSpeed,
+                minDistance: 1.2,
+                maxDistance: 10
+            });
 
         console.log('Globe instance created with full config:', globeInstance);
         
