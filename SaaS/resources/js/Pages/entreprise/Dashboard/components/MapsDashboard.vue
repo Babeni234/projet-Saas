@@ -3,7 +3,10 @@
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-slate-800">Localisation Maps</h2>
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    Localisation Maps
+                    <span v-if="settings.autoRotate && settings.displayMode === 'globe'" class="inline-block animate-spin text-xl select-none origin-center" style="animation-duration: 4s;">🌐</span>
+                </h2>
                 <p class="text-slate-500">Carte interactive en temps réel des emplacements mondiaux</p>
             </div>
             <div class="flex items-center gap-3">
@@ -77,7 +80,10 @@
                         >
                             <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200" :class="settings.autoRotate ? 'translate-x-6' : 'translate-x-0.5'"></div>
                         </button>
-                        <span class="text-sm text-slate-600">{{ settings.autoRotate ? 'Activé' : 'Désactivé' }}</span>
+                        <span class="text-sm text-slate-600 flex items-center gap-2">
+                            {{ settings.autoRotate ? 'Activé' : 'Désactivé' }}
+                            <span v-if="settings.autoRotate && settings.displayMode === 'globe'" class="inline-block animate-spin text-sm select-none origin-center" style="animation-duration: 4s;">🌐</span>
+                        </span>
                     </div>
                 </div>
                 <div class="space-y-2">
@@ -135,14 +141,18 @@
         </div>
 
         <!-- Map Container -->
-        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden" style="height: 600px;">
-            <div ref="globeContainer" class="w-full h-full relative">
-                <!-- Globe will be rendered here -->
-                <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-slate-50">
-                    <div class="text-center">
-                        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p class="text-slate-600">Chargement de la carte...</p>
-                    </div>
+        <div 
+            :class="settings.nightMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'"
+            class="rounded-2xl shadow-lg shadow-slate-200/50 border overflow-hidden relative" 
+            style="height: 600px;"
+        >
+            <div ref="globeContainer" class="w-full h-full relative block" style="min-height: 600px; min-width: 100%;"></div>
+            
+            <!-- Loading overlay as a sibling, absolute to the parent container -->
+            <div v-if="loading" :class="settings.nightMode ? 'bg-slate-950' : 'bg-slate-50'" class="absolute inset-0 flex items-center justify-center z-50">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p :class="settings.nightMode ? 'text-slate-400' : 'text-slate-600'">Chargement de la carte...</p>
                 </div>
             </div>
         </div>
@@ -221,7 +231,7 @@ const selectedLocation = ref('');
 
 const settings = ref({
     displayMode: 'globe',
-    autoRotate: true,
+    autoRotate: false,
     rotationSpeed: 1,
     showPoints: true,
     showLines: true,
@@ -258,6 +268,28 @@ let mapInstance = null;
 let satelliteInstance = null;
 let mapMarkers = [];
 let mapPolylines = [];
+
+const cleanupGlobe = () => {
+    if (globeInstance) {
+        try {
+            // Stop autoRotate
+            const controls = globeInstance.controls();
+            if (controls) {
+                controls.autoRotate = false;
+            }
+            // Clear HTML elements data & other datasets to cleanly detach them from Three.js scene
+            globeInstance.htmlElementsData([]);
+            globeInstance.pointsData([]);
+            globeInstance.arcsData([]);
+            
+            // Destroy the globe.gl instance
+            globeInstance();
+        } catch (error) {
+            console.error('Error during globe cleanup:', error);
+        }
+        globeInstance = null;
+    }
+};
 
 const toggleSettings = () => {
     showSettings.value = !showSettings.value;
@@ -463,17 +495,14 @@ const initSatelliteMap = () => {
     }
 
     const container = globeContainer.value;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || container.offsetWidth || 800;
+    const height = container.clientHeight || container.offsetHeight || 600;
 
     console.log('Initializing satellite map with 3D buildings, dimensions:', width, height);
 
     try {
         // Clear existing instances
-        if (globeInstance) {
-            globeInstance();
-            globeInstance = null;
-        }
+        cleanupGlobe();
         if (mapInstance) {
             mapInstance.remove();
             mapInstance = null;
@@ -482,6 +511,9 @@ const initSatelliteMap = () => {
             satelliteInstance.remove();
             satelliteInstance = null;
         }
+
+        // Clear container DOM
+        container.innerHTML = '';
 
         // Initialize Mapbox GL JS map with satellite imagery and 3D buildings
         satelliteInstance = new mapboxgl.Map({
@@ -742,17 +774,21 @@ const initMap = () => {
     }
 
     const container = globeContainer.value;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || container.offsetWidth || 800;
+    const height = container.clientHeight || container.offsetHeight || 600;
 
     console.log('Initializing flat map with dimensions:', width, height);
 
     try {
         // Clear existing globe if any
-        if (globeInstance) {
-            globeInstance();
-            globeInstance = null;
+        cleanupGlobe();
+        if (satelliteInstance) {
+            satelliteInstance.remove();
+            satelliteInstance = null;
         }
+
+        // Clear container DOM
+        container.innerHTML = '';
 
         // Initialize Leaflet map
         mapInstance = L.map(container, {
@@ -877,8 +913,8 @@ const initGlobe = () => {
     }
 
     const container = globeContainer.value;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || container.offsetWidth || 800;
+    const height = container.clientHeight || container.offsetHeight || 600;
 
     console.log('Initializing globe with dimensions:', width, height);
     console.log('Container element:', container);
@@ -889,27 +925,36 @@ const initGlobe = () => {
             mapInstance.remove();
             mapInstance = null;
         }
+        if (satelliteInstance) {
+            satelliteInstance.remove();
+            satelliteInstance = null;
+        }
+        cleanupGlobe();
 
-        // Correct globe.gl API with full configuration
+        // Clear container DOM
+        container.innerHTML = '';
+
+        // Correct globe.gl API with full configuration and fallback Github URLs
         globeInstance = Globe()(container)
             .width(width)
             .height(height)
             .globeImageUrl(settings.value.nightMode 
-                ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
-                : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+                ? 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg'
+                : 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg'
             )
-            .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-            .backgroundImageUrl(settings.value.nightMode
-                ? 'https://unpkg.com/three-globe/example/img/night-sky.png'
-                : 'https://unpkg.com/three-globe/example/img/night-sky.png'
-            )
-            .pointOfView({ lat: 20, lng: 0, altitude: 3 })
-            .controls({ 
-                autoRotate: settings.value.autoRotate,
-                autoRotateSpeed: settings.value.rotationSpeed,
-                minDistance: 1.2,
-                maxDistance: 10
-            });
+            .bumpImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png')
+            .backgroundImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/night-sky.png')
+            .backgroundColor(settings.value.nightMode ? '#020617' : '#ffffff')
+            .pointOfView({ lat: 20, lng: 0, altitude: 3 });
+
+        // Configure OrbitControls directly
+        const controls = globeInstance.controls();
+        if (controls) {
+            controls.autoRotate = settings.value.autoRotate;
+            controls.autoRotateSpeed = settings.value.rotationSpeed;
+            controls.minDistance = 1.2;
+            controls.maxDistance = 10;
+        }
 
         console.log('Globe instance created with full config:', globeInstance);
         
@@ -945,10 +990,12 @@ watch(() => settings.value.displayMode, (newMode) => {
 // Watch for settings changes
 watch(() => settings.value.nightMode, () => {
     if (settings.value.displayMode === 'globe' && globeInstance) {
-        globeInstance.globeImageUrl(settings.value.nightMode 
-            ? 'https://unpkg.com/three-globe/example/img/earth-night.jpg'
-            : 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
-        );
+        globeInstance
+            .globeImageUrl(settings.value.nightMode 
+                ? 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg'
+                : 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg'
+            )
+            .backgroundColor(settings.value.nightMode ? '#020617' : '#ffffff');
         updateGlobeData();
     } else if (settings.value.displayMode === 'map' && mapInstance) {
         // Remove existing tile layer and add new one
@@ -971,15 +1018,21 @@ watch(() => settings.value.nightMode, () => {
     }
 });
 
-watch(() => settings.value.autoRotate, () => {
+watch(() => settings.value.autoRotate, (newVal) => {
     if (globeInstance) {
-        globeInstance.controlsAutoRotate(settings.value.autoRotate);
+        const controls = globeInstance.controls();
+        if (controls) {
+            controls.autoRotate = newVal;
+        }
     }
 });
 
-watch(() => settings.value.rotationSpeed, () => {
+watch(() => settings.value.rotationSpeed, (newVal) => {
     if (globeInstance) {
-        globeInstance.controlsAutoRotateSpeed(settings.value.rotationSpeed);
+        const controls = globeInstance.controls();
+        if (controls) {
+            controls.autoRotateSpeed = newVal;
+        }
     }
 });
 
@@ -1003,7 +1056,17 @@ watch(() => settings.value.showLines, () => {
     }
 });
 
+const handleResize = () => {
+    if (globeInstance && globeContainer.value && settings.value.displayMode === 'globe') {
+        const container = globeContainer.value;
+        const width = container.clientWidth || container.offsetWidth || 800;
+        const height = container.clientHeight || container.offsetHeight || 600;
+        globeInstance.width(width).height(height);
+    }
+};
+
 onMounted(() => {
+    window.addEventListener('resize', handleResize);
     // Initialize based on current display mode
     setTimeout(() => {
         if (settings.value.displayMode === 'globe') {
@@ -1017,11 +1080,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
     // Clean up all instances
-    if (globeInstance) {
-        globeInstance();
-        globeInstance = null;
-    }
+    cleanupGlobe();
     if (mapInstance) {
         mapInstance.remove();
         mapInstance = null;
