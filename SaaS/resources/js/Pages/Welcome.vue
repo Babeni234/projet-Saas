@@ -434,7 +434,7 @@ watch(locale, (val) => {
                             </Link>
                             <Link
                                 v-if="canRegister"
-                                :href="route('register')"
+                                :href="route('subscription')"
                                 class="group relative overflow-hidden rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/30"
                             >
                                 <span class="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 transition-opacity duration-300 group-hover:opacity-90" />
@@ -473,7 +473,7 @@ watch(locale, (val) => {
                             <Link :href="route('login')" class="text-sm font-medium text-slate-600">{{ t.nav.signIn }}</Link>
                             <Link
                                 v-if="canRegister"
-                                :href="route('register')"
+                                :href="route('subscription')"
                                 class="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-md"
                             >
                                 {{ t.nav.requestAccess }}
@@ -515,7 +515,7 @@ watch(locale, (val) => {
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <Link
                             v-if="canRegister"
-                            :href="route('register')"
+                            :href="route('subscription')"
                             class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/30"
                         >
                             <span class="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 transition-transform duration-300 group-hover:scale-105" />

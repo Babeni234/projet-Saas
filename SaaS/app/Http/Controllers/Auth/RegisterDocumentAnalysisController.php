@@ -24,9 +24,9 @@ class RegisterDocumentAnalysisController extends Controller
     public function analyze(Request $request): JsonResponse
     {
         $request->validate([
-            'certificate_of_incorporation' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
-            'tax_registration_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
-            'representative_id_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'certificate_of_incorporation' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'tax_registration_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'representative_id_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'proof_of_address' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'company_logo' => 'nullable|file|mimes:jpg,jpeg,png,svg,webp|max:2048',
             'legal_name' => 'nullable|string|max:255',
@@ -42,6 +42,15 @@ class RegisterDocumentAnalysisController extends Controller
             if ($request->hasFile($field)) {
                 $documents[$field] = $request->file($field);
             }
+        }
+
+        // Require at least one document for analysis
+        if (empty($documents)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one document is required for AI analysis.',
+                'error_code' => 'no_documents_provided',
+            ], 422);
         }
 
         $companyContext = array_filter([

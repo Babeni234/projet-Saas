@@ -6,11 +6,14 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { authTranslations, countryOptions } from '@/i18n/auth';
 import { useLocale } from '@/composables/useLocale';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 const { locale } = useLocale();
 const t = computed(() => authTranslations[locale.value].register);
+
+const page = usePage();
+const selectedPlan = computed(() => page.props.plan || null);
 
 const accountType = ref('individual');
 const logoPreview = ref(null);
@@ -20,6 +23,7 @@ const analysisError = ref('');
 const showAnalysisModal = ref(false);
 
 const form = useForm({
+    plan: selectedPlan.value,
     account_type: 'individual',
     name: '',
     email: '',
@@ -181,6 +185,19 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-slate-50
 
         <!-- Account type swipe toggle -->
         <div class="mb-6">
+            <!-- Selected plan display -->
+            <div v-if="selectedPlan" class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586l.707.707a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-sm font-semibold text-amber-900">Plan sélectionné: {{ selectedPlan }}</span>
+                    </div>
+                    <Link :href="route('subscription')" class="text-xs text-amber-700 hover:text-amber-800">Changer</Link>
+                </div>
+            </div>
+
             <div
                 class="relative grid grid-cols-2 rounded-xl border border-slate-200 bg-slate-100/80 p-1"
                 role="tablist"

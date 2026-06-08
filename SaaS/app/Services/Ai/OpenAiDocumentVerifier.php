@@ -38,11 +38,11 @@ class OpenAiDocumentVerifier
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a senior compliance officer. Review AI document verification results and produce a final assessment. Respond in JSON with keys: overall_recommendation (approve|review|reject), confidence (0-100), summary (string in English), risk_flags (array of strings), openai_verdict (string).',
+                        'content' => 'You are a senior compliance officer specialized in Cameroonian business regulations and document verification. Your expertise covers: Cameroonian commercial law, OHADA (Organisation pour l\'Harmonisation en Afrique du Droit des Affaires) regulations, Cameroon tax regulations (DGFiP), Ministry of Commerce requirements, and local business registration procedures (RCCM). Review AI document verification results and produce a final assessment. Respond in JSON with keys: overall_recommendation (approve|review|reject), confidence (0-100), summary (string in English), risk_flags (array of strings), openai_verdict (string).',
                     ],
                     [
                         'role' => 'user',
-                        'content' => "Review these document verification results and company context:\n\n{$payload}",
+                        'content' => "Review these document verification results and company context in the Cameroonian business environment:\n\n{$payload}",
                     ],
                 ],
             ]);

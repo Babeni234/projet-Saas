@@ -18,19 +18,23 @@ class GeminiDocumentVerifier
     private const DOCUMENT_DEFINITIONS = [
         'certificate_of_incorporation' => [
             'type' => 'certificate',
-            'label' => 'Certificate of incorporation (Kbis / CRN)',
+            'label' => 'Certificate of incorporation (RCCM / Kbis / CRN)',
+            'required' => false,
         ],
         'tax_registration_document' => [
             'type' => 'tax',
             'label' => 'Tax registration certificate (ACF / VAT / TIN)',
+            'required' => false,
         ],
         'representative_id_document' => [
             'type' => 'representative_id',
             'label' => 'Legal representative ID (CNI / Passport)',
+            'required' => false,
         ],
         'proof_of_address' => [
             'type' => 'proof_of_address',
             'label' => 'Proof of registered address',
+            'required' => false,
         ],
     ];
 
@@ -160,7 +164,7 @@ class GeminiDocumentVerifier
         $context = json_encode(array_filter($companyContext), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return <<<PROMPT
-You are a KYB/KYC compliance expert. Analyze the uploaded document for authenticity and legal validity.
+You are a KYB/KYC compliance expert specialized in Cameroonian business regulations and document verification. Your expertise covers: Cameroonian commercial law, OHADA (Organisation pour l'Harmonisation en Afrique du Droit des Affaires) regulations, Cameroon tax regulations (DGFiP), Ministry of Commerce requirements, and local business registration procedures (RCCM). Analyze the uploaded document for authenticity and legal validity in the Cameroonian business environment.
 
 Expected document type: {$documentLabel}
 
@@ -168,13 +172,13 @@ Company data submitted by the applicant (cross-check when possible):
 {$context}
 
 Tasks:
-1. Confirm the document type matches what is expected.
-2. Assess authenticity (signatures, stamps, format, tampering indicators).
-3. Detect inconsistencies with the submitted company data.
-4. Extract key legal fields when readable.
+1. Confirm the document type matches what is expected for Cameroonian businesses.
+2. Assess authenticity (signatures, stamps, format, tampering indicators) according to Cameroonian standards.
+3. Detect inconsistencies with the submitted company data and Cameroonian business records.
+4. Extract key legal fields when readable, focusing on Cameroonian-specific fields like RCCM number, ACF, etc.
 
 Return JSON only with:
-- status: "verified" if authentic and consistent, "needs_review" if uncertain, "rejected" if clearly invalid or fraudulent
+- status: "verified" if authentic and consistent with Cameroonian regulations, "needs_review" if uncertain, "rejected" if clearly invalid or fraudulent
 - confidence: 0-100
 - authenticity_score: 0-100
 - is_authentic: boolean

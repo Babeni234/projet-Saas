@@ -56,14 +56,55 @@
                     </svg>
                     <span class="hidden sm:inline">Actualiser</span>
                 </button>
+
+                <!-- Profile button -->
+                <Link
+                    :href="route('profile.edit')"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                    <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span class="hidden sm:inline">Profil</span>
+                </Link>
+
+                <!-- Logout button -->
+                <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-100"
+                    @click="handleLogout"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17l5-5-5-5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Logout loading popup -->
+        <div v-if="logoutLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div class="rounded-2xl bg-white px-8 py-6 shadow-2xl">
+                <div class="flex items-center gap-3">
+                    <svg class="h-6 w-6 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span class="text-lg font-medium text-slate-900">Déconnexion en cours...</span>
+                </div>
             </div>
         </div>
     </header>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import { RouterLink, useRoute } from 'vue-router';
+import { router, usePage } from '@inertiajs/vue3';
 import { useEnterpriseLayout } from '../../composables/useEnterpriseLayout';
 import { usePageTitle } from '../../composables/useEnterpriseLayout';
 
@@ -73,9 +114,21 @@ defineProps({
 
 defineEmits(['refresh']);
 
-const route = useRoute();
+const page = usePage();
+const vueRoute = useRoute();
 const pageTitle = usePageTitle();
 const { toggleMobileSidebar } = useEnterpriseLayout();
+
+const logoutLoading = ref(false);
+
+const handleLogout = () => {
+    logoutLoading.value = true;
+    router.post(window.route('logout'), {}, {
+        onFinish: () => {
+            logoutLoading.value = false;
+        },
+    });
+};
 
 const dateRange = computed(() => {
     const now = new Date();
@@ -85,5 +138,5 @@ const dateRange = computed(() => {
     return `${first.toLocaleDateString('fr-FR', opts)} – ${last.toLocaleDateString('fr-FR', opts)}`;
 });
 
-const breadcrumbs = computed(() => route.meta?.breadcrumbs || []);
+const breadcrumbs = computed(() => vueRoute.meta?.breadcrumbs || []);
 </script>
