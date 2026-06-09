@@ -251,14 +251,23 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const locataires = ref([
+const defaultLocataires = [
     { id: 1, nom: 'Jean Dupont', email: 'jean.dupont@email.com', telephone: '06 12 34 56 78', logement: 'APT-A101', garantie: 2400, statut: 'Actif' },
     { id: 2, nom: 'Marie Martin', email: 'marie.martin@email.com', telephone: '06 98 76 54 32', logement: 'APT-A201', garantie: 3000, statut: 'Actif' },
     { id: 3, nom: 'Pierre Bernard', email: 'pierre.bernard@email.com', telephone: '06 11 22 33 44', logement: 'APT-B101', garantie: 3600, statut: 'Suspendu' },
     { id: 4, nom: 'Sophie Richard', email: 'sophie.richard@email.com', telephone: '06 44 55 66 77', logement: 'APT-C101', garantie: 2400, statut: 'Actif' },
     { id: 5, nom: 'Lucas Petit', email: 'lucas.petit@email.com', telephone: '06 55 66 77 88', logement: 'APT-B102', garantie: 2800, statut: 'Actif' },
     { id: 6, nom: 'Emma Leroy', email: 'emma.leroy@email.com', telephone: '06 77 88 99 00', logement: 'APT-A102', garantie: 3200, statut: 'Inactif' },
-]);
+];
+
+const locataires = ref(JSON.parse(localStorage.getItem('immobilier_locataires')) || defaultLocataires);
+if (!localStorage.getItem('immobilier_locataires')) {
+    localStorage.setItem('immobilier_locataires', JSON.stringify(defaultLocataires));
+}
+
+const saveLocatairesToStorage = () => {
+    localStorage.setItem('immobilier_locataires', JSON.stringify(locataires.value));
+};
 
 const searchQuery = ref('');
 
@@ -297,7 +306,7 @@ const formData = ref({
 
 const openAddModal = () => {
     editingLocataire.value = null;
-    formData.value = { nom: '', email: '', telephone: '', logement: '', garantie: '' };
+    formData.value = { nom: '', email: '', telephone: '', logement: '', garantie: '', statut: 'Actif' };
     showModal.value = true;
 };
 
@@ -344,6 +353,7 @@ const saveLocataire = () => {
         successMessage.value = 'Locataire ajouté avec succès';
     }
 
+    saveLocatairesToStorage();
     closeModal();
     showSuccess.value = true;
 };
@@ -353,6 +363,7 @@ const confirmDelete = () => {
     if (index !== -1) {
         locataires.value.splice(index, 1);
         successMessage.value = 'Locataire supprimé avec succès';
+        saveLocatairesToStorage();
         closeDeleteModal();
         showSuccess.value = true;
     }

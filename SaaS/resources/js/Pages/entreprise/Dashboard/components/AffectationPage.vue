@@ -579,7 +579,7 @@
 import { ref, computed } from 'vue';
 
 // Mock listings (similar to LogementsPage)
-const initialLogements = [
+const defaultLogements = [
     { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement', standardRent: 800, statut: 'Occupé' },
     { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement', standardRent: 900, statut: 'Libre' },
     { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', categorie: 'Duplex', standardRent: 1000, statut: 'Occupé' },
@@ -590,30 +590,60 @@ const initialLogements = [
     { id: 8, reference: 'APT-D101', batiment: 'Immeuble D', categorie: 'Bureau', standardRent: 1200, statut: 'Libre' },
 ];
 
-const logements = ref(initialLogements);
+const getStoredLogements = () => {
+    const stored = localStorage.getItem('immobilier_logements');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.map(l => ({
+            ...l,
+            standardRent: l.loyer || l.standardRent || 800
+        }));
+    }
+    return defaultLogements;
+};
 
-// Mock tenants list (Locataires)
-const tenantsList = ref([
-    'Jean Dupont',
-    'Marie Martin',
-    'Pierre Bernard',
-    'Sophie Richard',
-    'Lucas Petit',
-    'Emma Leroy',
-    'Alain Delon',
-    'Chantal Jouanno'
-]);
+const logements = ref(getStoredLogements());
+
+const getStoredLocatairesNames = () => {
+    const stored = localStorage.getItem('immobilier_locataires');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.map(l => l.nom);
+    }
+    return [
+        'Jean Dupont',
+        'Marie Martin',
+        'Pierre Bernard',
+        'Sophie Richard',
+        'Lucas Petit',
+        'Emma Leroy',
+        'Alain Delon',
+        'Chantal Jouanno'
+    ];
+};
+
+const tenantsList = ref(getStoredLocatairesNames());
 
 // Mock buildings list
 const buildingsList = ref(['Immeuble A', 'Immeuble B', 'Immeuble C', 'Immeuble D']);
 
 // Mock Active/Historical Assignments
-const affectations = ref([
+const initialAffectations = [
     { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', locataire: 'Jean Dupont', loyer: 800, caution: 1600, dateEffet: '2026-01-01', duree: '1 an', typeBail: 'Habitation', cyclePaiement: 'Mensuel', statut: 'Actif' },
     { id: 2, reference: 'APT-A201', batiment: 'Immeuble A', locataire: 'Marie Martin', loyer: 1000, caution: 2000, dateEffet: '2026-02-15', duree: '3 ans', typeBail: 'Commercial', cyclePaiement: 'Trimestriel', statut: 'Actif' },
     { id: 3, reference: 'APT-B102', batiment: 'Immeuble B', locataire: 'Lucas Petit', loyer: 950, caution: 1900, dateEffet: '2026-03-01', duree: 'Indéterminée', typeBail: 'Habitation', cyclePaiement: 'Mensuel', statut: 'Actif' },
     { id: 4, reference: 'APT-C101', batiment: 'Immeuble C', locataire: 'Sophie Richard', loyer: 850, caution: 1700, dateEffet: '2026-04-10', duree: '1 an', typeBail: 'Professionnel', cyclePaiement: 'Mensuel', statut: 'Actif' },
-]);
+];
+
+const affectations = ref(JSON.parse(localStorage.getItem('immobilier_affectations')) || initialAffectations);
+if (!localStorage.getItem('immobilier_affectations')) {
+    localStorage.setItem('immobilier_affectations', JSON.stringify(initialAffectations));
+}
+
+const saveAllToStorage = () => {
+    localStorage.setItem('immobilier_affectations', JSON.stringify(affectations.value));
+    localStorage.setItem('immobilier_logements', JSON.stringify(logements.value));
+};
 
 const searchQuery = ref('');
 const filterBuilding = ref('');
@@ -710,7 +740,7 @@ const saveAffectation = () => {
         return;
     }
 
-    // Add assignment
+    // Add assignment - status defaults to 'En attente'
     const newAff = {
         id: affectations.value.length + 1,
         reference: data.reference,
@@ -722,17 +752,37 @@ const saveAffectation = () => {
         duree: data.duree,
         typeBail: data.typeBail,
         cyclePaiement: data.cyclePaiement,
-        statut: 'Actif',
+        statut: 'En attente',
     };
     affectations.value.unshift(newAff);
 
-    // Set logement status to occupied
+    // Set logement status to Réservé
     const logIdx = logements.value.findIndex(l => l.reference === data.reference);
     if (logIdx !== -1) {
-        logements.value[logIdx].statut = 'Occupé';
+        logements.value[logIdx].statut = 'Réservé';
     }
 
-    successMessage.value = "Logement affecté avec succès";
+    saveAllToStorage();
+
+    // Force locataire list update in storage if it doesn't contain this locataire
+    const locStore = localStorage.getItem('immobilier_locataires');
+    if (locStore) {
+        const parsedLoc = JSON.parse(locStore);
+        if (!parsedLoc.some(l => l.nom.toLowerCase() === data.locataire.toLowerCase())) {
+            parsedLoc.push({
+                id: Math.max(...parsedLoc.map(l => l.id), 0) + 1,
+                nom: data.locataire,
+                email: data.locataire.toLowerCase().replace(/\s+/g, '.') + '@email.com',
+                telephone: '06 00 00 00 00',
+                logement: data.reference,
+                garantie: Number(data.caution || 0),
+                statut: 'Inactif'
+            });
+            localStorage.setItem('immobilier_locataires', JSON.stringify(parsedLoc));
+        }
+    }
+
+    successMessage.value = "Logement affecté avec succès (Bail en attente)";
     showModal.value = false;
     showSuccess.value = true;
 };
@@ -762,6 +812,19 @@ const confirmTerminateLease = () => {
         logements.value[logIdx].statut = 'Libre';
     }
 
+    // Set locataire status to Inactif in storage
+    const locStore = localStorage.getItem('immobilier_locataires');
+    if (locStore) {
+        const parsedLoc = JSON.parse(locStore);
+        const locIdx = parsedLoc.findIndex(l => l.nom.toLowerCase() === terminatingAff.value.locataire.toLowerCase());
+        if (locIdx !== -1) {
+            parsedLoc[locIdx].statut = 'Inactif';
+            parsedLoc[locIdx].logement = 'Aucun';
+            localStorage.setItem('immobilier_locataires', JSON.stringify(parsedLoc));
+        }
+    }
+
+    saveAllToStorage();
     closeTerminateModal();
     successMessage.value = "Le bail a été clôturé";
     showSuccess.value = true;

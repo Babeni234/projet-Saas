@@ -24,6 +24,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Contract AI generation route
+    Route::post('/api/ai/generate-contract', [\App\Http\Controllers\ContractGenerationController::class, 'generate'])->name('ai.generate-contract');
+
     // Agencies routes
     Route::prefix('agencies')->name('agencies.')->group(function () {
         Route::get('/', [AgencyController::class, 'index'])->name('index');

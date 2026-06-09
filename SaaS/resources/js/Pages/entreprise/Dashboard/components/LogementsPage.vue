@@ -287,14 +287,23 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const logements = ref([
+const defaultLogements = [
     { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T2', etage: 1, surface: 65, loyer: 800, statut: 'Libre' },
     { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 75, loyer: 900, statut: 'Occupé' },
     { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', categorie: 'Duplex', sousCategorie: 'T4', etage: 2, surface: 85, loyer: 1000, statut: 'Occupé' },
     { id: 4, reference: 'APT-B101', batiment: 'Immeuble B', categorie: 'Studio', sousCategorie: 'T1', etage: 1, surface: 95, loyer: 1200, statut: 'Libre' },
     { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 80, loyer: 950, statut: 'Occupé' },
     { id: 6, reference: 'APT-C101', batiment: 'Immeuble C', categorie: 'Loft', sousCategorie: 'T4', etage: 1, surface: 70, loyer: 850, statut: 'Réservé' },
-]);
+];
+
+const logements = ref(JSON.parse(localStorage.getItem('immobilier_logements')) || defaultLogements);
+if (!localStorage.getItem('immobilier_logements')) {
+    localStorage.setItem('immobilier_logements', JSON.stringify(defaultLogements));
+}
+
+const saveLogementsToStorage = () => {
+    localStorage.setItem('immobilier_logements', JSON.stringify(logements.value));
+};
 
 const searchQuery = ref('');
 
@@ -381,6 +390,7 @@ const saveLogement = () => {
         successMessage.value = 'Logement ajouté avec succès';
     }
 
+    saveLogementsToStorage();
     closeModal();
     showSuccess.value = true;
 };
@@ -390,6 +400,7 @@ const confirmDelete = () => {
     if (index !== -1) {
         logements.value.splice(index, 1);
         successMessage.value = 'Logement supprimé avec succès';
+        saveLogementsToStorage();
         closeDeleteModal();
         showSuccess.value = true;
     }
