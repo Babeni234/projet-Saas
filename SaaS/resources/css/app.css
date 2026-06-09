@@ -1,3 +1,854 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+.imo-dashboard {
+        --imo-primary: 5 150 105;
+        --imo-primary-dark: 4 120 87;
+        --imo-surface: 248 250 252;
+        --imo-card: 255 255 255;
+        --imo-border: 226 232 240;
+        --imo-text: 15 23 42;
+        --imo-muted: 100 116 139;
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
+        background-color: #f8fafc;
+        background-image:
+            radial-gradient(ellipse 90% 60% at 0% 0%, rgb(16 185 129 / 0.08), transparent 50%),
+            radial-gradient(ellipse 70% 50% at 100% 0%, rgb(59 130 246 / 0.06), transparent 45%),
+            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .imo-page {
+        @apply space-y-8;
+        animation: imoFadeIn 0.45s ease-out;
+    }
+
+    .imo-stats-grid {
+        @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+    }
+
+    .imo-stats-grid-5 {
+        @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5;
+    }
+
+    .imo-section {
+        @apply space-y-4;
+    }
+
+    .imo-section-header {
+        @apply mb-4 flex flex-wrap items-center justify-between gap-3;
+    }
+
+    .imo-section-heading {
+        @apply text-lg font-bold tracking-tight text-slate-900 sm:text-xl;
+    }
+
+    .imo-link {
+        @apply text-sm font-semibold text-emerald-600 transition hover:text-emerald-800 hover:underline underline-offset-2;
+    }
+
+    .imo-panel {
+        @apply imo-card p-5 sm:p-6;
+    }
+
+    .imo-panel-compact {
+        @apply imo-card p-4;
+    }
+
+    .imo-empty-state {
+        @apply rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/80 p-10 text-center;
+    }
+
+    .imo-empty-state p {
+        @apply text-sm font-medium text-slate-500;
+    }
+
+    .imo-content-grid {
+        @apply grid gap-6 lg:grid-cols-3;
+    }
+
+    .imo-content-main {
+        @apply space-y-6 lg:col-span-2;
+    }
+
+    .imo-content-aside {
+        @apply space-y-6;
+    }
+
+    .imo-quick-grid {
+        @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-4;
+    }
+
+    .imo-quick-grid-6 {
+        @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6;
+    }
+
+    .imo-badge-certified {
+        @apply hidden items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold sm:inline-flex;
+        background: linear-gradient(135deg, rgb(209 250 229), rgb(204 251 241));
+        color: rgb(6 95 70);
+        box-shadow: 0 1px 3px rgb(5 150 105 / 0.2);
+    }
+
+    .imo-hero-bailleur {
+        @apply imo-card relative overflow-hidden p-5 sm:p-6;
+        background: linear-gradient(135deg, rgb(236 253 245) 0%, rgb(240 253 250) 40%, rgb(255 255 255) 100%);
+        border-color: rgb(167 243 208 / 0.7);
+    }
+
+    .imo-hero-bailleur::after {
+        content: '';
+        @apply pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-30;
+        background: radial-gradient(circle, rgb(16 185 129 / 0.4), transparent 70%);
+    }
+
+    .imo-metric-pill {
+        @apply rounded-2xl bg-white/80 px-5 py-3 text-center shadow-sm ring-1 ring-emerald-100/80 backdrop-blur-sm;
+    }
+
+    .imo-metric-pill-value {
+        @apply text-2xl font-extrabold tracking-tight text-slate-900;
+    }
+
+    .imo-metric-pill-label {
+        @apply mt-0.5 text-xs font-medium text-slate-500;
+    }
+
+    .imo-chart-panel {
+        @apply imo-panel;
+    }
+
+    .imo-chart-inner {
+        @apply flex h-44 items-end justify-between gap-2 px-2 pt-4;
+    }
+
+    .imo-chart-col {
+        @apply flex flex-1 flex-col items-center gap-2;
+    }
+
+    .imo-btn-dark {
+        @apply w-full rounded-xl py-2.5 text-sm font-bold text-white shadow-md transition;
+        background: linear-gradient(135deg, rgb(15 23 42), rgb(30 41 59));
+    }
+
+    .imo-btn-dark:hover {
+        @apply -translate-y-0.5 shadow-lg;
+        background: linear-gradient(135deg, rgb(30 41 59), rgb(51 65 85));
+    }
+
+    .imo-btn-dashed {
+        @apply mt-2 w-full rounded-xl border-2 border-dashed border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700;
+    }
+
+    .imo-notification-btn {
+        @apply relative rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
+    }
+
+    .imo-notification-dot {
+        @apply absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white;
+    }
+
+    .imo-stat-trend-up {
+        @apply text-emerald-600;
+    }
+
+    .imo-stat-trend-down {
+        @apply text-red-500;
+    }
+
+    .imo-stat-trend-neutral {
+        @apply text-slate-500;
+    }
+
+    .imo-list-divider > * + * {
+        @apply border-t border-slate-100 pt-4 mt-4;
+    }
+
+    .imo-sidebar {
+        @apply border-r border-slate-200/80 bg-white shadow-xl shadow-slate-200/40;
+    }
+
+    .imo-sidebar-brand {
+        @apply flex h-16 items-center gap-3 border-b border-slate-100 px-5;
+        background: linear-gradient(135deg, rgb(var(--imo-primary) / 0.08) 0%, transparent 60%);
+    }
+
+    .imo-logo {
+        @apply flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg;
+        background: linear-gradient(135deg, rgb(5 150 105), rgb(13 148 136));
+        box-shadow: 0 4px 14px rgb(5 150 105 / 0.35);
+    }
+
+    .imo-nav-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200;
+    }
+
+    .imo-nav-link:hover {
+        @apply bg-emerald-50 text-emerald-800 translate-x-0.5;
+    }
+
+    .imo-nav-link-active {
+        @apply bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 shadow-sm;
+        box-shadow: inset 3px 0 0 0 rgb(5 150 105);
+    }
+
+    .imo-header {
+        @apply sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl;
+    }
+
+    .imo-main {
+        @apply p-4 sm:p-6 lg:p-8;
+    }
+
+    .imo-btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200;
+        background: linear-gradient(135deg, rgb(5 150 105), rgb(13 148 136));
+        box-shadow: 0 4px 14px rgb(5 150 105 / 0.3);
+    }
+
+    .imo-btn-primary:hover {
+        @apply -translate-y-0.5 shadow-lg;
+        box-shadow: 0 6px 20px rgb(5 150 105 / 0.4);
+    }
+
+    .imo-btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50;
+    }
+
+    .imo-card {
+        @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm;
+        box-shadow: 0 1px 3px rgb(15 23 42 / 0.04), 0 4px 12px rgb(15 23 42 / 0.03);
+    }
+
+    .imo-card-hover {
+        @apply imo-card transition-all duration-300 hover:border-emerald-200/60 hover:shadow-md hover:-translate-y-0.5;
+    }
+
+    .imo-stat-card {
+        @apply imo-card-hover relative overflow-hidden p-5;
+    }
+
+    .imo-stat-card::before {
+        content: '';
+        @apply absolute right-0 top-0 h-24 w-24 rounded-full opacity-40;
+        background: radial-gradient(circle, rgb(16 185 129 / 0.15) 0%, transparent 70%);
+        transform: translate(30%, -30%);
+    }
+
+    .imo-section-title {
+        @apply text-xs font-bold uppercase tracking-widest text-slate-400;
+    }
+
+    .imo-badge {
+        @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    }
+
+    .imo-badge-success {
+        @apply imo-badge bg-emerald-100 text-emerald-800;
+    }
+
+    .imo-badge-warning {
+        @apply imo-badge bg-amber-100 text-amber-800;
+    }
+
+    .imo-badge-info {
+        @apply imo-badge bg-blue-100 text-blue-800;
+    }
+
+    .imo-badge-muted {
+        @apply imo-badge bg-slate-100 text-slate-600;
+    }
+
+    .imo-quick-action {
+        @apply imo-card-hover flex flex-col p-4 cursor-pointer;
+    }
+
+    .imo-quick-action-primary {
+        @apply border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-teal-50/80;
+    }
+
+    .imo-quick-action-warning {
+        @apply border-amber-200/80 bg-gradient-to-br from-amber-50 to-orange-50/50;
+    }
+
+    .imo-quick-icon {
+        @apply flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-100 transition group-hover:ring-emerald-200 group-hover:shadow;
+    }
+
+    .imo-property-card {
+        @apply imo-card-hover flex gap-4 p-4 sm:p-5;
+    }
+
+    .imo-property-thumb {
+        @apply relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 sm:h-24 sm:w-32;
+    }
+
+    .imo-table-wrap {
+        @apply imo-card overflow-hidden;
+    }
+
+    .imo-table thead {
+        @apply border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100/50;
+    }
+
+    .imo-table th {
+        @apply px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-500;
+    }
+
+    .imo-table tbody tr {
+        @apply border-b border-slate-50 transition hover:bg-emerald-50/30 last:border-0;
+    }
+
+    .imo-table td {
+        @apply px-4 py-3.5;
+    }
+
+    .imo-activity-item {
+        @apply flex gap-3 rounded-xl p-3 transition hover:bg-slate-50;
+    }
+
+    .imo-activity-icon {
+        @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700;
+    }
+
+    .imo-chart-bar {
+        @apply w-full max-w-[52px] rounded-t-lg transition-all duration-500;
+        background: linear-gradient(to top, rgb(5 150 105), rgb(52 211 153));
+        min-height: 8px;
+    }
+
+    .imo-chart-bar:hover {
+        filter: brightness(1.05);
+        transform: scaleY(1.02);
+        transform-origin: bottom;
+    }
+
+    .imo-alert-warning {
+        @apply flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900 shadow-sm;
+    }
+
+    .imo-alert-info {
+        @apply flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm text-blue-900 shadow-sm;
+    }
+
+    .imo-role-switch {
+        @apply flex-1 rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-all duration-200;
+    }
+
+    .imo-role-switch-active {
+        @apply border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm;
+    }
+
+    .imo-role-switch-inactive {
+        @apply border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50;
+    }
+
+    .imo-tenant-row {
+        @apply flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3 transition hover:border-emerald-100 hover:bg-emerald-50/30;
+    }
+
+    .imo-avatar {
+        @apply flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold;
+    }
+
+    .imo-avatar-user {
+        @apply imo-avatar bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-800 ring-2 ring-white;
+    }
+
+    .imo-avatar-tenant {
+        @apply imo-avatar bg-gradient-to-br from-violet-100 to-purple-100 text-violet-800;
+    }
+
+    .imo-text-gradient {
+        @apply bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent;
+    }
+
+    .imo-stats-grid-4 {
+        @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+    }
+
+    .imo-stat-icon {
+        @apply flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm;
+    }
+
+    .imo-stat-icon-emerald {
+        @apply imo-stat-icon bg-gradient-to-br from-emerald-500 to-teal-500;
+    }
+
+    .imo-stat-icon-blue {
+        @apply imo-stat-icon bg-gradient-to-br from-blue-500 to-indigo-500;
+    }
+
+    .imo-stat-icon-violet {
+        @apply imo-stat-icon bg-gradient-to-br from-violet-500 to-purple-500;
+    }
+
+    .imo-stat-icon-amber {
+        @apply imo-stat-icon bg-gradient-to-br from-amber-500 to-orange-500;
+    }
+
+    .imo-stat-icon-slate {
+        @apply imo-stat-icon bg-gradient-to-br from-slate-500 to-slate-600;
+    }
+
+    .imo-stat-value {
+        @apply mt-1 text-2xl font-extrabold tracking-tight text-slate-900;
+    }
+
+    .imo-stat-value-warning {
+        @apply imo-stat-value text-red-600;
+    }
+
+    .imo-stat-label {
+        @apply text-sm font-medium text-slate-500;
+    }
+
+    .imo-stat-change {
+        @apply mt-1 inline-flex items-center gap-1 text-xs font-semibold;
+    }
+
+    .imo-stat-change-positive {
+        @apply imo-stat-change text-emerald-600;
+    }
+
+    .imo-stat-change-negative {
+        @apply imo-stat-change text-red-500;
+    }
+
+    .imo-stat-change-neutral {
+        @apply imo-stat-change text-slate-500;
+    }
+
+    .imo-filters-bar {
+        @apply flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm;
+    }
+
+    .imo-search-input {
+        @apply w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 transition focus:border-emerald-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .imo-search-input-sm {
+        @apply w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 transition focus:border-emerald-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .imo-form-select-sm {
+        @apply rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .imo-btn-icon {
+        @apply flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
+    }
+
+    .imo-btn-icon-active {
+        @apply imo-btn-icon bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800;
+    }
+
+    .imo-btn-icon-secondary {
+        @apply imo-btn-icon border border-slate-200;
+    }
+
+    .imo-btn-icon-only {
+        @apply h-9 w-9 p-0;
+    }
+
+    .imo-btn-sm {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200;
+    }
+
+    .imo-btn-sm-primary {
+        @apply imo-btn-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:from-emerald-700 hover:to-teal-700;
+    }
+
+    .imo-btn-sm-secondary {
+        @apply imo-btn-sm border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50;
+    }
+
+    .imo-btn-sm-danger {
+        @apply imo-btn-sm bg-red-50 text-red-700 hover:bg-red-100;
+    }
+
+    .imo-empty-state-lg {
+        @apply rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/80 p-16 text-center;
+    }
+
+    .imo-empty-state-lg h3 {
+        @apply text-lg font-semibold text-slate-900;
+    }
+
+    .imo-empty-state-lg p {
+        @apply mt-2 text-sm text-slate-500;
+    }
+
+    .imo-favorite-card {
+        @apply imo-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    }
+
+    .imo-badge-active {
+        @apply bg-emerald-500 text-white;
+    }
+
+    .imo-badge-rented {
+        @apply bg-blue-500 text-white;
+    }
+
+    .imo-badge-pending {
+        @apply bg-amber-500 text-white;
+    }
+
+    .imo-badge-inactive {
+        @apply bg-slate-400 text-white;
+    }
+
+    .imo-message-input {
+        @apply w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition focus:border-emerald-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .imo-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200;
+    }
+
+    .imo-form-grid {
+        @apply grid gap-4 sm:grid-cols-2;
+    }
+
+    .imo-form-group {
+        @apply space-y-1.5;
+    }
+
+    .imo-form-label {
+        @apply block text-sm font-semibold text-slate-700;
+    }
+
+    .imo-form-input {
+        @apply block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .imo-form-select {
+        @apply imo-form-input appearance-none cursor-pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+
+    .imo-form-textarea {
+        @apply imo-form-input min-h-[100px] resize-y;
+    }
+
+    .imo-form-error {
+        @apply text-xs font-medium text-red-600;
+    }
+
+    .imo-toggle {
+        @apply relative inline-flex cursor-pointer items-center;
+    }
+
+    .imo-toggle-input {
+        @apply sr-only;
+    }
+
+    .imo-toggle-input + .imo-toggle-label {
+        @apply relative inline-flex h-6 w-11 cursor-pointer rounded-full border-2 border-transparent bg-slate-200 transition-colors duration-200;
+    }
+
+    .imo-toggle-input:checked + .imo-toggle-label {
+        @apply bg-emerald-500;
+    }
+
+    .imo-toggle-input + .imo-toggle-label::after {
+        content: '';
+        @apply absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200;
+    }
+
+    .imo-toggle-input:checked + .imo-toggle-label::after {
+        transform: translateX(1.25rem);
+    }
+
+    .imo-btn-icon-sm {
+        @apply flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700;
+    }
+
+    .imo-chart-bar-secondary {
+        @apply imo-chart-bar;
+        background: linear-gradient(to top, rgb(99 102 241), rgb(129 140 248));
+    }
+
+    .imo-checkbox-card {
+        @apply relative flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/30;
+    }
+
+    .imo-checkbox-card input:checked + .imo-checkbox-indicator {
+        @apply border-emerald-500 bg-emerald-500;
+    }
+
+    .imo-checkbox-card input:checked + .imo-checkbox-indicator::after {
+        content: '';
+        @apply absolute inset-0 m-auto h-2 w-3;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .imo-checkbox-indicator {
+        @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition;
+    }
+
+    .imo-checkbox-card input {
+        @apply sr-only;
+    }
+
+    .imo-checkbox-card:has(input:checked) {
+        @apply border-emerald-300 bg-emerald-50/50;
+    }
+
+    .imo-upload-zone {
+        @apply flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-8 text-center transition hover:border-emerald-300 hover:bg-emerald-50/30;
+    }
+
+    .imo-upload-label {
+        @apply mt-3 text-sm font-semibold text-slate-700;
+    }
+
+    /* Dark mode overrides */
+    .dark .imo-dashboard {
+        --imo-surface: 15 23 42;
+        --imo-card: 30 41 59;
+        --imo-border: 51 65 85;
+        --imo-text: 248 250 252;
+        --imo-muted: 148 163 184;
+        background-color: #0f172a;
+        background-image: radial-gradient(ellipse 90% 60% at 0% 0%, rgb(16 185 129 / 0.05), transparent 50%),
+                          radial-gradient(ellipse 70% 50% at 100% 0%, rgb(59 130 246 / 0.04), transparent 45%),
+                          linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .dark .imo-sidebar {
+        @apply border-slate-800 bg-slate-900;
+    }
+
+    .dark .imo-sidebar-brand {
+        @apply border-slate-800 bg-slate-900;
+    }
+
+    .dark .imo-sidebar-brand .text-slate-900 {
+        @apply text-white;
+    }
+
+    .dark .imo-nav-link {
+        @apply text-slate-300 hover:bg-slate-800 hover:text-white;
+    }
+
+    .dark .imo-nav-link-active {
+        @apply bg-emerald-900/40 text-emerald-300;
+    }
+
+    .dark .imo-header {
+        @apply border-slate-800 bg-slate-900/80;
+    }
+
+    .dark .imo-header h1.text-lg,
+    .dark .imo-section-heading {
+        @apply text-white;
+    }
+
+    .dark .imo-stat-card {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-stat-label {
+        @apply text-slate-400;
+    }
+
+    .dark .imo-stat-value {
+        @apply text-white;
+    }
+
+    .dark .imo-property-card {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-property-card .text-slate-900 {
+        @apply text-white;
+    }
+
+    .dark .imo-filters-bar {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-search-input,
+    .dark .imo-form-input,
+    .dark .imo-form-select,
+    .dark .imo-form-select-sm,
+    .dark .imo-form-textarea {
+        @apply border-slate-600 bg-slate-700 text-white placeholder-slate-400;
+    }
+
+    .dark .imo-table {
+        @apply border-slate-700;
+    }
+
+    .dark .imo-table th {
+        @apply bg-slate-800 text-slate-300;
+    }
+
+    .dark .imo-table td {
+        @apply border-slate-700 text-slate-300;
+    }
+
+    .dark .imo-table tbody tr:hover {
+        @apply bg-slate-700/50;
+    }
+
+    .dark .imo-panel {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-panel .text-slate-900 {
+        @apply text-white;
+    }
+
+    .dark .imo-panel-compact {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-card {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-badge-active {
+        @apply bg-emerald-900/60 text-emerald-300;
+    }
+
+    .dark .imo-badge-rented {
+        @apply bg-blue-900/60 text-blue-300;
+    }
+
+    .dark .imo-badge-pending {
+        @apply bg-amber-900/60 text-amber-300;
+    }
+
+    .dark .imo-badge-inactive {
+        @apply bg-slate-700 text-slate-400;
+    }
+
+    .dark .imo-btn-secondary {
+        @apply border-slate-600 bg-slate-700 text-slate-200 hover:bg-slate-600;
+    }
+
+    .dark .imo-btn-dashed {
+        @apply border-slate-600 text-slate-300 hover:border-slate-500 hover:bg-slate-700;
+    }
+
+    .dark .imo-btn-icon {
+        @apply text-slate-300 hover:bg-slate-700;
+    }
+
+    .dark .imo-btn-icon-active {
+        @apply bg-emerald-900/60 text-emerald-300;
+    }
+
+    .dark .imo-message-input {
+        @apply border-slate-600 bg-slate-700 text-white placeholder-slate-400;
+    }
+
+    .dark .imo-upload-zone {
+        @apply border-slate-600 bg-slate-800/50 hover:border-emerald-600;
+    }
+
+    .dark .imo-chart-panel {
+        @apply bg-slate-800;
+    }
+
+    .dark .imo-chart-bar {
+        @apply bg-emerald-600;
+    }
+
+    .dark .imo-chart-bar-secondary {
+        @apply bg-blue-600;
+    }
+
+    .dark .imo-empty-state-lg p,
+    .dark .imo-empty-state p {
+        @apply text-slate-400;
+    }
+
+    .dark .imo-empty-state-lg h3 {
+        @apply text-white;
+    }
+
+    .dark .imo-hero-bailleur {
+        @apply border-slate-700 bg-slate-800;
+    }
+
+    .dark .imo-hero-bailleur .text-slate-900 {
+        @apply text-white;
+    }
+
+    .dark .imo-section-title {
+        @apply text-slate-300;
+    }
+
+    .dark .imo-notification-btn {
+        @apply text-slate-300 hover:bg-slate-700;
+    }
+
+    .dark .imo-role-switch {
+        @apply text-slate-300;
+    }
+
+    .dark .imo-role-switch-inactive {
+        @apply border-slate-600 bg-slate-700 text-slate-300;
+    }
+
+    .dark .imo-avatar-user {
+        @apply bg-slate-700 text-slate-200;
+    }
+
+    .dark .imo-checkbox-card {
+        @apply border-slate-600 bg-slate-800;
+    }
+
+    .dark .imo-checkbox-card:has(input:checked) {
+        @apply border-emerald-600 bg-emerald-900/30;
+    }
+
+    .dark .imo-favorite-card {
+        @apply border-slate-700;
+    }
+
+    .dark .imo-quick-grid,
+    .dark .imo-quick-grid-6 {
+        @apply [&>.imo-panel-card]:border-slate-700 [&>.imo-panel-card]:bg-slate-800;
+    }
+
+    .dark .imo-list-divider li {
+        @apply border-slate-700;
+    }
+
+    .dark .imo-alert-warning {
+        @apply border-amber-700 bg-amber-900/30 text-amber-200;
+    }
+
+    .dark .imo-alert-info {
+        @apply border-blue-700 bg-blue-900/30 text-blue-200;
+    }
+
+    .dark .imo-text-gradient {
+        @apply bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent;
+    }
+}
+
+@keyframes imoFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

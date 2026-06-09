@@ -34,6 +34,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'immo' => [
+                'particulierUrl' => route('immo.particulier', absolute: false),
+                'bailleurUrl' => route('immo.bailleur', absolute: false),
+            ],
         ];
     }
 }
