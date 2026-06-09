@@ -605,6 +605,24 @@ const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return '0 €';
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 };
+
+// Global refresh listener for agent actions
+import { onMounted, onUnmounted } from 'vue';
+
+const loadLogementsFromStorage = () => {
+    const stored = localStorage.getItem('immobilier_logements');
+    if (stored) {
+        logements.value = JSON.parse(stored);
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('enterprise:refresh', loadLogementsFromStorage);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('enterprise:refresh', loadLogementsFromStorage);
+});
 </script>
 
 <style scoped>

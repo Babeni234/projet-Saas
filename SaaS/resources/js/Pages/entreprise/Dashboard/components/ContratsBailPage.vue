@@ -756,7 +756,7 @@ const generateWithIA = async () => {
             instructions: formData.value.instructions,
         };
         
-        const response = await axios.post('/api/ai/generate-contract', payload);
+        const response = await axios.post(route('ai.generate-contract'), payload);
         if (response.data && response.data.success) {
             editorContent.value = response.data.contract;
             showEditorModal.value = true;
@@ -955,6 +955,24 @@ const formatDate = (dateStr) => {
 const getTodayDate = () => {
     return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
 };
+
+// Global refresh listener for agent actions
+import { onMounted, onUnmounted } from 'vue';
+
+const loadContratsFromStorage = () => {
+    const stored = localStorage.getItem('immobilier_contrats');
+    if (stored) {
+        contrats.value = JSON.parse(stored);
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('enterprise:refresh', loadContratsFromStorage);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('enterprise:refresh', loadContratsFromStorage);
+});
 </script>
 
 <style scoped>

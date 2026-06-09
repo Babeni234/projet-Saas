@@ -902,7 +902,7 @@ const generateContractWithIA = async () => {
             instructions: selectedRenouvellementInstructions.value || '',
         };
 
-        const response = await axios.post('/api/ai/generate-contract', payload);
+        const response = await axios.post(route('ai.generate-contract'), payload);
         if (response.data && response.data.success) {
             editorContent.value = response.data.contract;
             showContractOptionsModal.value = false;

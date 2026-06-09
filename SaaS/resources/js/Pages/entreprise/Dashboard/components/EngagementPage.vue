@@ -637,7 +637,7 @@ const generateWithIA = async () => {
             instructions: formData.value.instructions,
         };
 
-        const response = await axios.post('/api/ai/generate-engagement', payload);
+        const response = await axios.post(route('ai.generate-engagement'), payload);
         if (response.data && response.data.success) {
             editorContent.value = response.data.engagement;
             showEditorModal.value = true;

@@ -190,7 +190,7 @@ const sendMessage = async () => {
     };
 
     try {
-        const response = await axios.post('/api/ai/assistant', {
+        const response = await axios.post(route('ai.assistant'), {
             message: text,
             context: context
         });
@@ -210,6 +210,20 @@ const sendMessage = async () => {
                 setTimeout(() => {
                     router.push(targetPath);
                 }, 1000);
+            }
+
+            // Check for action command: [ACTION: ACTION_TYPE: {JSON}]
+            const actionRegex = /\[ACTION:\s*([A-Z_]+):\s*({[\s\S]*?})\]/i;
+            const actionMatch = reply.match(actionRegex);
+            if (actionMatch) {
+                const actionType = actionMatch[1].toUpperCase();
+                try {
+                    const actionData = JSON.parse(actionMatch[2]);
+                    reply = reply.replace(actionRegex, '').trim();
+                    executeLocalAction(actionType, actionData);
+                } catch (err) {
+                    console.error("Failed to parse action JSON:", err);
+                }
             }
 
             // Convert raw newlines to paragraph tags if not structured HTML already
@@ -237,6 +251,120 @@ const sendMessage = async () => {
         loading.value = false;
         scrollToBottom();
     }
+};
+
+const executeLocalAction = (type, data) => {
+    try {
+        if (type === 'ADD_LOCATAIRE') {
+            const list = getLocalJSON('immobilier_locataires');
+            const newId = Math.max(...list.map(l => l.id), 0) + 1;
+            const newItem = {
+                id: newId,
+                nom: data.nom || 'Sans nom',
+                email: data.email || `${data.nom.toLowerCase().replace(/\s+/g, '')}@example.com`,
+                telephone: data.telephone || '06 00 00 00 00',
+                logement: data.logement || 'Aucun',
+                garantie: Number(data.garantie || 0),
+                statut: data.statut || 'Actif'
+            };
+            list.push(newItem);
+            localStorage.setItem('immobilier_locataires', JSON.stringify(list));
+            triggerGlobalRefresh("Locataire '" + newItem.nom + "' ajouté avec succès.");
+        }
+        else if (type === 'DELETE_LOCATAIRE') {
+            let list = getLocalJSON('immobilier_locataires');
+            const targetNom = data.nom.toLowerCase();
+            list = list.filter(l => l.nom.toLowerCase() !== targetNom);
+            localStorage.setItem('immobilier_locataires', JSON.stringify(list));
+            triggerGlobalRefresh("Locataire '" + data.nom + "' supprimé avec succès.");
+        }
+        else if (type === 'ADD_LOGEMENT') {
+            const list = getLocalJSON('immobilier_logements');
+            const newId = Math.max(...list.map(l => l.id), 0) + 1;
+            const newItem = {
+                id: newId,
+                reference: (data.reference || `UNIT-${newId}`).toUpperCase(),
+                batiment: data.batiment || 'Sans bâtiment',
+                categorie: data.categorie || 'Appartement',
+                sousCategorie: data.sousCategorie || 'T2',
+                etage: Number(data.etage || 1),
+                surface: Number(data.surface || 50),
+                loyer: Number(data.loyer || 600),
+                statut: data.statut || 'Libre'
+            };
+            list.unshift(newItem);
+            localStorage.setItem('immobilier_logements', JSON.stringify(list));
+            triggerGlobalRefresh("Logement '" + newItem.reference + "' ajouté avec succès.");
+        }
+        else if (type === 'DELETE_LOGEMENT') {
+            let list = getLocalJSON('immobilier_logements');
+            const targetRef = data.reference.toUpperCase();
+            list = list.filter(l => l.reference.toUpperCase() !== targetRef);
+            localStorage.setItem('immobilier_logements', JSON.stringify(list));
+            triggerGlobalRefresh("Logement '" + data.reference + "' supprimé avec succès.");
+        }
+        else if (type === 'ADD_BATIMENT') {
+            const list = getLocalJSON('immobilier_batiments');
+            const newId = Math.max(...list.map(b => b.id), 0) + 1;
+            const newItem = {
+                id: newId,
+                nom: data.nom || 'Sans nom',
+                ville: data.ville || 'Non spécifiée'
+            };
+            list.push(newItem);
+            localStorage.setItem('immobilier_batiments', JSON.stringify(list));
+            triggerGlobalRefresh("Bâtiment '" + newItem.nom + "' ajouté avec succès.");
+        }
+        else if (type === 'DELETE_BATIMENT') {
+            let list = getLocalJSON('immobilier_batiments');
+            const targetNom = data.nom.toLowerCase();
+            list = list.filter(b => b.nom.toLowerCase() !== targetNom);
+            localStorage.setItem('immobilier_batiments', JSON.stringify(list));
+            triggerGlobalRefresh("Bâtiment '" + data.nom + "' supprimé avec succès.");
+        }
+        else if (type === 'ADD_CONTRAT') {
+            const list = getLocalJSON('immobilier_contrats');
+            const newId = Math.max(...list.map(c => c.id), 0) + 1;
+            const newItem = {
+                id: newId,
+                numero: data.numero || `CTR-${String(newId).padStart(3, '0')}`,
+                locataire: data.locataire || 'Inconnu',
+                loyer: Number(data.loyer || 500),
+                caution: Number(data.caution || 1000),
+                debut: data.debut || new Date().toISOString().split('T')[0],
+                fin: data.fin || new Date().toISOString().split('T')[0],
+                statut: data.statut || 'Actif',
+                reference: data.reference || 'Aucun',
+                batiment: data.batiment || 'Aucun',
+                duree: data.duree || '1 an',
+                typeBail: data.typeBail || 'Habitation',
+                content: data.content || '<h3>CONTRAT DE BAIL</h3>'
+            };
+            list.unshift(newItem);
+            localStorage.setItem('immobilier_contrats', JSON.stringify(list));
+            triggerGlobalRefresh("Contrat '" + newItem.numero + "' créé avec succès.");
+        }
+        else if (type === 'DELETE_CONTRAT') {
+            let list = getLocalJSON('immobilier_contrats');
+            const targetNum = data.numero.toUpperCase();
+            list = list.filter(c => c.numero.toUpperCase() !== targetNum);
+            localStorage.setItem('immobilier_contrats', JSON.stringify(list));
+            triggerGlobalRefresh("Contrat '" + data.numero + "' supprimé avec succès.");
+        }
+    } catch (err) {
+        console.error("Failed to execute local storage agent action", err);
+    }
+};
+
+const triggerGlobalRefresh = (successMsg) => {
+    // 1. Dispatch custom event
+    window.dispatchEvent(new CustomEvent('enterprise:refresh'));
+    
+    // 2. Play a brief notify/toast inside the chat
+    messages.value.push({
+        role: 'assistant',
+        content: `<p class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">⚡ Action Agent : ${successMsg}</p>`
+    });
 };
 
 const getLocalJSON = (key) => {
