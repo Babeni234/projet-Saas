@@ -144,6 +144,32 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/factures',
+        name: 'immobilier.factures',
+        component: () => import('../Pages/entreprise/Dashboard/components/FacturationLoyerPage.vue'),
+        meta: {
+            title: 'Facturation des loyers',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Facturation', to: { name: 'immobilier.factures' } },
+            ],
+        },
+    },
+    {
+        path: '/dashboard/immobilier/paiements',
+        name: 'immobilier.paiements',
+        component: () => import('../Pages/entreprise/Dashboard/components/PaiementsLoyerPage.vue'),
+        meta: {
+            title: 'Paiements de loyer',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Paiements', to: { name: 'immobilier.paiements' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/agencies',
         name: 'dashboard.agencies',
         component: () => import('../Pages/entreprise/Dashboard/pages/AgenciesManagement.vue'),

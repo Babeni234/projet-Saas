@@ -24,8 +24,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Contract AI generation route
+    // Contract AI generation routes
     Route::post('/api/ai/generate-contract', [\App\Http\Controllers\ContractGenerationController::class, 'generate'])->name('ai.generate-contract');
+    Route::post('/api/ai/generate-engagement', [\App\Http\Controllers\ContractGenerationController::class, 'generateEngagement'])->name('ai.generate-engagement');
 
     // Agencies routes
     Route::prefix('agencies')->name('agencies.')->group(function () {
@@ -60,6 +61,11 @@ Route::middleware('auth')->group(function () {
                 'initialRoute' => 'immobilier/logements'
             ]);
         })->name('logements');
+        Route::get('/affectations', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/affectations'
+            ]);
+        })->name('affectations');
         Route::get('/contrats', function () {
             return Inertia::render('entreprise/Dashboard/Dashboard', [
                 'initialRoute' => 'immobilier/contrats'
@@ -70,6 +76,36 @@ Route::middleware('auth')->group(function () {
                 'initialRoute' => 'immobilier/locataires'
             ]);
         })->name('locataires');
+        Route::get('/factures', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/factures'
+            ]);
+        })->name('factures');
+        Route::get('/paiements', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/paiements'
+            ]);
+        })->name('paiements');
+        Route::get('/renouvellements', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/renouvellements'
+            ]);
+        })->name('renouvellements');
+        Route::get('/engagements', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/engagements'
+            ]);
+        })->name('engagements');
+        Route::get('/etats-des-lieux', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/etats-des-lieux'
+            ]);
+        })->name('etats-des-lieux');
+        Route::get('/historique', function () {
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/historique'
+            ]);
+        })->name('historique');
     });
 });
 

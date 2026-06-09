@@ -32,6 +32,8 @@ export const navigation = [
                     { name: 'immobilier.affectations', label: 'Affectation des logements' },
                     { name: 'immobilier.contrats', label: 'Contrats de bail' },
                     { name: 'immobilier.locataires', label: 'Locataires' },
+                    { name: 'immobilier.factures', label: 'Facturation' },
+                    { name: 'immobilier.paiements', label: 'Paiements de loyer' },
                     { name: 'immobilier.renouvellements', label: 'Renouvellements' },
                     { name: 'immobilier.engagements', label: 'Engagements' },
                     { name: 'immobilier.etats-des-lieux', label: 'États des lieux' },
@@ -84,6 +86,8 @@ export const navigation = [
 export const routeTitles = {
     'dashboard.master': 'Tableau de bord',
     'immobilier.index': 'Gestion immobilière',
+    'immobilier.factures': 'Facturation des loyers',
+    'immobilier.paiements': 'Paiements de loyer',
     'dashboard.agencies': 'Gestion des agences',
     'dashboard.agency.create': 'Nouvelle agence',
     'dashboard.agency.show': "Détail de l'agence",

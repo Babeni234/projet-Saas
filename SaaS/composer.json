@@ -10,6 +10,7 @@
         "algolia/algoliasearch-client-php": "^4.43",
         "aws/aws-sdk-php": "^3.384",
         "aws/aws-sdk-php-laravel": "^3.11",
+        "echolabsdev/prism": "*",
         "google-gemini-php/laravel": "^2.0",
         "guzzlehttp/guzzle": "^7.10",
         "inertiajs/inertia-laravel": "^2.0",
