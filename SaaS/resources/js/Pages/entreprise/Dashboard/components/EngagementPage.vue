@@ -205,23 +205,22 @@
 
         <!-- Add/Edit Modal (Canevas & Prompts options) -->
         <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-purple-50/20 rounded-3xl shadow-2xl max-w-xl w-full p-8 border border-purple-100/50 relative overflow-hidden animate-scale-up">
-                <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-purple-400/10 to-pink-500/10 rounded-full blur-3xl"></div>
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
                 
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-650 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <div class="w-11 h-11 rounded-2xl bg-purple-600 flex items-center justify-center shadow-md">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
-                            <h2 class="text-2xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                            <h2 class="text-2xl font-extrabold text-slate-800">
                                 {{ editingEngagement ? 'Modifier' : 'Créer un' }} Engagement
                             </h2>
                         </div>
                         <button @click="closeModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -320,7 +319,7 @@
                         </button>
                         <button 
                             @click="generateWithIA" 
-                            class="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-bold shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/35 transition-all flex items-center justify-center gap-2 text-xs"
+                            class="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 text-xs"
                             :disabled="isGenerating"
                         >
                             <span v-if="isGenerating" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

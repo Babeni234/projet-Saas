@@ -145,57 +145,58 @@
 
         <!-- Add Modal (Record Payment) -->
         <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-emerald-100/50 relative overflow-hidden animate-scale-up">
-                <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-emerald-400/10 to-teal-500/10 rounded-full blur-3xl"></div>
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
                 
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-650 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-md">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h2 class="text-2xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Enregistrer un Règlement</h2>
+                            <h2 class="text-2xl font-extrabold text-slate-800">Enregistrer un Règlement</h2>
                         </div>
                         <button @click="closeModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
 
                     <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
-                        <!-- Locataire selection -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire Actif *</label>
-                            <select 
-                                v-model="selectedLocataireName" 
-                                @change="handleLocataireChange"
-                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                            >
-                                <option value="" disabled>Sélectionner le locataire émetteur</option>
-                                <option v-for="c in contratsActifs" :key="c.id" :value="c.locataire">
-                                    {{ c.locataire }} (Bail {{ c.numero }} - {{ c.reference }})
-                                </option>
-                            </select>
-                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Locataire selection -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire Actif *</label>
+                                <select 
+                                    v-model="selectedLocataireName" 
+                                    @change="handleLocataireChange"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                >
+                                    <option value="" disabled>Sélectionner le locataire émetteur</option>
+                                    <option v-for="c in contratsActifs" :key="c.id" :value="c.locataire">
+                                        {{ c.locataire }} (Bail {{ c.numero }} - {{ c.reference }})
+                                    </option>
+                                </select>
+                            </div>
 
-                        <!-- Unpaid invoices dropdown -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Facture à imputer *</label>
-                            <select 
-                                v-model="selectedInvoiceId" 
-                                @change="handleInvoiceChange"
-                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                :disabled="!selectedLocataireName"
-                            >
-                                <option value="" disabled>Choisir la facture correspondante</option>
-                                <option v-for="f in unpaidInvoicesFiltered" :key="f.id" :value="f.id">
-                                    {{ f.numero }} - Période: {{ formatPeriod(f.periode) }} (Reste dû: {{ f.total - f.montantPaye }}€)
-                                </option>
-                                <option v-if="unpaidInvoicesFiltered.length === 0 && selectedLocataireName" value="" disabled>Aucune facture impayée pour ce locataire.</option>
-                            </select>
+                            <!-- Unpaid invoices dropdown -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Facture à imputer *</label>
+                                <select 
+                                    v-model="selectedInvoiceId" 
+                                    @change="handleInvoiceChange"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                    :disabled="!selectedLocataireName"
+                                >
+                                    <option value="" disabled>Choisir la facture correspondante</option>
+                                    <option v-for="f in unpaidInvoicesFiltered" :key="f.id" :value="f.id">
+                                        {{ f.numero }} - Période: {{ formatPeriod(f.periode) }} (Reste dû: {{ f.total - f.montantPaye }}€)
+                                    </option>
+                                    <option v-if="unpaidInvoicesFiltered.length === 0 && selectedLocataireName" value="" disabled>Aucune facture impayée pour ce locataire.</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -217,23 +218,25 @@
                             </div>
                         </div>
 
-                        <!-- Amount -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant Réglé (€) *</label>
-                            <input type="number" v-model.number="formData.montant" placeholder="Ex: 1250" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-850 text-sm shadow-sm" />
-                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Amount -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant Réglé (€) *</label>
+                                <input type="number" v-model.number="formData.montant" placeholder="Ex: 1250" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-855 text-sm shadow-sm" />
+                            </div>
 
-                        <!-- Receipt transaction reference -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Référence Transaction</label>
-                            <input type="text" v-model="formData.referenceTx" placeholder="Ex: TX-9082348" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-850 text-sm shadow-sm" />
+                            <!-- Receipt transaction reference -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Référence Transaction</label>
+                                <input type="text" v-model="formData.referenceTx" placeholder="Ex: TX-9082348" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-semibold text-slate-850 text-sm shadow-sm" />
+                            </div>
                         </div>
                     </div>
 
                     <!-- Footers -->
                     <div class="flex gap-4 mt-8 border-t border-slate-100 pt-5">
                         <button @click="closeModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
-                        <button @click="savePayment" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 transition-all text-xs">Valider l'Encaissement</button>
+                        <button @click="savePayment" class="flex-1 px-5 py-3.5 bg-emerald-600 hover:bg-emerald-750 text-white rounded-xl font-bold shadow-md transition-all text-xs">Valider l'Encaissement</button>
                     </div>
                 </div>
             </div>
