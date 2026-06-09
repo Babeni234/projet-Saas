@@ -46,19 +46,29 @@ Route::middleware('auth')->group(function () {
     // Immobilier routes
     Route::prefix('immobilier')->name('immobilier.')->group(function () {
         Route::get('/', function () {
-            return Inertia::render('entreprise/Dashboard/Dashboard');
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier'
+            ]);
         })->name('index');
         Route::get('/batiments', function () {
-            return Inertia::render('entreprise/Dashboard/components/BatimentsPage');
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/batiments'
+            ]);
         })->name('batiments');
         Route::get('/logements', function () {
-            return Inertia::render('entreprise/Dashboard/components/LogementsPage');
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/logements'
+            ]);
         })->name('logements');
         Route::get('/contrats', function () {
-            return Inertia::render('entreprise/Dashboard/components/ContratsBailPage');
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/contrats'
+            ]);
         })->name('contrats');
         Route::get('/locataires', function () {
-            return Inertia::render('entreprise/Dashboard/components/LocatairesPage');
+            return Inertia::render('entreprise/Dashboard/Dashboard', [
+                'initialRoute' => 'immobilier/locataires'
+            ]);
         })->name('locataires');
     });
 });

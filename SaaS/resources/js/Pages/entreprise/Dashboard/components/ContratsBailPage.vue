@@ -482,7 +482,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import axios from 'axios';
 import tinymce from 'tinymce';
 
@@ -556,6 +556,22 @@ const showModal = ref(false);
 const showDeleteModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
+
+// Auto-hide error modal after 5 seconds
+let errorTimeout = null;
+watch(showError, (newVal) => {
+    if (newVal) {
+        if (errorTimeout) clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+            showError.value = false;
+        }, 5000);
+    } else {
+        if (errorTimeout) {
+            clearTimeout(errorTimeout);
+            errorTimeout = null;
+        }
+    }
+});
 const showEditorModal = ref(false);
 const showViewContentModal = ref(false);
 

@@ -67,6 +67,12 @@ class AgencyController extends Controller
                 'active' => Agency::active()->count(),
                 'inactive' => Agency::inactive()->count(),
                 'suspended' => Agency::where('status', 'suspended')->count(),
+                'total_employees' => Agency::sum('employee_count'),
+                'needs_attention' => Agency::where(function($q) {
+                    $q->whereNull('manager_name')
+                      ->orWhere('manager_name', '')
+                      ->orWhere('status', 'suspended');
+                })->count(),
             ],
         ]);
     }

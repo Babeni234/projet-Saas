@@ -1,70 +1,77 @@
 <template>
     <div class="flex flex-col gap-6">
         <!-- Header with Add Button -->
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900">Bâtiments</h1>
-                <p class="text-slate-600 mt-1">Gestion complète de vos immeubles</p>
+                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
+                    Gestion des Bâtiments
+                    <span class="text-indigo-500 text-sm font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">Module Immobilier</span>
+                </h1>
+                <p class="text-slate-600 mt-1">Gérer les immeubles, localisations et caractéristiques structurelles.</p>
             </div>
             <button
                 @click="openAddModal"
-                class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all"
+                class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Ajouter un Bâtiment
+                Nouveau Bâtiment
             </button>
         </div>
 
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Batiments -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/20 animate-fade-in" style="animation-delay: 0ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-slate-600">Total Bâtiments</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Bâtiments</p>
                         <p class="text-3xl font-bold text-slate-900 mt-1 animate-number">{{ totalBatiments }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
                         <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                         </svg>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20 animate-fade-in" style="animation-delay: 100ms">
+            <!-- Total Appartements -->
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/20 animate-fade-in" style="animation-delay: 100ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-slate-600">Total Appartements</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Appartements</p>
                         <p class="text-3xl font-bold text-slate-900 mt-1 animate-number">{{ totalAppartements }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
-                        <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    <div class="w-12 h-12 rounded-xl bg-violet-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
+                        <svg class="w-6 h-6 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                         </svg>
                     </div>
                 </div>
             </div>
+            <!-- Batiments Actifs -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20 animate-fade-in" style="animation-delay: 200ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-slate-600">Bâtiments Actifs</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Bâtiments Actifs</p>
                         <p class="text-3xl font-bold text-emerald-600 mt-1 animate-number">{{ batimentsActifs }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
                         <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
             </div>
+            <!-- En Maintenance -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/20 animate-fade-in" style="animation-delay: 300ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-slate-600">En Maintenance</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">En Maintenance</p>
                         <p class="text-3xl font-bold text-amber-600 mt-1 animate-number">{{ batimentsMaintenance }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
                         <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                         </svg>
@@ -73,18 +80,29 @@
             </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-4 border border-slate-100">
-            <div class="relative">
+        <!-- Search & Advanced Filtering Bar -->
+        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-4 border border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="relative w-full md:flex-1">
                 <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                     v-model="searchQuery"
                     type="text"
-                    placeholder="Rechercher un bâtiment..."
-                    class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="Rechercher par nom, ville, pays ou adresse..."
+                    class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
                 >
+            </div>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <select 
+                    v-model="statusFilter" 
+                    class="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm bg-white text-slate-700 w-full md:w-48"
+                >
+                    <option value="">Tous les statuts</option>
+                    <option value="Actif">Actifs</option>
+                    <option value="Maintenance">En Maintenance</option>
+                </select>
             </div>
         </div>
 
@@ -94,45 +112,73 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nom</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Adresse</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Étages</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Appartements</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Statut</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-slate-900">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Nom du Bâtiment</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Adresse & Localisation</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Nombre d'Étages</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Unités / Appartements</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut Opérationnel</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr v-for="batiment in filteredBatiments" :key="batiment.id" class="border-b border-slate-100 hover:bg-slate-50 transition">
-                            <td class="px-6 py-4">
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-for="batiment in filteredBatiments" :key="batiment.id" class="hover:bg-slate-50/80 transition-all duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                        </svg>
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                                        {{ getInitials(batiment.nom) }}
                                     </div>
-                                    <span class="font-medium text-slate-900">{{ batiment.nom }}</span>
+                                    <div>
+                                        <div class="font-semibold text-slate-900 block">{{ batiment.nom }}</div>
+                                        <div class="text-[10px] text-slate-400">ID: BAT-{{ String(batiment.id).padStart(3, '0') }}</div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-slate-600">{{ batiment.adresse }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ batiment.etages }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ batiment.appartements }}</td>
                             <td class="px-6 py-4">
-                                <span :class="[
-                                    'px-3 py-1 rounded-full text-xs font-semibold',
-                                    batiment.statut === 'Actif' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                                ]">
-                                    {{ batiment.statut }}
+                                <div class="flex flex-col text-sm text-slate-600">
+                                    <span class="font-medium text-slate-900">{{ batiment.adresse }}</span>
+                                    <span class="text-xs text-slate-500">
+                                        {{ batiment.quartier ? batiment.quartier + ', ' : '' }}{{ batiment.ville }} ({{ getCountryName(batiment.pays) }})
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center gap-1.5 w-max">
+                                    {{ batiment.etages }} étages
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
-                                    <button @click="openEditModal(batiment)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100 flex items-center gap-1.5 w-max">
+                                    {{ batiment.appartements }} unités
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="[
+                                    'px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 shadow-sm',
+                                    batiment.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                ]">
+                                    <span :class="[
+                                        'w-1.5 h-1.5 rounded-full',
+                                        batiment.statut === 'Actif' ? 'bg-emerald-500' : 'bg-amber-500'
+                                    ]"></span>
+                                    {{ batiment.statut === 'Actif' ? 'Actif' : 'En Maintenance' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button 
+                                        @click="openEditModal(batiment)" 
+                                        class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                        title="Modifier la fiche"
+                                    >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <button @click="openDeleteModal(batiment)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                    <button 
+                                        @click="openDeleteModal(batiment)" 
+                                        class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                        title="Supprimer le bâtiment"
+                                    >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -140,179 +186,292 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr v-if="filteredBatiments.length === 0">
+                            <td colspan="6" class="text-center py-12 text-slate-400">
+                                Aucun bâtiment trouvé correspondant à vos critères de recherche.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Add/Edit Modal -->
+        <!-- Add/Edit Modal (Premium 2-Column landscape-oriented layout) -->
         <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-slate-900">{{ editingBatiment ? 'Modifier' : 'Ajouter' }} un Bâtiment</h2>
-                    <button @click="closeModal" class="text-slate-400 hover:text-slate-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden animate-scale-up border border-slate-100">
+                <!-- Header -->
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-violet-50/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">{{ editingBatiment ? 'Modifier' : 'Ajouter' }} un Bâtiment</h2>
+                            <p class="text-xs text-slate-500">Définissez les propriétés de l'immeuble et sa localisation précise.</p>
+                        </div>
+                    </div>
+                    <button @click="closeModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="animate-slide-in" style="animation-delay: 0ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nom du Bâtiment</label>
-                        <input v-model="formData.nom" type="text" placeholder="Ex: Immeuble A" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
-                    </div>
-                    <div class="animate-slide-in" style="animation-delay: 50ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Propriétaire</label>
-                        <select v-model="formData.proprietaire" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
-                            <option value="">Sélectionner un propriétaire</option>
-                            <option value="Jean Dupont">Jean Dupont</option>
-                            <option value="Marie Martin">Marie Martin</option>
-                            <option value="Pierre Bernard">Pierre Bernard</option>
-                            <option value="Sophie Petit">Sophie Petit</option>
-                            <option value="Michel Leroy">Michel Leroy</option>
-                        </select>
-                    </div>
-                    <div class="animate-slide-in" style="animation-delay: 100ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Pays</label>
-                        <select v-model="formData.pays" @change="onCountryChange" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
-                            <option value="">Sélectionner un pays</option>
-                            <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
-                        </select>
-                    </div>
-                    <div class="animate-slide-in" style="animation-delay: 125ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Ville</label>
-                        <div class="relative">
+                <!-- Form Body -->
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Column 1: Identification & Capacity -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Identification & Capacité</h3>
+
+                        <!-- Nom du bâtiment -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nom du Bâtiment</label>
+                            <input 
+                                v-model="formData.nom" 
+                                type="text" 
+                                placeholder="Ex: Immeuble A" 
+                                :class="[
+                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white',
+                                    formData.nom ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
+                                ]"
+                            >
+                        </div>
+
+                        <!-- Propriétaire -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Propriétaire</label>
                             <select 
-                                v-model="formData.ville" 
-                                @change="onCityChange"
-                                :disabled="!formData.pays || loadingCities"
-                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
+                                v-model="formData.proprietaire" 
+                                :class="[
+                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700',
+                                    formData.proprietaire ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
+                                ]"
                             >
-                                <option value="">{{ loadingCities ? 'Chargement...' : formData.pays ? 'Sélectionner une ville' : 'Sélectionnez d\'abord un pays' }}</option>
-                                <option v-for="city in cities" :key="city.geonameId || city.name" :value="city.name">{{ city.name }}{{ formatCoords(city) }}</option>
+                                <option value="">Sélectionner un propriétaire</option>
+                                <option value="Jean Dupont">Jean Dupont</option>
+                                <option value="Marie Martin">Marie Martin</option>
+                                <option value="Pierre Bernard">Pierre Bernard</option>
+                                <option value="Sophie Petit">Sophie Petit</option>
+                                <option value="Michel Leroy">Michel Leroy</option>
                             </select>
-                            <button 
-                                @click="detectLocation" 
-                                class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                                title="Utiliser ma position"
-                            >
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </button>
+                        </div>
+
+                        <!-- Dimension grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Étages</label>
+                                <input v-model.number="formData.etages" type="number" placeholder="Ex: 5" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Appartements</label>
+                                <input v-model.number="formData.appartements" type="number" placeholder="Ex: 25" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Statut -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Statut opérationnel</label>
+                            <select v-model="formData.statut" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700">
+                                <option value="Actif">Actif / Exploité</option>
+                                <option value="Maintenance">En Maintenance / Travaux</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="animate-slide-in col-span-2" style="animation-delay: 150ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Quartier</label>
-                        <select 
-                            v-model="formData.quartier" 
-                            :disabled="!formData.ville || loadingNeighborhoods"
-                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
-                        >
-                            <option value="">{{ loadingNeighborhoods ? 'Chargement...' : formData.ville ? 'Sélectionner un quartier' : 'Sélectionnez d\'abord une ville' }}</option>
-                            <option v-for="quartier in neighborhoods" :key="quartier.geonameId || quartier.name" :value="quartier.name">{{ quartier.name }}{{ formatCoords(quartier) }}</option>
-                        </select>
-                    </div>
-                    <div class="animate-slide-in col-span-2" style="animation-delay: 175ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
-                        <input v-model="formData.adresse" type="text" placeholder="Ex: 123 Rue de Paris" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
-                    </div>
-                    <div class="animate-slide-in" style="animation-delay: 200ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Étages</label>
-                        <input v-model="formData.etages" type="number" placeholder="5" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
-                    </div>
-                    <div class="animate-slide-in" style="animation-delay: 225ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Appartements</label>
-                        <input v-model="formData.appartements" type="number" placeholder="25" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300">
-                    </div>
-                    <div class="animate-slide-in col-span-2" style="animation-delay: 250ms">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Statut</label>
-                        <select v-model="formData.statut" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-slate-300 bg-white">
-                            <option value="Actif">Actif</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
+
+                    <!-- Column 2: Localisation details -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Localisation géographique</h3>
+
+                        <!-- Pays -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Pays</label>
+                            <select 
+                                v-model="formData.pays" 
+                                @change="onCountryChange" 
+                                :class="[
+                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700',
+                                    formData.pays ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
+                                ]"
+                            >
+                                <option value="">Sélectionner un pays</option>
+                                <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Ville -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ville</label>
+                            <div class="relative">
+                                <select 
+                                    v-model="formData.ville" 
+                                    @change="onCityChange"
+                                    :disabled="!formData.pays || loadingCities"
+                                    :class="[
+                                        'w-full pl-4 pr-10 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700 disabled:bg-slate-100 disabled:cursor-not-allowed',
+                                        formData.ville ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
+                                    ]"
+                                >
+                                    <option value="">{{ loadingCities ? 'Chargement...' : formData.pays ? 'Sélectionner une ville' : "Sélectionnez d'abord un pays" }}</option>
+                                    <option v-for="city in cities" :key="city.geonameId || city.name" :value="city.name">{{ city.name }}{{ formatCoords(city) }}</option>
+                                </select>
+                                <button 
+                                    type="button"
+                                    @click="detectLocation" 
+                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                    title="Détecter ma position"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quartier -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Quartier</label>
+                            <select 
+                                v-model="formData.quartier" 
+                                :disabled="!formData.ville || loadingNeighborhoods"
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="">{{ loadingNeighborhoods ? 'Chargement...' : formData.ville ? 'Sélectionner un quartier' : "Sélectionnez d'abord une ville" }}</option>
+                                <option v-for="quartier in neighborhoods" :key="quartier.geonameId || quartier.name" :value="quartier.name">{{ quartier.name }}{{ formatCoords(quartier) }}</option>
+                            </select>
+                        </div>
+
+                        <!-- Adresse -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Adresse postale</label>
+                            <input 
+                                v-model="formData.adresse" 
+                                type="text" 
+                                placeholder="Ex: 123 Rue de Paris" 
+                                :class="[
+                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white',
+                                    formData.adresse ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
+                                ]"
+                            >
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3 mt-6">
-                    <button @click="closeModal" class="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition">Annuler</button>
-                    <button @click="saveBatiment" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Enregistrer</button>
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+                    <button 
+                        @click="closeModal" 
+                        class="px-5 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition text-sm"
+                    >
+                        Annuler
+                    </button>
+                    <button 
+                        @click="saveBatiment" 
+                        :disabled="!formData.nom || !formData.proprietaire || !formData.pays || !formData.ville || !formData.adresse"
+                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm"
+                    >
+                        Enregistrer
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Delete Modal -->
         <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4 animate-bounce">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce bâtiment?</h3>
-                <p class="text-center text-slate-600 mb-6">Cette action est irréversible</p>
+                <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce bâtiment ?</h3>
+                <p class="text-center text-slate-500 mb-6 text-sm">Cette action est définitive et supprimera toutes les informations de <strong>{{ deletingBatiment?.nom }}</strong>.</p>
 
                 <div class="flex gap-3">
-                    <button @click="closeDeleteModal" class="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition">Annuler</button>
-                    <button @click="confirmDelete" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Supprimer</button>
+                    <button @click="closeDeleteModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
+                    <button @click="confirmDelete" class="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition text-sm">Supprimer</button>
                 </div>
             </div>
         </div>
 
         <!-- Success Modal -->
         <div v-if="showSuccess" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
                 <div class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mx-auto mb-4">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">{{ successMessage }}</h3>
-                <p class="text-center text-slate-600 mb-6">Opération effectuée avec succès</p>
+                <p class="text-center text-slate-500 text-sm mb-6">Fiche bâtiment enregistrée dans le système.</p>
 
-                <button @click="closeSuccess" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">Fermer</button>
+                <button @click="closeSuccess" class="w-full px-4 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 shadow shadow-emerald-500/20 transition text-sm">Fermer</button>
             </div>
         </div>
 
         <!-- Error Modal -->
         <div v-if="showError" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
                 <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Erreur</h3>
-                <p class="text-center text-slate-600 mb-6">{{ errorMessage }}</p>
+                <p class="text-center text-slate-500 text-sm mb-6">{{ errorMessage }}</p>
 
-                <button @click="closeError" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Fermer</button>
+                <button @click="closeError" class="w-full px-4 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition text-sm">Fermer</button>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
-const batiments = ref([
-    { id: 1, nom: 'Immeuble A', adresse: '123 Rue de Paris', etages: 5, appartements: 25, statut: 'Actif', pays: 'FR', ville: 'Paris', quartier: 'Le Marais' },
-    { id: 2, nom: 'Immeuble B', adresse: '456 Avenue Lyon', etages: 7, appartements: 35, statut: 'Actif', pays: 'FR', ville: 'Lyon', quartier: 'Vieux Lyon' },
-    { id: 3, nom: 'Immeuble C', adresse: '789 Boulevard Nice', etages: 3, appartements: 15, statut: 'Maintenance', pays: 'FR', ville: 'Nice', quartier: 'Vieux Nice' },
-    { id: 4, nom: 'Immeuble D', adresse: '321 Rue Marseille', etages: 8, appartements: 40, statut: 'Actif', pays: 'CM', ville: 'Douala', quartier: 'Akwa' },
-    { id: 5, nom: 'Immeuble E', adresse: '654 Avenue Toulouse', etages: 4, appartements: 20, statut: 'Maintenance', pays: 'CM', ville: 'Yaoundé', quartier: 'Bastos' },
-]);
+const defaultBatiments = [
+    { id: 1, nom: 'Immeuble A', adresse: '123 Rue de Paris', etages: 5, appartements: 25, statut: 'Actif', pays: 'FR', ville: 'Paris', quartier: 'Le Marais', proprietaire: 'Jean Dupont' },
+    { id: 2, nom: 'Immeuble B', adresse: '456 Avenue Lyon', etages: 7, appartements: 35, statut: 'Actif', pays: 'FR', ville: 'Lyon', quartier: 'Vieux Lyon', proprietaire: 'Marie Martin' },
+    { id: 3, nom: 'Immeuble C', adresse: '789 Boulevard Nice', etages: 3, appartements: 15, statut: 'Maintenance', pays: 'FR', ville: 'Nice', quartier: 'Vieux Nice', proprietaire: 'Pierre Bernard' },
+    { id: 4, nom: 'Immeuble D', adresse: '321 Rue Marseille', etages: 8, appartements: 40, statut: 'Actif', pays: 'CM', ville: 'Douala', quartier: 'Akwa', proprietaire: 'Sophie Petit' },
+    { id: 5, nom: 'Immeuble E', adresse: '654 Avenue Toulouse', etages: 4, appartements: 20, statut: 'Maintenance', pays: 'CM', ville: 'Yaoundé', quartier: 'Bastos', proprietaire: 'Michel Leroy' },
+];
+
+const batiments = ref(JSON.parse(localStorage.getItem('immobilier_batiments')) || defaultBatiments);
+if (!localStorage.getItem('immobilier_batiments')) {
+    localStorage.setItem('immobilier_batiments', JSON.stringify(defaultBatiments));
+}
+
+const saveBatimentsToStorage = () => {
+    localStorage.setItem('immobilier_batiments', JSON.stringify(batiments.value));
+};
 
 const searchQuery = ref('');
+const statusFilter = ref('');
 
 const filteredBatiments = computed(() => {
-    if (!searchQuery.value) return batiments.value;
-    const query = searchQuery.value.toLowerCase();
-    return batiments.value.filter(b => 
-        b.nom.toLowerCase().includes(query) ||
-        b.adresse.toLowerCase().includes(query)
-    );
+    let list = batiments.value;
+    
+    // Status Filter
+    if (statusFilter.value) {
+        list = list.filter(b => b.statut === statusFilter.value);
+    }
+    
+    // Search Query
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        list = list.filter(b => 
+            b.nom.toLowerCase().includes(query) ||
+            b.adresse.toLowerCase().includes(query) ||
+            (b.ville && b.ville.toLowerCase().includes(query)) ||
+            (b.pays && b.pays.toLowerCase().includes(query)) ||
+            (b.quartier && b.quartier.toLowerCase().includes(query))
+        );
+    }
+    
+    return list;
 });
 
 const totalBatiments = computed(() => batiments.value.length);
@@ -324,6 +483,22 @@ const showModal = ref(false);
 const showDeleteModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
+
+// Auto-hide error modal after 5 seconds
+let errorTimeout = null;
+watch(showError, (newVal) => {
+    if (newVal) {
+        if (errorTimeout) clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+            showError.value = false;
+        }, 5000);
+    } else {
+        if (errorTimeout) {
+            clearTimeout(errorTimeout);
+            errorTimeout = null;
+        }
+    }
+});
 const editingBatiment = ref(null);
 const deletingBatiment = ref(null);
 const successMessage = ref('');
@@ -1187,27 +1362,43 @@ const closeDeleteModal = () => {
 };
 
 const saveBatiment = () => {
-    if (!formData.value.nom || !formData.value.adresse) {
-        errorMessage.value = 'Veuillez remplir tous les champs';
+    if (!formData.value.nom || !formData.value.adresse || !formData.value.pays || !formData.value.ville) {
+        errorMessage.value = 'Le nom, le pays, la ville et l\'adresse sont requis.';
         showError.value = true;
         return;
     }
 
+    const batData = {
+        nom: formData.value.nom,
+        proprietaire: formData.value.proprietaire || '',
+        pays: formData.value.pays,
+        ville: formData.value.ville,
+        quartier: formData.value.quartier || '',
+        adresse: formData.value.adresse,
+        etages: Number(formData.value.etages || 0),
+        appartements: Number(formData.value.appartements || 0),
+        statut: formData.value.statut || 'Actif',
+    };
+
     if (editingBatiment.value) {
         const index = batiments.value.findIndex(b => b.id === editingBatiment.value.id);
         if (index !== -1) {
-            batiments.value[index] = { ...editingBatiment.value, ...formData.value };
+            batiments.value[index] = {
+                id: editingBatiment.value.id,
+                ...batData
+            };
         }
         successMessage.value = 'Bâtiment modifié avec succès';
     } else {
+        const newId = Math.max(...batiments.value.map(b => b.id), 0) + 1;
         batiments.value.push({
-            id: Math.max(...batiments.value.map(b => b.id), 0) + 1,
-            ...formData.value,
-            statut: 'Actif'
+            id: newId,
+            ...batData
         });
         successMessage.value = 'Bâtiment ajouté avec succès';
     }
 
+    saveBatimentsToStorage();
     closeModal();
     showSuccess.value = true;
 };
@@ -1217,6 +1408,7 @@ const confirmDelete = () => {
     if (index !== -1) {
         batiments.value.splice(index, 1);
         successMessage.value = 'Bâtiment supprimé avec succès';
+        saveBatimentsToStorage();
         closeDeleteModal();
         showSuccess.value = true;
     }
@@ -1228,6 +1420,20 @@ const closeSuccess = () => {
 
 const closeError = () => {
     showError.value = false;
+};
+
+const getInitials = (name) => {
+    if (!name) return 'B';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+        return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+};
+
+const getCountryName = (code) => {
+    const country = countries.value.find(c => c.code === code);
+    return country ? country.name : code;
 };
 </script>
 
