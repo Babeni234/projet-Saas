@@ -186,7 +186,7 @@ const groupActive = (item) => {
 watch(
     () => route.name,
     (name) => {
-        if (String(name || '').includes('agencies') || name === 'dashboard.immobilier') {
+        if (String(name || '').includes('agencies') || String(name || '').includes('immobilier')) {
             openGroups.immobilier = true;
         }
         if (String(name || '').includes('hotel')) {

@@ -53,6 +53,19 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/affectations',
+        name: 'immobilier.affectations',
+        component: () => import('../Pages/entreprise/Dashboard/components/AffectationPage.vue'),
+        meta: {
+            title: 'Affectation des logements',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Affectations', to: { name: 'immobilier.affectations' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/contrats',
         name: 'immobilier.contrats',
         component: () => import('../Pages/entreprise/Dashboard/components/ContratsBailPage.vue'),
