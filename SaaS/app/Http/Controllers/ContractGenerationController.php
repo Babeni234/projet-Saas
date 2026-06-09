@@ -324,4 +324,165 @@ class ContractGenerationController extends Controller
 
         return $banner . $tpl;
     }
+
+    /**
+     * Chat with the management assistant.
+     */
+    public function assistantChat(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string',
+            'context' => 'nullable|array',
+        ]);
+
+        $message = $request->input('message');
+        $context = $request->input('context');
+
+        // Build the context description
+        $contextStr = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        $systemPrompt = "Vous êtes un assistant IA de gestion immobilière intelligent et professionnel pour la plateforme Enterprise Property Corp.\n";
+        $systemPrompt .= "Votre tâche est de répondre aux questions de l'administrateur concernant les données de la plateforme et de l'aider dans sa gestion.\n\n";
+        $systemPrompt .= "Voici les données du système actuel extraites de l'application :\n";
+        $systemPrompt .= "\"\"\"\n{$contextStr}\n\"\"\"\n\n";
+        $systemPrompt .= "Consignes importantes :\n";
+        $systemPrompt .= "1. Répondez de manière professionnelle, précise et en français.\n";
+        $systemPrompt .= "2. Si l'administrateur vous pose des questions spécifiques (ex: 'Qui n'a pas payé ?', 'Quel est le loyer moyen ?', 'Combien de baux sont actifs ?', etc.), analysez les données JSON fournies pour donner des chiffres réels et des noms exacts issus du contexte.\n";
+        $systemPrompt .= "   - Note sur les impayés : regardez dans 'factures' (le statut 'Impayé' ou 'En attente') ou 'paiements'. Par exemple, si une facture a 'statut: Impayé' ou 'statut: En attente', indiquez le locataire concerné, le montant et la date.\n";
+        $systemPrompt .= "3. Si l'utilisateur exprime l'intention d'aller sur une page ou demande une redirection (ex: 'va sur la facturation', 'affiche les locataires', 'je veux voir les contrats', etc.), vous devez ajouter à la toute fin de votre réponse textuelle la balise spéciale [NAVIGATE: /path/to/page] pour déclencher la redirection automatique côté client.\n";
+        $systemPrompt .= "Voici les routes valides :\n";
+        $systemPrompt .= "   - Tableau de bord principal : /dashboard/master\n";
+        $systemPrompt .= "   - Gestion des Bâtiments : /dashboard/immobilier/batiments\n";
+        $systemPrompt .= "   - Gestion des Logements : /dashboard/immobilier/logements\n";
+        $systemPrompt .= "   - Affectation des logements : /dashboard/immobilier/affectations\n";
+        $systemPrompt .= "   - Contrats de bail : /dashboard/immobilier/contrats\n";
+        $systemPrompt .= "   - Liste des Locataires : /dashboard/immobilier/locataires\n";
+        $systemPrompt .= "   - Factures / Facturation : /dashboard/immobilier/factures\n";
+        $systemPrompt .= "   - Paiements de loyer : /dashboard/immobilier/paiements\n";
+        $systemPrompt .= "   - Renouvellements de bail : /dashboard/immobilier/renouvellements\n";
+        $systemPrompt .= "   - Actes d'Engagement : /dashboard/immobilier/engagements\n";
+        $systemPrompt .= "   - États des lieux : /dashboard/immobilier/etats-des-lieux\n";
+        $systemPrompt .= "   - Historique d'activité : /dashboard/immobilier/historique\n\n";
+        $systemPrompt .= "Exemple de redirection : 'Je vous dirige vers la liste des locataires. [NAVIGATE: /dashboard/immobilier/locataires]'\n";
+        $systemPrompt .= "4. Si la donnée demandée n'existe pas dans le contexte, expliquez-le poliment. Ne faites pas de fausses affirmations (hallucinations).\n";
+        $systemPrompt .= "5. Essayez de formater votre réponse de manière claire (listes à puces, gras pour les chiffres) pour qu'elle soit agréable à lire.\n";
+
+        $generatedText = '';
+        $generateViaIA = true;
+
+        try {
+            $model = config('ai.groq_model', 'llama-3.3-70b-versatile');
+            $response = Prism::text()
+                ->using(Provider::Groq, $model)
+                ->withPrompt("Message de l'administrateur : {$message}\n\nRépondez en respectant les consignes système.")
+                ->withSystemPrompt($systemPrompt)
+                ->asText();
+            $generatedText = $response->text;
+        } catch (Exception $e) {
+            Log::warning('Groq API call failed for Assistant Chat, falling back to local generation. Error: ' . $e->getMessage());
+            $generateViaIA = false;
+        }
+
+        if (!$generateViaIA) {
+            // Local fallback logic
+            $generatedText = $this->assistantLocalFallback($message, $context);
+        }
+
+        return response()->json([
+            'success' => true,
+            'response' => $generatedText,
+        ]);
+    }
+
+    /**
+     * Local fallback response generator for assistant chat.
+     */
+    private function assistantLocalFallback($message, $context)
+    {
+        $messageLower = strtolower($message);
+        $res = "<div style='background-color: #fef3c7; border: 1px solid #f59e0b; padding: 10px; border-radius: 8px; color: #92400e; margin-bottom: 12px; font-size: 12px;'><strong>Mode de secours local :</strong> La connexion à l'IA (Groq) a échoué. Voici une réponse basée sur l'analyse heuristique des données locales.</div>";
+
+        if (str_contains($messageLower, 'paye') || str_contains($messageLower, 'payé') || str_contains($messageLower, 'facture') || str_contains($messageLower, 'loyer')) {
+            // Check unpaid invoices
+            $factures = isset($context['factures']) ? $context['factures'] : [];
+            $unpaid = array_filter($factures, function($f) {
+                return isset($f['statut']) && ($f['statut'] === 'Impayé' || $f['statut'] === 'En attente' || str_contains(strtolower($f['statut']), 'impay'));
+            });
+
+            if (empty($unpaid)) {
+                $res .= "<p>Selon les données actuelles, tous les locataires sont à jour dans leurs paiements de factures et loyers.</p>";
+            } else {
+                $res .= "<p>Voici la liste des locataires ayant des factures/loyers impayés ou en attente :</p><ul>";
+                foreach ($unpaid as $u) {
+                    $loc = isset($u['locataire']) ? $u['locataire'] : 'Inconnu';
+                    $montant = isset($u['montant']) ? $u['montant'] : '0';
+                    $ref = isset($u['reference']) ? $u['reference'] : '';
+                    $date = isset($u['date']) ? $u['date'] : '';
+                    $statut = isset($u['statut']) ? $u['statut'] : 'Impayé';
+                    $res .= "<li><strong>{$loc}</strong> - Montant : <strong>{$montant} €</strong> (Date : {$date}, Statut : {$statut})</li>";
+                }
+                $res .= "</ul>";
+            }
+
+            if (str_contains($messageLower, 'va') || str_contains($messageLower, 'redirige') || str_contains($messageLower, 'page') || str_contains($messageLower, 'affiche')) {
+                if (str_contains($messageLower, 'facture')) {
+                    $res .= "<p>Je vous redirige vers l'historique de facturation. [NAVIGATE: /dashboard/immobilier/factures]</p>";
+                } else {
+                    $res .= "<p>Je vous redirige vers le tableau des paiements. [NAVIGATE: /dashboard/immobilier/paiements]</p>";
+                }
+            }
+            return $res;
+        }
+
+        if (str_contains($messageLower, 'locataire')) {
+            $locataires = isset($context['locataires']) ? $context['locataires'] : [];
+            $res .= "<p>Vous avez actuellement <strong>" . count($locataires) . "</strong> locataires enregistrés dans le système.</p>";
+            if (!empty($locataires)) {
+                $res .= "<ul>";
+                foreach (array_slice($locataires, 0, 5) as $l) {
+                    $nom = isset($l['nom']) ? $l['nom'] : 'N/A';
+                    $statut = isset($l['statut']) ? $l['statut'] : 'N/A';
+                    $res .= "<li><strong>{$nom}</strong> (Statut : {$statut})</li>";
+                }
+                if (count($locataires) > 5) {
+                    $res .= "<li>... et " . (count($locataires) - 5) . " autres.</li>";
+                }
+                $res .= "</ul>";
+            }
+            $res .= "<p>Je vous redirige vers la liste des locataires. [NAVIGATE: /dashboard/immobilier/locataires]</p>";
+            return $res;
+        }
+
+        if (str_contains($messageLower, 'contrat') || str_contains($messageLower, 'bail')) {
+            $contrats = isset($context['contrats']) ? $context['contrats'] : [];
+            $res .= "<p>Il y a <strong>" . count($contrats) . "</strong> contrats de bail enregistrés.</p>";
+            $res .= "<p>Je vous redirige vers les contrats. [NAVIGATE: /dashboard/immobilier/contrats]</p>";
+            return $res;
+        }
+
+        // Generic redirection help
+        if (str_contains($messageLower, 'bâtiment') || str_contains($messageLower, 'batiment')) {
+            $res .= "<p>Je vous redirige vers les bâtiments. [NAVIGATE: /dashboard/immobilier/batiments]</p>";
+            return $res;
+        }
+        if (str_contains($messageLower, 'logement')) {
+            $res .= "<p>Je vous redirige vers les logements. [NAVIGATE: /dashboard/immobilier/logements]</p>";
+            return $res;
+        }
+        if (str_contains($messageLower, 'renouvellement')) {
+            $res .= "<p>Je vous redirige vers les renouvellements de bail. [NAVIGATE: /dashboard/immobilier/renouvellements]</p>";
+            return $res;
+        }
+        if (str_contains($messageLower, 'engagement')) {
+            $res .= "<p>Je vous redirige vers les actes d'engagement. [NAVIGATE: /dashboard/immobilier/engagements]</p>";
+            return $res;
+        }
+        if (str_contains($messageLower, 'etat') || str_contains($messageLower, 'état')) {
+            $res .= "<p>Je vous redirige vers les états des lieux. [NAVIGATE: /dashboard/immobilier/etats-des-lieux]</p>";
+            return $res;
+        }
+
+        $res .= "<p>Je suis votre assistant de gestion immobilière. Posez-moi des questions sur vos locataires, vos loyers, les impayés ou demandez-moi de vous diriger vers une page spécifique !</p>";
+        return $res;
+    }
 }

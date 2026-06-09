@@ -20,6 +20,8 @@
                 </RouterView>
             </main>
         </div>
+
+        <EnterpriseAssistant />
     </div>
 </template>
 
@@ -28,6 +30,7 @@ import { ref } from 'vue';
 import { RouterView } from 'vue-router';
 import EnterpriseSidebar from './partials/EnterpriseSidebar.vue';
 import EnterpriseHeader from './partials/EnterpriseHeader.vue';
+import EnterpriseAssistant from './partials/EnterpriseAssistant.vue';
 import { provideEnterpriseLayout } from '../composables/useEnterpriseLayout';
 import { provideEnterpriseProps } from '../composables/useEnterpriseProps';
 

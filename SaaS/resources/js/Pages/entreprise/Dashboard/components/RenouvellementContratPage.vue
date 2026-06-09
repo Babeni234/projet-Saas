@@ -155,8 +155,28 @@
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
                                     <button 
+                                        v-if="renouvellement.content"
+                                        @click="viewContract(renouvellement)" 
+                                        class="p-2 text-slate-650 hover:bg-slate-100 rounded-xl transition-all"
+                                        title="Voir le contrat"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="openContractEditor(renouvellement)" 
+                                        class="p-2 text-indigo-650 hover:bg-indigo-50 rounded-xl transition-all"
+                                        title="Rédiger/Éditer le nouveau contrat"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </button>
+                                    <button 
                                         @click="editRenouvellement(renouvellement)" 
-                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                        class="p-2 text-blue-650 hover:bg-blue-50 rounded-xl transition-all"
                                         title="Modifier"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,24 +207,22 @@
 
         <!-- Add/Edit Modal (Premium backdrop blur design) -->
         <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-blue-50/20 rounded-3xl shadow-2xl shadow-slate-950/40 max-w-lg w-full p-8 border border-blue-100/50 relative overflow-hidden animate-scale-up">
-                <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="bg-white rounded-3xl shadow-2xl shadow-slate-950/40 max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
                 
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-650 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <div class="w-11 h-11 rounded-2xl bg-blue-650 flex items-center justify-center shadow-md">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" />
                                 </svg>
                             </div>
-                            <h2 class="text-2xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                            <h2 class="text-2xl font-extrabold text-slate-800">
                                 {{ editingRenouvellement ? 'Modifier' : 'Nouveau' }} Renouvellement
                             </h2>
                         </div>
                         <button @click="closeModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -212,33 +230,35 @@
 
                     <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
                         
-                        <!-- Leases selection (active leases only) -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrat de Bail Actif *</label>
-                            <select 
-                                v-model="formData.contrat" 
-                                @change="handleContratChange"
-                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                :disabled="editingRenouvellement"
-                            >
-                                <option value="" disabled>Sélectionner un bail actif</option>
-                                <option v-for="c in contratsActifs" :key="c.id" :value="c.numero">
-                                    {{ c.numero }} - {{ c.locataire }} ({{ c.reference }})
-                                </option>
-                            </select>
-                            <p v-if="contratsActifs.length === 0" class="text-xs text-rose-600 font-semibold mt-1">Aucun contrat actif trouvé dans le système.</p>
-                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Leases selection (active leases only) -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrat de Bail Actif *</label>
+                                <select 
+                                    v-model="formData.contrat" 
+                                    @change="handleContratChange"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                    :disabled="editingRenouvellement"
+                                >
+                                    <option value="" disabled>Sélectionner un bail actif</option>
+                                    <option v-for="c in contratsActifs" :key="c.id" :value="c.numero">
+                                        {{ c.numero }} - {{ c.locataire }} ({{ c.reference }})
+                                    </option>
+                                </select>
+                                <p v-if="contratsActifs.length === 0" class="text-xs text-rose-600 font-semibold mt-1">Aucun contrat actif trouvé dans le système.</p>
+                            </div>
 
-                        <!-- Locataire (Read-only after lease choice) -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire</label>
-                            <input 
-                                v-model="formData.locataire" 
-                                type="text" 
-                                placeholder="Sélectionnez un bail d'abord" 
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-500 text-sm focus:outline-none cursor-not-allowed shadow-sm" 
-                                readonly
-                            />
+                            <!-- Locataire (Read-only after lease choice) -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire</label>
+                                <input 
+                                    v-model="formData.locataire" 
+                                    type="text" 
+                                    placeholder="Sélectionnez un bail d'abord" 
+                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-500 text-sm focus:outline-none cursor-not-allowed shadow-sm" 
+                                    readonly
+                                />
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -295,13 +315,13 @@
                     <div class="flex gap-4 mt-8 border-t border-slate-100 pt-5">
                         <button 
                             @click="closeModal" 
-                            class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-250 transition-all text-xs"
+                            class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
                         >
                             Annuler
                         </button>
                         <button 
                             @click="saveRenouvellement" 
-                            class="flex-1 px-5 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/35 transition-all hover:scale-[1.01] text-xs"
+                            class="flex-1 px-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md transition-all text-xs"
                         >
                             Enregistrer
                         </button>
@@ -383,17 +403,148 @@
             </div>
         </div>
 
+        <!-- Contract Options Modal -->
+        <div v-if="showContractOptionsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-extrabold text-slate-800">Édition du Nouveau Contrat</h2>
+                    </div>
+                    <button @click="closeContractOptionsModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
+                        <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-50 border border-slate-150 rounded-2xl space-y-2 text-sm text-slate-700">
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-400">Locataire :</span>
+                            <span class="font-bold text-slate-800">{{ selectedRenouvellement?.locataire }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-400">Contrat initial :</span>
+                            <span class="font-bold text-slate-800">{{ selectedRenouvellement?.contrat }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-400">Nouveau Loyer :</span>
+                            <span class="font-bold text-slate-800">{{ formatCurrency(selectedRenouvellement?.nouveauLoyer) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-400">Nouvelle date de fin :</span>
+                            <span class="font-bold text-slate-800">{{ formatDate(selectedRenouvellement?.nouvelleDate) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Consignes additionnelles de guidage IA</label>
+                        <textarea 
+                            v-model="selectedRenouvellementInstructions" 
+                            placeholder="Indiquez ici les conditions particulières à faire figurer dans le bail renouvelé..." 
+                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800 text-sm shadow-sm h-24"
+                        ></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                        <button 
+                            @click="openManualContractEditor" 
+                            class="px-4 py-3.5 bg-white border-2 border-slate-250 text-slate-750 rounded-xl font-bold hover:bg-slate-50 transition-all text-xs"
+                        >
+                            ✏️ Rédiger Manuellement
+                        </button>
+                        <button 
+                            @click="generateContractWithIA" 
+                            class="px-4 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+                            :disabled="isGenerating"
+                        >
+                            <span v-if="isGenerating" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            🤖 Générer avec l'IA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rich Text TinyMCE Editor Modal -->
+        <div v-if="showEditorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-extrabold text-slate-800">Éditeur de Contrat de Renouvellement</h3>
+                    <span class="text-xs font-bold text-slate-400">TinyMCE Workspace</span>
+                </div>
+                
+                <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden">
+                    <textarea id="contract-renewal-editor"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-4">
+                    <button 
+                        @click="closeEditorModal" 
+                        class="px-6 py-3 bg-slate-100 text-slate-650 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
+                    >
+                        Fermer sans enregistrer
+                    </button>
+                    <button 
+                        @click="confirmContractRedaction" 
+                        class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all text-xs"
+                    >
+                        Valider & Enregistrer le Contrat
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Contract Modal -->
+        <div v-if="showViewContractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-blue-600 uppercase">Contrat de renouvellement</span>
+                        <h3 class="text-lg font-extrabold text-slate-850">Bail renouvelé pour {{ viewingContractRef?.locataire }}</h3>
+                    </div>
+                    <button @click="closeViewContractModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
+                        <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200/60 rounded-2xl p-6 md:p-8 max-h-[50vh] overflow-y-auto scrollbar-thin shadow-inner font-serif text-slate-850 text-sm leading-relaxed whitespace-pre-line" v-html="viewingContractRef?.content"></div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="closeViewContractModal" class="px-6 py-2.5 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all">Fermer</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
+import axios from 'axios';
+import tinymce from 'tinymce';
 
 const renouvellements = ref([]);
 const contratsActifs = ref([]);
 
 const searchQuery = ref('');
 const statusFilter = ref('All');
+
+const showContractOptionsModal = ref(false);
+const showEditorModal = ref(false);
+const showViewContractModal = ref(false);
+const selectedRenouvellement = ref(null);
+const selectedRenouvellementInstructions = ref('');
+const editorContent = ref('');
+const isGenerating = ref(false);
+const viewingContractRef = ref(null);
 
 onMounted(() => {
     // 1. Load renewals from localStorage
@@ -402,9 +553,9 @@ onMounted(() => {
         renouvellements.value = JSON.parse(storedRen);
     } else {
         renouvellements.value = [
-            { id: 1, contrat: 'CTR-001', locataire: 'Jean Dupont', dateFinActuelle: '2026-06-30', nouvelleDate: '2027-06-30', nouveauLoyer: 1250, statut: 'En attente' },
-            { id: 2, contrat: 'CTR-002', locataire: 'Marie Lambert', dateFinActuelle: '2026-07-15', nouvelleDate: '2027-07-15', nouveauLoyer: 2600, statut: 'À venir' },
-            { id: 3, contrat: 'CTR-003', locataire: 'Pierre Martin', dateFinActuelle: '2026-05-31', nouvelleDate: '2027-05-31', nouveauLoyer: 980, statut: 'Complété' }
+            { id: 1, contrat: 'CTR-001', locataire: 'Jean Dupont', dateFinActuelle: '2026-06-30', nouvelleDate: '2027-06-30', nouveauLoyer: 1250, statut: 'En attente', instructions: '', content: '' },
+            { id: 2, contrat: 'CTR-002', locataire: 'Marie Lambert', dateFinActuelle: '2026-07-15', nouvelleDate: '2027-07-15', nouveauLoyer: 2600, statut: 'À venir', instructions: '', content: '' },
+            { id: 3, contrat: 'CTR-003', locataire: 'Pierre Martin', dateFinActuelle: '2026-05-31', nouvelleDate: '2027-05-31', nouveauLoyer: 980, statut: 'Complété', instructions: '', content: '' }
         ];
         localStorage.setItem('immobilier_renouvellements', JSON.stringify(renouvellements.value));
     }
@@ -626,6 +777,160 @@ const getAvatarGradient = (name) => {
     }
     const index = Math.abs(hash) % colors.length;
     return colors[index];
+};
+
+const openContractEditor = (renouvellement) => {
+    selectedRenouvellement.value = renouvellement;
+    selectedRenouvellementInstructions.value = renouvellement.instructions || '';
+    editorContent.value = renouvellement.content || '';
+    showContractOptionsModal.value = true;
+};
+
+const closeContractOptionsModal = () => {
+    showContractOptionsModal.value = false;
+    selectedRenouvellement.value = null;
+    selectedRenouvellementInstructions.value = '';
+};
+
+const initTinyMCE = () => {
+    if (!tinymce) {
+        alert("TinyMCE n'est pas chargé. Veuillez vérifier votre connexion.");
+        return;
+    }
+    
+    const editor = tinymce.get('contract-renewal-editor');
+    if (editor) {
+        tinymce.remove(editor);
+    }
+    
+    tinymce.init({
+        selector: '#contract-renewal-editor',
+        license_key: 'gpl',
+        skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/ui/oxide',
+        content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/content/default/content.css',
+        height: 320,
+        menubar: false,
+        branding: false,
+        plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime table code help wordcount',
+        toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | code',
+        setup: (editor) => {
+            editor.on('init', () => {
+                editor.setContent(editorContent.value || '');
+            });
+            editor.on('change keyup', () => {
+                editorContent.value = editor.getContent();
+            });
+        }
+    });
+};
+
+const openManualContractEditor = () => {
+    if (!editorContent.value) {
+        editorContent.value = buildInitialContractFromTemplate();
+    }
+    showContractOptionsModal.value = false;
+    showEditorModal.value = true;
+    nextTick(() => {
+        initTinyMCE();
+    });
+};
+
+const buildInitialContractFromTemplate = () => {
+    return `<h3>AVENANT DE RENOUVELLEMENT DE BAIL</h3>
+<p><strong>Bailleur :</strong> Enterprise Property Corp<br>
+<strong>Locataire :</strong> ${selectedRenouvellement.value.locataire}<br>
+<strong>Bail initial :</strong> Numéro ${selectedRenouvellement.value.contrat} se terminant le ${formatDate(selectedRenouvellement.value.dateFinActuelle)}</p>
+
+<p>Par le présent avenant, les parties conviennent de renouveler le contrat de bail susmentionné aux conditions suivantes :</p>
+<ul>
+    <li><strong>Nouvelle date de fin :</strong> ${formatDate(selectedRenouvellement.value.nouvelleDate)}</li>
+    <li><strong>Nouveau loyer mensuel :</strong> ${formatCurrency(selectedRenouvellement.value.nouveauLoyer)}</li>
+</ul>
+
+<p>Les autres clauses et conditions du bail initial demeurent inchangées et restent pleinement applicables.</p>
+<p>Fait en double exemplaire le ${getTodayDate()}.</p>`;
+};
+
+const getTodayDate = () => {
+    const today = new Date();
+    return today.toLocaleDateString('fr-FR');
+};
+
+const closeEditorModal = () => {
+    const editor = tinymce.get('contract-renewal-editor');
+    if (editor) {
+        tinymce.remove(editor);
+    }
+    showEditorModal.value = false;
+};
+
+const confirmContractRedaction = () => {
+    const editor = tinymce.get('contract-renewal-editor');
+    if (editor) {
+        editorContent.value = editor.getContent();
+        tinymce.remove(editor);
+    }
+    showEditorModal.value = false;
+    
+    // Save content to renewal
+    const index = renouvellements.value.findIndex(r => r.id === selectedRenouvellement.value.id);
+    if (index !== -1) {
+        renouvellements.value[index].content = editorContent.value;
+        renouvellements.value[index].instructions = selectedRenouvellementInstructions.value;
+        localStorage.setItem('immobilier_renouvellements', JSON.stringify(renouvellements.value));
+        successMessage.value = "Contrat de renouvellement enregistré avec succès.";
+        showSuccess.value = true;
+    }
+    closeContractOptionsModal();
+};
+
+const generateContractWithIA = async () => {
+    isGenerating.value = true;
+    try {
+        const activeContrat = contratsActifs.value.find(c => c.numero === selectedRenouvellement.value.contrat) || {};
+        
+        const payload = {
+            locataire: selectedRenouvellement.value.locataire,
+            loyer: selectedRenouvellement.value.nouveauLoyer,
+            caution: activeContrat.caution || (selectedRenouvellement.value.nouveauLoyer * 2),
+            debut: selectedRenouvellement.value.dateFinActuelle,
+            fin: selectedRenouvellement.value.nouvelleDate,
+            reference: activeContrat.reference || 'Non spécifié',
+            batiment: activeContrat.batiment || 'Non spécifié',
+            duree: activeContrat.duree || '1 an',
+            typeBail: activeContrat.typeBail || 'Habitation',
+            instructions: selectedRenouvellementInstructions.value || '',
+        };
+
+        const response = await axios.post('/api/ai/generate-contract', payload);
+        if (response.data && response.data.success) {
+            editorContent.value = response.data.contract;
+            showContractOptionsModal.value = false;
+            showEditorModal.value = true;
+            nextTick(() => {
+                initTinyMCE();
+            });
+        } else {
+            errorMessage.value = response.data.message || "Impossible de générer le contrat.";
+            showError.value = true;
+        }
+    } catch (e) {
+        console.error(e);
+        errorMessage.value = e.response?.data?.message || "Une erreur s'est produite lors de l'appel de l'API de génération.";
+        showError.value = true;
+    } finally {
+        isGenerating.value = false;
+    }
+};
+
+const viewContract = (renouvellement) => {
+    viewingContractRef.value = renouvellement;
+    showViewContractModal.value = true;
+};
+
+const closeViewContractModal = () => {
+    showViewContractModal.value = false;
+    viewingContractRef.value = null;
 };
 </script>
 

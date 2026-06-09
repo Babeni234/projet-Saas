@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     // Contract AI generation routes
     Route::post('/api/ai/generate-contract', [\App\Http\Controllers\ContractGenerationController::class, 'generate'])->name('ai.generate-contract');
     Route::post('/api/ai/generate-engagement', [\App\Http\Controllers\ContractGenerationController::class, 'generateEngagement'])->name('ai.generate-engagement');
+    Route::post('/api/ai/assistant', [\App\Http\Controllers\ContractGenerationController::class, 'assistantChat'])->name('ai.assistant');
 
     // Agencies routes
     Route::prefix('agencies')->name('agencies.')->group(function () {
