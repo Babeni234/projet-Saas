@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Gemini\Laravel\Facades\Gemini;
+use Prism\Prism\Facades\Prism;
+use Prism\Prism\Enums\Provider;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -75,11 +76,14 @@ class ContractGenerationController extends Controller
         $generatedText = '';
 
         try {
-            $model = config('ai.gemini_model', 'gemini-2.0-flash');
-            $response = Gemini::generativeModel(model: $model)->generateContent($prompt);
-            $generatedText = $response->text();
+            $model = config('ai.groq_model', 'llama-3.3-70b-versatile');
+            $response = Prism::text()
+                ->using(Provider::Groq, $model)
+                ->withPrompt($prompt)
+                ->asText();
+            $generatedText = $response->text;
         } catch (Exception $e) {
-            Log::warning('Gemini API call failed, falling back to local generation. Error: ' . $e->getMessage());
+            Log::warning('Groq API call failed, falling back to local generation. Error: ' . $e->getMessage());
             $apiError = $e->getMessage();
             $generateViaIA = false;
         }
@@ -168,7 +172,7 @@ class ContractGenerationController extends Controller
 
         // Add notice banner at the top
         $banner = "<div style='background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; color: #92400e; margin-bottom: 20px; font-family: sans-serif; font-size: 13px;'>\n";
-        $banner .= "<strong>Note de simulation :</strong> Ce contrat a été généré via notre moteur de secours local (Limite d'API Gemini atteinte/Quota dépassé). Le modèle de contrat de référence a été appliqué avec succès.\n";
+        $banner .= "<strong>Note de simulation :</strong> Ce contrat a été généré via notre moteur de secours local (Limite d'API Groq atteinte/Quota dépassé). Le modèle de contrat de référence a été appliqué avec succès.\n";
         $banner .= "</div>\n\n";
 
         return $banner . $tpl;
@@ -236,11 +240,14 @@ class ContractGenerationController extends Controller
         $generatedText = '';
 
         try {
-            $model = config('ai.gemini_model', 'gemini-2.0-flash');
-            $response = \Gemini\Laravel\Facades\Gemini::generativeModel(model: $model)->generateContent($prompt);
-            $generatedText = $response->text();
+            $model = config('ai.groq_model', 'llama-3.3-70b-versatile');
+            $response = Prism::text()
+                ->using(Provider::Groq, $model)
+                ->withPrompt($prompt)
+                ->asText();
+            $generatedText = $response->text;
         } catch (\Exception $e) {
-            \Log::warning('Gemini API call failed for Engagement, falling back to local generation. Error: ' . $e->getMessage());
+            \Log::warning('Groq API call failed for Engagement, falling back to local generation. Error: ' . $e->getMessage());
             $apiError = $e->getMessage();
             $generateViaIA = false;
         }
@@ -312,7 +319,7 @@ class ContractGenerationController extends Controller
         }
 
         $banner = "<div style='background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; color: #92400e; margin-bottom: 20px; font-family: sans-serif; font-size: 13px;'>\n";
-        $banner .= "<strong>Note de simulation :</strong> Cet engagement a été généré via notre moteur de secours local (Limite d'API Gemini atteinte/Quota dépassé). Le canevas de référence a été appliqué avec succès.\n";
+        $banner .= "<strong>Note de simulation :</strong> Cet engagement a été généré via notre moteur de secours local (Limite d'API Groq atteinte/Quota dépassé). Le canevas de référence a été appliqué avec succès.\n";
         $banner .= "</div>\n\n";
 
         return $banner . $tpl;
