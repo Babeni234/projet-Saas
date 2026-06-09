@@ -409,4 +409,13 @@ const router = createRouter({
     },
 });
 
+router.beforeEach((to, from, next) => {
+    if (to.path.startsWith('/dashboard/hotel')) {
+        alert("🔒 Accès interdit : Le module Hôtellerie est bloqué pour votre entreprise.");
+        next({ name: 'dashboard.master' });
+    } else {
+        next();
+    }
+});
+
 export default router;

@@ -46,6 +46,7 @@ export const navigation = [
                 icon: 'hotel',
                 accent: 'amber',
                 badgeKey: 'hotel',
+                blocked: true,
                 children: [
                     { name: 'dashboard.hotel', label: "Vue d'ensemble" },
                     { name: 'hotel.reservations', label: 'Réservations' },

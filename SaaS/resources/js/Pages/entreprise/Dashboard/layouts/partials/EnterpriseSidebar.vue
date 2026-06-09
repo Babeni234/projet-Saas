@@ -48,17 +48,34 @@
                         <button
                             type="button"
                             class="nav-item w-full"
-                            :class="groupActive(item) ? `nav-item-active nav-accent-${item.accent}` : ''"
-                            @click="toggleGroup(item.id)"
+                            :class="[
+                                groupActive(item) ? `nav-item-active nav-accent-${item.accent}` : '',
+                                item.blocked ? 'opacity-65 cursor-not-allowed hover:bg-transparent' : ''
+                            ]"
+                            @click="item.blocked ? showBlockedModal = true : toggleGroup(item.id)"
                         >
                             <NavIcon :name="item.icon" />
                             <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ item.label }}</span>
+                            
+                            <!-- Lock Icon for Blocked Modules -->
+                            <svg
+                                v-if="item.blocked && !sidebarCollapsed"
+                                class="h-4 w-4 shrink-0 text-slate-500"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0110 0v4" />
+                            </svg>
+                            
                             <span
-                                v-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
+                                v-else-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
                                 class="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white"
                             >{{ badgeCount(item.badgeKey) }}</span>
                             <svg
-                                v-show="!sidebarCollapsed"
+                                v-show="!sidebarCollapsed && !item.blocked"
                                 class="h-4 w-4 shrink-0 transition-transform"
                                 :class="openGroups[item.id] ? 'rotate-180' : ''"
                                 viewBox="0 0 24 24"
@@ -71,8 +88,8 @@
                         </button>
 
                         <div
-                            v-show="openGroups[item.id] && !sidebarCollapsed"
-                            class="ml-3 space-y-0.5 border-l border-white/10 pl-3"
+                            v-show="openGroups[item.id] && !sidebarCollapsed && !item.blocked"
+                            class="ml-3 space-y-0.5 border-l border-slate-200 pl-3"
                         >
                             <template v-for="child in item.children" :key="child.label">
                                 <span
@@ -137,10 +154,43 @@
             @click="closeMobileSidebar"
         />
     </Transition>
+
+    <!-- Blocked Module Modal -->
+    <div v-if="showBlockedModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-gradient-to-br from-white via-white to-amber-50/20 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-amber-100/50 relative overflow-hidden animate-scale-up text-left">
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-amber-400/10 to-orange-500/10 rounded-full blur-3xl"></div>
+            <div class="relative z-10 text-center">
+                <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 mx-auto mb-5 shadow-lg shadow-amber-500/30">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-800 mb-2">Module Bloqué</h3>
+                <p class="text-slate-650 text-sm mb-6 leading-relaxed">
+                    L'accès au module <strong>Hôtellerie</strong> est restreint. Cette fonctionnalité n'est pas incluse dans votre abonnement actuel ou a été désactivée par votre administrateur.
+                </p>
+                <div class="flex gap-4">
+                    <button 
+                        @click="showBlockedModal = false" 
+                        class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
+                    >
+                        Fermer
+                    </button>
+                    <button 
+                        @click="showBlockedModal = false" 
+                        class="flex-1 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all text-xs"
+                    >
+                        Contacter l'Administration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { usePage } from '@inertiajs/vue3';
 import { navigation } from '../../config/navigation';
@@ -150,6 +200,8 @@ import NavIcon from './NavIcon.vue';
 const route = useRoute();
 const page = usePage();
 const { sidebarCollapsed, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = useEnterpriseLayout();
+
+const showBlockedModal = ref(false);
 
 const alerts = reactive({
     immobilier: 3,
