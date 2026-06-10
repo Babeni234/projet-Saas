@@ -26,7 +26,19 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
+        $this->assertGuest();
+        $response->assertStatus(200);
+
+        // Code should be in the session
+        $this->assertTrue(session()->has('2fa_register_code'));
+        $code = session('2fa_register_code');
+
+        // Verify the code
+        $verifyResponse = $this->post('/register/verify-2fa', [
+            'code' => $code,
+        ]);
+
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $verifyResponse->assertRedirect(route('subscription', absolute: false));
     }
 }

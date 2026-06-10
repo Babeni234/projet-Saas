@@ -13,14 +13,16 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('subscription', function () {
-        return inertia('Auth/Subscription');
-    })->name('subscription');
-
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
+
+    Route::post('register/verify-2fa', [RegisteredUserController::class, 'verify2fa'])
+        ->name('register.verify-2fa');
+
+    Route::post('register/resend-2fa', [RegisteredUserController::class, 'resend2fa'])
+        ->name('register.resend-2fa');
 
     Route::post('register/analyze', [RegisterDocumentAnalysisController::class, 'analyze'])
         ->name('register.analyze');
@@ -29,6 +31,12 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::post('login/verify-2fa', [AuthenticatedSessionController::class, 'verify2fa'])
+        ->name('login.verify-2fa');
+
+    Route::post('login/resend-2fa', [AuthenticatedSessionController::class, 'resend2fa'])
+        ->name('login.resend-2fa');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -44,6 +52,24 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('subscription', function () {
+        return inertia('Auth/Subscription', [
+            'accountType' => auth()->user()->account_type,
+        ]);
+    })->name('subscription');
+
+    Route::post('subscription', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'plan' => 'required|string|in:starter,professional,enterprise,standard_particulier,premium_particulier,expert_particulier,pro_entreprise,business_entreprise,corporate',
+        ]);
+
+        $user = auth()->user();
+        $user->subscription_plan = $request->plan;
+        $user->save();
+
+        return redirect(route('dashboard', absolute: false));
+    })->name('subscription.save');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

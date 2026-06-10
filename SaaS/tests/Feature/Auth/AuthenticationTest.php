@@ -26,8 +26,18 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
+        $this->assertGuest();
+        $response->assertStatus(200);
+        $this->assertTrue(session()->has('2fa_code'));
+        
+        $code = session('2fa_code');
+
+        $response2 = $this->post('/login/verify-2fa', [
+            'code' => $code,
+        ]);
+
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response2->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

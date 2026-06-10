@@ -41,7 +41,7 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): Response|RedirectResponse
     {
         $accountType = $request->input('account_type', 'individual');
 
@@ -82,7 +82,7 @@ class RegisteredUserController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'account_type' => $accountType,
-                'subscription_plan' => $validated['plan'] ?? 'starter',
+                'subscription_plan' => 'starter', // Default, modified after 2FA validation
             ]);
 
             if ($accountType !== 'company') {
@@ -136,8 +136,100 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Generate 6-digit verification code
+        $code = sprintf("%06d", mt_rand(0, 999999));
 
-        return redirect(route('dashboard', absolute: false));
+        // Store 2fa registration data to session
+        session([
+            '2fa_register_user_id' => $user->id,
+            '2fa_register_code' => $code,
+            '2fa_register_expires_at' => now()->addMinute(),
+        ]);
+
+        // Send 2fa code
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\TwoFactorCodeMail($code));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SMTP Register 2FA send failed: ' . $e->getMessage());
+        }
+
+        return Inertia::render('Auth/Register', [
+            'requires2fa' => true,
+            'email' => $user->email,
+            'status' => 'Un code de vérification a été envoyé à votre adresse e-mail.',
+        ]);
+    }
+
+    /**
+     * Verify the registration 2FA code.
+     */
+    public function verify2fa(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'code' => 'required|string|size:6',
+        ]);
+
+        $userId = session('2fa_register_user_id');
+        $storedCode = session('2fa_register_code');
+        $expiresAt = session('2fa_register_expires_at');
+
+        if (!$userId || !$storedCode || !$expiresAt) {
+            return redirect()->route('register')->withErrors(['email' => 'Session expirée. Veuillez vous réinscrire.']);
+        }
+
+        if (now()->gt(\Carbon\Carbon::parse($expiresAt))) {
+            return back()->withErrors(['code' => 'Le code de vérification a expiré. Veuillez en demander un nouveau.']);
+        }
+
+        if (trim($request->code) !== trim($storedCode)) {
+            return back()->withErrors(['code' => 'Le code de vérification est incorrect.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('register')->withErrors(['email' => 'Utilisateur introuvable.']);
+        }
+
+        // Clear session
+        session()->forget(['2fa_register_user_id', '2fa_register_code', '2fa_register_expires_at']);
+
+        // Log user in
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        // Redirect to selection
+        return redirect(route('subscription'));
+    }
+
+    /**
+     * Resend the registration 2FA code.
+     */
+    public function resend2fa(Request $request): RedirectResponse
+    {
+        $userId = session('2fa_register_user_id');
+
+        if (!$userId) {
+            return redirect()->route('register')->withErrors(['email' => 'Session expirée. Veuillez vous réinscrire.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('register')->withErrors(['email' => 'Utilisateur introuvable.']);
+        }
+
+        $code = sprintf("%06d", mt_rand(0, 999999));
+
+        session([
+            '2fa_register_code' => $code,
+            '2fa_register_expires_at' => now()->addMinute(),
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\TwoFactorCodeMail($code));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SMTP Register 2FA resend failed: ' . $e->getMessage());
+        }
+
+        return back()->with('status', 'Un nouveau code de vérification a été envoyé à votre adresse e-mail.');
     }
 }

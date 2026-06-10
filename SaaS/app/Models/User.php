@@ -24,11 +24,13 @@ class User extends Authenticatable
         'email',
         'password',
         'account_type',
+        'account_type',
         'landlord_verified',
         'landlord_verification_status',
         'verification_documents',
         'additional_info',
         'verified_at',
+        'subscription_plan',
     ];
 
     /**
