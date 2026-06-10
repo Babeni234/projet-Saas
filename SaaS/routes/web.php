@@ -65,6 +65,7 @@ Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->grou
     Route::get('/immobilier/historique', function () {
         return redirect()->route('agence.dashboard', ['route' => 'immobilier/historique']);
     })->name('immobilier.historique');
+    Route::get('/immobilier/illustrations', [\App\Http\Controllers\IllustrationController::class, 'index'])->name('immobilier.illustrations');
     Route::get('/comptabilite', function () {
         return redirect()->route('agence.dashboard', ['route' => 'comptabilite']);
     })->name('accounting');
@@ -179,6 +180,7 @@ Route::middleware('auth')->group(function () {
                 'initialRoute' => 'immobilier/historique'
             ]);
         })->name('historique');
+        Route::get('/illustrations', [\App\Http\Controllers\IllustrationController::class, 'index'])->name('illustrations');
     });
 
     // Roles and Permissions routes
@@ -191,6 +193,11 @@ Route::middleware('auth')->group(function () {
     });
     Route::post('dashboard/users/{user}/role', [\App\Http\Controllers\RoleController::class, 'updateUserRole'])->name('users.update-role');
     Route::post('dashboard/users/{user}/status', [\App\Http\Controllers\RoleController::class, 'updateUserStatus'])->name('users.update-status');
+
+    // Illustrations API routes
+    Route::post('/api/illustrations', [\App\Http\Controllers\IllustrationController::class, 'store'])->name('illustrations.store');
+    Route::put('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'update'])->name('illustrations.update');
+    Route::delete('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'destroy'])->name('illustrations.destroy');
 });
 
 require __DIR__.'/auth.php';

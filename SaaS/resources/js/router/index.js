@@ -53,6 +53,19 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/illustrations',
+        name: 'immobilier.illustrations',
+        component: () => import('../Pages/entreprise/Dashboard/components/IllustrationPage.vue'),
+        meta: {
+            title: 'Gestion des illustrations',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Illustrations', to: { name: 'immobilier.illustrations' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/affectations',
         name: 'immobilier.affectations',
         component: () => import('../Pages/entreprise/Dashboard/components/AffectationPage.vue'),
@@ -459,6 +472,19 @@ const routes = [
                 { label: 'Accueil', to: { name: 'agence.master' } },
                 { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
                 { label: 'Logements', to: { name: 'agence.immobilier.logements' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/illustrations',
+        name: 'agence.immobilier.illustrations',
+        component: () => import('../Pages/entreprise/Dashboard/components/IllustrationPage.vue'),
+        meta: {
+            title: 'Gestion des illustrations',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Illustrations', to: { name: 'agence.immobilier.illustrations' } },
             ],
         },
     },
