@@ -30,8 +30,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $agencies = [];
         if ($user) {
-            $user->load('company');
+            $user->load(['company', 'role', 'employee.agency']);
+            if ($user->company_profile_id) {
+                $agencies = \App\Models\Agency::where('company_profile_id', $user->company_profile_id)->get();
+            }
         }
 
         return [
@@ -39,6 +43,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'agencies' => $agencies,
         ];
     }
 }

@@ -1,23 +1,14 @@
 <template>
     <div class="flex flex-col gap-6">
-        <!-- Header with Add Button -->
+        <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
                     Gestion des Bâtiments
-                    <span class="text-indigo-500 text-sm font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">Module Immobilier</span>
+                    <span class="text-indigo-500 text-sm font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">Espace Agence</span>
                 </h1>
-                <p class="text-slate-600 mt-1">Gérer les immeubles, localisations et caractéristiques structurelles.</p>
+                <p class="text-slate-650 mt-1">Consultez les immeubles et les logements gérés par votre agence.</p>
             </div>
-            <button
-                @click="openAddModal"
-                class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nouveau Bâtiment
-            </button>
         </div>
 
         <!-- KPI Cards -->
@@ -117,7 +108,6 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Nombre d'Étages</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Unités / Appartements</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut Opérationnel</th>
-                            <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -166,31 +156,9 @@
                                     {{ batiment.statut === 'Actif' ? 'Actif' : 'En Maintenance' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <button 
-                                        @click="openEditModal(batiment)" 
-                                        class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                                        title="Modifier la fiche"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button 
-                                        @click="openDeleteModal(batiment)" 
-                                        class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                                        title="Supprimer le bâtiment"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
                         </tr>
                         <tr v-if="filteredBatiments.length === 0">
-                            <td colspan="6" class="text-center py-12 text-slate-400">
+                            <td colspan="5" class="text-center py-12 text-slate-400">
                                 Aucun bâtiment trouvé correspondant à vos critères de recherche.
                             </td>
                         </tr>
@@ -451,6 +419,7 @@ import { usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const agencies = computed(() => page.props.agencies || []);
+const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id);
 
 const getAgencyName = (agencyId) => {
     const agency = agencies.value.find(a => Number(a.id) === Number(agencyId));
@@ -478,7 +447,9 @@ const searchQuery = ref('');
 const statusFilter = ref('');
 
 const filteredBatiments = computed(() => {
-    let list = batiments.value;
+    // Agency scope
+    const agencyId = currentAgencyId.value;
+    let list = batiments.value.filter(b => Number(b.agency_id) === Number(agencyId));
     
     // Status Filter
     if (statusFilter.value) {
@@ -500,10 +471,10 @@ const filteredBatiments = computed(() => {
     return list;
 });
 
-const totalBatiments = computed(() => batiments.value.length);
-const totalAppartements = computed(() => batiments.value.reduce((sum, b) => sum + b.appartements, 0));
-const batimentsActifs = computed(() => batiments.value.filter(b => b.statut === 'Actif').length);
-const batimentsMaintenance = computed(() => batiments.value.filter(b => b.statut === 'Maintenance').length);
+const totalBatiments = computed(() => filteredBatiments.value.length);
+const totalAppartements = computed(() => filteredBatiments.value.reduce((sum, b) => sum + b.appartements, 0));
+const batimentsActifs = computed(() => filteredBatiments.value.filter(b => b.statut === 'Actif').length);
+const batimentsMaintenance = computed(() => filteredBatiments.value.filter(b => b.statut === 'Maintenance').length);
 
 const showModal = ref(false);
 const showDeleteModal = ref(false);

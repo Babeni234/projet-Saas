@@ -16,8 +16,74 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    if ($user && $user->employee && $user->employee->agency_id !== null) {
+        return redirect()->route('agence.dashboard');
+    }
     return Inertia::render('entreprise/Dashboard/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Agence\AgencyDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/employees/data', [\App\Http\Controllers\Agence\AgencyEmployeeController::class, 'index'])->name('employees.data');
+    Route::post('/employees/store', [\App\Http\Controllers\Agence\AgencyEmployeeController::class, 'store'])->name('employees.store');
+    
+    // Scoped sub-navigation redirects for Espace Agence
+    Route::get('/immobilier', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier']);
+    })->name('immobilier.index');
+    Route::get('/immobilier/batiments', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/batiments']);
+    })->name('immobilier.batiments');
+    Route::get('/immobilier/logements', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/logements']);
+    })->name('immobilier.logements');
+    Route::get('/immobilier/affectations', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/affectations']);
+    })->name('immobilier.affectations');
+    Route::get('/immobilier/contrats', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/contrats']);
+    })->name('immobilier.contrats');
+    Route::get('/immobilier/locataires', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/locataires']);
+    })->name('immobilier.locataires');
+    Route::get('/immobilier/factures', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/factures']);
+    })->name('immobilier.factures');
+    Route::get('/immobilier/paiements', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/paiements']);
+    })->name('immobilier.paiements');
+    Route::get('/immobilier/renouvellements', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/renouvellements']);
+    })->name('immobilier.renouvellements');
+    Route::get('/immobilier/engagements', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/engagements']);
+    })->name('immobilier.engagements');
+    Route::get('/immobilier/etats-des-lieux', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/etats-des-lieux']);
+    })->name('immobilier.etats-des-lieux');
+    Route::get('/immobilier/historique', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/historique']);
+    })->name('immobilier.historique');
+    Route::get('/comptabilite', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'comptabilite']);
+    })->name('accounting');
+    Route::get('/comptabilite/factures', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'comptabilite/factures']);
+    })->name('accounting.factures');
+    Route::get('/comptabilite/facture-creation', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'comptabilite/facture-creation']);
+    })->name('accounting.facture-creation');
+    Route::get('/maintenance', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'maintenance']);
+    })->name('maintenance');
+    Route::get('/rapports', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'rapports']);
+    })->name('reports');
+    Route::get('/employees', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'employees']);
+    })->name('employees');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', function () {
