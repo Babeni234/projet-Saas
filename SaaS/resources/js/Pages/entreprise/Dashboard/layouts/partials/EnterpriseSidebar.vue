@@ -10,15 +10,18 @@
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-gradient-to-r from-yellow-100 to-yellow-50 px-4">
             <RouterLink
                 :to="{ name: 'dashboard.master' }"
-                class="flex min-w-0 items-center gap-3"
+                class="flex min-w-0 items-center gap-3 animate-fade-in"
                 @click="closeMobileSidebar"
             >
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
-                    <span class="text-sm font-bold text-white">E</span>
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+                    <img v-if="companyLogo" :src="companyLogo" class="h-full w-full object-contain p-1" alt="Logo" />
+                    <div v-else class="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-xs font-black">
+                        {{ companyInitials }}
+                    </div>
                 </div>
-                <div v-show="!sidebarCollapsed" class="min-w-0 truncate">
-                    <p class="text-sm font-semibold text-slate-900">Enterprise</p>
-                    <p class="truncate text-[11px] text-slate-600">Portail de gestion</p>
+                <div v-show="!sidebarCollapsed" class="min-w-0 truncate text-left">
+                    <p class="text-sm font-bold text-slate-900 truncate max-w-[140px]">{{ companyName }}</p>
+                    <p class="truncate text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{{ companyType }}</p>
                 </div>
             </RouterLink>
             <button
@@ -218,6 +221,14 @@ const userName = computed(() => page.props.auth?.user?.name || 'Administrateur')
 const userRole = computed(() => 'Administrateur');
 const userInitials = computed(() => {
     const name = userName.value || 'A';
+    return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+});
+
+const companyName = computed(() => page.props.auth?.user?.company?.legal_name || 'Enterprise');
+const companyType = computed(() => page.props.auth?.user?.company?.business_type || 'Portail');
+const companyLogo = computed(() => page.props.auth?.user?.company?.logo_path ? '/storage/' + page.props.auth.user.company.logo_path : null);
+const companyInitials = computed(() => {
+    const name = companyName.value || 'E';
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 });
 

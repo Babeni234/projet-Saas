@@ -58,8 +58,8 @@
                 </button>
 
                 <!-- Profile button -->
-                <Link
-                    :href="route('profile.edit')"
+                <RouterLink
+                    :to="{ name: 'dashboard.company.profile' }"
                     class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                 >
                     <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -67,7 +67,7 @@
                         <circle cx="12" cy="7" r="4" />
                     </svg>
                     <span class="hidden sm:inline">Profil</span>
-                </Link>
+                </RouterLink>
 
                 <!-- Logout button -->
                 <button
@@ -97,6 +97,40 @@
                 </div>
             </div>
         </div>
+
+        <!-- Logout confirmation popup -->
+        <Transition name="fade">
+            <div v-if="showLogoutConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                <div class="bg-gradient-to-br from-white via-white to-red-50/10 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-red-100/50 relative overflow-hidden animate-scale-up text-left">
+                    <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-red-400/10 to-rose-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-650 mx-auto mb-5 shadow-lg shadow-red-500/30">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-2">Déconnexion</h3>
+                        <p class="text-slate-650 text-sm mb-6 leading-relaxed">
+                            Voulez-vous vraiment vous déconnecter de l'entreprise <strong class="text-slate-800 font-extrabold">{{ companyName }}</strong> ?
+                        </p>
+                        <div class="flex gap-4">
+                            <button 
+                                @click="showLogoutConfirm = false" 
+                                class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
+                            >
+                                Annuler
+                            </button>
+                            <button 
+                                @click="confirmLogout" 
+                                class="flex-1 px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all text-xs"
+                            >
+                                Se Déconnecter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
     </header>
 </template>
 
@@ -120,8 +154,15 @@ const pageTitle = usePageTitle();
 const { toggleMobileSidebar } = useEnterpriseLayout();
 
 const logoutLoading = ref(false);
+const showLogoutConfirm = ref(false);
+const companyName = computed(() => page.props.auth?.user?.company?.legal_name || 'votre entreprise');
 
 const handleLogout = () => {
+    showLogoutConfirm.value = true;
+};
+
+const confirmLogout = () => {
+    showLogoutConfirm.value = false;
     logoutLoading.value = true;
     router.post(window.route('logout'), {}, {
         onFinish: () => {

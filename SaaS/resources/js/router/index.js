@@ -399,6 +399,18 @@ const routes = [
         component: () => import('../Pages/entreprise/Dashboard/components/RolesPermissions.vue'),
         meta: { title: 'Rôles & permissions' },
     },
+    {
+        path: '/dashboard/company/profile',
+        name: 'dashboard.company.profile',
+        component: () => import('../Pages/entreprise/Dashboard/pages/CompanyProfile.vue'),
+        meta: {
+            title: 'Profil de l\'entreprise',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Profil de l\'entreprise', to: { name: 'dashboard.company.profile' } },
+            ],
+        },
+    },
 ];
 
 const router = createRouter({
