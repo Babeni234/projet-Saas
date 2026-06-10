@@ -107,7 +107,12 @@ class AuthenticatedSessionController extends Controller
         Auth::loginUsingId($userId, $remember);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $intended = redirect()->intended(route('dashboard', absolute: false))->getTargetUrl();
+        if (str_contains($intended, '/subscription')) {
+            $intended = route('dashboard', absolute: false);
+        }
+
+        return redirect()->to($intended);
     }
 
     /**

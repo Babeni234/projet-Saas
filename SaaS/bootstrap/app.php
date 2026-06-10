@@ -19,5 +19,16 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+                if ($request->is('logout') || $request->is('*/logout')) {
+                    auth()->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return redirect('/');
+                }
+                return redirect()->back()->with('error', 'Votre session a expiré. Veuillez réessayer.');
+            }
+            return $response;
+        });
     })->create();
