@@ -53,27 +53,39 @@ class AgencyController extends Controller
         // Paginate
         $agencies = $query->paginate($perPage);
 
+        $stats = [
+            'total' => Agency::count(),
+            'active' => Agency::active()->count(),
+            'inactive' => Agency::inactive()->count(),
+            'suspended' => Agency::where('status', 'suspended')->count(),
+            'total_employees' => (int) Agency::sum('employee_count'),
+            'needs_attention' => Agency::where(function($q) {
+                $q->whereNull('manager_name')
+                  ->orWhere('manager_name', '')
+                  ->orWhere('status', 'suspended');
+            })->count(),
+        ];
+
+        $filters = [
+            'search' => $search,
+            'status' => $status,
+            'per_page' => $perPage,
+            'sort_by' => $sortBy,
+            'sort_order' => $sortOrder,
+        ];
+
+        if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
+            return response()->json([
+                'agencies' => $agencies,
+                'filters' => $filters,
+                'stats' => $stats,
+            ]);
+        }
+
         return $this->enterpriseDashboard('immobilier/agencies', [
             'agencies' => $agencies,
-            'filters' => [
-                'search' => $search,
-                'status' => $status,
-                'per_page' => $perPage,
-                'sort_by' => $sortBy,
-                'sort_order' => $sortOrder,
-            ],
-            'stats' => [
-                'total' => Agency::count(),
-                'active' => Agency::active()->count(),
-                'inactive' => Agency::inactive()->count(),
-                'suspended' => Agency::where('status', 'suspended')->count(),
-                'total_employees' => Agency::sum('employee_count'),
-                'needs_attention' => Agency::where(function($q) {
-                    $q->whereNull('manager_name')
-                      ->orWhere('manager_name', '')
-                      ->orWhere('status', 'suspended');
-                })->count(),
-            ],
+            'filters' => $filters,
+            'stats' => $stats,
         ]);
     }
 
@@ -114,7 +126,15 @@ class AgencyController extends Controller
             'establishment_date' => 'nullable|date',
         ]);
 
-        Agency::create($validated);
+        $agency = Agency::create($validated);
+
+        if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Agence créée avec succès.',
+                'agency' => $agency
+            ], 201);
+        }
 
         return redirect()->route('agencies.index')
             ->with('success', 'Agence créée avec succès.');
@@ -169,6 +189,14 @@ class AgencyController extends Controller
 
         $agency->update($validated);
 
+        if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Agence mise à jour avec succès.',
+                'agency' => $agency
+            ]);
+        }
+
         return redirect()->route('agencies.index')
             ->with('success', 'Agence mise à jour avec succès.');
     }
@@ -176,9 +204,16 @@ class AgencyController extends Controller
     /**
      * Remove the specified agency from storage.
      */
-    public function destroy(Agency $agency)
+    public function destroy(Request $request, Agency $agency)
     {
         $agency->delete();
+
+        if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Agence supprimée avec succès.'
+            ]);
+        }
 
         return redirect()->route('agencies.index')
             ->with('success', 'Agence supprimée avec succès.');

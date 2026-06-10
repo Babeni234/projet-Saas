@@ -235,12 +235,12 @@
 
             <!-- Form Actions -->
             <div class="flex gap-4 justify-end">
-                <a
-                    href="/"
+                <Link
+                    :href="route('agencies.index')"
                     class="px-8 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all duration-200 font-medium"
                 >
                     Annuler
-                </a>
+                </Link>
                 <button
                     type="submit"
                     :disabled="isSubmitting"
@@ -262,7 +262,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { usePage, router as inertiaRouter } from '@inertiajs/vue3';
+import { usePage, router as inertiaRouter, Link } from '@inertiajs/vue3';
 import { RouterLink } from 'vue-router';
 
 const page = usePage();
@@ -299,12 +299,13 @@ const submitForm = async () => {
 
     try {
         const method = agency.value ? 'PUT' : 'POST';
-        const url = agency.value ? `/agencies/${agency.value.id}` : '/agencies';
+        const url = agency.value ? route('agencies.update', agency.value.id) : route('agencies.store');
 
         const response = await fetch(url, {
             method,
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(formData.value),
@@ -318,7 +319,7 @@ const submitForm = async () => {
             return;
         }
 
-        inertiaRouter.visit('/agencies');
+        inertiaRouter.visit(route('agencies.index'));
     } catch (error) {
         console.error('Erreur lors de la soumission:', error);
     } finally {

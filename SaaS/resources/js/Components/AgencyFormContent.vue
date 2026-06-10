@@ -13,7 +13,6 @@
                     Informations Générales
                 </h3>
 
-                <!-- Name & Code row -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nom de l'Agence <span class="text-red-500">*</span></label>
@@ -23,7 +22,9 @@
                             required
                             placeholder="Ex: Agence Principale"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.name}"
                         />
+                        <span v-if="errors.name" class="text-red-500 text-[11px] mt-1 block">{{ errors.name[0] }}</span>
                     </div>
 
                     <div>
@@ -34,11 +35,12 @@
                             required
                             placeholder="Ex: AG001"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.code}"
                         />
+                        <span v-if="errors.code" class="text-red-500 text-[11px] mt-1 block">{{ errors.code[0] }}</span>
                     </div>
                 </div>
 
-                <!-- Description -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description & Notes</label>
                     <textarea
@@ -46,10 +48,11 @@
                         rows="3"
                         placeholder="Notes de service, description de l'agence..."
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+                        :class="{'border-red-500 focus:ring-red-500': errors.description}"
                     ></textarea>
+                    <span v-if="errors.description" class="text-red-500 text-[11px] mt-1 block">{{ errors.description[0] }}</span>
                 </div>
 
-                <!-- Statut & Date d'établissement -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Statut opérationnel <span class="text-red-500">*</span></label>
@@ -57,11 +60,13 @@
                             v-model="formData.status"
                             required
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-slate-700 cursor-pointer"
+                            :class="{'border-red-500 focus:ring-red-500': errors.status}"
                         >
                             <option value="active">Actif</option>
                             <option value="inactive">Inactif</option>
                             <option value="suspended">Suspendu</option>
                         </select>
+                        <span v-if="errors.status" class="text-red-500 text-[11px] mt-1 block">{{ errors.status[0] }}</span>
                     </div>
 
                     <div>
@@ -70,11 +75,12 @@
                             v-model="formData.establishment_date"
                             type="date"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-slate-700"
+                            :class="{'border-red-500 focus:ring-red-500': errors.establishment_date}"
                         />
+                        <span v-if="errors.establishment_date" class="text-red-500 text-[11px] mt-1 block">{{ errors.establishment_date[0] }}</span>
                     </div>
                 </div>
 
-                <!-- Effectif / Employés -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre d'Employés</label>
                     <input
@@ -83,7 +89,9 @@
                         min="0"
                         placeholder="Ex: 15"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        :class="{'border-red-500 focus:ring-red-500': errors.employee_count}"
                     />
+                    <span v-if="errors.employee_count" class="text-red-500 text-[11px] mt-1 block">{{ errors.employee_count[0] }}</span>
                 </div>
             </div>
 
@@ -106,7 +114,9 @@
                             type="email"
                             placeholder="agence@contact.com"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.email}"
                         />
+                        <span v-if="errors.email" class="text-red-500 text-[11px] mt-1 block">{{ errors.email[0] }}</span>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Téléphone de l'Agence</label>
@@ -115,7 +125,9 @@
                             type="tel"
                             placeholder="+33 1 23 45 67 89"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.phone}"
                         />
+                        <span v-if="errors.phone" class="text-red-500 text-[11px] mt-1 block">{{ errors.phone[0] }}</span>
                     </div>
                 </div>
 
@@ -127,7 +139,9 @@
                         type="text"
                         placeholder="123 Rue de l'Agence"
                         class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        :class="{'border-red-500 focus:ring-red-500': errors.address}"
                     />
+                    <span v-if="errors.address" class="text-red-500 text-[11px] mt-1 block">{{ errors.address[0] }}</span>
                 </div>
 
                 <div class="grid grid-cols-3 gap-3">
@@ -138,7 +152,9 @@
                             type="text"
                             placeholder="Paris"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.city}"
                         />
+                        <span v-if="errors.city" class="text-red-500 text-[11px] mt-1 block">{{ errors.city[0] }}</span>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Code Postal</label>
@@ -147,7 +163,9 @@
                             type="text"
                             placeholder="75000"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.postal_code}"
                         />
+                        <span v-if="errors.postal_code" class="text-red-500 text-[11px] mt-1 block">{{ errors.postal_code[0] }}</span>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pays</label>
@@ -156,29 +174,75 @@
                             type="text"
                             placeholder="France"
                             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.country}"
                         />
+                        <span v-if="errors.country" class="text-red-500 text-[11px] mt-1 block">{{ errors.country[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Geolocation Inputs -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Latitude</label>
+                        <input
+                            v-model.number="formData.latitude"
+                            type="number"
+                            step="0.00001"
+                            placeholder="Ex: 48.8566"
+                            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.latitude}"
+                        />
+                        <span v-if="errors.latitude" class="text-red-500 text-[11px] mt-1 block">{{ errors.latitude[0] }}</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Longitude</label>
+                        <input
+                            v-model.number="formData.longitude"
+                            type="number"
+                            step="0.00001"
+                            placeholder="Ex: 2.3522"
+                            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            :class="{'border-red-500 focus:ring-red-500': errors.longitude}"
+                        />
+                        <span v-if="errors.longitude" class="text-red-500 text-[11px] mt-1 block">{{ errors.longitude[0] }}</span>
                     </div>
                 </div>
 
                 <!-- Responsible Manager -->
                 <div class="border-t border-slate-100 pt-3 mt-2">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Responsable de l'Agence</label>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-3">
                         <div>
                             <input
                                 v-model="formData.manager_name"
                                 type="text"
                                 placeholder="Nom du Manager"
                                 class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                :class="{'border-red-500 focus:ring-red-500': errors.manager_name}"
                             />
+                            <span v-if="errors.manager_name" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_name[0] }}</span>
                         </div>
-                        <div>
-                            <input
-                                v-model="formData.manager_phone"
-                                type="tel"
-                                placeholder="Téléphone du Manager"
-                                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                            />
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <input
+                                    v-model="formData.manager_email"
+                                    type="email"
+                                    placeholder="Email du Manager"
+                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    :class="{'border-red-500 focus:ring-red-500': errors.manager_email}"
+                                />
+                                <span v-if="errors.manager_email" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_email[0] }}</span>
+                            </div>
+                            <div>
+                                <input
+                                    v-model="formData.manager_phone"
+                                    type="tel"
+                                    placeholder="Téléphone du Manager"
+                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    :class="{'border-red-500 focus:ring-red-500': errors.manager_phone}"
+                                />
+                                <span v-if="errors.manager_phone" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_phone[0] }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -220,6 +284,10 @@ const props = defineProps({
     agency: {
         type: Object,
         default: null
+    },
+    errors: {
+        type: Object,
+        default: () => ({})
     }
 });
 

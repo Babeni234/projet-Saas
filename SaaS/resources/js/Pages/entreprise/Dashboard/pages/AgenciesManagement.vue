@@ -514,6 +514,7 @@
         >
             <AgencyFormContent
                 :agency="editingAgency"
+                :errors="formErrors"
                 @submit="handleFormSubmit"
                 @cancel="closeModal"
             />
@@ -581,6 +582,7 @@ const stats = ref(initialStats);
 const showModal = ref(false);
 const showDeleteModal = ref(false);
 const editingAgency = ref(null);
+const formErrors = ref({});
 const deletingAgencyId = ref(null);
 const modalTitle = ref('');
 const modalSubtitle = ref('');
@@ -645,10 +647,11 @@ const submitQuickAssign = async () => {
             establishment_date: selected.establishment_date,
         };
 
-        const response = await fetch(`/agencies/${selected.id}`, {
+        const response = await fetch(route('agencies.update', selected.id), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(payload),
@@ -774,6 +777,7 @@ const closeNotification = () => {
 
 const openCreateModal = () => {
     editingAgency.value = null;
+    formErrors.value = {};
     modalTitle.value = 'Créer une nouvelle agence';
     modalSubtitle.value = 'Remplissez les informations ci-dessous pour créer une nouvelle agence';
     showModal.value = true;
@@ -781,6 +785,7 @@ const openCreateModal = () => {
 
 const openEditModal = (agency) => {
     editingAgency.value = agency;
+    formErrors.value = {};
     modalTitle.value = 'Modifier l\'agence';
     modalSubtitle.value = `Modifiez les informations de l'agence ${agency.name}`;
     showModal.value = true;
@@ -789,6 +794,7 @@ const openEditModal = (agency) => {
 const closeModal = () => {
     showModal.value = false;
     editingAgency.value = null;
+    formErrors.value = {};
 };
 
 const confirmDelete = (id) => {
@@ -803,7 +809,7 @@ const closeDeleteModal = () => {
 
 const confirmDeleteAction = async () => {
     try {
-        const response = await fetch(`/agencies/${deletingAgencyId.value}`, {
+        const response = await fetch(route('agencies.destroy', deletingAgencyId.value), {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -825,14 +831,16 @@ const confirmDeleteAction = async () => {
 };
 
 const handleFormSubmit = async (formData) => {
+    formErrors.value = {};
     try {
         const method = editingAgency.value ? 'PUT' : 'POST';
-        const url = editingAgency.value ? `/agencies/${editingAgency.value.id}` : '/agencies';
+        const url = editingAgency.value ? route('agencies.update', editingAgency.value.id) : route('agencies.store');
 
         const response = await fetch(url, {
             method,
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(formData),
@@ -844,6 +852,9 @@ const handleFormSubmit = async (formData) => {
             loadAgencies();
         } else {
             const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                formErrors.value = data.errors;
+            }
             showNotification('error', 'Erreur', data.message || 'Une erreur est survenue');
         }
     } catch (error) {
@@ -867,7 +878,7 @@ const handleFilter = () => {
 
 const loadAgencies = () => {
     const params = new URLSearchParams(filters.value);
-    inertiaRouter.get(`/agencies?${params.toString()}`, {}, {
+    inertiaRouter.get(route('agencies.index') + `?${params.toString()}`, {}, {
         preserveState: true,
         preserveScroll: true,
         only: ['agencies', 'stats', 'filters'],
@@ -899,7 +910,7 @@ const clearSelection = () => {
 };
 
 const viewAgency = (id) => {
-    inertiaRouter.visit(`/agencies/${id}`);
+    inertiaRouter.visit(route('agencies.show', id));
 };
 
 const editAgency = (id) => {
@@ -919,7 +930,7 @@ const bulkMarkInactive = async () => {
 
 const bulkUpdateStatus = async (status) => {
     try {
-        const response = await fetch('/agencies/bulk/status', {
+        const response = await fetch(route('agencies.bulk-status'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -952,7 +963,7 @@ const confirmBulkDelete = () => {
 
 const bulkDelete = async () => {
     try {
-        const response = await fetch('/agencies/bulk/delete', {
+        const response = await fetch(route('agencies.bulk-delete'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -977,7 +988,7 @@ const bulkDelete = async () => {
 };
 
 const exportData = () => {
-    window.location.href = '/agencies/export';
+    window.location.href = route('agencies.export');
 };
 
 const getPaginationPages = () => {

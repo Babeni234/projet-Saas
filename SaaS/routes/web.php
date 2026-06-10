@@ -34,15 +34,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [AgencyController::class, 'index'])->name('index');
         Route::get('/create', [AgencyController::class, 'create'])->name('create');
         Route::post('/', [AgencyController::class, 'store'])->name('store');
-        Route::get('/{agency}', [AgencyController::class, 'show'])->name('show');
-        Route::get('/{agency}/edit', [AgencyController::class, 'edit'])->name('edit');
-        Route::put('/{agency}', [AgencyController::class, 'update'])->name('update');
-        Route::delete('/{agency}', [AgencyController::class, 'destroy'])->name('destroy');
         Route::get('/export/csv', [AgencyController::class, 'export'])->name('export');
         Route::get('/statistics', [AgencyController::class, 'getStatistics'])->name('statistics');
         Route::get('/map/agencies', [AgencyController::class, 'getAgenciesForMap'])->name('map');
         Route::post('/bulk/status', [AgencyController::class, 'bulkUpdateStatus'])->name('bulk-status');
         Route::post('/bulk/delete', [AgencyController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/{agency}', [AgencyController::class, 'show'])->name('show');
+        Route::get('/{agency}/edit', [AgencyController::class, 'edit'])->name('edit');
+        Route::put('/{agency}', [AgencyController::class, 'update'])->name('update');
+        Route::delete('/{agency}', [AgencyController::class, 'destroy'])->name('destroy');
     });
 
     // Immobilier routes
