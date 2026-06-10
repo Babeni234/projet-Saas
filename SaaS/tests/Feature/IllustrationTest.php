@@ -87,7 +87,8 @@ class IllustrationTest extends TestCase
             'target_id' => '101',
             'target_name' => 'APT-A101',
             'description' => 'Superbes photos de la pièce principale',
-            'media_files' => [$imageFile, $videoFile]
+            'photos' => [$imageFile],
+            'videos' => [$videoFile]
         ];
 
         $response = $this->actingAs($this->companyUser)->post(route('illustrations.store'), $payload);

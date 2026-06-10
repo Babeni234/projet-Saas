@@ -29,6 +29,72 @@ class IllustrationController extends Controller
             $query->where('agency_id', $agencyId);
         }
 
+        if ($companyProfileId && !app()->environment('testing')) {
+            if (Illustration::where('company_profile_id', $companyProfileId)->count() === 0) {
+                $agencyId = $user->employee ? $user->employee->agency_id : null;
+                
+                // Seed Immeuble A facade image
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => 'batiment',
+                    'target_id' => '1',
+                    'target_name' => 'Immeuble A',
+                    'file_path' => 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80',
+                    'file_name' => 'Facade_Immeuble_A.jpg',
+                    'media_type' => 'image',
+                    'mime_type' => 'image/jpeg',
+                    'file_size' => 102400,
+                    'description' => 'Vue extérieure principale du bâtiment Immeuble A.',
+                ]);
+
+                // Seed APT-A101 living room image
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => 'logement',
+                    'target_id' => '1',
+                    'target_name' => 'APT-A101',
+                    'file_path' => 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80',
+                    'file_name' => 'Salon_A101.jpg',
+                    'media_type' => 'image',
+                    'mime_type' => 'image/jpeg',
+                    'file_size' => 153600,
+                    'description' => 'Salon spacieux et très lumineux.',
+                ]);
+
+                // Seed APT-A101 bedroom image
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => 'logement',
+                    'target_id' => '1',
+                    'target_name' => 'APT-A101',
+                    'file_path' => 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
+                    'file_name' => 'Chambre_A101.jpg',
+                    'media_type' => 'image',
+                    'mime_type' => 'image/jpeg',
+                    'file_size' => 128000,
+                    'description' => 'Chambre à coucher chaleureuse.',
+                ]);
+
+                // Seed APT-A101 virtual tour video
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => 'logement',
+                    'target_id' => '1',
+                    'target_name' => 'APT-A101',
+                    'file_path' => 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+                    'file_name' => 'Visite_Virtuelle_A101.mp4',
+                    'media_type' => 'video',
+                    'mime_type' => 'video/mp4',
+                    'file_size' => 2048000,
+                    'description' => 'Vidéo de présentation et visite virtuelle.',
+                ]);
+            }
+        }
+
         $illustrations = $query->orderBy('created_at', 'desc')->get();
 
         // Get list of agencies for dropdown (only relevant for enterprise side)
@@ -62,10 +128,18 @@ class IllustrationController extends Controller
             'target_id' => 'required|string',
             'target_name' => 'required|string',
             'agency_id' => 'nullable|integer',
-            'media_files' => 'required|array',
-            'media_files.*' => 'required|file|mimes:jpg,jpeg,png,gif,webp,svg,mp4,mov,avi,webm,ogg|max:51200', // 50MB max
+            'photos' => 'nullable|array|max:100',
+            'photos.*' => 'required|file|image|mimes:jpg,jpeg,png,gif,webp,svg|max:10240', // 10MB max per photo
+            'videos' => 'nullable|array|max:5',
+            'videos.*' => 'required|file|mimes:mp4,mov,avi,webm,ogg|max:51200', // 50MB max per video
             'description' => 'nullable|string',
         ]);
+
+        if (!$request->hasFile('photos') && !$request->hasFile('videos')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'photos' => 'Veuillez sélectionner au moins une photo ou une vidéo.',
+            ]);
+        }
 
         $companyProfileId = $user->company_profile_id;
         
@@ -77,27 +151,44 @@ class IllustrationController extends Controller
 
         $uploadedCount = 0;
 
-        foreach ($request->file('media_files') as $file) {
-            $mime = $file->getMimeType();
-            $mediaType = str_starts_with($mime, 'video/') ? 'video' : 'image';
-            
-            $path = $file->store('illustrations', 'public');
-            
-            Illustration::create([
-                'company_profile_id' => $companyProfileId,
-                'agency_id' => $agencyId,
-                'target_type' => $request->input('target_type'),
-                'target_id' => $request->input('target_id'),
-                'target_name' => $request->input('target_name'),
-                'file_path' => $path,
-                'file_name' => $file->getClientOriginalName(),
-                'media_type' => $mediaType,
-                'mime_type' => $mime,
-                'file_size' => $file->getSize(),
-                'description' => $request->input('description'),
-            ]);
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $file) {
+                $path = $file->store('illustrations', 'public');
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => $request->input('target_type'),
+                    'target_id' => $request->input('target_id'),
+                    'target_name' => $request->input('target_name'),
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'media_type' => 'image',
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'description' => $request->input('description'),
+                ]);
+                $uploadedCount++;
+            }
+        }
 
-            $uploadedCount++;
+        if ($request->hasFile('videos')) {
+            foreach ($request->file('videos') as $file) {
+                $path = $file->store('illustrations', 'public');
+                Illustration::create([
+                    'company_profile_id' => $companyProfileId,
+                    'agency_id' => $agencyId,
+                    'target_type' => $request->input('target_type'),
+                    'target_id' => $request->input('target_id'),
+                    'target_name' => $request->input('target_name'),
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'media_type' => 'video',
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'description' => $request->input('description'),
+                ]);
+                $uploadedCount++;
+            }
         }
 
         return redirect()->back()->with('success', "{$uploadedCount} fichier(s) affecté(s) avec succès.");

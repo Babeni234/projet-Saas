@@ -260,44 +260,78 @@
                         </select>
                     </div>
 
-                    <!-- Files upload dropzone -->
+                    <!-- Photos upload field -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fichiers (Images / Vidéos)</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photos (Images)</label>
                         <div
-                            @click="triggerFileInput"
-                            @dragover.prevent="dragOver = true"
-                            @dragleave.prevent="dragOver = false"
-                            @drop.prevent="handleDrop"
+                            @click="triggerPhotoInput"
                             :class="[
-                                'border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[140px]',
-                                dragOver
-                                    ? (isAgency ? 'border-amber-500 bg-amber-50/20' : 'border-indigo-500 bg-indigo-50/20')
-                                    : 'border-slate-200 hover:bg-slate-50/50'
+                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
                             ]"
                         >
                             <input
                                 type="file"
-                                ref="fileInput"
-                                @change="handleFileChange"
+                                ref="photoInput"
+                                @change="handlePhotoChange"
                                 multiple
                                 class="hidden"
-                                accept="image/*,video/*"
+                                accept="image/*"
                             >
-                            <svg :class="['w-8 h-8 mb-2', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <p class="text-sm font-semibold text-slate-800">Glissez-déposez vos fichiers ici</p>
-                            <p class="text-xs text-slate-400 mt-1">Images et Vidéos autorisées (50 Mo max par fichier)</p>
+                            <p class="text-xs font-bold text-slate-700">Sélectionner des Photos</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Maximum 100 photos simultanées (JPG, PNG, WEBP)</p>
                         </div>
-
-                        <!-- Selected files listing -->
-                        <div v-if="selectedFiles.length > 0" class="mt-3 space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                            <div v-for="(file, idx) in selectedFiles" :key="idx" class="flex items-center justify-between text-xs bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 font-medium">
+                        <!-- Photos Selected listing -->
+                        <div v-if="selectedPhotos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1">
+                            <div v-for="(file, idx) in selectedPhotos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
                                 <span class="truncate text-slate-700 max-w-[280px]">{{ file.name }}</span>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[10px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
-                                    <button type="button" @click="removeSelectedFile(idx)" class="text-rose-500 hover:text-rose-700 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
+                                    <button type="button" @click="removeSelectedPhoto(idx)" class="text-rose-500 hover:text-rose-700 transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Videos upload field -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vidéos</label>
+                        <div
+                            @click="triggerVideoInput"
+                            :class="[
+                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
+                            ]"
+                        >
+                            <input
+                                type="file"
+                                ref="videoInput"
+                                @change="handleVideoChange"
+                                multiple
+                                class="hidden"
+                                accept="video/*"
+                            >
+                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z" />
+                            </svg>
+                            <p class="text-xs font-bold text-slate-700">Sélectionner des Vidéos</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Maximum 5 vidéos simultanées (MP4, WEBM, MOV)</p>
+                        </div>
+                        <!-- Videos Selected listing -->
+                        <div v-if="selectedVideos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1">
+                            <div v-for="(file, idx) in selectedVideos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
+                                <span class="truncate text-slate-700 max-w-[280px]">{{ file.name }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
+                                    <button type="button" @click="removeSelectedVideo(idx)" class="text-rose-500 hover:text-rose-700 transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
@@ -331,7 +365,7 @@
                         </button>
                         <button
                             type="submit"
-                            :disabled="!selectedTargetKey || selectedFiles.length === 0 || uploading"
+                            :disabled="!selectedTargetKey || (selectedPhotos.length === 0 && selectedVideos.length === 0) || uploading"
                             :class="[
                                 'px-5 py-2.5 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm flex items-center gap-2',
                                 isAgency ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700'
@@ -405,14 +439,14 @@
                             <div class="aspect-video w-full bg-slate-900 relative overflow-hidden flex items-center justify-center text-white select-none shrink-0 border-b border-slate-100">
                                 <img
                                     v-if="media.media_type === 'image'"
-                                    :src="'/storage/' + media.file_path"
+                                    :src="media.file_path.startsWith('http') ? media.file_path : '/storage/' + media.file_path"
                                     class="object-cover w-full h-full group-hover:scale-105 transition duration-300"
                                     alt="Image"
                                     loading="lazy"
                                 >
                                 <video
                                     v-else
-                                    :src="'/storage/' + media.file_path"
+                                    :src="media.file_path.startsWith('http') ? media.file_path : '/storage/' + media.file_path"
                                     class="w-full h-full object-cover"
                                     controls
                                     preload="metadata"
@@ -690,37 +724,54 @@ watch(selectedTargetKey, (newVal) => {
     }
 });
 
-const selectedFiles = ref([]);
-const fileInput = ref(null);
-const dragOver = ref(false);
+const selectedPhotos = ref([]);
+const selectedVideos = ref([]);
+const photoInput = ref(null);
+const videoInput = ref(null);
 const uploading = ref(false);
 
-const triggerFileInput = () => {
-    fileInput.value?.click();
+const triggerPhotoInput = () => {
+    photoInput.value?.click();
 };
 
-const handleFileChange = (e) => {
+const triggerVideoInput = () => {
+    videoInput.value?.click();
+};
+
+const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files || []);
-    addFiles(files);
-};
-
-const handleDrop = (e) => {
-    dragOver.value = false;
-    const files = Array.from(e.dataTransfer?.files || []);
-    addFiles(files);
-};
-
-const addFiles = (files) => {
+    if (selectedPhotos.value.length + files.length > 100) {
+        errorMessage.value = "Vous ne pouvez pas ajouter plus de 100 photos à la fois.";
+        showError.value = true;
+        return;
+    }
     files.forEach(file => {
-        // Prevent duplicate file imports in selection
-        if (!selectedFiles.value.some(f => f.name === file.name && f.size === file.size)) {
-            selectedFiles.value.push(file);
+        if (!selectedPhotos.value.some(f => f.name === file.name && f.size === file.size)) {
+            selectedPhotos.value.push(file);
         }
     });
 };
 
-const removeSelectedFile = (idx) => {
-    selectedFiles.value.splice(idx, 1);
+const handleVideoChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (selectedVideos.value.length + files.length > 5) {
+        errorMessage.value = "Vous ne pouvez pas ajouter plus de 5 vidéos à la fois.";
+        showError.value = true;
+        return;
+    }
+    files.forEach(file => {
+        if (!selectedVideos.value.some(f => f.name === file.name && f.size === file.size)) {
+            selectedVideos.value.push(file);
+        }
+    });
+};
+
+const removeSelectedPhoto = (idx) => {
+    selectedPhotos.value.splice(idx, 1);
+};
+
+const removeSelectedVideo = (idx) => {
+    selectedVideos.value.splice(idx, 1);
 };
 
 const formatSize = (bytes) => {
@@ -740,7 +791,8 @@ const openAddModal = () => {
         description: '',
     };
     selectedTargetKey.value = '';
-    selectedFiles.value = [];
+    selectedPhotos.value = [];
+    selectedVideos.value = [];
     showAddModal.value = true;
 };
 
@@ -749,7 +801,7 @@ const closeAddModal = () => {
 };
 
 const submitForm = () => {
-    if (!selectedTargetKey.value || selectedFiles.value.length === 0) return;
+    if (!selectedTargetKey.value || (selectedPhotos.value.length === 0 && selectedVideos.value.length === 0)) return;
 
     const data = new FormData();
     data.append('target_type', newForm.value.target_type);
@@ -763,8 +815,12 @@ const submitForm = () => {
         data.append('description', newForm.value.description);
     }
     
-    selectedFiles.value.forEach(file => {
-        data.append('media_files[]', file);
+    selectedPhotos.value.forEach(file => {
+        data.append('photos[]', file);
+    });
+
+    selectedVideos.value.forEach(file => {
+        data.append('videos[]', file);
     });
 
     uploading.value = true;
@@ -773,7 +829,8 @@ const submitForm = () => {
         onSuccess: () => {
             uploading.value = false;
             showAddModal.value = false;
-            selectedFiles.value = [];
+            selectedPhotos.value = [];
+            selectedVideos.value = [];
             successMessage.value = 'Illustration affectée avec succès.';
             showSuccess.value = true;
         },
