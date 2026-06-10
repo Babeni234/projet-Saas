@@ -422,130 +422,256 @@
         </div>
 
         <!-- Target Gallery Modal -->
-        <div v-if="showGalleryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full h-[85vh] overflow-hidden animate-scale-up border border-slate-100 flex flex-col">
-                <!-- Header -->
-                <div :class="['px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0', isAgency ? 'bg-gradient-to-r from-amber-50 to-orange-50/50' : 'bg-gradient-to-r from-indigo-50 to-violet-50/50']">
+        <div v-if="showGalleryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] animate-scale-up border border-slate-100 flex flex-col" style="height: 92vh;">
+
+                <!-- ====== HEADER FIXE (toujours visible) ====== -->
+                <div :class="['px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 z-10', isAgency ? 'bg-gradient-to-r from-amber-50 to-orange-50/50' : 'bg-gradient-to-r from-indigo-50 to-violet-50/50']">
                     <div class="flex items-center gap-3">
-                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', isAgency ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600']">
+                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0', isAgency ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600']">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-900">Galerie : {{ selectedTarget?.name }}</h2>
-                            <p class="text-xs text-slate-500">Filtrer, modifier ou supprimer les médias affectés à ce {{ selectedTarget?.type === 'batiment' ? 'bâtiment' : 'logement' }}.</p>
+                        <div class="min-w-0">
+                            <h2 class="text-lg font-bold text-slate-900 truncate">Galerie — {{ selectedTarget?.name }}</h2>
+                            <p class="text-xs text-slate-500">{{ filteredGalleryMedias.length }} média(s) · Cliquez sur un média pour l'agrandir</p>
                         </div>
                     </div>
-                    <button @click="closeGalleryModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
+                    <button
+                        @click="closeGalleryModal"
+                        class="ml-4 shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                        title="Fermer"
+                    >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <!-- Gallery Tabs & Filtering -->
+                <!-- ====== TABS FIXES ====== -->
                 <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                    <div class="flex bg-slate-100 p-1 rounded-xl w-fit">
+                    <div class="flex bg-slate-200/60 p-1 rounded-xl w-fit gap-1">
                         <button
                             v-for="tab in ['all', 'image', 'video']"
                             :key="tab"
                             @click="galleryFilter = tab"
                             :class="[
-                                'px-4 py-2 text-xs font-bold rounded-lg transition-all capitalize',
+                                'px-4 py-1.5 text-xs font-bold rounded-lg transition-all',
                                 galleryFilter === tab
-                                    ? (isAgency ? 'bg-amber-600 text-white shadow-md' : 'bg-indigo-600 text-white shadow-md')
-                                    : 'text-slate-600 hover:bg-slate-200/50'
+                                    ? (isAgency ? 'bg-amber-600 text-white shadow' : 'bg-indigo-600 text-white shadow')
+                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/70'
                             ]"
                         >
-                            {{ tab === 'all' ? 'Tout' : tab === 'image' ? 'Images' : 'Vidéos' }}
+                            {{ tab === 'all' ? '🗂 Tout' : tab === 'image' ? '🖼 Images' : '🎬 Vidéos' }}
                         </button>
                     </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase">
-                        {{ filteredGalleryMedias.length }} média(s) affiché(s)
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                        {{ filteredGalleryMedias.length }} affiché(s)
                     </span>
                 </div>
 
-                <!-- Gallery Body -->
+                <!-- ====== CORPS SCROLLABLE ====== -->
                 <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
-                    <div v-if="filteredGalleryMedias.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-if="filteredGalleryMedias.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div
                             v-for="media in filteredGalleryMedias"
                             :key="media.id"
-                            class="bg-white rounded-2xl overflow-hidden border border-slate-150 shadow-sm flex flex-col group hover:shadow-md hover:border-slate-300 transition duration-200"
+                            class="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm flex flex-col group hover:shadow-lg hover:border-slate-200 transition-all duration-200"
                         >
-                            <!-- Media Visual Container -->
-                            <div class="aspect-video w-full bg-slate-900 relative overflow-hidden flex items-center justify-center text-white select-none shrink-0 border-b border-slate-100">
+                            <!-- Vignette cliquable → Lightbox -->
+                            <div
+                                class="aspect-video w-full bg-slate-950 relative overflow-hidden cursor-pointer"
+                                @click="openLightbox(media)"
+                                :title="media.media_type === 'image' ? 'Cliquer pour agrandir' : 'Cliquer pour lire en plein écran'"
+                            >
                                 <img
                                     v-if="media.media_type === 'image'"
                                     :src="media.file_path.startsWith('http') ? media.file_path : '/storage/' + media.file_path"
-                                    class="object-cover w-full h-full group-hover:scale-105 transition duration-300"
-                                    alt="Image"
+                                    class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                    alt="Illustration"
                                     loading="lazy"
                                 >
                                 <video
                                     v-else
                                     :src="media.file_path.startsWith('http') ? media.file_path : '/storage/' + media.file_path"
-                                    class="w-full h-full object-cover"
-                                    controls
+                                    class="w-full h-full object-cover pointer-events-none"
                                     preload="metadata"
                                 ></video>
-                                
-                                <span :class="[
-                                    'absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold text-white tracking-wider uppercase',
-                                    media.media_type === 'image' ? 'bg-blue-600' : 'bg-rose-600'
-                                ]">
-                                    {{ media.media_type }}
-                                </span>
-                            </div>
 
-                            <!-- Details -->
-                            <div class="p-4 flex-1 flex flex-col justify-between">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm truncate" :title="media.file_name">
-                                        {{ media.file_name }}
-                                    </h4>
-                                    <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">
-                                        Importé le {{ formatDate(media.created_at) }}
-                                    </p>
-                                    <p class="text-xs text-slate-500 mt-2 line-clamp-2 italic" v-if="media.description">
-                                        "{{ media.description }}"
-                                    </p>
-                                    <p class="text-xs text-slate-300 mt-2 italic" v-else>
-                                        Aucune description.
-                                    </p>
+                                <!-- Badge type -->
+                                <span :class="[
+                                    'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold text-white tracking-widest uppercase shadow',
+                                    media.media_type === 'image' ? 'bg-blue-600' : 'bg-rose-600'
+                                ]">{{ media.media_type }}</span>
+
+                                <!-- Overlay expand au survol -->
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                                    <div class="opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-75 group-hover:scale-100">
+                                        <div class="bg-white/20 backdrop-blur-md rounded-full p-3 border border-white/30 shadow-xl">
+                                            <svg v-if="media.media_type === 'image'" class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                            </svg>
+                                            <svg v-else class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Actions -->
-                                <div class="mt-4 pt-3 border-t border-slate-100 flex gap-2 justify-end">
+                                <!-- Icône vidéo permanente si video -->
+                                <div v-if="media.media_type === 'video'" class="absolute bottom-2 right-2 bg-black/60 rounded-lg px-2 py-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                                    </svg>
+                                    <span class="text-white text-[9px] font-bold">VIDÉO</span>
+                                </div>
+                            </div>
+
+                            <!-- Détails + Actions -->
+                            <div class="p-4 flex flex-col gap-2">
+                                <h4 class="font-bold text-slate-800 text-sm truncate" :title="media.file_name">{{ media.file_name }}</h4>
+                                <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ formatDate(media.created_at) }}</p>
+                                <p v-if="media.description" class="text-xs text-slate-500 line-clamp-2 italic">"{{ media.description }}"</p>
+
+                                <div class="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 justify-between">
+                                    <!-- Bouton agrandir -->
                                     <button
-                                        @click="openEditModal(media)"
-                                        class="p-2 text-indigo-600 hover:bg-indigo-50 border border-slate-100 rounded-lg transition"
-                                        title="Modifier la description"
+                                        @click="openLightbox(media)"
+                                        :class="['flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all', isAgency ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100']"
                                     >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                                         </svg>
+                                        Agrandir
                                     </button>
-                                    <button
-                                        @click="openDeleteModal(media)"
-                                        class="p-2 text-rose-600 hover:bg-rose-50 border border-slate-100 rounded-lg transition"
-                                        title="Supprimer le média"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    <div class="flex gap-1.5">
+                                        <button @click="openEditModal(media)" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Modifier">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                        </button>
+                                        <button @click="openDeleteModal(media)" class="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Supprimer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div v-else class="text-center py-20 text-slate-400">
-                        Aucun média correspondant à la catégorie sélectionnée n'a été trouvé.
+                    <div v-else class="flex flex-col items-center justify-center py-24 text-slate-400">
+                        <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="font-semibold text-sm">Aucun média dans cette catégorie</p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ====================================================== -->
+        <!-- LIGHTBOX PLEIN ÉCRAN (Image ou Vidéo) -->
+        <!-- ====================================================== -->
+        <Teleport to="body">
+            <div
+                v-if="lightboxMedia"
+                class="fixed inset-0 z-[100] flex items-center justify-center"
+                style="background: rgba(0,0,0,0.95);"
+                @click.self="closeLightbox"
+            >
+                <!-- Bouton Fermer -->
+                <button
+                    @click="closeLightbox"
+                    class="absolute top-4 right-4 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-white transition-all"
+                    title="Fermer (Échap)"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Compteur -->
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs font-bold px-4 py-2 rounded-full backdrop-blur-sm border border-white/10">
+                    {{ lightboxIndex + 1 }} / {{ filteredGalleryMedias.length }}
+                </div>
+
+                <!-- Flèche Gauche -->
+                <button
+                    v-if="filteredGalleryMedias.length > 1"
+                    @click="lightboxPrev"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-white transition-all hover:scale-110"
+                    title="Précédent (←)"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <!-- Flèche Droite -->
+                <button
+                    v-if="filteredGalleryMedias.length > 1"
+                    @click="lightboxNext"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-white transition-all hover:scale-110"
+                    title="Suivant (→)"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <!-- Media Plein Écran -->
+                <div class="flex flex-col items-center justify-center px-20 max-w-full max-h-full" style="max-width: 92vw; max-height: 88vh;">
+                    <img
+                        v-if="lightboxMedia.media_type === 'image'"
+                        :src="lightboxMedia.file_path.startsWith('http') ? lightboxMedia.file_path : '/storage/' + lightboxMedia.file_path"
+                        :alt="lightboxMedia.file_name"
+                        class="rounded-xl shadow-2xl object-contain animate-scale-up"
+                        style="max-width: 88vw; max-height: 78vh;"
+                    >
+                    <video
+                        v-else
+                        :src="lightboxMedia.file_path.startsWith('http') ? lightboxMedia.file_path : '/storage/' + lightboxMedia.file_path"
+                        controls
+                        autoplay
+                        class="rounded-xl shadow-2xl animate-scale-up"
+                        style="max-width: 88vw; max-height: 78vh;"
+                    ></video>
+
+                    <!-- Légende -->
+                    <div class="mt-4 text-center">
+                        <p class="text-white font-semibold text-sm">{{ lightboxMedia.file_name }}</p>
+                        <p v-if="lightboxMedia.description" class="text-white/60 text-xs mt-1 italic">{{ lightboxMedia.description }}</p>
+                        <span :class="['mt-2 inline-block px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest', lightboxMedia.media_type === 'image' ? 'bg-blue-600/80 text-white' : 'bg-rose-600/80 text-white']">
+                            {{ lightboxMedia.media_type }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Miniatures en bas -->
+                <div v-if="filteredGalleryMedias.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 px-4 overflow-x-auto max-w-[90vw] scrollbar-thin pb-1">
+                    <button
+                        v-for="(m, idx) in filteredGalleryMedias"
+                        :key="m.id"
+                        @click="lightboxGoTo(idx)"
+                        :class="['w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all hover:scale-110', idx === lightboxIndex ? 'border-white shadow-lg scale-110' : 'border-white/30 opacity-60']"
+                    >
+                        <img
+                            v-if="m.media_type === 'image'"
+                            :src="m.file_path.startsWith('http') ? m.file_path : '/storage/' + m.file_path"
+                            class="w-full h-full object-cover"
+                            loading="lazy"
+                        >
+                        <div v-else class="w-full h-full bg-slate-800 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </Teleport>
 
         <!-- Edit Description Sub-Modal -->
         <div v-if="showEditModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
@@ -630,7 +756,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePage, router } from '@inertiajs/vue3';
 
@@ -740,9 +866,63 @@ watch(selectedAgencyFilter, () => {
     loadLocalData();
 });
 
+// ==========================================
+// LIGHTBOX (plein écran image / vidéo)
+// ==========================================
+const lightboxMedia = ref(null);
+const lightboxIndex = ref(0);
+
+const openLightbox = (media) => {
+    const idx = filteredGalleryMedias.value.findIndex(m => m.id === media.id);
+    lightboxIndex.value = idx >= 0 ? idx : 0;
+    lightboxMedia.value = media;
+};
+
+const closeLightbox = () => {
+    lightboxMedia.value = null;
+};
+
+const lightboxPrev = () => {
+    const list = filteredGalleryMedias.value;
+    if (!list.length) return;
+    lightboxIndex.value = (lightboxIndex.value - 1 + list.length) % list.length;
+    lightboxMedia.value = list[lightboxIndex.value];
+};
+
+const lightboxNext = () => {
+    const list = filteredGalleryMedias.value;
+    if (!list.length) return;
+    lightboxIndex.value = (lightboxIndex.value + 1) % list.length;
+    lightboxMedia.value = list[lightboxIndex.value];
+};
+
+const lightboxGoTo = (idx) => {
+    const list = filteredGalleryMedias.value;
+    if (idx >= 0 && idx < list.length) {
+        lightboxIndex.value = idx;
+        lightboxMedia.value = list[idx];
+    }
+};
+
+// Navigation clavier : Escape = fermer, ← → = naviguer
+const handleKeydown = (e) => {
+    if (lightboxMedia.value) {
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') lightboxPrev();
+        else if (e.key === 'ArrowRight') lightboxNext();
+    } else if (showGalleryModal.value && e.key === 'Escape') {
+        closeGalleryModal();
+    }
+};
+
 onMounted(async () => {
     loadLocalData();
     await fetchIllustrations();
+    window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
 });
 
 // Grouped items having illustrations

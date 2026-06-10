@@ -21,4 +21,4 @@ Le projet est une plateforme SaaS de gestion immobilière avancée en phase de d
 - **Sécurité :** Gestion des rôles, authentification robuste et middleware de vérification.
 - **Infrastructure :** Architecture pensée pour la scalabilité et la modularité.
 
-Le projet est actuellement en phase de stabilisation et de développement de fonctionnalités complémentaires pour enrichir l'écosystème de gestion locative.
+Le projet est actuellement en phase de stabilisation et de développement continu pour enrichir l'écosystème de gestion locative, notamment avec l'optimisation du module d'illustrations.
