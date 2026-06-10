@@ -12,11 +12,35 @@ class AgencyTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private \App\Models\CompanyProfile $companyProfile;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->user = User::factory()->create();
+        $this->companyProfile = \App\Models\CompanyProfile::create([
+            'user_id' => $this->user->id,
+            'business_type' => 'SAS',
+            'legal_name' => 'Test Company',
+            'registration_number' => '123456789',
+            'tax_id' => '987654321',
+            'country' => 'FR',
+            'address' => '123 Rue de la Paix',
+            'city' => 'Paris',
+            'postal_code' => '75001',
+            'legal_representative_name' => 'Jean Rep',
+            'legal_representative_id_number' => 'ID123456',
+            'phone' => '+33123456789',
+        ]);
+        $this->user->update([
+            'company_profile_id' => $this->companyProfile->id,
+        ]);
+
+        Agency::saving(function ($agency) {
+            if (empty($agency->company_profile_id)) {
+                $agency->company_profile_id = $this->companyProfile->id;
+            }
+        });
     }
 
     public function test_agencies_index_page_requires_auth(): void
@@ -255,5 +279,72 @@ class AgencyTest extends TestCase
         $response->assertOk();
         $response->assertHeaderContains('Content-Type', 'text/csv');
         $this->assertStringContainsString('ExportAgency', $response->getContent());
+    }
+
+    public function test_assigning_employee_to_agency_on_create_updates_employee_agency_id(): void
+    {
+        $managerUser = User::factory()->create([
+            'email' => 'manager_test@example.com',
+            'company_profile_id' => $this->companyProfile->id,
+        ]);
+        $employee = \App\Models\Employee::create([
+            'user_id' => $managerUser->id,
+            'company_profile_id' => $this->companyProfile->id,
+            'phone' => '12345678',
+            'position' => 'Manager',
+        ]);
+
+        $payload = [
+            'name' => 'Agency with Employee Manager',
+            'code' => 'AWEM1',
+            'status' => 'active',
+            'manager_name' => $managerUser->name,
+            'manager_email' => $managerUser->email,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson(route('agencies.store'), $payload);
+
+        $response->assertStatus(201);
+
+        $agency = Agency::where('code', 'AWEM1')->first();
+        $this->assertNotNull($agency);
+        $this->assertEquals($agency->id, $employee->fresh()->agency_id);
+    }
+
+    public function test_assigning_employee_to_agency_on_update_updates_employee_agency_id(): void
+    {
+        $agency = Agency::create([
+            'name' => 'Agency for Update Test',
+            'code' => 'AUT1',
+            'status' => 'active',
+            'company_profile_id' => $this->companyProfile->id,
+        ]);
+
+        $managerUser = User::factory()->create([
+            'email' => 'manager_update@example.com',
+            'company_profile_id' => $this->companyProfile->id,
+        ]);
+        $employee = \App\Models\Employee::create([
+            'user_id' => $managerUser->id,
+            'company_profile_id' => $this->companyProfile->id,
+            'phone' => '12345678',
+            'position' => 'Manager',
+        ]);
+
+        $payload = [
+            'name' => 'Agency for Update Test',
+            'code' => 'AUT1',
+            'status' => 'active',
+            'manager_name' => $managerUser->name,
+            'manager_email' => $managerUser->email,
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->putJson(route('agencies.update', $agency), $payload);
+
+        $response->assertOk();
+
+        $this->assertEquals($agency->id, $employee->fresh()->agency_id);
     }
 }

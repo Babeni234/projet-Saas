@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Agency;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -23,8 +24,12 @@ class AgencyController extends Controller
     /**
      * Get eligible managers (employees with manage_agencies or * permission)
      */
-    private function getEligibleManagers(int $companyProfileId)
+    private function getEligibleManagers(?int $companyProfileId)
     {
+        if ($companyProfileId === null) {
+            return collect();
+        }
+
         return Employee::with(['user.role'])
             ->where('company_profile_id', $companyProfileId)
             ->whereHas('user.role', function ($query) {
@@ -201,6 +206,13 @@ class AgencyController extends Controller
 
         $agency = Agency::create($validated);
 
+        if (!empty($agency->manager_email)) {
+            $user = User::where('email', $agency->manager_email)->first();
+            if ($user && $user->employee) {
+                $user->employee->update(['agency_id' => $agency->id]);
+            }
+        }
+
         if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
@@ -278,6 +290,13 @@ class AgencyController extends Controller
         ]);
 
         $agency->update($validated);
+
+        if (!empty($agency->manager_email)) {
+            $user = User::where('email', $agency->manager_email)->first();
+            if ($user && $user->employee) {
+                $user->employee->update(['agency_id' => $agency->id]);
+            }
+        }
 
         if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
             return response()->json([
