@@ -22,7 +22,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('immo.particulier')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -34,10 +34,16 @@ const showingNavigationDropdown = ref(false);
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
+                                    :href="route('immo.particulier')"
+                                    :active="route().current('immo.particulier')"
                                 >
-                                    Dashboard
+                                    Espace particulier
+                                </NavLink>
+                                <NavLink
+                                    :href="route('immo.bailleur')"
+                                    :active="route().current('immo.bailleur')"
+                                >
+                                    Espace bailleur
                                 </NavLink>
                             </div>
                         </div>
@@ -141,10 +147,16 @@ const showingNavigationDropdown = ref(false);
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
+                            :href="route('immo.particulier')"
+                            :active="route().current('immo.particulier')"
                         >
-                            Dashboard
+                            Espace particulier
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('immo.bailleur')"
+                            :active="route().current('immo.bailleur')"
+                        >
+                            Espace bailleur
                         </ResponsiveNavLink>
                     </div>
 

@@ -24,6 +24,11 @@ class User extends Authenticatable
         'email',
         'password',
         'account_type',
+        'landlord_verified',
+        'landlord_verification_status',
+        'verification_documents',
+        'additional_info',
+        'verified_at',
     ];
 
     /**
@@ -46,6 +51,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'landlord_verified' => 'boolean',
+            'verification_documents' => 'array',
+            'verified_at' => 'datetime',
         ];
     }
 

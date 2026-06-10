@@ -21,11 +21,17 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+<<<<<<< HEAD
         "@vue-leaflet/vue-leaflet": "^0.10.1",
         "chart.js": "^4.5.1",
         "globe.gl": "^2.46.1",
         "leaflet": "^1.9.4",
         "mapbox-gl": "^3.24.0",
         "vue-router": "^4.6.4"
+=======
+        "chart.js": "^4.5.1",
+        "leaflet": "^1.9.4",
+        "vue-chartjs": "^5.3.3"
+>>>>>>> feature/nangue
     }
 }
