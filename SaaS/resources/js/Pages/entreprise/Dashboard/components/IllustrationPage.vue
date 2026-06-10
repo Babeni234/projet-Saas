@@ -12,18 +12,46 @@
                 </h1>
                 <p class="text-slate-600 mt-1">Affecter des images et des vidéos aux logements ou bâtiments et gérer les galeries.</p>
             </div>
-            <button
-                @click="openAddModal"
-                :class="[
-                    'flex items-center gap-2 px-5 py-3 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-200',
-                    isAgency ? 'bg-gradient-to-r from-amber-600 to-orange-600 shadow-amber-500/30' : 'bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/30'
-                ]"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nouvelle Illustration
-            </button>
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Agency Filter (Enterprise dashboard only, when not locked to agency) -->
+                <div v-if="!isAgency && agencies.length > 0" class="relative">
+                    <select
+                        v-model="selectedAgencyFilter"
+                        class="pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl appearance-none focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 transition-all duration-200 text-slate-700 font-semibold text-sm cursor-pointer shadow-sm min-w-[220px]"
+                    >
+                        <option value="">Toutes les agences</option>
+                        <option value="none">Siège principal (Aucune agence)</option>
+                        <option v-for="agency in agencies" :key="agency.id" :value="agency.id">
+                            {{ agency.name }}
+                        </option>
+                    </select>
+                    <!-- Left Icon: Professional Office Building Icon -->
+                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <!-- Right Icon: Custom Down Chevron -->
+                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <button
+                    @click="openAddModal"
+                    :class="[
+                        'flex items-center gap-2 px-5 py-3 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-200',
+                        isAgency ? 'bg-gradient-to-r from-amber-600 to-orange-600 shadow-amber-500/30' : 'bg-gradient-to-r from-indigo-600 to-violet-600 shadow-indigo-500/30'
+                    ]"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nouvelle Illustration
+                </button>
+            </div>
         </div>
 
         <!-- KPI Cards -->
@@ -598,16 +626,33 @@ import { usePage, router } from '@inertiajs/vue3';
 const route = useRoute();
 const page = usePage();
 
-const isAgency = computed(() => route.name.startsWith('agence.'));
+const isAgency = computed(() => route.name.startsWith('agence.') || !!currentAgencyId.value);
 const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id || null);
 
 const illustrations = computed(() => page.props.illustrations || []);
 const agencies = computed(() => page.props.agencies || []);
 
+// Filter illustrations based on connected user agency scope or selected agency filter
+const selectedAgencyFilter = ref('');
+
+const filteredIllustrations = computed(() => {
+    let list = illustrations.value;
+    const activeAgencyId = isAgency.value ? currentAgencyId.value : selectedAgencyFilter.value;
+    
+    if (activeAgencyId) {
+        if (activeAgencyId === 'none') {
+            list = list.filter(item => !item.agency_id);
+        } else {
+            list = list.filter(item => Number(item.agency_id) === Number(activeAgencyId));
+        }
+    }
+    return list;
+});
+
 // Total counts
-const totalMedias = computed(() => illustrations.value.length);
-const totalImages = computed(() => illustrations.value.filter(m => m.media_type === 'image').length);
-const totalVideos = computed(() => illustrations.value.filter(m => m.media_type === 'video').length);
+const totalMedias = computed(() => filteredIllustrations.value.length);
+const totalImages = computed(() => filteredIllustrations.value.filter(m => m.media_type === 'image').length);
+const totalVideos = computed(() => filteredIllustrations.value.filter(m => m.media_type === 'video').length);
 
 // Fallbacks for batiments and logements
 const fallbackBatiments = [
@@ -633,10 +678,16 @@ const loadLocalData = () => {
     let bats = rawBat ? JSON.parse(rawBat) : fallbackBatiments;
     let logs = rawLog ? JSON.parse(rawLog) : fallbackLogements;
     
-    // Filter by agency if inside agency portal
-    if (isAgency.value && currentAgencyId.value) {
-        const agencyIdNum = Number(currentAgencyId.value);
-        bats = bats.filter(b => Number(b.agency_id) === agencyIdNum);
+    // Filter by agency if inside agency portal or if user is scoped/filtered to an agency
+    const activeAgencyId = isAgency.value ? currentAgencyId.value : selectedAgencyFilter.value;
+    
+    if (activeAgencyId) {
+        if (activeAgencyId === 'none') {
+            bats = bats.filter(b => !b.agency_id);
+        } else {
+            const agencyIdNum = Number(activeAgencyId);
+            bats = bats.filter(b => Number(b.agency_id) === agencyIdNum);
+        }
         
         // Filter housings: keep housing if its building belongs to the filtered buildings
         const validBuildingNames = bats.map(b => b.nom);
@@ -647,6 +698,11 @@ const loadLocalData = () => {
     localLogements.value = logs;
 };
 
+// Re-load data when filter changes
+watch(selectedAgencyFilter, () => {
+    loadLocalData();
+});
+
 onMounted(() => {
     loadLocalData();
 });
@@ -655,7 +711,7 @@ onMounted(() => {
 const groupedTargets = computed(() => {
     const map = {};
     
-    illustrations.value.forEach(item => {
+    filteredIllustrations.value.forEach(item => {
         const key = `${item.target_type}-${item.target_id}`;
         if (!map[key]) {
             map[key] = {
@@ -787,7 +843,7 @@ const openAddModal = () => {
         target_type: 'logement',
         target_id: '',
         target_name: '',
-        agency_id: '',
+        agency_id: selectedAgencyFilter.value === 'none' ? '' : selectedAgencyFilter.value,
         description: '',
     };
     selectedTargetKey.value = '';
