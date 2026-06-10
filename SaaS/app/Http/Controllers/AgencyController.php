@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agency;
+use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AgencyController extends Controller
@@ -19,17 +21,67 @@ class AgencyController extends Controller
     }
 
     /**
+     * Get eligible managers (employees with manage_agencies or * permission)
+     */
+    private function getEligibleManagers(int $companyProfileId)
+    {
+        return Employee::with(['user.role'])
+            ->where('company_profile_id', $companyProfileId)
+            ->whereHas('user.role', function ($query) {
+                $query->whereJsonContains('permissions', 'manage_agencies')
+                      ->orWhereJsonContains('permissions', '*');
+            })
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->user->name,
+                    'email' => $employee->user->email,
+                    'phone' => $employee->phone ?? $employee->user->phone ?? '',
+                ];
+            });
+    }
+
+    /**
+     * Apply agency scope filter for the logged-in user if they are an employee.
+     */
+    private function applyAgencyScope($query)
+    {
+        $user = auth()->user();
+        if ($user->employee && $user->employee->agency_id !== null) {
+            $query->where('id', $user->employee->agency_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Check if the logged-in user is authorized to access the specified agency.
+     */
+    private function checkAgencyAccess(Agency $agency)
+    {
+        $user = auth()->user();
+        if ($agency->company_profile_id !== $user->company_profile_id) {
+            abort(403);
+        }
+        if ($user->employee && $user->employee->agency_id !== null && $agency->id !== $user->employee->agency_id) {
+            abort(403);
+        }
+    }
+
+    /**
      * Display a listing of the agencies.
      */
     public function index(Request $request)
     {
+        $companyProfileId = auth()->user()->company_profile_id;
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search', '');
         $status = $request->query('status', '');
         $sortBy = $request->query('sort_by', 'created_at');
         $sortOrder = $request->query('sort_order', 'desc');
 
-        $query = Agency::query();
+        $query = Agency::where('company_profile_id', $companyProfileId);
+        $query = $this->applyAgencyScope($query);
 
         // Search
         if ($search) {
@@ -53,13 +105,16 @@ class AgencyController extends Controller
         // Paginate
         $agencies = $query->paginate($perPage);
 
+        $statsQuery = Agency::where('company_profile_id', $companyProfileId);
+        $statsQuery = $this->applyAgencyScope($statsQuery);
+
         $stats = [
-            'total' => Agency::count(),
-            'active' => Agency::active()->count(),
-            'inactive' => Agency::inactive()->count(),
-            'suspended' => Agency::where('status', 'suspended')->count(),
-            'total_employees' => (int) Agency::sum('employee_count'),
-            'needs_attention' => Agency::where(function($q) {
+            'total' => (clone $statsQuery)->count(),
+            'active' => (clone $statsQuery)->active()->count(),
+            'inactive' => (clone $statsQuery)->inactive()->count(),
+            'suspended' => (clone $statsQuery)->where('status', 'suspended')->count(),
+            'total_employees' => (int) (clone $statsQuery)->sum('employee_count'),
+            'needs_attention' => (clone $statsQuery)->where(function($q) {
                 $q->whereNull('manager_name')
                   ->orWhere('manager_name', '')
                   ->orWhere('status', 'suspended');
@@ -74,11 +129,14 @@ class AgencyController extends Controller
             'sort_order' => $sortOrder,
         ];
 
+        $eligibleManagers = $this->getEligibleManagers($companyProfileId);
+
         if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
             return response()->json([
                 'agencies' => $agencies,
                 'filters' => $filters,
                 'stats' => $stats,
+                'eligibleManagers' => $eligibleManagers,
             ]);
         }
 
@@ -86,6 +144,7 @@ class AgencyController extends Controller
             'agencies' => $agencies,
             'filters' => $filters,
             'stats' => $stats,
+            'eligibleManagers' => $eligibleManagers,
         ]);
     }
 
@@ -94,9 +153,13 @@ class AgencyController extends Controller
      */
     public function create()
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+        $eligibleManagers = $this->getEligibleManagers($companyProfileId);
+
         return $this->enterpriseDashboard('immobilier/agencies/create', [
             'agency' => null,
             'title' => 'Créer une nouvelle agence',
+            'eligibleManagers' => $eligibleManagers,
         ]);
     }
 
@@ -105,9 +168,17 @@ class AgencyController extends Controller
      */
     public function store(Request $request)
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:agencies',
-            'code' => 'required|string|max:50|unique:agencies',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('agencies')->where('company_profile_id', $companyProfileId)
+            ],
+            'code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('agencies')->where('company_profile_id', $companyProfileId)
+            ],
             'description' => 'nullable|string',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
@@ -125,6 +196,8 @@ class AgencyController extends Controller
             'employee_count' => 'nullable|integer|min:0',
             'establishment_date' => 'nullable|date',
         ]);
+
+        $validated['company_profile_id'] = $companyProfileId;
 
         $agency = Agency::create($validated);
 
@@ -145,6 +218,8 @@ class AgencyController extends Controller
      */
     public function show(Agency $agency)
     {
+        $this->checkAgencyAccess($agency);
+
         return $this->enterpriseDashboard("immobilier/agencies/{$agency->id}", [
             'agency' => $agency,
         ]);
@@ -155,9 +230,15 @@ class AgencyController extends Controller
      */
     public function edit(Agency $agency)
     {
+        $this->checkAgencyAccess($agency);
+        $companyProfileId = auth()->user()->company_profile_id;
+
+        $eligibleManagers = $this->getEligibleManagers($companyProfileId);
+
         return $this->enterpriseDashboard("immobilier/agencies/{$agency->id}/edit", [
             'agency' => $agency,
             'title' => 'Modifier l\'agence: ' . $agency->name,
+            'eligibleManagers' => $eligibleManagers,
         ]);
     }
 
@@ -166,9 +247,18 @@ class AgencyController extends Controller
      */
     public function update(Request $request, Agency $agency)
     {
+        $this->checkAgencyAccess($agency);
+        $companyProfileId = auth()->user()->company_profile_id;
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:agencies,name,' . $agency->id,
-            'code' => 'required|string|max:50|unique:agencies,code,' . $agency->id,
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('agencies')->ignore($agency->id)->where('company_profile_id', $companyProfileId)
+            ],
+            'code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('agencies')->ignore($agency->id)->where('company_profile_id', $companyProfileId)
+            ],
             'description' => 'nullable|string',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
@@ -206,6 +296,8 @@ class AgencyController extends Controller
      */
     public function destroy(Request $request, Agency $agency)
     {
+        $this->checkAgencyAccess($agency);
+
         $agency->delete();
 
         if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
@@ -224,12 +316,16 @@ class AgencyController extends Controller
      */
     public function getStatistics()
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+        $query = Agency::where('company_profile_id', $companyProfileId);
+        $query = $this->applyAgencyScope($query);
+
         return response()->json([
-            'total' => Agency::count(),
-            'active' => Agency::active()->count(),
-            'inactive' => Agency::inactive()->count(),
-            'suspended' => Agency::where('status', 'suspended')->count(),
-            'total_employees' => Agency::sum('employee_count'),
+            'total' => (clone $query)->count(),
+            'active' => (clone $query)->active()->count(),
+            'inactive' => (clone $query)->inactive()->count(),
+            'suspended' => (clone $query)->where('status', 'suspended')->count(),
+            'total_employees' => (clone $query)->sum('employee_count'),
         ]);
     }
 
@@ -238,8 +334,12 @@ class AgencyController extends Controller
      */
     public function getAgenciesForMap()
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+        $query = Agency::where('company_profile_id', $companyProfileId);
+        $query = $this->applyAgencyScope($query);
+
         return response()->json(
-            Agency::where('latitude', '!=', null)
+            $query->where('latitude', '!=', null)
                 ->where('longitude', '!=', null)
                 ->select('id', 'name', 'code', 'city', 'latitude', 'longitude', 'status')
                 ->get()
@@ -251,11 +351,25 @@ class AgencyController extends Controller
      */
     public function bulkUpdateStatus(Request $request)
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+
         $validated = $request->validate([
             'ids' => 'required|array',
-            'ids.*' => 'integer|exists:agencies,id',
+            'ids.*' => [
+                'integer',
+                Rule::exists('agencies', 'id')->where('company_profile_id', $companyProfileId)
+            ],
             'status' => 'required|in:active,inactive,suspended',
         ]);
+
+        $user = auth()->user();
+        if ($user->employee && $user->employee->agency_id !== null) {
+            foreach ($validated['ids'] as $id) {
+                if ($id !== $user->employee->agency_id) {
+                    abort(403);
+                }
+            }
+        }
 
         Agency::whereIn('id', $validated['ids'])
             ->update(['status' => $validated['status']]);
@@ -271,10 +385,24 @@ class AgencyController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        $companyProfileId = auth()->user()->company_profile_id;
+
         $validated = $request->validate([
             'ids' => 'required|array',
-            'ids.*' => 'integer|exists:agencies,id',
+            'ids.*' => [
+                'integer',
+                Rule::exists('agencies', 'id')->where('company_profile_id', $companyProfileId)
+            ],
         ]);
+
+        $user = auth()->user();
+        if ($user->employee && $user->employee->agency_id !== null) {
+            foreach ($validated['ids'] as $id) {
+                if ($id !== $user->employee->agency_id) {
+                    abort(403);
+                }
+            }
+        }
 
         $count = Agency::whereIn('id', $validated['ids'])->delete();
 
@@ -289,7 +417,10 @@ class AgencyController extends Controller
      */
     public function export(Request $request)
     {
-        $agencies = Agency::all();
+        $companyProfileId = auth()->user()->company_profile_id;
+        $query = Agency::where('company_profile_id', $companyProfileId);
+        $query = $this->applyAgencyScope($query);
+        $agencies = $query->get();
 
         $csv = fopen('php://memory', 'r+');
         fputcsv($csv, ['ID', 'Nom', 'Code', 'Email', 'Téléphone', 'Ville', 'Pays', 'Statut', 'Employés', 'Créé le']);

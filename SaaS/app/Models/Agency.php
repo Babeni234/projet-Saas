@@ -29,7 +29,18 @@ class Agency extends Model
         'employee_count',
         'establishment_date',
         'metadata',
+        'company_profile_id',
     ];
+
+    public function companyProfile(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(CompanyProfile::class);
+    }
+
+    public function employees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
 
     protected $casts = [
         'metadata' => 'json',

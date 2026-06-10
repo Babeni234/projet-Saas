@@ -111,6 +111,77 @@ class RegisteredUserController extends Controller
                 'verification_status' => 'pending',
             ]);
 
+            // Seed default roles for this new company
+            $roles = [
+                [
+                    'name' => 'Admin',
+                    'slug' => 'admin',
+                    'description' => 'Administrateur avec accès complet à toutes les fonctionnalités.',
+                    'permissions' => json_encode(['*']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => "Chef d'agence",
+                    'slug' => 'chef_agence',
+                    'description' => "Gestion et supervision d'une agence spécifique.",
+                    'permissions' => json_encode(['manage_agencies', 'manage_properties', 'view_reports']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Gestionnaire',
+                    'slug' => 'gestionnaire',
+                    'description' => 'Gestion des opérations quotidiennes et des locations.',
+                    'permissions' => json_encode(['manage_properties', 'view_reports']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Comptable',
+                    'slug' => 'comptable',
+                    'description' => 'Accès et gestion de la comptabilité et des factures.',
+                    'permissions' => json_encode(['manage_accounting', 'view_reports']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Maintenancier',
+                    'slug' => 'maintenancier',
+                    'description' => 'Gestion des tickets et interventions de maintenance.',
+                    'permissions' => json_encode(['manage_maintenance']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Employé simple',
+                    'slug' => 'employer_simple',
+                    'description' => 'Employé simple avec accès de base.',
+                    'permissions' => json_encode(['basic_access']),
+                    'company_profile_id' => $profile->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ];
+            DB::table('roles')->insert($roles);
+
+            // Fetch newly created admin role to assign it
+            $adminRole = DB::table('roles')
+                ->where('company_profile_id', $profile->id)
+                ->where('slug', 'admin')
+                ->first();
+
+            // Link user to company profile and assign admin role
+            $user->update([
+                'company_profile_id' => $profile->id,
+                'role_id' => $adminRole ? $adminRole->id : null,
+            ]);
+
             foreach (self::DOCUMENT_TYPES as $documentType) {
                 if (! $request->hasFile($documentType)) {
                     continue;

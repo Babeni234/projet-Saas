@@ -213,13 +213,20 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Responsable de l'Agence</label>
                     <div class="grid grid-cols-1 gap-3">
                         <div>
-                            <input
-                                v-model="formData.manager_name"
-                                type="text"
-                                placeholder="Nom du Manager"
-                                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                :class="{'border-red-500 focus:ring-red-500': errors.manager_name}"
-                            />
+                            <select
+                                @change="handleManagerChange"
+                                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-slate-700 cursor-pointer"
+                            >
+                                <option value="">Sélectionner un responsable...</option>
+                                <option 
+                                    v-for="mgr in eligibleManagers" 
+                                    :key="mgr.id" 
+                                    :value="mgr.id"
+                                    :selected="formData.manager_name === mgr.name || formData.manager_email === mgr.email"
+                                >
+                                    {{ mgr.name }} ({{ mgr.email }})
+                                </option>
+                            </select>
                             <span v-if="errors.manager_name" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_name[0] }}</span>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -228,20 +235,18 @@
                                     v-model="formData.manager_email"
                                     type="email"
                                     placeholder="Email du Manager"
-                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    :class="{'border-red-500 focus:ring-red-500': errors.manager_email}"
+                                    disabled
+                                    class="w-full px-3 py-2 bg-slate-150 border border-slate-200 rounded-xl text-sm text-slate-500 focus:outline-none"
                                 />
-                                <span v-if="errors.manager_email" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_email[0] }}</span>
                             </div>
                             <div>
                                 <input
                                     v-model="formData.manager_phone"
                                     type="tel"
                                     placeholder="Téléphone du Manager"
-                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    :class="{'border-red-500 focus:ring-red-500': errors.manager_phone}"
+                                    disabled
+                                    class="w-full px-3 py-2 bg-slate-150 border border-slate-200 rounded-xl text-sm text-slate-500 focus:outline-none"
                                 />
-                                <span v-if="errors.manager_phone" class="text-red-500 text-[11px] mt-1 block">{{ errors.manager_phone[0] }}</span>
                             </div>
                         </div>
                     </div>
@@ -288,6 +293,10 @@ const props = defineProps({
     errors: {
         type: Object,
         default: () => ({})
+    },
+    eligibleManagers: {
+        type: Array,
+        default: () => ([])
     }
 });
 
@@ -340,6 +349,20 @@ watch(() => props.agency, (newAgency) => {
         };
     }
 });
+
+const handleManagerChange = (event) => {
+    const selectedId = parseInt(event.target.value);
+    const manager = props.eligibleManagers.find(m => m.id === selectedId);
+    if (manager) {
+        formData.value.manager_name = manager.name;
+        formData.value.manager_email = manager.email;
+        formData.value.manager_phone = manager.phone || '';
+    } else {
+        formData.value.manager_name = '';
+        formData.value.manager_email = '';
+        formData.value.manager_phone = '';
+    }
+};
 
 const handleSubmit = async () => {
     isSubmitting.value = true;

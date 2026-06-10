@@ -108,6 +108,17 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('historique');
     });
+
+    // Roles and Permissions routes
+    Route::prefix('dashboard/roles')->name('roles.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
+        Route::put('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
+        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
+        Route::post('/employees', [\App\Http\Controllers\RoleController::class, 'storeEmployee'])->name('store-employee');
+    });
+    Route::post('dashboard/users/{user}/role', [\App\Http\Controllers\RoleController::class, 'updateUserRole'])->name('users.update-role');
+    Route::post('dashboard/users/{user}/status', [\App\Http\Controllers\RoleController::class, 'updateUserStatus'])->name('users.update-status');
 });
 
 require __DIR__.'/auth.php';

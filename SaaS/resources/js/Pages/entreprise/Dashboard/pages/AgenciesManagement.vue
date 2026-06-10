@@ -515,6 +515,7 @@
             <AgencyFormContent
                 :agency="editingAgency"
                 :errors="formErrors"
+                :eligible-managers="eligibleManagers"
                 @submit="handleFormSubmit"
                 @cancel="closeModal"
             />
@@ -568,6 +569,7 @@ import AgencyFormContent from '../../../../components/AgencyFormContent.vue';
 
 const page = usePage();
 const agencies = ref(page.props.agencies || { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 });
+const eligibleManagers = ref(page.props.eligibleManagers || []);
 const initialStats = page.props.stats || {
     total: 0,
     active: 0,
@@ -726,8 +728,18 @@ watch(
     },
 );
 
+watch(
+    () => page.props.eligibleManagers,
+    (value) => {
+        if (value) eligibleManagers.value = value;
+    },
+);
+
 onMounted(() => {
     loadStateFromStorage();
+    if (!page.props.agencies) {
+        loadAgencies();
+    }
     window.addEventListener('enterprise:refresh', loadAgencies);
 });
 
@@ -881,7 +893,7 @@ const loadAgencies = () => {
     inertiaRouter.get(route('agencies.index') + `?${params.toString()}`, {}, {
         preserveState: true,
         preserveScroll: true,
-        only: ['agencies', 'stats', 'filters'],
+        only: ['agencies', 'stats', 'filters', 'eligibleManagers'],
     });
 };
 

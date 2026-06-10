@@ -25,6 +25,10 @@ class User extends Authenticatable
         'password',
         'account_type',
         'subscription_plan',
+        'role_id',
+        'status',
+        'last_login_at',
+        'company_profile_id',
     ];
 
     /**
@@ -53,5 +57,20 @@ class User extends Authenticatable
     public function companyProfile(): HasOne
     {
         return $this->hasOne(CompanyProfile::class);
+    }
+
+    public function role(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(CompanyProfile::class, 'company_profile_id');
+    }
+
+    public function employee(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Employee::class);
     }
 }

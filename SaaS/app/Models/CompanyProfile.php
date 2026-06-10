@@ -34,4 +34,14 @@ class CompanyProfile extends Model
     {
         return $this->hasMany(CompanyLegalDocument::class);
     }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    public function agencies(): HasMany
+    {
+        return $this->hasMany(Agency::class);
+    }
 }

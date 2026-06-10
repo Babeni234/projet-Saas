@@ -36,12 +36,12 @@
                         Supprimer
                     </span>
                 </button>
-                <RouterLink
-                    :to="{ name: 'dashboard.agencies' }"
+                <Link
+                    :href="route('agencies.index')"
                     class="px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-slate-100 hover:border-slate-400 transition-all duration-300 font-bold transform hover:scale-105"
                 >
                     Retour
-                </RouterLink>
+                </Link>
             </div>
         </div>
 
@@ -275,7 +275,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { usePage, router as inertiaRouter } from '@inertiajs/vue3';
+import { usePage, router as inertiaRouter, Link } from '@inertiajs/vue3';
 import ModalPremium from '../../../../components/ModalPremium.vue';
 import NotificationPremium from '../../../../components/NotificationPremium.vue';
 import AgencyFormContent from '../../../../components/AgencyFormContent.vue';
