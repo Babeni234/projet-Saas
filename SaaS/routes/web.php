@@ -33,11 +33,11 @@ Route::get('/', function () {
     ]);
 });
 
-<<<<<<< HEAD
+
 Route::get('/dashboard', function () {
     return Inertia::render('entreprise/Dashboard/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
-=======
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return redirect()->route('immo.particulier');
@@ -293,7 +293,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('landlord.reports.export');
     }); // Fin du groupe réservé aux bailleurs vérifiés
 });
->>>>>>> feature/nangue
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

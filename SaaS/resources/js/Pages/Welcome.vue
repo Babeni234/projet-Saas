@@ -420,17 +420,17 @@ watch(locale, (val) => {
                     <div v-if="canLogin" class="hidden items-center gap-4 md:flex">
                         <Link
                             v-if="$page.props.auth.user"
-<<<<<<< HEAD
+
                             :href="route('dashboard')"
                             class="text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-slate-900"
                         >
                             {{ t.nav.dashboard }}
-=======
+
                             :href="route('immo.particulier')"
                             class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
                         >
                             Mon espace immo
->>>>>>> feature/nangue
+
                         </Link>
                         <template v-else>
                             <Link
