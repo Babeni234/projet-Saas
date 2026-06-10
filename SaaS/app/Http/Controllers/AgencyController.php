@@ -181,7 +181,7 @@ class AgencyController extends Controller
                 Rule::unique('agencies')->where('company_profile_id', $companyProfileId)
             ],
             'code' => [
-                'required', 'string', 'max:50',
+                'nullable', 'string', 'max:50',
                 Rule::unique('agencies')->where('company_profile_id', $companyProfileId)
             ],
             'description' => 'nullable|string',
@@ -203,6 +203,10 @@ class AgencyController extends Controller
         ]);
 
         $validated['company_profile_id'] = $companyProfileId;
+
+        if (empty($validated['code'])) {
+            unset($validated['code']);
+        }
 
         $agency = Agency::create($validated);
 
@@ -268,7 +272,7 @@ class AgencyController extends Controller
                 Rule::unique('agencies')->ignore($agency->id)->where('company_profile_id', $companyProfileId)
             ],
             'code' => [
-                'required', 'string', 'max:50',
+                'nullable', 'string', 'max:50',
                 Rule::unique('agencies')->ignore($agency->id)->where('company_profile_id', $companyProfileId)
             ],
             'description' => 'nullable|string',
@@ -288,6 +292,10 @@ class AgencyController extends Controller
             'employee_count' => 'nullable|integer|min:0',
             'establishment_date' => 'nullable|date',
         ]);
+
+        if (empty($validated['code'])) {
+            unset($validated['code']);
+        }
 
         $agency->update($validated);
 

@@ -5,8 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Traits\HasCustomUuid;
+
 class CompanyLegalDocument extends Model
 {
+    use HasCustomUuid;
     protected $fillable = [
         'company_profile_id',
         'document_type',

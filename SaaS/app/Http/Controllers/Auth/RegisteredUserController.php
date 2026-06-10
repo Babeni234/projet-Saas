@@ -114,6 +114,8 @@ class RegisteredUserController extends Controller
             // Seed default roles for this new company
             $roles = [
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => 'Admin',
                     'slug' => 'admin',
                     'description' => 'Administrateur avec accès complet à toutes les fonctionnalités.',
@@ -123,6 +125,8 @@ class RegisteredUserController extends Controller
                     'updated_at' => now(),
                 ],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => "Chef d'agence",
                     'slug' => 'chef_agence',
                     'description' => "Gestion et supervision d'une agence spécifique.",
@@ -132,6 +136,8 @@ class RegisteredUserController extends Controller
                     'updated_at' => now(),
                 ],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => 'Gestionnaire',
                     'slug' => 'gestionnaire',
                     'description' => 'Gestion des opérations quotidiennes et des locations.',
@@ -141,6 +147,8 @@ class RegisteredUserController extends Controller
                     'updated_at' => now(),
                 ],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => 'Comptable',
                     'slug' => 'comptable',
                     'description' => 'Accès et gestion de la comptabilité et des factures.',
@@ -150,6 +158,8 @@ class RegisteredUserController extends Controller
                     'updated_at' => now(),
                 ],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => 'Maintenancier',
                     'slug' => 'maintenancier',
                     'description' => 'Gestion des tickets et interventions de maintenance.',
@@ -159,6 +169,8 @@ class RegisteredUserController extends Controller
                     'updated_at' => now(),
                 ],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'synced' => 0,
                     'name' => 'Employé simple',
                     'slug' => 'employer_simple',
                     'description' => 'Employé simple avec accès de base.',

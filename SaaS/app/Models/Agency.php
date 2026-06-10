@@ -5,9 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Traits\HasCustomUuid;
+
 class Agency extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCustomUuid;
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($agency) {
+            if (empty($agency->code)) {
+                $latest = static::orderBy('id', 'desc')->first();
+                $nextId = $latest ? $latest->id + 1 : 1;
+                while (static::where('code', 'AG-' . str_pad($nextId, 5, '0', STR_PAD_LEFT))->exists()) {
+                    $nextId++;
+                }
+                $agency->code = 'AG-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 
     protected $fillable = [
         'name',
