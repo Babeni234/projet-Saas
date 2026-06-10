@@ -568,7 +568,22 @@ import NotificationPremium from '../../../../components/NotificationPremium.vue'
 import AgencyFormContent from '../../../../components/AgencyFormContent.vue';
 
 const page = usePage();
-const agencies = ref(page.props.agencies || { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 });
+
+const getInitialAgencies = () => {
+    const raw = page.props.agencies;
+    if (!raw) {
+        return { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    if (Array.isArray(raw)) {
+        return { data: raw, current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    if (!raw.data) {
+        return { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    return raw;
+};
+
+const agencies = ref(getInitialAgencies());
 const eligibleManagers = ref(page.props.eligibleManagers || []);
 const initialStats = page.props.stats || {
     total: 0,
@@ -717,7 +732,15 @@ const selectedIds = ref([]);
 watch(
     () => page.props.agencies,
     (value) => {
-        if (value) agencies.value = value;
+        if (value) {
+            if (Array.isArray(value)) {
+                agencies.value = { data: value, current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+            } else if (!value.data) {
+                agencies.value = { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+            } else {
+                agencies.value = value;
+            }
+        }
     },
 );
 
@@ -737,7 +760,7 @@ watch(
 
 onMounted(() => {
     loadStateFromStorage();
-    if (!page.props.agencies) {
+    if (!page.props.agencies || Array.isArray(page.props.agencies) || !page.props.agencies.data) {
         loadAgencies();
     }
     window.addEventListener('enterprise:refresh', loadAgencies);
