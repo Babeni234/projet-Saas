@@ -21,6 +21,7 @@ class RoleController extends Controller
     public function index()
     {
         $companyProfileId = auth()->user()->company_profile_id;
+        $currentUser = auth()->user();
 
         // Fetch roles for this company and count users within this company
         $roles = Role::where('company_profile_id', $companyProfileId)
@@ -30,20 +31,37 @@ class RoleController extends Controller
             ->get();
         
         // Active and inactive users for this company (only employees)
-        $users = User::where('company_profile_id', $companyProfileId)
+        $usersQuery = User::where('company_profile_id', $companyProfileId)
             ->whereIn('status', ['active', 'inactive'])
             ->whereHas('employee')
-            ->with(['role', 'employee.agency'])
-            ->get();
+            ->with(['role', 'employee.agency']);
+
+        // Scope to agency if logged-in user is an employee assigned to an agency
+        if ($currentUser->employee && $currentUser->employee->agency_id !== null) {
+            $usersQuery->whereHas('employee', function ($q) use ($currentUser) {
+                $q->where('agency_id', $currentUser->employee->agency_id);
+            });
+        }
+        $users = $usersQuery->get();
             
         // Pending request users for this company
-        $pendingUsers = User::where('company_profile_id', $companyProfileId)
+        $pendingUsersQuery = User::where('company_profile_id', $companyProfileId)
             ->where('status', 'pending')
-            ->with(['role', 'employee.agency'])
-            ->get();
+            ->with(['role', 'employee.agency']);
 
-        // Fetch company agencies to populate create/edit forms
-        $agencies = Agency::where('company_profile_id', $companyProfileId)->get();
+        if ($currentUser->employee && $currentUser->employee->agency_id !== null) {
+            $pendingUsersQuery->whereHas('employee', function ($q) use ($currentUser) {
+                $q->where('agency_id', $currentUser->employee->agency_id);
+            });
+        }
+        $pendingUsers = $pendingUsersQuery->get();
+
+        // Fetch company agencies
+        $agenciesQuery = Agency::where('company_profile_id', $companyProfileId);
+        if ($currentUser->employee && $currentUser->employee->agency_id !== null) {
+            $agenciesQuery->where('id', $currentUser->employee->agency_id);
+        }
+        $agencies = $agenciesQuery->get();
 
         return Inertia::render('entreprise/Dashboard/Dashboard', [
             'initialRoute' => 'roles',
