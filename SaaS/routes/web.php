@@ -195,6 +195,7 @@ Route::middleware('auth')->group(function () {
     Route::post('dashboard/users/{user}/status', [\App\Http\Controllers\RoleController::class, 'updateUserStatus'])->name('users.update-status');
 
     // Illustrations API routes
+    Route::get('/api/illustrations', [\App\Http\Controllers\IllustrationController::class, 'fetchJson'])->name('illustrations.json');
     Route::post('/api/illustrations', [\App\Http\Controllers\IllustrationController::class, 'store'])->name('illustrations.store');
     Route::put('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'update'])->name('illustrations.update');
     Route::delete('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'destroy'])->name('illustrations.destroy');

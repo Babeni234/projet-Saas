@@ -181,7 +181,18 @@
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="groupedTargets.length === 0">
+                        <tr v-if="illustrationsLoading">
+                            <td colspan="6" class="text-center py-12">
+                                <div class="flex flex-col items-center justify-center gap-3 text-slate-400">
+                                    <svg class="animate-spin h-8 w-8" :class="isAgency ? 'text-amber-500' : 'text-indigo-500'" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Chargement des illustrations...</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-else-if="groupedTargets.length === 0">
                             <td colspan="6" class="text-center py-12 text-slate-400">
                                 Aucun logement ou bâtiment n'a encore d'illustration affectée. Cliquez sur "Nouvelle Illustration" pour commencer.
                             </td>
@@ -626,17 +637,43 @@ import { usePage, router } from '@inertiajs/vue3';
 const route = useRoute();
 const page = usePage();
 
-const isAgency = computed(() => route.name.startsWith('agence.') || !!currentAgencyId.value);
+const isAgency = computed(() => route.name?.startsWith('agence.') || !!currentAgencyId.value);
 const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id || null);
 
-const illustrations = computed(() => page.props.illustrations || []);
+// Illustrations fetched via AJAX (not from Inertia props, since the page is an SPA sub-route)
+const illustrationsData = ref([]);
+const illustrationsLoading = ref(false);
 const agencies = computed(() => page.props.agencies || []);
+
+// Fetch illustrations from our JSON API endpoint
+const fetchIllustrations = async () => {
+    illustrationsLoading.value = true;
+    try {
+        const response = await fetch('/api/illustrations', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        });
+        if (response.ok) {
+            const data = await response.json();
+            illustrationsData.value = data.illustrations || [];
+        } else {
+            console.error('Failed to fetch illustrations:', response.status);
+        }
+    } catch (err) {
+        console.error('Error fetching illustrations:', err);
+    } finally {
+        illustrationsLoading.value = false;
+    }
+};
 
 // Filter illustrations based on connected user agency scope or selected agency filter
 const selectedAgencyFilter = ref('');
 
 const filteredIllustrations = computed(() => {
-    let list = illustrations.value;
+    let list = illustrationsData.value;
     const activeAgencyId = isAgency.value ? currentAgencyId.value : selectedAgencyFilter.value;
     
     if (activeAgencyId) {
@@ -703,8 +740,9 @@ watch(selectedAgencyFilter, () => {
     loadLocalData();
 });
 
-onMounted(() => {
+onMounted(async () => {
     loadLocalData();
+    await fetchIllustrations();
 });
 
 // Grouped items having illustrations
@@ -882,11 +920,12 @@ const submitForm = () => {
     uploading.value = true;
     router.post('/api/illustrations', data, {
         forceFormData: true,
-        onSuccess: () => {
+        onSuccess: async () => {
             uploading.value = false;
             showAddModal.value = false;
             selectedPhotos.value = [];
             selectedVideos.value = [];
+            await fetchIllustrations();
             successMessage.value = 'Illustration affectée avec succès.';
             showSuccess.value = true;
         },
@@ -916,7 +955,7 @@ const closeGalleryModal = () => {
 const filteredGalleryMedias = computed(() => {
     if (!selectedTarget.value) return [];
     
-    let list = illustrations.value.filter(item => 
+    let list = illustrationsData.value.filter(item => 
         item.target_type === selectedTarget.value.type &&
         String(item.target_id) === String(selectedTarget.value.id)
     );
@@ -953,10 +992,9 @@ const saveEdit = () => {
     if (!editingMedia.value) return;
     
     router.put(`/api/illustrations/${editingMedia.value.id}`, editForm.value, {
-        onSuccess: () => {
-            // Re-fetch media updates
+        onSuccess: async () => {
+            await fetchIllustrations();
             if (selectedTarget.value) {
-                // Keep target updated if target_name changed
                 selectedTarget.value.name = editForm.value.target_name;
             }
             showEditModal.value = false;
@@ -987,9 +1025,10 @@ const confirmDelete = () => {
     if (!deletingMedia.value) return;
     
     router.delete(`/api/illustrations/${deletingMedia.value.id}`, {
-        onSuccess: () => {
+        onSuccess: async () => {
             showDeleteModal.value = false;
             deletingMedia.value = null;
+            await fetchIllustrations();
             successMessage.value = 'Média supprimé avec succès.';
             showSuccess.value = true;
             

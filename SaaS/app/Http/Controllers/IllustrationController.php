@@ -117,6 +117,30 @@ class IllustrationController extends Controller
     }
 
     /**
+     * Return illustrations as JSON for SPA AJAX calls.
+     */
+    public function fetchJson(Request $request)
+    {
+        $user = Auth::user();
+        $companyProfileId = $user->company_profile_id;
+
+        $query = Illustration::where('company_profile_id', $companyProfileId);
+
+        $isAgency = $request->is('agence/*') || ($user->employee && $user->employee->agency_id !== null);
+
+        if ($isAgency) {
+            $agencyId = $user->employee->agency_id;
+            $query->where('agency_id', $agencyId);
+        }
+
+        $illustrations = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'illustrations' => $illustrations,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
