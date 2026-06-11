@@ -75,4 +75,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class);
     }
+
+    public function locataire(): HasOne
+    {
+        return $this->hasOne(Locataire::class);
+    }
 }

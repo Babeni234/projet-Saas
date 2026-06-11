@@ -6,6 +6,8 @@ use App\Http\Controllers\BatimentController;
 use App\Http\Controllers\ProprietaireController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\LogementController;
+use App\Http\Controllers\LocataireController;
+use App\Http\Controllers\AffectationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -231,6 +233,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/logements', [LogementController::class, 'store'])->name('logements.store');
     Route::put('/api/logements/{logement}', [LogementController::class, 'update'])->name('logements.update');
     Route::delete('/api/logements/{logement}', [LogementController::class, 'destroy'])->name('logements.destroy');
+
+    // Locataires API routes
+    Route::get('/api/locataires', [LocataireController::class, 'index'])->name('locataires.json');
+    Route::post('/api/locataires', [LocataireController::class, 'store'])->name('locataires.store');
+    Route::post('/api/locataires/{locataire}', [LocataireController::class, 'update'])->name('locataires.update');
+    Route::delete('/api/locataires/{locataire}', [LocataireController::class, 'destroy'])->name('locataires.destroy');
+    Route::post('/api/locataires/{locataire}/status', [LocataireController::class, 'updateStatus'])->name('locataires.status');
+    Route::delete('/api/locataires/{locataire}/documents/{index}', [LocataireController::class, 'deleteDocument'])->name('locataires.documents.delete');
+
+    // Affectations API routes
+    Route::get('/api/affectations', [AffectationController::class, 'index'])->name('affectations.json');
+    Route::post('/api/affectations', [AffectationController::class, 'store'])->name('affectations.store');
+    Route::post('/api/affectations/{affectation}/terminate', [AffectationController::class, 'terminate'])->name('affectations.terminate');
+    Route::delete('/api/affectations/{affectation}', [AffectationController::class, 'destroy'])->name('affectations.destroy');
 
     // Page Proprietaires
     Route::get('/immobilier/proprietaires', function () {

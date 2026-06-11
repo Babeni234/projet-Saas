@@ -5,9 +5,9 @@
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
                     Affectation des Logements
-                    <span class="text-emerald-500 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Module Immobilier</span>
+                    <span class="text-emerald-500 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Module Agence</span>
                 </h1>
-                <p class="text-slate-600 mt-1">Attribuer et gérer l'occupation des logements par les locataires</p>
+                <p class="text-slate-600 mt-1">Attribuer et gérer l'occupation des biens immobiliers par les locataires de votre agence</p>
             </div>
             <button
                 @click="openAddModal"
@@ -23,7 +23,7 @@
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <!-- Taux d'occupation -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-emerald-500/10 animate-fade-in" style="animation-delay: 0ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03]">
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-medium text-slate-500">Taux d'Occupation</p>
@@ -41,10 +41,10 @@
             </div>
 
             <!-- Logements Affectés -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-blue-500/10 animate-fade-in" style="animation-delay: 100ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03]">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-slate-500">Logements Occupés</p>
+                        <p class="text-sm font-medium text-slate-500">Biens Occupés / Réservés</p>
                         <p class="text-3xl font-bold text-blue-600 mt-1">{{ activeLeases }} <span class="text-sm text-slate-400 font-medium">/ {{ totalLogements }}</span></p>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-inner">
@@ -53,11 +53,11 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-4">{{ totalVacant }} logements vacants prêts à l'affectation</p>
+                <p class="text-xs text-slate-400 mt-4">{{ totalVacant }} biens vacants</p>
             </div>
 
             <!-- Cautions Encaissées -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-violet-500/10 animate-fade-in" style="animation-delay: 200ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03]">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-slate-500">Garanties Encaissées</p>
@@ -69,11 +69,11 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-4">Fonds sécurisés déposés en banque</p>
+                <p class="text-xs text-slate-400 mt-4">Fonds sécurisés de l'agence</p>
             </div>
 
             <!-- Revenus Mensuels Estimés -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-teal-500/10 animate-fade-in" style="animation-delay: 300ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-[1.03]">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-slate-500">Revenu Mensuel</p>
@@ -85,7 +85,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-4">Loyers théoriques sur affectations actives</p>
+                <p class="text-xs text-slate-400 mt-4">Loyers théoriques des contrats actifs</p>
             </div>
         </div>
 
@@ -109,7 +109,7 @@
                     class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                 >
                     <option value="">Tous les bâtiments</option>
-                    <option v-for="b in buildingsList" :key="b" :value="b">{{ b }}</option>
+                    <option v-for="b in uniqueBuildingsList" :key="b.id" :value="b.nom">{{ b.nom }}</option>
                 </select>
 
                 <select 
@@ -119,7 +119,6 @@
                     <option value="">Tous les statuts</option>
                     <option value="Actif">Actif</option>
                     <option value="Terminé">Terminé</option>
-                    <option value="À venir">À venir</option>
                 </select>
             </div>
         </div>
@@ -131,7 +130,7 @@
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Locataire</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Logement</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Bien loué</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Bâtiment</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Date d'effet</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Bail / Durée</th>
@@ -149,7 +148,7 @@
                                     </div>
                                     <div>
                                         <span class="font-semibold text-slate-900 block">{{ aff.locataire }}</span>
-                                        <span class="text-xs text-slate-500">Locataire Officiel</span>
+                                        <span class="text-xs text-slate-500">Locataire</span>
                                     </div>
                                 </div>
                             </td>
@@ -172,7 +171,7 @@
                             <td class="px-6 py-4">
                                 <span :class="[
                                     'px-3 py-1.5 rounded-full text-xs font-semibold border inline-block shadow-sm',
-                                    aff.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : aff.statut === 'Terminé' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    aff.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
                                 ]">
                                     {{ aff.statut }}
                                 </span>
@@ -182,7 +181,7 @@
                                     <button 
                                         @click="printReceipt(aff)"
                                         class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                                        title="Imprimer la fiche de bail"
+                                        title="Imprimer le bail"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -203,7 +202,7 @@
                         </tr>
                         <tr v-if="filteredAffectations.length === 0">
                             <td colspan="8" class="text-center py-12 text-slate-400">
-                                Aucun logement affecté correspondant aux critères de recherche.
+                                Aucune affectation active ou archivée pour cette agence.
                             </td>
                         </tr>
                     </tbody>
@@ -213,7 +212,7 @@
 
         <!-- Add/Edit Split-Screen Modal -->
         <div v-if="showModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] animate-slide-up">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] animate-scale-up">
                 
                 <!-- Left panel: Form Inputs -->
                 <div class="flex-1 p-8 overflow-y-auto flex flex-col border-r border-slate-100">
@@ -234,26 +233,31 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-1">Bâtiment</label>
                                     <select 
-                                        v-model="formData.batiment" 
+                                        v-model="formData.batiment_id" 
                                         @change="onBuildingChange"
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                     >
                                         <option value="">Sélectionner</option>
-                                        <option v-for="b in buildingsList" :key="b" :value="b">{{ b }}</option>
+                                        <option v-for="b in dbBatiments" :key="b.id" :value="b.id">{{ b.nom }}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Logement vacant</label>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Logement vacant (Libre)</label>
                                     <select 
-                                        v-model="formData.reference" 
+                                        v-model="formData.logement_id" 
                                         @change="onLogementChange"
-                                        :disabled="!formData.batiment"
+                                        :disabled="!formData.batiment_id"
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     >
                                         <option value="">Sélectionner</option>
-                                        <option v-for="l in availableLogements" :key="l.id" :value="l.reference">{{ l.reference }} ({{ l.categorie }})</option>
+                                        <option v-for="l in availableLogements" :key="l.id" :value="l.id">
+                                            {{ l.reference }} ({{ l.categorie }})
+                                        </option>
                                     </select>
                                 </div>
+                            </div>
+                            <div v-if="selectedLogementDetails" class="text-xs text-slate-500 bg-slate-100 p-2.5 rounded-xl border border-slate-200/50">
+                                🏠 <strong>Détails du logement :</strong> Étage {{ selectedLogementDetails.etage }} &bull; Surface : {{ selectedLogementDetails.surface }} m² &bull; Catégorie : {{ selectedLogementDetails.categorie }}
                             </div>
                         </div>
 
@@ -263,11 +267,13 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Locataire</label>
                                 <select 
-                                    v-model="formData.locataire" 
+                                    v-model="formData.locataire_id" 
                                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                 >
                                     <option value="">Sélectionner un locataire</option>
-                                    <option v-for="t in tenantsList" :key="t" :value="t">{{ t }}</option>
+                                    <option v-for="t in dbLocataires" :key="t.id" :value="t.id">
+                                        {{ t.nom }} ({{ t.email }})
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -285,7 +291,7 @@
                                     >
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dépôt de garantie (€)</label>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Dépôt de garantie / Caution (€)</label>
                                     <input 
                                         v-model.number="formData.caution" 
                                         type="number" 
@@ -297,7 +303,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-1">Date d'effet</label>
                                     <input 
-                                        v-model="formData.dateEffet" 
+                                        v-model="formData.date_debut" 
                                         type="date" 
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                     >
@@ -305,7 +311,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-1">Type de bail</label>
                                     <select 
-                                        v-model="formData.typeBail" 
+                                        v-model="formData.type_bail" 
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                     >
                                         <option value="Habitation">Bail d'Habitation</option>
@@ -331,7 +337,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-1">Cycle de paiement</label>
                                     <select 
-                                        v-model="formData.cyclePaiement" 
+                                        v-model="formData.cycle_paiement" 
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                     >
                                         <option value="Mensuel">Mensuel</option>
@@ -345,7 +351,9 @@
 
                     <div class="flex gap-3 mt-6">
                         <button @click="closeModal" class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition">Annuler</button>
-                        <button @click="saveAffectation" class="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow shadow-emerald-500/20 transition">Valider l'affectation</button>
+                        <button @click="saveAffectation" :disabled="saving" class="flex-1 px-4 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow shadow-emerald-500/20 transition disabled:opacity-50">
+                            {{ saving ? 'Validation...' : 'Valider l\'affectation' }}
+                        </button>
                     </div>
                 </div>
 
@@ -358,75 +366,44 @@
                     </button>
                     
                     <div class="text-center mb-6">
-                        <span class="text-xs font-bold text-indigo-500 uppercase tracking-widest block mb-1">Aperçu en direct</span>
-                        <p class="text-xs text-slate-400">Ce document se met à jour au fil de votre saisie</p>
+                        <span class="text-xs font-bold text-emerald-500 uppercase tracking-widest block mb-1">Aperçu du bail</span>
+                        <p class="text-xs text-slate-400">Généré dynamiquement</p>
                     </div>
 
                     <!-- Visual sheet of paper -->
                     <div class="w-full aspect-[1/1.4] bg-white rounded-xl shadow-xl border border-slate-200/80 p-5 flex flex-col justify-between relative select-none">
-                        <!-- Watermark -->
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-45 select-none">
-                            <span class="text-3xl font-bold tracking-widest text-slate-900">SIMULATION - BAIL</span>
-                        </div>
-
                         <div class="space-y-4">
-                            <!-- Paper Header -->
                             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
-                                <div class="flex items-center gap-1.5">
-                                    <div class="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center text-[10px] text-white font-bold">E</div>
-                                    <span class="text-[9px] font-bold text-slate-700 tracking-wider">ENTERPRISE SAAS</span>
-                                </div>
-                                <span class="text-[8px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-semibold uppercase">Fiche de Bail</span>
+                                <span class="text-[9px] font-bold text-slate-700 tracking-wider">PropertyAI</span>
+                                <span class="text-[8px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold uppercase">Fiche de Bail</span>
                             </div>
 
-                            <!-- Document Title -->
                             <div class="text-center space-y-1">
                                 <h4 class="text-[12px] font-bold text-slate-900 tracking-wider">CONTRAT DE LOCATION</h4>
-                                <p class="text-[8px] text-slate-400 uppercase tracking-wide">Simulation d'Affectation Immobilière</p>
                             </div>
 
-                            <!-- Parties Section -->
                             <div class="space-y-1.5 mt-2">
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">1. Parties contractantes</span>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">1. Parties</span>
                                 <div class="text-[9px] text-slate-700 space-y-0.5 pl-2 border-l border-emerald-500">
-                                    <p><span class="font-semibold text-slate-500">Bailleur :</span> Enterprise Management</p>
-                                    <p><span class="font-semibold text-slate-500">Preneur :</span> {{ formData.locataire || 'Non spécifié' }}</p>
+                                    <p><span class="font-semibold text-slate-500">Preneur :</span> {{ selectedLocataireName }}</p>
                                 </div>
                             </div>
 
-                            <!-- Property Section -->
                             <div class="space-y-1.5">
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">2. Désignation des locaux</span>
-                                <div class="text-[9px] text-slate-700 space-y-0.5 pl-2 border-l border-indigo-500">
-                                    <p><span class="font-semibold text-slate-500">Bâtiment :</span> {{ formData.batiment || 'Non spécifié' }}</p>
-                                    <p><span class="font-semibold text-slate-500">Logement :</span> {{ formData.reference || 'Non spécifié' }}</p>
-                                    <p><span class="font-semibold text-slate-500">Catégorie :</span> {{ getLogementCategory(formData.reference) }}</p>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">2. Désignation</span>
+                                <div class="text-[9px] text-slate-700 space-y-0.5 pl-2 border-l border-emerald-500">
+                                    <p><span class="font-semibold text-slate-500">Bâtiment :</span> {{ selectedBuildingName }}</p>
+                                    <p><span class="font-semibold text-slate-500">Logement :</span> {{ selectedLogementRef }}</p>
                                 </div>
                             </div>
 
-                            <!-- Finance Section -->
                             <div class="space-y-1.5">
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">3. Conditions financières & Dates</span>
-                                <div class="text-[9px] text-slate-700 space-y-0.5 pl-2 border-l border-amber-500">
-                                    <p><span class="font-semibold text-slate-500">Loyer mensuel :</span> {{ formatCurrency(formData.loyer) }}</p>
-                                    <p><span class="font-semibold text-slate-500">Dépôt de garantie :</span> {{ formatCurrency(formData.caution) }}</p>
-                                    <p><span class="font-semibold text-slate-500">Date d'effet :</span> {{ formatDate(formData.dateEffet) || 'Non spécifiée' }}</p>
-                                    <p><span class="font-semibold text-slate-500">Durée / Cycle :</span> {{ formData.duree }} / {{ formData.cyclePaiement }}</p>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">3. Conditions</span>
+                                <div class="text-[9px] text-slate-700 space-y-0.5 pl-2 border-l border-emerald-500">
+                                    <p><span class="font-semibold text-slate-500">Loyer :</span> {{ formatCurrency(formData.loyer) }}</p>
+                                    <p><span class="font-semibold text-slate-500">Caution :</span> {{ formatCurrency(formData.caution) }}</p>
+                                    <p><span class="font-semibold text-slate-500">Début :</span> {{ formData.date_debut }}</p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer Signatures -->
-                        <div class="border-t border-slate-100 pt-3 flex items-end justify-between">
-                            <div class="text-[7px] text-slate-400">
-                                <p>Date signature : {{ getTodayDate() }}</p>
-                                <p>Valide pour accord</p>
-                            </div>
-                            <div class="text-right space-y-1">
-                                <div class="w-16 h-8 border border-dashed border-slate-200 rounded flex items-center justify-center bg-slate-50/50">
-                                    <span class="text-[6px] text-slate-300 font-semibold uppercase tracking-wider">Signature</span>
-                                </div>
-                                <span class="text-[7px] text-slate-500 font-medium">Bailleur & Preneur</span>
                             </div>
                         </div>
                     </div>
@@ -445,12 +422,14 @@
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Libérer le logement ?</h3>
                 <p class="text-center text-slate-600 text-sm mb-6">
-                    Vous êtes sur le point de terminer le bail de <span class="font-semibold text-slate-800">{{ terminatingAff?.locataire }}</span> pour le logement <span class="font-semibold text-slate-800">{{ terminatingAff?.reference }}</span>. Le logement sera marqué comme disponible/libre.
+                    Vous êtes sur le point de terminer le bail de <span class="font-semibold text-slate-800">{{ terminatingAff?.locataire }}</span> pour le logement <span class="font-semibold text-slate-800">{{ terminatingAff?.reference }}</span>. Le bien repassera en statut 'Libre' et le locataire sera libéré.
                 </p>
 
                 <div class="flex gap-3">
                     <button @click="closeTerminateModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition">Annuler</button>
-                    <button @click="confirmTerminateLease" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 transition">Confirmer la fin</button>
+                    <button @click="confirmTerminateLease" :disabled="terminating" class="flex-1 px-4 py-2.5 bg-rose-600 text-white font-medium rounded-xl hover:bg-rose-700 transition disabled:opacity-50">
+                        {{ terminating ? 'Résiliation...' : 'Confirmer la fin' }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -464,7 +443,7 @@
                     </svg>
                 </div>
                 <h3 class="text-xl font-bold text-center text-slate-900 mb-2">{{ successMessage }}</h3>
-                <p class="text-center text-slate-500 text-sm mb-6">L'affectation locative a été enregistrée avec succès.</p>
+                <p class="text-center text-slate-500 text-sm mb-6">L'affectation a été enregistrée et mise à jour en base de données.</p>
 
                 <button @click="closeSuccess" class="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 shadow shadow-emerald-500/20 transition">Fermer</button>
             </div>
@@ -472,7 +451,7 @@
 
         <!-- Print Receipt Simulation Modal -->
         <div v-if="showPrintModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 relative animate-scale-up">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 relative animate-scale-up max-h-[90vh] overflow-y-auto">
                 <button @click="closePrintModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -486,15 +465,11 @@
                     Fiche du Bail d'Habitation
                 </h3>
 
-                <!-- Document Print View Container -->
                 <div id="printable-bail" class="bg-white border-2 border-slate-100 p-8 rounded-2xl shadow-inner text-slate-800 space-y-6">
                     <div class="flex justify-between items-start border-b-2 border-slate-100 pb-5">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold">E</div>
-                            <div>
-                                <span class="font-bold text-slate-950 block text-sm">Enterprise System</span>
-                                <span class="text-xs text-slate-400">Gestion de patrimoine</span>
-                            </div>
+                        <div>
+                            <span class="font-bold text-slate-950 block text-sm">PropertyAI System</span>
+                            <span class="text-xs text-slate-400">Gestion de bail</span>
                         </div>
                         <div class="text-right">
                             <span class="text-xs font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Bail Actif</span>
@@ -504,24 +479,16 @@
 
                     <div class="grid grid-cols-2 gap-8 text-sm">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Propriétaire / Bailleur</span>
-                            <p class="font-semibold text-slate-950">Enterprise Property Corp</p>
-                            <p class="text-xs text-slate-500">Service Immobilier</p>
-                            <p class="text-xs text-slate-500">immo@enterprise-saas.com</p>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Locataire / Preneur</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Preneur / Locataire</span>
                             <p class="font-semibold text-slate-950">{{ printingAff?.locataire }}</p>
-                            <p class="text-xs text-slate-500">Résident officiel</p>
-                            <p class="text-xs text-slate-500">Contrat Individuel</p>
                         </div>
                     </div>
 
                     <div class="border-y border-slate-100 py-4 space-y-2 text-sm">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Désignation du bien loué</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Désignation du bien</span>
                         <div class="grid grid-cols-3 gap-4">
                             <div>
-                                <span class="text-xs text-slate-500 block">Logement</span>
+                                <span class="text-xs text-slate-500 block">Référence</span>
                                 <span class="font-semibold text-slate-900">{{ printingAff?.reference }}</span>
                             </div>
                             <div>
@@ -529,14 +496,13 @@
                                 <span class="font-semibold text-slate-900">{{ printingAff?.batiment }}</span>
                             </div>
                             <div>
-                                <span class="text-xs text-slate-500 block">Type de Bail</span>
+                                <span class="text-xs text-slate-500 block">Bail</span>
                                 <span class="font-semibold text-slate-900">{{ printingAff?.typeBail }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-2 text-sm">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Conditions financières & Durée</span>
                         <div class="grid grid-cols-3 gap-4">
                             <div>
                                 <span class="text-xs text-slate-500 block">Loyer Mensuel</span>
@@ -547,25 +513,16 @@
                                 <span class="font-bold text-slate-950 text-base">{{ formatCurrency(printingAff?.caution) }}</span>
                             </div>
                             <div>
-                                <span class="text-xs text-slate-500 block">Date d'effet / Durée</span>
+                                <span class="text-xs text-slate-500 block">Date d'effet</span>
                                 <span class="font-semibold text-slate-900 block">{{ formatDate(printingAff?.dateEffet) }}</span>
-                                <span class="text-[10px] text-slate-400">Durée: {{ printingAff?.duree }}</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="pt-6 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
-                        <span>Fait à Douala, le {{ getTodayDate() }}</span>
-                        <span class="italic">Signature et cachet du bailleur font foi</span>
                     </div>
                 </div>
 
                 <div class="flex gap-3 mt-6">
                     <button @click="closePrintModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition">Fermer</button>
-                    <button @click="triggerPrint" class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 shadow shadow-indigo-500/20 transition flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
+                    <button @click="triggerPrint" class="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2">
                         Imprimer
                     </button>
                 </div>
@@ -576,104 +533,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
 
-const page = usePage();
-const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id);
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-const systemBatiments = computed(() => {
-    const stored = localStorage.getItem('immobilier_batiments');
-    let bats = [];
-    if (stored) {
-        bats = JSON.parse(stored);
-    } else {
-        bats = [
-            { id: 1, nom: 'Immeuble A', ville: 'Paris' },
-            { id: 2, nom: 'Immeuble B', ville: 'Lyon' },
-            { id: 3, nom: 'Immeuble C', ville: 'Nice' },
-            { id: 4, nom: 'Immeuble D', ville: 'Douala' }
-        ];
-    }
-    const agencyId = currentAgencyId.value;
-    return bats.filter(b => Number(b.agency_id) === Number(agencyId));
-});
-
-const buildingsList = computed(() => systemBatiments.value.map(b => b.nom));
-
-// Mock listings (similar to LogementsPage)
-const defaultLogements = [
-    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement', standardRent: 800, statut: 'Occupé' },
-    { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement', standardRent: 900, statut: 'Libre' },
-    { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', categorie: 'Duplex', standardRent: 1000, statut: 'Occupé' },
-    { id: 4, reference: 'APT-B101', batiment: 'Immeuble B', categorie: 'Studio', standardRent: 650, statut: 'Libre' },
-    { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', categorie: 'Appartement', standardRent: 950, statut: 'Occupé' },
-    { id: 6, reference: 'APT-C101', batiment: 'Immeuble C', categorie: 'Loft', standardRent: 850, statut: 'Occupé' },
-    { id: 7, reference: 'APT-C102', batiment: 'Immeuble C', categorie: 'Magasin', standardRent: 1500, statut: 'Libre' },
-    { id: 8, reference: 'APT-D101', batiment: 'Immeuble D', categorie: 'Bureau', standardRent: 1200, statut: 'Libre' },
-];
-
-const getStoredLogements = () => {
-    const stored = localStorage.getItem('immobilier_logements');
-    if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.map(l => ({
-            ...l,
-            standardRent: l.loyer || l.standardRent || 800
-        }));
-    }
-    return defaultLogements;
-};
-
-const logements = ref(getStoredLogements());
-
-const scopedLogements = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return logements.value.filter(l => agencyBuildingNames.includes(l.batiment));
-});
-
-const getStoredLocatairesNames = () => {
-    const stored = localStorage.getItem('immobilier_locataires');
-    const agencyId = currentAgencyId.value;
-    const agencyLogementRefs = scopedLogements.value.map(l => l.reference);
-    
-    if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed
-            .filter(l => agencyLogementRefs.includes(l.logement) || Number(l.agency_id) === Number(agencyId))
-            .map(l => l.nom);
-    }
-    return [
-        'Jean Dupont',
-        'Marie Martin',
-        'Pierre Bernard',
-        'Sophie Richard',
-        'Lucas Petit',
-        'Emma Leroy',
-        'Alain Delon',
-        'Chantal Jouanno'
-    ];
-};
-
-const tenantsList = computed(() => getStoredLocatairesNames());
-
-// Mock Active/Historical Assignments
-const initialAffectations = [
-    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', locataire: 'Jean Dupont', loyer: 800, caution: 1600, dateEffet: '2026-01-01', duree: '1 an', typeBail: 'Habitation', cyclePaiement: 'Mensuel', statut: 'Actif' },
-    { id: 2, reference: 'APT-A201', batiment: 'Immeuble A', locataire: 'Marie Martin', loyer: 1000, caution: 2000, dateEffet: '2026-02-15', duree: '3 ans', typeBail: 'Commercial', cyclePaiement: 'Trimestriel', statut: 'Actif' },
-    { id: 3, reference: 'APT-B102', batiment: 'Immeuble B', locataire: 'Lucas Petit', loyer: 950, caution: 1900, dateEffet: '2026-03-01', duree: 'Indéterminée', typeBail: 'Habitation', cyclePaiement: 'Mensuel', statut: 'Actif' },
-    { id: 4, reference: 'APT-C101', batiment: 'Immeuble C', locataire: 'Sophie Richard', loyer: 850, caution: 1700, dateEffet: '2026-04-10', duree: '1 an', typeBail: 'Professionnel', cyclePaiement: 'Mensuel', statut: 'Actif' },
-];
-
-const affectations = ref(JSON.parse(localStorage.getItem('immobilier_affectations')) || initialAffectations);
-if (!localStorage.getItem('immobilier_affectations')) {
-    localStorage.setItem('immobilier_affectations', JSON.stringify(initialAffectations));
-}
-
-const saveAllToStorage = () => {
-    localStorage.setItem('immobilier_affectations', JSON.stringify(affectations.value));
-    localStorage.setItem('immobilier_logements', JSON.stringify(logements.value));
-};
+// State
+const affectations = ref([]);
+const dbBatiments = ref([]);
+const dbLocataires = ref([]);
+const dbLogements = ref([]); // All logs in database
 
 const searchQuery = ref('');
 const filterBuilding = ref('');
@@ -684,143 +552,151 @@ const showTerminateModal = ref(false);
 const showSuccess = ref(false);
 const showPrintModal = ref(false);
 
+const saving = ref(false);
+const terminating = ref(false);
+
 const successMessage = ref('');
-const terminatingAff = ref(null);
 const printingAff = ref(null);
+const terminatingAff = ref(null);
 
 const formData = ref({
-    reference: '',
-    batiment: '',
-    locataire: '',
-    loyer: '',
-    caution: '',
-    dateEffet: '',
+    batiment_id: '',
+    logement_id: '',
+    locataire_id: '',
+    loyer: 0,
+    caution: 0,
+    date_debut: '',
+    type_bail: 'Habitation',
     duree: '1 an',
-    typeBail: 'Habitation',
-    cyclePaiement: 'Mensuel',
+    cycle_paiement: 'Mensuel',
 });
 
-const scopedAffectations = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return affectations.value.filter(a => agencyBuildingNames.includes(a.batiment));
-});
+// Load resources from Database APIs
+const fetchAllData = async () => {
+    try {
+        // Fetch Affectations
+        const resAff = await fetch('/api/affectations', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
+        if (resAff.ok) affectations.value = await resAff.json();
 
-// Computed Values for dashboard KPIs
-const totalLogements = computed(() => scopedLogements.value.length);
-const activeLeases = computed(() => scopedAffectations.value.filter(a => a.statut === 'Actif').length);
-const totalVacant = computed(() => scopedLogements.value.filter(l => l.statut === 'Libre').length);
-const occupancyRate = computed(() => totalLogements.value > 0 ? Math.round((activeLeases.value / totalLogements.value) * 100) : 0);
-const totalDeposits = computed(() => scopedAffectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.caution, 0));
-const monthlyRevenue = computed(() => scopedAffectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.loyer, 0));
+        // Fetch Buildings
+        const resBat = await fetch('/api/batiments', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
+        if (resBat.ok) dbBatiments.value = await resBat.json();
 
-// Filtered assignments
-const filteredAffectations = computed(() => {
-    return scopedAffectations.value.filter(a => {
-        const matchesSearch = 
-            a.locataire.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            a.reference.toLowerCase().includes(searchQuery.value.toLowerCase());
-        const matchesBuilding = !filterBuilding.value || a.batiment === filterBuilding.value;
-        const matchesStatus = !filterStatus.value || a.statut === filterStatus.value;
-        return matchesSearch && matchesBuilding && matchesStatus;
-    });
-});
+        // Fetch Logements
+        const resLog = await fetch('/api/logements', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
+        if (resLog.ok) dbLogements.value = await resLog.json();
 
-// Logements filter list for form select (vacant in selected building)
-const availableLogements = computed(() => {
-    if (!formData.value.batiment) return [];
-    return scopedLogements.value.filter(l => l.batiment === formData.value.batiment && l.statut === 'Libre');
-});
-
-// Event Handlers
-const onBuildingChange = () => {
-    formData.value.reference = '';
-    formData.value.loyer = '';
-    formData.value.caution = '';
+        // Fetch Locataires
+        const resLoc = await fetch('/api/locataires', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
+        if (resLoc.ok) {
+            const tenants = await resLoc.json();
+            dbLocataires.value = tenants.filter(t => t.statut.toLowerCase() !== 'affecté');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 };
 
+// Computed vacant properties of the selected building
+const availableLogements = computed(() => {
+    if (!formData.value.batiment_id) return [];
+    return dbLogements.value.filter(
+        l => l.batiment_id === Number(formData.value.batiment_id) && l.statut === 'Libre'
+    );
+});
+
+// Selected property full details
+const selectedLogementDetails = computed(() => {
+    if (!formData.value.logement_id) return null;
+    return dbLogements.value.find(l => l.id === Number(formData.value.logement_id));
+});
+
+// Unique buildings having properties, for filtering table
+const uniqueBuildingsList = computed(() => dbBatiments.value);
+
+// Form live previews
+const selectedLocataireName = computed(() => {
+    const loc = dbLocataires.value.find(t => t.id === Number(formData.value.locataire_id));
+    return loc ? loc.nom : 'Non spécifié';
+});
+
+const selectedBuildingName = computed(() => {
+    const bat = dbBatiments.value.find(b => b.id === Number(formData.value.batiment_id));
+    return bat ? bat.nom : 'Non spécifié';
+});
+
+const selectedLogementRef = computed(() => {
+    const log = dbLogements.value.find(l => l.id === Number(formData.value.logement_id));
+    return log ? log.reference : 'Non spécifié';
+});
+
+// KPI Calculations
+const totalLogements = computed(() => dbLogements.value.length);
+const activeLeases = computed(() => affectations.value.filter(a => a.statut === 'Actif').length);
+const totalVacant = computed(() => dbLogements.value.filter(l => l.statut === 'Libre').length);
+const occupancyRate = computed(() => {
+    if (totalLogements.value === 0) return 0;
+    return Math.round((activeLeases.value / totalLogements.value) * 100);
+});
+const totalDeposits = computed(() => affectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.caution, 0));
+const monthlyRevenue = computed(() => affectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.loyer, 0));
+
+// Filtered assignments list
+const filteredAffectations = computed(() => {
+    let list = affectations.value;
+
+    if (filterBuilding.value) {
+        list = list.filter(a => a.batiment === filterBuilding.value);
+    }
+    if (filterStatus.value) {
+        list = list.filter(a => a.statut === filterStatus.value);
+    }
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        list = list.filter(a => 
+            a.locataire.toLowerCase().includes(query) ||
+            a.reference.toLowerCase().includes(query) ||
+            a.batiment.toLowerCase().includes(query)
+        );
+    }
+    return list;
+});
+
+const onBuildingChange = () => {
+    formData.value.logement_id = '';
+    formData.value.loyer = 0;
+    formData.value.caution = 0;
+};
+
+// Autofill fields when property is selected
 const onLogementChange = () => {
-    const selected = logements.value.find(l => l.reference === formData.value.reference);
-    if (selected) {
-        formData.value.loyer = selected.standardRent;
-        formData.value.caution = selected.standardRent * 2; // Prefill deposit with 2x rent
+    const details = selectedLogementDetails.value;
+    if (details) {
+        formData.value.loyer = Number(details.loyer || 0);
+        formData.value.caution = Number(details.loyer || 0);
     } else {
-        formData.value.loyer = '';
-        formData.value.caution = '';
+        formData.value.loyer = 0;
+        formData.value.caution = 0;
     }
 };
 
 const openAddModal = () => {
     formData.value = {
-        reference: '',
-        batiment: '',
-        locataire: '',
-        loyer: '',
-        caution: '',
-        dateEffet: getTodayIsoDate(),
+        batiment_id: '',
+        logement_id: '',
+        locataire_id: '',
+        loyer: 0,
+        caution: 0,
+        date_debut: new Date().toISOString().substring(0, 10),
+        type_bail: 'Habitation',
         duree: '1 an',
-        typeBail: 'Habitation',
-        cyclePaiement: 'Mensuel',
+        cycle_paiement: 'Mensuel',
     };
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
-};
-
-const saveAffectation = () => {
-    const data = formData.value;
-    if (!data.reference || !data.batiment || !data.locataire || !data.loyer || !data.dateEffet) {
-        alert("Veuillez remplir tous les champs obligatoires d'étape");
-        return;
-    }
-
-    // Add assignment - status defaults to 'En attente'
-    const newAff = {
-        id: affectations.value.length + 1,
-        reference: data.reference,
-        batiment: data.batiment,
-        locataire: data.locataire,
-        loyer: Number(data.loyer),
-        caution: Number(data.caution || 0),
-        dateEffet: data.dateEffet,
-        duree: data.duree,
-        typeBail: data.typeBail,
-        cyclePaiement: data.cyclePaiement,
-        statut: 'En attente',
-    };
-    affectations.value.unshift(newAff);
-
-    // Set logement status to Réservé
-    const logIdx = logements.value.findIndex(l => l.reference === data.reference);
-    if (logIdx !== -1) {
-        logements.value[logIdx].statut = 'Réservé';
-    }
-
-    saveAllToStorage();
-
-    // Force locataire list update in storage if it doesn't contain this locataire
-    const locStore = localStorage.getItem('immobilier_locataires');
-    if (locStore) {
-        const parsedLoc = JSON.parse(locStore);
-        if (!parsedLoc.some(l => l.nom.toLowerCase() === data.locataire.toLowerCase())) {
-            parsedLoc.push({
-                id: Math.max(...parsedLoc.map(l => l.id), 0) + 1,
-                nom: data.locataire,
-                email: data.locataire.toLowerCase().replace(/\s+/g, '.') + '@email.com',
-                telephone: '06 00 00 00 00',
-                logement: data.reference,
-                garantie: Number(data.caution || 0),
-                statut: 'Inactif',
-                agency_id: currentAgencyId.value
-            });
-            localStorage.setItem('immobilier_locataires', JSON.stringify(parsedLoc));
-        }
-    }
-
-    successMessage.value = "Logement affecté avec succès (Bail en attente)";
-    showModal.value = false;
-    showSuccess.value = true;
 };
 
 const openTerminateModal = (aff) => {
@@ -831,39 +707,6 @@ const openTerminateModal = (aff) => {
 const closeTerminateModal = () => {
     showTerminateModal.value = false;
     terminatingAff.value = null;
-};
-
-const confirmTerminateLease = () => {
-    if (!terminatingAff.value) return;
-
-    // Set assignment status to Terminé
-    const affIdx = affectations.value.findIndex(a => a.id === terminatingAff.value.id);
-    if (affIdx !== -1) {
-        affectations.value[affIdx].statut = 'Terminé';
-    }
-
-    // Set logement status to Libre
-    const logIdx = logements.value.findIndex(l => l.reference === terminatingAff.value.reference);
-    if (logIdx !== -1) {
-        logements.value[logIdx].statut = 'Libre';
-    }
-
-    // Set locataire status to Inactif in storage
-    const locStore = localStorage.getItem('immobilier_locataires');
-    if (locStore) {
-        const parsedLoc = JSON.parse(locStore);
-        const locIdx = parsedLoc.findIndex(l => l.nom.toLowerCase() === terminatingAff.value.locataire.toLowerCase());
-        if (locIdx !== -1) {
-            parsedLoc[locIdx].statut = 'Inactif';
-            parsedLoc[locIdx].logement = 'Aucun';
-            localStorage.setItem('immobilier_locataires', JSON.stringify(parsedLoc));
-        }
-    }
-
-    saveAllToStorage();
-    closeTerminateModal();
-    successMessage.value = "Le bail a été clôturé";
-    showSuccess.value = true;
 };
 
 const printReceipt = (aff) => {
@@ -880,14 +723,84 @@ const triggerPrint = () => {
     window.print();
 };
 
+// Create new lease assignment in DB
+const saveAffectation = async () => {
+    if (!formData.value.locataire_id || !formData.value.logement_id || !formData.value.loyer || !formData.value.date_debut) {
+        alert("Veuillez remplir toutes les informations requises.");
+        return;
+    }
+
+    saving.value = true;
+    try {
+        const res = await fetch('/api/affectations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+            body: JSON.stringify(formData.value)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            successMessage.value = 'Affectation créée avec succès';
+            closeModal();
+            fetchAllData();
+            showSuccess.value = true;
+        } else {
+            alert(data.error || 'Une erreur est survenue.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erreur de communication avec le serveur.');
+    } finally {
+        saving.value = false;
+    }
+};
+
+// Terminate lease assignment in DB
+const confirmTerminateLease = async () => {
+    terminating.value = true;
+    try {
+        const res = await fetch(`/api/affectations/${terminatingAff.value.id}/terminate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            }
+        });
+
+        if (res.ok) {
+            successMessage.value = 'Le bail a été clôturé avec succès et le logement est désormais libre.';
+            closeTerminateModal();
+            fetchAllData();
+            showSuccess.value = true;
+        } else {
+            alert('Erreur lors de la résiliation.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Erreur de communication.');
+    } finally {
+        terminating.value = false;
+    }
+};
+
 const closeSuccess = () => {
     showSuccess.value = false;
 };
 
-// Helpers
+// Utils
 const getInitials = (name) => {
     if (!name) return 'L';
-    return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
+    return name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-FR');
 };
 
 const formatCurrency = (val) => {
@@ -895,70 +808,23 @@ const formatCurrency = (val) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 };
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
-};
-
-const getTodayDate = () => {
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
-};
-
-const getTodayIsoDate = () => {
-    return new Date().toISOString().split('T')[0];
-};
-
-const getLogementCategory = (refNum) => {
-    const log = logements.value.find(l => l.reference === refNum);
-    return log ? log.categorie : 'Logement standard';
-};
+onMounted(() => {
+    fetchAllData();
+});
 </script>
 
 <style scoped>
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @keyframes scaleUp {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.95);
     }
     to {
         opacity: 1;
         transform: scale(1);
     }
 }
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-slide-up {
-    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 .animate-scale-up {
-    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-    opacity: 0;
+    animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
