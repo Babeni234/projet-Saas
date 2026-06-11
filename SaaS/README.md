@@ -12,7 +12,7 @@ Le projet est une plateforme SaaS de gestion immobilière avancée en phase de d
 *   **Tableaux de bord (Dashboards) :** Tableaux de bord spécialisés (Immobilier, Agence, Comptabilité, Maintenance) avec visualisation de données en temps réel.
 *   **Finance & Facturation :** Gestion complète des loyers, factures, indexations (IRL) et suivi des impayés.
 *   **Assistant Entreprise :** Système d'assistance intégré pour les opérations quotidiennes.
-*   **Module Illustrations :** Gestion de ressources visuelles pour les propriétés.
+*   **Module Illustrations (v2) :** Amélioration de la gestion et de la visualisation des ressources graphiques.
 
 ### Architecture Technique
 
