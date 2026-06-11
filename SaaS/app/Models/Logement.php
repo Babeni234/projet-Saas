@@ -43,10 +43,39 @@ class Logement extends Model
                 $model->uuid = (string) Str::uuid();
             }
             if (empty($model->reference)) {
-                $count = static::withTrashed()
-                               ->where('company_profile_id', $model->company_profile_id)
-                               ->count();
-                $model->reference = 'BIEN-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+                $prefix = 'BIEN';
+                if ($model->categorie_id) {
+                    $cat = \App\Models\Categorie::find($model->categorie_id);
+                    if ($cat && !empty($cat->nom)) {
+                        // Normalize and strip accents
+                        $nomLower = strtr(mb_strtolower($cat->nom, 'UTF-8'), [
+                            'à'=>'a', 'â'=>'a', 'ä'=>'a', 'é'=>'e', 'è'=>'e', 'ê'=>'e', 'ë'=>'e', 
+                            'î'=>'i', 'ï'=>'i', 'ô'=>'o', 'ö'=>'o', 'ù'=>'u', 'û'=>'u', 'ü'=>'u', 'ç'=>'c'
+                        ]);
+                        if (str_contains($nomLower, 'apparthotel')) {
+                            $prefix = 'APTH';
+                        } elseif (str_contains($nomLower, 'appart')) {
+                            $prefix = 'APPT';
+                        } elseif (str_contains($nomLower, 'chambre')) {
+                            $prefix = 'CH';
+                        } elseif (str_contains($nomLower, 'studio')) {
+                            $prefix = 'STD';
+                        } elseif (str_contains($nomLower, 'villa')) {
+                            $prefix = 'VL';
+                        } elseif (str_contains($nomLower, 'bureau')) {
+                            $prefix = 'BUR';
+                        } elseif (str_contains($nomLower, 'magasin')) {
+                            $prefix = 'MAG';
+                        } elseif (str_contains($nomLower, 'entrepot')) {
+                            $prefix = 'ENT';
+                        } else {
+                            $clean = preg_replace('/[^a-zA-Z]/', '', $cat->nom);
+                            $prefix = !empty($clean) ? strtoupper(substr($clean, 0, 4)) : 'BIEN';
+                        }
+                    }
+                }
+                $randomDigits = mt_rand(1000, 9999);
+                $model->reference = $prefix . '-' . $randomDigits;
             }
         });
     }

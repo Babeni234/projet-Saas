@@ -118,6 +118,7 @@
                 >
                     <option value="">Tous les statuts</option>
                     <option value="Actif">Actif</option>
+                    <option value="En cours d'exécution">En cours d'exécution</option>
                     <option value="Terminé">Terminé</option>
                 </select>
             </div>
@@ -662,14 +663,14 @@ const selectedTypeContratNom = computed(() => {
 
 // KPI Calculations
 const totalLogements = computed(() => dbLogements.value.length);
-const activeLeases = computed(() => affectations.value.filter(a => a.statut === 'Actif').length);
+const activeLeases = computed(() => affectations.value.filter(a => a.statut === 'Actif' || a.statut === "En cours d'exécution").length);
 const totalVacant = computed(() => dbLogements.value.filter(l => l.statut === 'Libre').length);
 const occupancyRate = computed(() => {
     if (totalLogements.value === 0) return 0;
     return Math.round((activeLeases.value / totalLogements.value) * 100);
 });
-const totalDeposits = computed(() => affectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.caution, 0));
-const monthlyRevenue = computed(() => affectations.value.filter(a => a.statut === 'Actif').reduce((sum, a) => sum + a.loyer, 0));
+const totalDeposits = computed(() => affectations.value.filter(a => a.statut === 'Actif' || a.statut === "En cours d'exécution").reduce((sum, a) => sum + a.caution, 0));
+const monthlyRevenue = computed(() => affectations.value.filter(a => a.statut === 'Actif' || a.statut === "En cours d'exécution").reduce((sum, a) => sum + a.loyer, 0));
 
 // Filtered assignments list
 const filteredAffectations = computed(() => {

@@ -234,6 +234,16 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/type-contrats/{typeContrat}', [\App\Http\Controllers\TypeContratController::class, 'update'])->name('type-contrats.update');
     Route::delete('/api/type-contrats/{typeContrat}', [\App\Http\Controllers\TypeContratController::class, 'destroy'])->name('type-contrats.destroy');
 
+    // Contrats API routes
+    Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');
+    Route::post('/api/contrats', [\App\Http\Controllers\ContratController::class, 'store'])->name('contrats.store');
+    Route::put('/api/contrats/{contrat}', [\App\Http\Controllers\ContratController::class, 'update'])->name('contrats.update');
+    Route::delete('/api/contrats/{contrat}', [\App\Http\Controllers\ContratController::class, 'destroy'])->name('contrats.destroy');
+
+    // ContratTemplates API routes
+    Route::get('/api/contrat-templates', [\App\Http\Controllers\ContratTemplateController::class, 'index'])->name('contrat-templates.json');
+    Route::post('/api/contrat-templates', [\App\Http\Controllers\ContratTemplateController::class, 'storeOrUpdate'])->name('contrat-templates.storeOrUpdate');
+
     // Logements API routes
     Route::get('/api/logements', [LogementController::class, 'index'])->name('logements.json');
     Route::post('/api/logements', [LogementController::class, 'store'])->name('logements.store');

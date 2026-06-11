@@ -5,7 +5,7 @@
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
                     Contrats de Bail
-                    <span class="text-emerald-500 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Module Immobilier</span>
+                    <span class="text-emerald-500 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">Espace Agence</span>
                 </h1>
                 <p class="text-slate-600 mt-1">Gérer, rédiger et générer par IA les contrats de location officiels</p>
             </div>
@@ -78,16 +78,16 @@
         </div>
 
         <!-- Search Bar -->
-        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-4 border border-slate-100">
-            <div class="relative">
+        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-4 border border-slate-100 flex items-center justify-between gap-4">
+            <div class="relative flex-1">
                 <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                     v-model="searchQuery"
                     type="text"
-                    placeholder="Rechercher un contrat..."
-                    class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Rechercher un contrat par numéro, locataire ou logement..."
+                    class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                 >
             </div>
         </div>
@@ -113,8 +113,8 @@
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ contrat.numero }}</td>
                             <td class="px-6 py-4 text-slate-700 font-medium">{{ contrat.locataire }}</td>
                             <td class="px-6 py-4 text-slate-600">
-                                <span class="font-medium text-slate-900 block">{{ contrat.reference || 'Non spécifié' }}</span>
-                                <span class="text-xs text-slate-400">{{ contrat.batiment || 'Sans bâtiment' }}</span>
+                                <span class="font-medium text-slate-900 block">{{ contrat.reference }}</span>
+                                <span class="text-xs text-slate-400">{{ contrat.batiment }}</span>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-bold text-emerald-600 block">{{ formatCurrency(contrat.loyer) }}</span>
@@ -148,11 +148,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <button @click="openDeleteModal(contrat)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Supprimer">
+                                    <!-- <button @click="openDeleteModal(contrat)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Supprimer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
-                                    </button>
+                                    </button> -->
                                 </div>
                             </td>
                         </tr>
@@ -166,36 +166,9 @@
             </div>
         </div>
 
-        <!-- Reference Template Configuration Card -->
-        <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Exemplaire de Contrat de Référence (Template IA)
-                    </h3>
-                    <p class="text-sm text-slate-500 mt-1">Ce modèle est utilisé par l'IA Gemini comme structure contractuelle de base pour générer de nouveaux contrats.</p>
-                </div>
-                <button 
-                    @click="saveExemplaire" 
-                    class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium shadow transition"
-                >
-                    Enregistrer le modèle
-                </button>
-            </div>
-            <textarea 
-                v-model="exemplaireContrat" 
-                rows="8" 
-                class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm text-slate-700 bg-slate-50"
-                placeholder="Rédigez ou collez votre exemplaire de contrat type ici..."
-            ></textarea>
-        </div>
-
-        <!-- Add/Edit Modal (Select Pending Assignments) -->
+        <!-- Add/Edit Modal (Select Pending Assignments with Cascading Filters) -->
         <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full flex flex-col md:flex-row h-[75vh] max-h-[580px] overflow-hidden animate-scale-up">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full flex flex-col md:flex-row h-[85vh] max-h-[750px] overflow-hidden animate-scale-up">
                 
                 <!-- Left Column: Parameters and Actions -->
                 <div class="flex-1 p-6 overflow-y-auto flex flex-col justify-between border-r border-slate-100">
@@ -210,23 +183,41 @@
                         </div>
 
                         <div class="space-y-4">
-                            <!-- Dropdown for Locataire (Only on Creation mode) -->
-                            <div v-if="!editingContrat">
-                                <label class="block text-xs font-semibold text-slate-500 mb-1">Locataire en attente de bail</label>
-                                <div v-if="pendingAssignments.length === 0" class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-800 text-xs">
-                                    Aucun locataire avec une affectation "En attente". Veuillez d'abord créer une affectation dans le module **Affectation des logements**.
+                            <!-- Cascading Dropdowns (Only on Creation mode) -->
+                            <div v-if="!editingContrat" class="space-y-4">
+                                <!-- 1. Building Select -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Bâtiment</label>
+                                    <select 
+                                        v-model="selectedBatimentId" 
+                                        @change="onBatimentChange"
+                                        class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white text-sm"
+                                    >
+                                        <option value="">Sélectionner un bâtiment</option>
+                                        <option v-for="b in batiments" :key="b.id" :value="b.id">
+                                            {{ b.nom }} ({{ b.ville }})
+                                        </option>
+                                    </select>
                                 </div>
-                                <select 
-                                    v-else
-                                    v-model="formData.locataire" 
-                                    @change="onTenantChange" 
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white text-sm"
-                                >
-                                    <option value="">Sélectionner un locataire</option>
-                                    <option v-for="a in pendingAssignments" :key="a.id" :value="a.locataire">
-                                        {{ a.locataire }} (Logement: {{ a.reference }}, Loyer: {{ a.loyer }}€)
-                                    </option>
-                                </select>
+
+                                <!-- 2. Tenant Select -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Locataire (Affectation active)</label>
+                                    <select 
+                                        v-model="selectedAssignmentId" 
+                                        @change="onAssignmentChange"
+                                        :disabled="!selectedBatimentId"
+                                        class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition bg-white text-sm disabled:bg-slate-50 disabled:text-slate-400"
+                                    >
+                                        <option value="">Sélectionner un locataire</option>
+                                        <option v-for="a in filteredAssignments" :key="a.id" :value="a.id">
+                                            {{ a.locataire }} - Local: {{ a.reference }} (Loyer: {{ a.loyer }}€)
+                                        </option>
+                                    </select>
+                                    <p v-if="selectedBatimentId && filteredAssignments.length === 0" class="text-xs text-amber-600 mt-1">
+                                        Aucun locataire avec une affectation "Actif" pour ce bâtiment.
+                                    </p>
+                                </div>
                             </div>
 
                             <!-- Input for edit mode -->
@@ -235,9 +226,9 @@
                                 <input v-model="formData.locataire" type="text" disabled class="w-full px-4 py-2 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed text-sm">
                             </div>
 
-                            <!-- Dynamic Details Form: Optimized in Width -->
-                            <div v-if="formData.locataire" class="space-y-4">
-                                <!-- 3 Column summary info (landscape) -->
+                            <!-- Dynamic Details Form -->
+                            <div v-if="formData.locataire_id || editingContrat" class="space-y-4">
+                                <!-- 3 Column summary info -->
                                 <div class="grid grid-cols-3 gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3">
                                     <div class="text-[11px] text-slate-600">
                                         <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wide">Bien</span>
@@ -256,27 +247,25 @@
                                     </div>
                                 </div>
 
-                                <!-- Two columns sub-layout for interactive fields (exploiting horizontal space) -->
+                                <!-- Interactive fields -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Col 1: Dates -->
                                     <div class="space-y-3">
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Date Début</label>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Date Début (Modifiable)</label>
                                             <input v-model="formData.debut" type="date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition">
                                         </div>
                                         <div>
-                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Date Fin</label>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Date Fin (Modifiable)</label>
                                             <input v-model="formData.fin" type="date" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition">
                                         </div>
                                     </div>
 
-                                    <!-- Col 2: AI Prompt Instructions -->
                                     <div class="flex flex-col h-full">
                                         <label class="block text-[10px] font-bold text-indigo-600 uppercase tracking-wide mb-1 flex items-center gap-1">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                             </svg>
-                                            Consignes IA (Optionnel)
+                                            Consignes de rédaction IA (Optionnel)
                                         </label>
                                         <textarea 
                                             v-model="formData.instructions" 
@@ -287,7 +276,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Action buttons -->
+                                <!-- Actions -->
                                 <div class="grid grid-cols-2 gap-3 pt-1">
                                     <button 
                                         type="button"
@@ -295,7 +284,7 @@
                                         class="px-3 py-2.5 border border-emerald-600 text-emerald-700 font-semibold rounded-xl text-xs hover:bg-emerald-50 transition flex items-center justify-center gap-1.5"
                                     >
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                         Rédiger manuellement
                                     </button>
@@ -322,12 +311,18 @@
 
                     <div class="flex gap-3 mt-6 pt-4 border-t border-slate-100">
                         <button @click="closeModal" class="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
-                        <button @click="saveContrat" :disabled="!editorContent" class="flex-1 px-4 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow shadow-emerald-500/20 transition text-sm">Enregistrer & Activer</button>
+                        <button @click="saveContrat" :disabled="!editorContent || savingContrat" class="flex-1 px-4 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow shadow-emerald-500/20 transition text-sm flex items-center justify-center gap-2">
+                            <svg v-if="savingContrat" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Enregistrer & Activer
+                        </button>
                     </div>
                 </div>
 
-                <!-- Right Column: Document Live Preview Sheet -->
-                <div class="w-full md:w-[380px] bg-slate-50 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 relative">
+                <!-- Right Column: Document Live Preview Sheet (Enlarged) -->
+                <div class="w-full md:w-[480px] bg-slate-50 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 relative">
                     <button @click="closeModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 hidden md:block">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -335,18 +330,18 @@
                     </button>
                     
                     <div class="text-center mb-4">
-                        <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-1">Visualisation du contrat</span>
-                        <p class="text-[9px] text-slate-400">Ce document doit être rédigé ou généré avant l'activation</p>
+                        <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-1">Prévisualisation du Contrat</span>
+                        <p class="text-[10px] text-slate-400">Vérifiez les mentions obligatoires et le contenu avant validation</p>
                     </div>
 
-                    <!-- Visual sheet of paper -->
-                    <div class="flex-1 bg-white rounded-xl shadow-md border border-slate-200 p-5 flex flex-col justify-between relative overflow-y-auto select-none min-h-[200px] max-h-[380px]">
+                    <!-- Visual sheet of paper (Scrollable HTML content) -->
+                    <div class="flex-1 bg-white rounded-xl shadow-md border border-slate-200 p-6 flex flex-col justify-between relative overflow-y-auto min-h-[250px]">
                         <!-- Watermark -->
                         <div v-if="!editorContent" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] rotate-12">
-                            <span class="text-xl font-bold tracking-widest text-slate-900">EN ATTENTE</span>
+                            <span class="text-2xl font-bold tracking-widest text-slate-900">EN ATTENTE</span>
                         </div>
 
-                        <div v-if="editorContent" class="font-serif text-[10px] text-slate-700 leading-relaxed select-text" v-html="editorContent">
+                        <div v-if="editorContent" class="font-serif text-xs text-slate-800 leading-relaxed select-text" v-html="editorContent">
                         </div>
                         <div v-else class="flex flex-col items-center justify-center h-full text-center p-4 text-slate-400 space-y-2">
                             <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,12 +352,12 @@
                         </div>
                     </div>
 
-                    <div v-if="editorContent" class="mt-4 flex items-center justify-between text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 p-2 rounded-lg">
+                    <div v-if="editorContent" class="mt-4 flex items-center justify-between text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-100 p-2 rounded-lg">
                         <span class="font-semibold flex items-center gap-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
                             </svg>
-                            Contrat prêt
+                            Contrat rédigé avec succès
                         </span>
                         <button type="button" @click="openManualEditor" class="font-bold text-indigo-600 hover:underline">Modifier</button>
                     </div>
@@ -373,7 +368,7 @@
 
         <!-- TinyMCE editor modal -->
         <div v-if="showEditorModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full p-6 flex flex-col h-[75vh] max-h-[580px] animate-scale-up">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full p-6 flex flex-col h-[80vh] max-h-[680px] animate-scale-up">
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -404,7 +399,7 @@
 
         <!-- View Contract Content Modal (Read Only) -->
         <div v-if="showViewContentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-6 flex flex-col h-[80vh] animate-scale-up">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-6 flex flex-col h-[85vh] animate-scale-up">
                 <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
                     <div>
                         <h3 class="text-xl font-bold text-slate-950 flex items-center gap-2">
@@ -440,11 +435,17 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce contrat?</h3>
-                <p class="text-center text-slate-600 mb-6">Cette action est irréversible et supprimera le bail actif.</p>
+                <p class="text-center text-slate-600 mb-6">Cette action est irréversible et supprimera le bail actif, puis réactivera l'affectation correspondante.</p>
 
                 <div class="flex gap-3">
                     <button @click="closeDeleteModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition">Annuler</button>
-                    <button @click="confirmDelete" class="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition">Supprimer</button>
+                    <button @click="confirmDelete" :disabled="savingDelete" class="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <svg v-if="savingDelete" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Supprimer
+                    </button>
                 </div>
             </div>
         </div>
@@ -482,102 +483,80 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref, computed, nextTick, watch, onMounted } from 'vue';
 import axios from 'axios';
 import tinymce from 'tinymce';
 
-const page = usePage();
-const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id);
+// Loaded from Backend APIs
+const contrats = ref([]);
+const batiments = ref([]);
+const affectations = ref([]);
+const typeContrats = ref([]);
+const templates = ref([]);
+const companyName = ref('Votre Entreprise');
 
-const systemBatiments = computed(() => {
-    const stored = localStorage.getItem('immobilier_batiments');
-    let bats = [];
-    if (stored) {
-        bats = JSON.parse(stored);
-    } else {
-        bats = [
-            { id: 1, nom: 'Immeuble A', ville: 'Paris' },
-            { id: 2, nom: 'Immeuble B', ville: 'Lyon' },
-            { id: 3, nom: 'Immeuble C', ville: 'Nice' },
-            { id: 4, nom: 'Immeuble D', ville: 'Douala' }
-        ];
-    }
-    const agencyId = currentAgencyId.value;
-    return bats.filter(b => Number(b.agency_id) === Number(agencyId));
-});
+// Loading state indicators
+const loading = ref(false);
+const savingContrat = ref(false);
+const savingDelete = ref(false);
 
-const buildingsList = computed(() => systemBatiments.value.map(b => b.nom));
-
-// Default exemplar template
-const defaultExemplaire = `CONTRAT DE BAIL D'HABITATION
-
-Entre les soussignés :
-Le Bailleur : Enterprise Property Corp (Service Immobilier)
-Et
-Le Preneur : [Locataire]
-
-Il a été convenu ce qui suit :
-Le Bailleur donne en location au Preneur le logement désigné ci-après.
-
-1. Désignation du bien : Logement [Logement] situé dans le bâtiment [Bâtiment].
-2. Loyer mensuel : [Loyer] euros hors charges, payable mensuellement.
-3. Dépôt de garantie (Caution) : [Caution] euros.
-4. Durée du bail : [Durée] à compter du [Date Début].
-
-Fait en double exemplaire, le [Date].
-
-Signatures :
-Le Bailleur                       Le Preneur`;
-
-// Load/Save Exemplaire de reference
-const exemplaireContrat = ref(localStorage.getItem('immobilier_exemplaire_contrat') || defaultExemplaire);
-const saveExemplaire = () => {
-    localStorage.setItem('immobilier_exemplaire_contrat', exemplaireContrat.value);
-    alert("Modèle exemplaire de contrat de référence enregistré avec succès !");
-};
-
-// Default leases list
-const defaultContrats = [
-    { id: 1, numero: 'CTR-001', locataire: 'Jean Dupont', loyer: 800, caution: 1600, debut: '2026-01-01', fin: '2027-01-01', statut: 'Actif', reference: 'APT-A101', batiment: 'Immeuble A', duree: '1 an', typeBail: 'Habitation', content: '<h3>CONTRAT DE BAIL D\'HABITATION</h3><p>Entre Enterprise Property Corp et Jean Dupont pour le logement APT-A101.</p>' },
-    { id: 2, numero: 'CTR-002', locataire: 'Marie Martin', loyer: 1000, caution: 2000, debut: '2026-02-15', fin: '2029-02-15', statut: 'Actif', reference: 'APT-A201', batiment: 'Immeuble A', duree: '3 ans', typeBail: 'Commercial', content: '<h3>CONTRAT DE BAIL COMMERCIAL</h3><p>Entre Enterprise Property Corp et Marie Martin pour le logement APT-A201.</p>' },
-];
-
-const contrats = ref(JSON.parse(localStorage.getItem('immobilier_contrats')) || defaultContrats);
-if (!localStorage.getItem('immobilier_contrats')) {
-    localStorage.setItem('immobilier_contrats', JSON.stringify(defaultContrats));
-}
+// Filter selections
+const selectedBatimentId = ref('');
+const selectedAssignmentId = ref('');
+const selectedAssignment = ref(null);
 
 const searchQuery = ref('');
 
-const scopedContrats = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return contrats.value.filter(c => agencyBuildingNames.includes(c.batiment));
-});
-
 // Computed values for stats
-const totalContrats = computed(() => scopedContrats.value.length);
-const contratsActifs = computed(() => scopedContrats.value.filter(c => c.statut === 'Actif').length);
-const contratsExpire = computed(() => scopedContrats.value.filter(c => c.statut === 'Expiré').length);
-const revenuMensuel = computed(() => scopedContrats.value.filter(c => c.statut === 'Actif').reduce((sum, c) => sum + c.loyer, 0));
+const totalContrats = computed(() => contrats.value.length);
+const contratsActifs = computed(() => contrats.value.filter(c => c.statut === 'Actif').length);
+const contratsExpire = computed(() => contrats.value.filter(c => c.statut === 'Expiré').length);
+const revenuMensuel = computed(() => contrats.value.filter(c => c.statut === 'Actif').reduce((sum, c) => sum + c.loyer, 0));
 
-// Filtered contracts
+// Filtered contracts list
 const filteredContrats = computed(() => {
-    if (!searchQuery.value) return scopedContrats.value;
+    if (!searchQuery.value) return contrats.value;
     const query = searchQuery.value.toLowerCase();
-    return scopedContrats.value.filter(c => 
-        c.numero.toLowerCase().includes(query) ||
-        c.locataire.toLowerCase().includes(query) ||
+    return contrats.value.filter(c => 
+        (c.numero && c.numero.toLowerCase().includes(query)) ||
+        (c.locataire && c.locataire.toLowerCase().includes(query)) ||
         (c.reference && c.reference.toLowerCase().includes(query))
     );
 });
 
-// Load pending assignments from localStorage
-const pendingAssignments = computed(() => {
-    const stored = localStorage.getItem('immobilier_affectations');
-    const affList = stored ? JSON.parse(stored) : [];
-    const agencyBuildingNames = buildingsList.value;
-    return affList.filter(a => a.statut === 'En attente' && agencyBuildingNames.includes(a.batiment));
+// Cascading Filtering logic (No agency select needed on agency space)
+const filteredAssignments = computed(() => {
+    if (!selectedBatimentId.value) return [];
+    return affectations.value.filter(a => a.statut === 'Actif' && Number(a.batiment_id) === Number(selectedBatimentId.value));
+});
+
+// Load templates and other datasets on mount
+const fetchData = async () => {
+    loading.value = true;
+    try {
+        const [contratsRes, batimentsRes, affectationsRes, typeContratsRes, templatesRes] = await Promise.all([
+            axios.get(route('contrats.json')),
+            axios.get(route('batiments.json')),
+            axios.get(route('affectations.json')),
+            axios.get(route('type-contrats.json')),
+            axios.get(route('contrat-templates.json'))
+        ]);
+
+        contrats.value = contratsRes.data;
+        batiments.value = batimentsRes.data;
+        affectations.value = affectationsRes.data;
+        typeContrats.value = typeContratsRes.data;
+        templates.value = templatesRes.data?.templates || [];
+        companyName.value = templatesRes.data?.company_name || 'Votre Entreprise';
+    } catch (e) {
+        console.error("Erreur lors de la récupération des données", e);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchData();
 });
 
 // Modal state refs
@@ -585,22 +564,6 @@ const showModal = ref(false);
 const showDeleteModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
-
-// Auto-hide error modal after 5 seconds
-let errorTimeout = null;
-watch(showError, (newVal) => {
-    if (newVal) {
-        if (errorTimeout) clearTimeout(errorTimeout);
-        errorTimeout = setTimeout(() => {
-            showError.value = false;
-        }, 5000);
-    } else {
-        if (errorTimeout) {
-            clearTimeout(errorTimeout);
-            errorTimeout = null;
-        }
-    }
-});
 const showEditorModal = ref(false);
 const showViewContentModal = ref(false);
 
@@ -615,7 +578,9 @@ const editorContent = ref('');
 
 // Form Data Model
 const formData = ref({
+    locataire_id: '',
     locataire: '',
+    logement_id: '',
     loyer: '',
     caution: '',
     debut: '',
@@ -623,15 +588,26 @@ const formData = ref({
     statut: 'Actif',
     reference: '',
     batiment: '',
-    duree: '1 an',
-    typeBail: 'Habitation',
+    duree: '',
+    typeBail: '',
+    type_contrat_id: '',
     instructions: '',
+    numero: ''
 });
 
-// Fetch pending assignment details when tenant is selected
-const onTenantChange = () => {
-    const selected = pendingAssignments.value.find(a => a.locataire === formData.value.locataire);
+const onBatimentChange = () => {
+    selectedAssignmentId.value = '';
+    selectedAssignment.value = null;
+    resetFormData();
+};
+
+const onAssignmentChange = () => {
+    const selected = filteredAssignments.value.find(a => Number(a.id) === Number(selectedAssignmentId.value));
     if (selected) {
+        selectedAssignment.value = selected;
+        formData.value.locataire_id = selected.locataire_id;
+        formData.value.locataire = selected.locataire;
+        formData.value.logement_id = selected.logement_id;
         formData.value.loyer = selected.loyer;
         formData.value.caution = selected.caution;
         formData.value.debut = selected.dateEffet;
@@ -639,43 +615,75 @@ const onTenantChange = () => {
         formData.value.batiment = selected.batiment;
         formData.value.duree = selected.duree;
         formData.value.typeBail = selected.typeBail;
-        
-        // Default end date set to 1 year later
-        if (selected.dateEffet) {
-            const date = new Date(selected.dateEffet);
-            date.setFullYear(date.getFullYear() + 1);
-            formData.value.fin = date.toISOString().split('T')[0];
+        formData.value.type_contrat_id = selected.type_contrat_id;
+
+        // Auto calculate end date
+        formData.value.fin = calculateEndDate(selected.dateEffet, selected.duree);
+
+        // Fetch template content from database templates list
+        const matchedTpl = templates.value.find(t => Number(t.type_contrat_id) === Number(selected.type_contrat_id));
+        if (matchedTpl) {
+            editorContent.value = buildInitialContractFromTemplateContent(matchedTpl.content);
+        } else {
+            editorContent.value = buildInitialContractFromTemplateContent(
+                `CONTRAT DE BAIL\n\nBailleur : ${companyName.value}\nPreneur : [Locataire]\nBien : [Logement] situé dans le bâtiment [Bâtiment]\nLoyer : [Loyer] € / Caution : [Caution] €\nDurée : [Durée] à compter du [Date Début]\n\nFait le [Date]`
+            );
         }
     } else {
-        formData.value.loyer = '';
-        formData.value.caution = '';
-        formData.value.debut = '';
-        formData.value.fin = '';
-        formData.value.reference = '';
-        formData.value.batiment = '';
-        formData.value.duree = '1 an';
-        formData.value.typeBail = 'Habitation';
+        selectedAssignment.value = null;
+        resetFormData();
     }
-    editorContent.value = ''; // Reset editor content when changing tenant
+};
+
+const resetFormData = () => {
+    formData.value = {
+        locataire_id: '',
+        locataire: '',
+        logement_id: '',
+        loyer: '',
+        caution: '',
+        debut: '',
+        fin: '',
+        statut: 'Actif',
+        reference: '',
+        batiment: '',
+        duree: '',
+        typeBail: '',
+        type_contrat_id: '',
+        instructions: '',
+        numero: ''
+    };
+    editorContent.value = '';
+};
+
+// Date calculation helper
+const calculateEndDate = (startDateStr, durationStr) => {
+    if (!startDateStr) return '';
+    const date = new Date(startDateStr);
+    if (!durationStr) {
+        date.setFullYear(date.getFullYear() + 1);
+        return date.toISOString().split('T')[0];
+    }
+    const duration = durationStr.toLowerCase();
+    if (duration.includes('an')) {
+        const years = parseInt(duration) || 1;
+        date.setFullYear(date.getFullYear() + years);
+    } else if (duration.includes('mois')) {
+        const months = parseInt(duration) || 12;
+        date.setMonth(date.getMonth() + months);
+    } else {
+        date.setFullYear(date.getFullYear() + 1);
+    }
+    return date.toISOString().split('T')[0];
 };
 
 // Modal functions
 const openAddModal = () => {
     editingContrat.value = null;
-    editorContent.value = '';
-    formData.value = { 
-        locataire: '', 
-        loyer: '', 
-        caution: '', 
-        debut: '', 
-        fin: '', 
-        statut: 'Actif',
-        reference: '',
-        batiment: '',
-        duree: '1 an',
-        typeBail: 'Habitation',
-        instructions: ''
-    };
+    selectedBatimentId.value = '';
+    selectedAssignmentId.value = '';
+    selectedAssignment.value = null;
+    resetFormData();
     showModal.value = true;
 };
 
@@ -718,7 +726,7 @@ const initTinyMCE = () => {
         license_key: 'gpl',
         skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/ui/oxide',
         content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/content/default/content.css',
-        height: 320,
+        height: 380,
         menubar: false,
         branding: false,
         plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime table code help wordcount',
@@ -735,13 +743,9 @@ const initTinyMCE = () => {
 };
 
 const openManualEditor = () => {
-    if (!formData.value.locataire) {
+    if (!formData.value.locataire_id) {
         alert("Veuillez d'abord sélectionner un locataire.");
         return;
-    }
-
-    if (!editorContent.value) {
-        editorContent.value = buildInitialContractFromTemplate();
     }
     
     showEditorModal.value = true;
@@ -750,8 +754,8 @@ const openManualEditor = () => {
     });
 };
 
-const buildInitialContractFromTemplate = () => {
-    let tpl = exemplaireContrat.value;
+const buildInitialContractFromTemplateContent = (tplText) => {
+    let tpl = tplText;
     tpl = tpl.replace(/\[Locataire\]/g, formData.value.locataire || 'Non spécifié');
     tpl = tpl.replace(/\[Logement\]/g, formData.value.reference || 'Non spécifié');
     tpl = tpl.replace(/\[Bâtiment\]/g, formData.value.batiment || 'Non spécifié');
@@ -760,11 +764,19 @@ const buildInitialContractFromTemplate = () => {
     tpl = tpl.replace(/\[Durée\]/g, formData.value.duree || '1 an');
     tpl = tpl.replace(/\[Date Début\]/g, formatDate(formData.value.debut) || 'Non spécifiée');
     tpl = tpl.replace(/\[Date\]/g, getTodayDate());
-    return tpl.replace(/\n/g, '<br>'); // Convert newlines to HTML br tags
+
+    if (!pregMatchHtml(tpl)) {
+        tpl = tpl.replace(/\n/g, '<br>');
+    }
+    return tpl;
+};
+
+const pregMatchHtml = (str) => {
+    return /<[a-z][\s\S]*>/i.test(str);
 };
 
 const generateWithIA = async () => {
-    if (!formData.value.locataire) {
+    if (!formData.value.locataire_id) {
         alert("Veuillez d'abord sélectionner un locataire");
         return;
     }
@@ -772,7 +784,7 @@ const generateWithIA = async () => {
     isGenerating.value = true;
     try {
         const payload = {
-            locataire: formData.value.locataire,
+            locataire_id: formData.value.locataire_id,
             loyer: formData.value.loyer,
             caution: formData.value.caution,
             debut: formData.value.debut,
@@ -781,13 +793,15 @@ const generateWithIA = async () => {
             batiment: formData.value.batiment,
             duree: formData.value.duree,
             typeBail: formData.value.typeBail,
-            template: exemplaireContrat.value,
             instructions: formData.value.instructions,
+            // Pass template if loaded
+            template: templates.value.find(t => Number(t.type_contrat_id) === Number(formData.value.type_contrat_id))?.content || '',
         };
         
         const response = await axios.post(route('ai.generate-contract'), payload);
         if (response.data && response.data.success) {
             editorContent.value = response.data.contract;
+            formData.value.numero = response.data.numero;
             showEditorModal.value = true;
             nextTick(() => {
                 initTinyMCE();
@@ -798,7 +812,7 @@ const generateWithIA = async () => {
         }
     } catch (e) {
         console.error(e);
-        errorMessage.value = e.response?.data?.message || "Une erreur s'est produite lors de l'appel de l'API Gemini.";
+        errorMessage.value = e.response?.data?.message || "Une erreur s'est produite lors de la génération IA.";
         showError.value = true;
     } finally {
         isGenerating.value = false;
@@ -832,9 +846,9 @@ const closeViewContentModal = () => {
     viewingContratRef.value = null;
 };
 
-// Save contract and perform state updates
-const saveContrat = () => {
-    if (!formData.value.locataire || !formData.value.loyer) {
+// Save contract and perform state updates in DB
+const saveContrat = async () => {
+    if (!formData.value.locataire_id || !formData.value.loyer) {
         errorMessage.value = 'Veuillez remplir tous les champs obligatoires';
         showError.value = true;
         return;
@@ -846,118 +860,63 @@ const saveContrat = () => {
         return;
     }
 
-    const contractData = {
-        id: editingContrat.value ? editingContrat.value.id : Math.max(...contrats.value.map(c => c.id), 0) + 1,
-        numero: editingContrat.value ? editingContrat.value.numero : `CTR-${String(contrats.value.length + 1).padStart(3, '0')}`,
-        locataire: formData.value.locataire,
-        loyer: Number(formData.value.loyer),
-        caution: Number(formData.value.caution || 0),
-        debut: formData.value.debut,
-        fin: formData.value.fin,
-        statut: 'Actif',
-        reference: formData.value.reference,
-        batiment: formData.value.batiment,
-        duree: formData.value.duree,
-        typeBail: formData.value.typeBail,
-        content: editorContent.value,
-    };
+    savingContrat.value = true;
+    try {
+        const payload = {
+            locataire_id: formData.value.locataire_id,
+            logement_id: formData.value.logement_id,
+            type_contrat_id: formData.value.type_contrat_id,
+            loyer: formData.value.loyer,
+            caution: formData.value.caution,
+            debut: formData.value.debut,
+            fin: formData.value.fin,
+            content: editorContent.value,
+            numero: formData.value.numero || null,
+        };
 
-    if (editingContrat.value) {
-        const index = contrats.value.findIndex(c => c.id === editingContrat.value.id);
-        if (index !== -1) {
-            contrats.value[index] = contractData;
+        if (editingContrat.value) {
+            const res = await axios.put(route('contrats.update', { contrat: editingContrat.value.id }), payload);
+            const index = contrats.value.findIndex(c => c.id === editingContrat.value.id);
+            if (index !== -1) {
+                contrats.value[index] = res.data;
+            }
+            successMessage.value = 'Contrat modifié avec succès';
+        } else {
+            const res = await axios.post(route('contrats.store'), payload);
+            contrats.value.unshift(res.data);
+            successMessage.value = 'Contrat enregistré & activé avec succès !';
         }
-        successMessage.value = 'Contrat modifié avec succès';
-    } else {
-        contrats.value.unshift(contractData);
-        successMessage.value = 'Contrat enregistré & activé avec succès !';
         
-        // --- Synchronization flow ---
-        
-        // 1. Update assignment (affectation) status from 'En attente' to 'Actif'
-        const storedAff = localStorage.getItem('immobilier_affectations');
-        if (storedAff) {
-            const affList = JSON.parse(storedAff);
-            const affIdx = affList.findIndex(a => a.locataire.toLowerCase() === formData.value.locataire.toLowerCase() && a.statut === 'En attente');
-            if (affIdx !== -1) {
-                affList[affIdx].statut = 'Actif';
-                localStorage.setItem('immobilier_affectations', JSON.stringify(affList));
-            }
-        }
-
-        // 2. Set logement status to 'Occupé'
-        const storedLog = localStorage.getItem('immobilier_logements');
-        if (storedLog) {
-            const logList = JSON.parse(storedLog);
-            const logIdx = logList.findIndex(l => l.reference === formData.value.reference);
-            if (logIdx !== -1) {
-                logList[logIdx].statut = 'Occupé';
-                localStorage.setItem('immobilier_logements', JSON.stringify(logList));
-            }
-        }
-
-        // 3. Set locataire status to 'Actif'
-        const storedLoc = localStorage.getItem('immobilier_locataires');
-        if (storedLoc) {
-            const locList = JSON.parse(storedLoc);
-            const locIdx = locList.findIndex(l => l.nom.toLowerCase() === formData.value.locataire.toLowerCase());
-            if (locIdx !== -1) {
-                locList[locIdx].statut = 'Actif';
-                locList[locIdx].logement = formData.value.reference;
-                locList[locIdx].garantie = Number(formData.value.caution);
-                localStorage.setItem('immobilier_locataires', JSON.stringify(locList));
-            }
-        }
+        closeModal();
+        showSuccess.value = true;
+        fetchData();
+    } catch (e) {
+        console.error(e);
+        errorMessage.value = e.response?.data?.error || "Une erreur s'est produite lors de la sauvegarde.";
+        showError.value = true;
+    } finally {
+        savingContrat.value = false;
     }
-
-    localStorage.setItem('immobilier_contrats', JSON.stringify(contrats.value));
-    
-    closeModal();
-    showSuccess.value = true;
 };
 
-const confirmDelete = () => {
-    const index = contrats.value.findIndex(c => c.id === deletingContrat.value.id);
-    if (index !== -1) {
-        const target = contrats.value[index];
-        contrats.value.splice(index, 1);
-        
-        // Synchronize on delete: logement goes back to 'Libre', locataire goes back to 'Inactif'
-        const storedLog = localStorage.getItem('immobilier_logements');
-        if (storedLog && target.reference) {
-            const logList = JSON.parse(storedLog);
-            const logIdx = logList.findIndex(l => l.reference === target.reference);
-            if (logIdx !== -1) {
-                logList[logIdx].statut = 'Libre';
-                localStorage.setItem('immobilier_logements', JSON.stringify(logList));
-            }
+const confirmDelete = async () => {
+    if (!deletingContrat.value) return;
+    savingDelete.value = true;
+    try {
+        await axios.delete(route('contrats.destroy', { contrat: deletingContrat.value.id }));
+        const index = contrats.value.findIndex(c => c.id === deletingContrat.value.id);
+        if (index !== -1) {
+            contrats.value.splice(index, 1);
         }
-        
-        const storedLoc = localStorage.getItem('immobilier_locataires');
-        if (storedLoc && target.locataire) {
-            const locList = JSON.parse(storedLoc);
-            const locIdx = locList.findIndex(l => l.nom.toLowerCase() === target.locataire.toLowerCase());
-            if (locIdx !== -1) {
-                locList[locIdx].statut = 'Inactif';
-                locList[locIdx].logement = 'Aucun';
-                localStorage.setItem('immobilier_locataires', JSON.stringify(locList));
-            }
-        }
-
-        const storedAff = localStorage.getItem('immobilier_affectations');
-        if (storedAff && target.locataire) {
-            const affList = JSON.parse(storedAff);
-            const affIdx = affList.findIndex(a => a.locataire.toLowerCase() === target.locataire.toLowerCase() && a.statut === 'Actif');
-            if (affIdx !== -1) {
-                affList[affIdx].statut = 'Terminé';
-                localStorage.setItem('immobilier_affectations', JSON.stringify(affList));
-            }
-        }
-
-        localStorage.setItem('immobilier_contrats', JSON.stringify(contrats.value));
         successMessage.value = 'Contrat supprimé avec succès';
         closeDeleteModal();
         showSuccess.value = true;
+        fetchData();
+    } catch (e) {
+        errorMessage.value = "Impossible de supprimer ce contrat.";
+        showError.value = true;
+    } finally {
+        savingDelete.value = false;
     }
 };
 
@@ -984,24 +943,6 @@ const formatDate = (dateStr) => {
 const getTodayDate = () => {
     return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
 };
-
-// Global refresh listener for agent actions
-import { onMounted, onUnmounted } from 'vue';
-
-const loadContratsFromStorage = () => {
-    const stored = localStorage.getItem('immobilier_contrats');
-    if (stored) {
-        contrats.value = JSON.parse(stored);
-    }
-};
-
-onMounted(() => {
-    window.addEventListener('enterprise:refresh', loadContratsFromStorage);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('enterprise:refresh', loadContratsFromStorage);
-});
 </script>
 
 <style scoped>

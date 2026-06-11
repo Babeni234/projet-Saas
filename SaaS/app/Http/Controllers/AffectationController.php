@@ -185,6 +185,8 @@ class AffectationController extends Controller
             'uuid'             => $a->uuid,
             'reference'        => $a->logement?->reference ?? 'Bien Supprimé',
             'batiment'         => $a->logement?->batiment?->nom ?? 'Sans bâtiment',
+            'batiment_id'      => $a->logement?->batiment_id,
+            'agency_id'        => $a->agency_id,
             'locataire'        => $a->locataire?->user?->name ?? 'Locataire Supprimé',
             'locataire_id'     => $a->locataire_id,
             'logement_id'      => $a->logement_id,

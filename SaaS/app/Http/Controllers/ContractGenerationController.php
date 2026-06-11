@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Prism\Prism\Facades\Prism;
 use Prism\Prism\Enums\Provider;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,8 @@ class ContractGenerationController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'locataire' => 'required|string',
+            'locataire' => 'nullable|string',
+            'locataire_id' => 'nullable|integer',
             'loyer' => 'required',
             'caution' => 'required',
             'debut' => 'required|string',
@@ -30,9 +32,22 @@ class ContractGenerationController extends Controller
             'typeBail' => 'required|string',
             'template' => 'nullable|string',
             'instructions' => 'nullable|string',
+            'numero' => 'nullable|string',
         ]);
 
+        $user = Auth::user();
+        $companyProfileId = $user ? $user->company_profile_id : null;
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Enterprise Property Corp';
+
+        $locataireId = $request->input('locataire_id');
         $locataire = $request->input('locataire');
+        if ($locataireId) {
+            $loc = \App\Models\Locataire::with('user')->find($locataireId);
+            if ($loc && $loc->user) {
+                $locataire = $loc->user->name;
+            }
+        }
+
         $loyer = $request->input('loyer');
         $caution = $request->input('caution');
         $debut = $request->input('debut');
@@ -44,11 +59,35 @@ class ContractGenerationController extends Controller
         $template = $request->input('template');
         $instructions = $request->input('instructions');
 
+        // Determine contract number
+        $numero = $request->input('numero');
+        if (empty($numero) && $companyProfileId) {
+            $count = \App\Models\Contrat::where('company_profile_id', $companyProfileId)->count();
+            $numero = 'CTR-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+        }
+
+        // If template is empty, try to load it from the database based on type of contract
+        if (empty($template) && $locataireId && $companyProfileId) {
+            // Find active assignment
+            $aff = \App\Models\Affectation::where('locataire_id', $locataireId)
+                                          ->where('statut', 'Actif')
+                                          ->first();
+            if ($aff && $aff->type_contrat_id) {
+                $tplRecord = \App\Models\ContratTemplate::where('company_profile_id', $companyProfileId)
+                                                        ->where('type_contrat_id', $aff->type_contrat_id)
+                                                        ->first();
+                if ($tplRecord) {
+                    $template = $tplRecord->content;
+                }
+            }
+        }
+
         // Construct prompt for Gemini
         $prompt = "Vous êtes un expert juridique spécialisé en droit immobilier et en rédaction de contrats de bail.\n";
         $prompt .= "Rédigez un contrat de bail professionnel, complet et juridiquement structuré en français en utilisant les informations suivantes :\n\n";
+        $prompt .= "- **Numéro du Contrat** : {$numero}\n";
         $prompt .= "- **Preneur (Locataire)** : {$locataire}\n";
-        $prompt .= "- **Bailleur** : Enterprise Property Corp (Service Immobilier)\n";
+        $prompt .= "- **Bailleur** : {$companyName}\n";
         $prompt .= "- **Désignation du bien** : Logement {$reference} situé dans le bâtiment '{$batiment}'\n";
         $prompt .= "- **Type de Bail** : {$typeBail}\n";
         $prompt .= "- **Durée du bail** : {$duree}\n";
@@ -56,6 +95,7 @@ class ContractGenerationController extends Controller
         $prompt .= "- **Date de fin** : {$fin}\n";
         $prompt .= "- **Montant du Loyer mensuel** : {$loyer} €\n";
         $prompt .= "- **Dépôt de Garantie (Caution)** : {$caution} €\n\n";
+        $prompt .= "Consigne TRÈS IMPORTANTE : Vous devez obligatoirement mentionner le numéro de contrat \"{$numero}\" et l'entreprise bailleur \"{$companyName}\" dans le corps du contrat.\n\n";
 
         if (!empty($template)) {
             $prompt .= "Consigne TRÈS IMPORTANTE : Vous DEVEZ vous baser sur la structure et le style du modèle de contrat de référence suivant pour rédiger le contrat final, tout en injectant les données ci-dessus :\n";
@@ -100,7 +140,7 @@ class ContractGenerationController extends Controller
                 $batiment,
                 $duree,
                 $typeBail,
-                $template,
+                $template ?: "CONTRAT DE BAIL\n\nNuméro: {$numero}\nBailleur: {$companyName}\nLocataire: [Locataire]",
                 $instructions,
                 $apiError
             );
@@ -114,6 +154,7 @@ class ContractGenerationController extends Controller
         return response()->json([
             'success' => true,
             'contract' => $generatedText,
+            'numero' => $numero,
             'fallback' => !$generateViaIA,
         ]);
     }
