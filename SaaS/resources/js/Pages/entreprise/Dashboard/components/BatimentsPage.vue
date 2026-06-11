@@ -10,6 +10,7 @@
                 <p class="text-slate-600 mt-1">Gérer les immeubles, localisations et caractéristiques structurelles.</p>
             </div>
             <button
+                type="button"
                 @click="openAddModal"
                 class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
@@ -246,18 +247,18 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Propriétaire</label>
                             <select 
-                                v-model="formData.proprietaire" 
-                                :class="[
-                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700',
-                                    formData.proprietaire ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
-                                ]"
+                                v-model="formData.proprietaire_id" 
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
                             >
-                                <option value="">Sélectionner un propriétaire</option>
-                                <option value="Jean Dupont">Jean Dupont</option>
-                                <option value="Marie Martin">Marie Martin</option>
-                                <option value="Pierre Bernard">Pierre Bernard</option>
-                                <option value="Sophie Petit">Sophie Petit</option>
-                                <option value="Michel Leroy">Michel Leroy</option>
+                                <option value="">Aucun propriétaire</option>
+                                <option v-if="loadingProprietaires" disabled>Chargement...</option>
+                                <option 
+                                    v-for="prop in proprietaires" 
+                                    :key="prop.id" 
+                                    :value="prop.id"
+                                >
+                                    {{ prop.nom_complet }} {{ prop.type === 'personne_morale' ? '(Société)' : '' }}
+                                </option>
                             </select>
                         </div>
 
@@ -386,10 +387,14 @@
                     </button>
                     <button 
                         @click="saveBatiment" 
-                        :disabled="!formData.nom || !formData.proprietaire || !formData.pays || !formData.ville || !formData.adresse"
-                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm"
+                        :disabled="!formData.nom || !formData.pays || !formData.ville || !formData.adresse || saving"
+                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm flex items-center gap-2"
                     >
-                        Enregistrer
+                        <svg v-if="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
                     </button>
                 </div>
             </div>
@@ -446,7 +451,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const page = usePage();
@@ -457,22 +462,53 @@ const getAgencyName = (agencyId) => {
     return agency ? agency.name : 'Siège';
 };
 
-const defaultBatiments = [
-    { id: 1, nom: 'Immeuble A', adresse: '123 Rue de Paris', etages: 5, appartements: 25, statut: 'Actif', pays: 'FR', ville: 'Paris', quartier: 'Le Marais', proprietaire: 'Jean Dupont' },
-    { id: 2, nom: 'Immeuble B', adresse: '456 Avenue Lyon', etages: 7, appartements: 35, statut: 'Actif', pays: 'FR', ville: 'Lyon', quartier: 'Vieux Lyon', proprietaire: 'Marie Martin' },
-    { id: 3, nom: 'Immeuble C', adresse: '789 Boulevard Nice', etages: 3, appartements: 15, statut: 'Maintenance', pays: 'FR', ville: 'Nice', quartier: 'Vieux Nice', proprietaire: 'Pierre Bernard' },
-    { id: 4, nom: 'Immeuble D', adresse: '321 Rue Marseille', etages: 8, appartements: 40, statut: 'Actif', pays: 'CM', ville: 'Douala', quartier: 'Akwa', proprietaire: 'Sophie Petit' },
-    { id: 5, nom: 'Immeuble E', adresse: '654 Avenue Toulouse', etages: 4, appartements: 20, statut: 'Maintenance', pays: 'CM', ville: 'Yaoundé', quartier: 'Bastos', proprietaire: 'Michel Leroy' },
-];
+// ── État ─────────────────────────────────────────────────────────────────────
+const batiments = ref([]);
+const proprietaires = ref([]);
+const loadingBatiments = ref(false);
+const loadingProprietaires = ref(false);
+const saving = ref(false);
+const deleting = ref(false);
 
-const batiments = ref(JSON.parse(localStorage.getItem('immobilier_batiments')) || defaultBatiments);
-if (!localStorage.getItem('immobilier_batiments')) {
-    localStorage.setItem('immobilier_batiments', JSON.stringify(defaultBatiments));
-}
-
-const saveBatimentsToStorage = () => {
-    localStorage.setItem('immobilier_batiments', JSON.stringify(batiments.value));
+// ── API calls ────────────────────────────────────────────────────────────────
+const fetchBatiments = async () => {
+    loadingBatiments.value = true;
+    try {
+        const res = await fetch('/api/batiments', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        batiments.value = await res.json();
+    } catch (err) {
+        console.error('fetchBatiments:', err);
+        batiments.value = [];
+    } finally {
+        loadingBatiments.value = false;
+    }
 };
+
+const fetchProprietaires = async () => {
+    loadingProprietaires.value = true;
+    try {
+        const res = await fetch('/api/proprietaires', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        proprietaires.value = await res.json();
+    } catch (err) {
+        console.error('fetchProprietaires:', err);
+        proprietaires.value = [];
+    } finally {
+        loadingProprietaires.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchBatiments();
+    fetchProprietaires();
+});
 
 const searchQuery = ref('');
 const statusFilter = ref('');
@@ -532,7 +568,7 @@ const errorMessage = ref('');
 
 const formData = ref({
     nom: '',
-    proprietaire: '',
+    proprietaire_id: '',
     pays: '',
     ville: '',
     quartier: '',
@@ -1346,7 +1382,7 @@ const openAddModal = () => {
     editingBatiment.value = null;
     formData.value = { 
         nom: '', 
-        proprietaire: '',
+        proprietaire_id: '',
         pays: '',
         ville: '',
         quartier: '',
@@ -1365,6 +1401,7 @@ const openEditModal = async (batiment) => {
     editingBatiment.value = batiment;
     formData.value = { 
         ...batiment,
+        proprietaire_id: batiment.proprietaire_id || '',
         agency_id: batiment.agency_id || ''
     };
     showModal.value = true;
@@ -1392,57 +1429,104 @@ const closeDeleteModal = () => {
     deletingBatiment.value = null;
 };
 
-const saveBatiment = () => {
+const saveBatiment = async () => {
     if (!formData.value.nom || !formData.value.adresse || !formData.value.pays || !formData.value.ville) {
         errorMessage.value = 'Le nom, le pays, la ville et l\'adresse sont requis.';
         showError.value = true;
         return;
     }
 
-    const batData = {
-        nom: formData.value.nom,
-        proprietaire: formData.value.proprietaire || '',
-        pays: formData.value.pays,
-        ville: formData.value.ville,
-        quartier: formData.value.quartier || '',
-        adresse: formData.value.adresse,
-        etages: Number(formData.value.etages || 0),
-        appartements: Number(formData.value.appartements || 0),
-        statut: formData.value.statut || 'Actif',
-        agency_id: formData.value.agency_id || '',
+    saving.value = true;
+
+    const payload = {
+        nom:             formData.value.nom,
+        proprietaire_id: formData.value.proprietaire_id || null,
+        pays:            formData.value.pays,
+        ville:           formData.value.ville,
+        quartier:        formData.value.quartier || null,
+        adresse:         formData.value.adresse,
+        etages:          Number(formData.value.etages || 0),
+        appartements:    Number(formData.value.appartements || 0),
+        statut:          formData.value.statut || 'Actif',
+        agency_id:       formData.value.agency_id || null,
     };
 
-    if (editingBatiment.value) {
-        const index = batiments.value.findIndex(b => b.id === editingBatiment.value.id);
-        if (index !== -1) {
-            batiments.value[index] = {
-                id: editingBatiment.value.id,
-                ...batData
-            };
+    try {
+        let res;
+        if (editingBatiment.value) {
+            res = await fetch(`/api/batiments/${editingBatiment.value.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
+        } else {
+            res = await fetch('/api/batiments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
         }
-        successMessage.value = 'Bâtiment modifié avec succès';
-    } else {
-        const newId = Math.max(...batiments.value.map(b => b.id), 0) + 1;
-        batiments.value.push({
-            id: newId,
-            ...batData
-        });
-        successMessage.value = 'Bâtiment ajouté avec succès';
-    }
 
-    saveBatimentsToStorage();
-    closeModal();
-    showSuccess.value = true;
+        const data = await res.json();
+
+        if (!res.ok) {
+            const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Erreur lors de la sauvegarde.');
+            errorMessage.value = msg;
+            showError.value = true;
+            return;
+        }
+
+        // Refresh list from server
+        await fetchBatiments();
+        successMessage.value = editingBatiment.value ? 'Bâtiment modifié avec succès' : 'Bâtiment ajouté avec succès';
+        closeModal();
+        showSuccess.value = true;
+
+    } catch (err) {
+        console.error('saveBatiment:', err);
+        errorMessage.value = 'Erreur de connexion. Veuillez réessayer.';
+        showError.value = true;
+    } finally {
+        saving.value = false;
+    }
 };
 
-const confirmDelete = () => {
-    const index = batiments.value.findIndex(b => b.id === deletingBatiment.value.id);
-    if (index !== -1) {
-        batiments.value.splice(index, 1);
+const confirmDelete = async () => {
+    if (!deletingBatiment.value) return;
+    deleting.value = true;
+    try {
+        const res = await fetch(`/api/batiments/${deletingBatiment.value.id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await fetchBatiments();
         successMessage.value = 'Bâtiment supprimé avec succès';
-        saveBatimentsToStorage();
         closeDeleteModal();
         showSuccess.value = true;
+    } catch (err) {
+        console.error('confirmDelete:', err);
+        errorMessage.value = 'Erreur lors de la suppression.';
+        showError.value = true;
+    } finally {
+        deleting.value = false;
     }
 };
 

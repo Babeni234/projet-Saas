@@ -38,6 +38,20 @@
                     <span class="text-xs font-medium text-slate-600">{{ dateRange }}</span>
                 </div>
 
+                <!-- Language Toggle -->
+                <button
+                    type="button"
+                    @click="toggleLocale"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                    :title="locale === 'fr' ? 'Switch to English' : 'Passer en français'"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" stroke-linecap="round" />
+                    </svg>
+                    <span class="text-xs font-extrabold tracking-widest">{{ locale === 'fr' ? 'EN' : 'FR' }}</span>
+                </button>
+
                 <button
                     type="button"
                     class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100"
@@ -54,7 +68,7 @@
                     >
                         <path d="M4 4v5h5M20 20v-5h-5M20 8A8 8 0 004 16" stroke-linecap="round" />
                     </svg>
-                    <span class="hidden sm:inline">Actualiser</span>
+                    <span class="hidden sm:inline">{{ t('Actualiser') }}</span>
                 </button>
 
                 <!-- Profile button -->
@@ -66,7 +80,7 @@
                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke-linecap="round" stroke-linejoin="round" />
                         <circle cx="12" cy="7" r="4" />
                     </svg>
-                    <span class="hidden sm:inline">Profil</span>
+                    <span class="hidden sm:inline">{{ t('Profil') }}</span>
                 </RouterLink>
 
                 <!-- Logout button -->
@@ -80,7 +94,7 @@
                         <path d="M16 17l5-5-5-5" stroke-linecap="round" stroke-linejoin="round" />
                         <path d="M21 12H9" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <span class="hidden sm:inline">Déconnexion</span>
+                    <span class="hidden sm:inline">{{ t('Deconnexion') }}</span>
                 </button>
             </div>
         </div>
@@ -93,7 +107,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span class="text-lg font-medium text-slate-900">Déconnexion en cours...</span>
+                    <span class="text-lg font-medium text-slate-900">{{ t('Deconnexion en cours...') }}</span>
                 </div>
             </div>
         </div>
@@ -109,22 +123,23 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-extrabold text-slate-800 mb-2">Déconnexion</h3>
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-2">{{ t('Deconnexion') }}</h3>
                         <p class="text-slate-650 text-sm mb-6 leading-relaxed">
-                            Voulez-vous vraiment vous déconnecter de l'entreprise <strong class="text-slate-800 font-extrabold">{{ companyName }}</strong> ?
+                            {{ locale === 'fr' ? 'Voulez-vous vraiment vous déconnecter de l\'entreprise' : 'Do you really want to log out of' }}
+                            <strong class="text-slate-800 font-extrabold">{{ companyName }}</strong> ?
                         </p>
                         <div class="flex gap-4">
                             <button 
                                 @click="showLogoutConfirm = false" 
                                 class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
                             >
-                                Annuler
+                                {{ t('Annuler') }}
                             </button>
                             <button 
                                 @click="confirmLogout" 
                                 class="flex-1 px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all text-xs"
                             >
-                                Se Déconnecter
+                                {{ t('Se Deconnecter') }}
                             </button>
                         </div>
                     </div>
@@ -141,6 +156,7 @@ import { RouterLink, useRoute } from 'vue-router';
 import { router, usePage } from '@inertiajs/vue3';
 import { useEnterpriseLayout } from '../../composables/useEnterpriseLayout';
 import { usePageTitle } from '../../composables/useEnterpriseLayout';
+import { useLocale } from '../../../../../composables/useLocale';
 
 defineProps({
     refreshing: { type: Boolean, default: false },
@@ -152,6 +168,7 @@ const page = usePage();
 const vueRoute = useRoute();
 const pageTitle = usePageTitle();
 const { toggleMobileSidebar } = useEnterpriseLayout();
+const { locale, t, toggleLocale } = useLocale();
 
 const logoutLoading = ref(false);
 const showLogoutConfirm = ref(false);
@@ -176,7 +193,8 @@ const dateRange = computed(() => {
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
     const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const opts = { month: 'short', year: 'numeric' };
-    return `${first.toLocaleDateString('fr-FR', opts)} – ${last.toLocaleDateString('fr-FR', opts)}`;
+    const localeStr = locale.value === 'en' ? 'en-GB' : 'fr-FR';
+    return `${first.toLocaleDateString(localeStr, opts)} – ${last.toLocaleDateString(localeStr, opts)}`;
 });
 
 const breadcrumbs = computed(() => vueRoute.meta?.breadcrumbs || []);

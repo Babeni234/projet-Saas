@@ -42,7 +42,7 @@
                     v-show="!sidebarCollapsed"
                     class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700"
                 >
-                    {{ section.label }}
+                    {{ t(section.label) }}
                 </p>
 
                 <template v-for="item in section.items" :key="item.id || item.name">
@@ -58,7 +58,7 @@
                             @click="item.blocked ? showBlockedModal = true : toggleGroup(item.id)"
                         >
                             <NavIcon :name="item.icon" />
-                            <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ item.label }}</span>
+                            <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ t(item.label) }}</span>
                             
                             <!-- Lock Icon for Blocked Modules -->
                             <svg
@@ -100,8 +100,8 @@
                                     class="flex cursor-not-allowed items-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-600"
                                     :title="'Bientôt disponible'"
                                 >
-                                    {{ child.label }}
-                                    <span class="ml-auto rounded bg-white/5 px-1.5 py-0.5 text-[9px] uppercase">Soon</span>
+                                    {{ t(child.label) }}
+                                    <span class="ml-auto rounded bg-white/5 px-1.5 py-0.5 text-[9px] uppercase">{{ t('Bientot disponible') }}</span>
                                 </span>
                                 <RouterLink
                                     v-else
@@ -110,7 +110,7 @@
                                     active-class="nav-subitem-active"
                                     @click="closeMobileSidebar"
                                 >
-                                    {{ child.label }}
+                                    {{ t(child.label) }}
                                 </RouterLink>
                             </template>
                         </div>
@@ -125,7 +125,7 @@
                         @click="closeMobileSidebar"
                     >
                         <NavIcon :name="item.icon" />
-                        <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ item.label }}</span>
+                        <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ t(item.label) }}</span>
                         <span
                             v-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
                             class="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white"
@@ -143,7 +143,7 @@
                 </div>
                 <div v-show="!sidebarCollapsed" class="min-w-0 flex-1">
                     <p class="truncate text-sm font-medium text-slate-900">{{ userName }}</p>
-                    <p class="truncate text-xs text-slate-600">{{ userRole }}</p>
+                    <p class="truncate text-xs text-slate-600">{{ t(userRole) }}</p>
                 </div>
             </div>
         </div>
@@ -169,22 +169,22 @@
                         <path d="M7 11V7a5 5 0 0110 0v4" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-extrabold text-slate-800 mb-2">Module Bloqué</h3>
+                <h3 class="text-xl font-extrabold text-slate-800 mb-2">{{ t('Module Bloque') }}</h3>
                 <p class="text-slate-650 text-sm mb-6 leading-relaxed">
-                    L'accès au module <strong>Hôtellerie</strong> est restreint. Cette fonctionnalité n'est pas incluse dans votre abonnement actuel ou a été désactivée par votre administrateur.
+                    {{ locale === 'fr' ? "L'accès au module Hôtellerie est restreint. Cette fonctionnalité n'est pas incluse dans votre abonnement actuel ou a été désactivée par votre administrateur." : "Access to the Hospitality module is restricted. This feature is not included in your current subscription or has been disabled by your administrator." }}
                 </p>
                 <div class="flex gap-4">
                     <button 
                         @click="showBlockedModal = false" 
                         class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
                     >
-                        Fermer
+                        {{ t('Fermer') }}
                     </button>
                     <button 
                         @click="showBlockedModal = false" 
                         class="flex-1 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all text-xs"
                     >
-                        Contacter l'Administration
+                        {{ t('Contacter l Administration') }}
                     </button>
                 </div>
             </div>
@@ -198,11 +198,13 @@ import { RouterLink, useRoute } from 'vue-router';
 import { usePage } from '@inertiajs/vue3';
 import { navigation } from '../../config/navigation';
 import { useEnterpriseLayout } from '../../composables/useEnterpriseLayout';
+import { useLocale } from '../../../../../composables/useLocale';
 import NavIcon from './NavIcon.vue';
 
 const route = useRoute();
 const page = usePage();
 const { sidebarCollapsed, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = useEnterpriseLayout();
+const { locale, t } = useLocale();
 
 const showBlockedModal = ref(false);
 
@@ -218,7 +220,7 @@ const openGroups = reactive({
 });
 
 const userName = computed(() => page.props.auth?.user?.name || 'Administrateur');
-const userRole = computed(() => 'Administrateur');
+const userRole = computed(() => locale.value === 'en' ? 'Administrator' : 'Administrateur');
 const userInitials = computed(() => {
     const name = userName.value || 'A';
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();

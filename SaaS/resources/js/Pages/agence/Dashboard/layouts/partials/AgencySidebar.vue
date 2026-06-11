@@ -42,7 +42,7 @@
                     v-show="!sidebarCollapsed"
                     class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700"
                 >
-                    {{ section.label }}
+                    {{ t(section.label) }}
                 </p>
 
                 <template v-for="item in section.items" :key="item.id || item.name">
@@ -57,7 +57,7 @@
                             @click="toggleGroup(item.id)"
                         >
                             <NavIcon :name="item.icon" />
-                            <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ item.label }}</span>
+                            <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ t(item.label) }}</span>
                             
                             <span
                                 v-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
@@ -87,7 +87,7 @@
                                     active-class="nav-subitem-active"
                                     @click="closeMobileSidebar"
                                 >
-                                    {{ child.label }}
+                                    {{ t(child.label) }}
                                 </RouterLink>
                             </template>
                         </div>
@@ -102,7 +102,7 @@
                         @click="closeMobileSidebar"
                     >
                         <NavIcon :name="item.icon" />
-                        <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ item.label }}</span>
+                        <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ t(item.label) }}</span>
                         <span
                             v-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
                             class="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white"
@@ -120,7 +120,7 @@
                 </div>
                 <div v-show="!sidebarCollapsed" class="min-w-0 flex-1">
                     <p class="truncate text-sm font-medium text-slate-900">{{ userName }}</p>
-                    <p class="truncate text-xs text-slate-600">{{ userRole }}</p>
+                    <p class="truncate text-xs text-slate-600">{{ t(userRole) }}</p>
                 </div>
             </div>
         </div>
@@ -142,11 +142,13 @@ import { RouterLink, useRoute } from 'vue-router';
 import { usePage } from '@inertiajs/vue3';
 import { navigation } from '../../config/navigation';
 import { useEnterpriseLayout } from '../../../../entreprise/Dashboard/composables/useEnterpriseLayout';
+import { useLocale } from '../../../../../composables/useLocale';
 import NavIcon from '../../../../entreprise/Dashboard/layouts/partials/NavIcon.vue';
 
 const route = useRoute();
 const page = usePage();
 const { sidebarCollapsed, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = useEnterpriseLayout();
+const { locale, t } = useLocale();
 
 const alerts = reactive({
     immobilier: 2,
@@ -159,7 +161,7 @@ const openGroups = reactive({
 });
 
 const userName = computed(() => page.props.auth?.user?.name || 'Collaborateur');
-const userRole = computed(() => page.props.auth?.user?.role?.name || 'Agent');
+const userRole = computed(() => page.props.auth?.user?.role?.name || (locale.value === 'en' ? 'Agent' : 'Agent'));
 const userInitials = computed(() => {
     const name = userName.value || 'A';
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();

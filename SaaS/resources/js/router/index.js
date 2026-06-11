@@ -40,6 +40,19 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/proprietaires',
+        name: 'immobilier.proprietaires',
+        component: () => import('../Pages/entreprise/Dashboard/components/ProprietairesPage.vue'),
+        meta: {
+            title: 'Gestion des propriétaires',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Propriétaires', to: { name: 'immobilier.proprietaires' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/logements',
         name: 'immobilier.logements',
         component: () => import('../Pages/entreprise/Dashboard/components/LogementsPage.vue'),

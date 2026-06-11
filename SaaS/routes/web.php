@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AgencyController;
+use App\Http\Controllers\BatimentController;
+use App\Http\Controllers\ProprietaireController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -199,6 +201,27 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/illustrations', [\App\Http\Controllers\IllustrationController::class, 'store'])->name('illustrations.store');
     Route::put('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'update'])->name('illustrations.update');
     Route::delete('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'destroy'])->name('illustrations.destroy');
+
+    // Batiments API routes
+    Route::get('/api/batiments', [BatimentController::class, 'index'])->name('batiments.json');
+    Route::post('/api/batiments', [BatimentController::class, 'store'])->name('batiments.store');
+    Route::put('/api/batiments/{batiment}', [BatimentController::class, 'update'])->name('batiments.update');
+    Route::delete('/api/batiments/{batiment}', [BatimentController::class, 'destroy'])->name('batiments.destroy');
+
+    // Proprietaires API routes
+    Route::get('/api/proprietaires', [ProprietaireController::class, 'index'])->name('proprietaires.json');
+    Route::post('/api/proprietaires', [ProprietaireController::class, 'store'])->name('proprietaires.store');
+    Route::put('/api/proprietaires/{proprietaire}', [ProprietaireController::class, 'update'])->name('proprietaires.update');
+    Route::delete('/api/proprietaires/{proprietaire}', [ProprietaireController::class, 'destroy'])->name('proprietaires.destroy');
+    Route::post('/api/proprietaires/{proprietaire}/photo', [ProprietaireController::class, 'uploadPhoto'])->name('proprietaires.photo');
+    Route::delete('/api/proprietaires/{proprietaire}/photo', [ProprietaireController::class, 'deletePhoto'])->name('proprietaires.photo.delete');
+
+    // Page Proprietaires
+    Route::get('/immobilier/proprietaires', function () {
+        return Inertia::render('entreprise/Dashboard/Dashboard', [
+            'initialRoute' => 'immobilier/proprietaires'
+        ]);
+    })->name('immobilier.proprietaires');
 });
 
 require __DIR__.'/auth.php';
