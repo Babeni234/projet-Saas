@@ -40,6 +40,19 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/proprietaires',
+        name: 'immobilier.proprietaires',
+        component: () => import('../Pages/entreprise/Dashboard/components/ProprietairesPage.vue'),
+        meta: {
+            title: 'Gestion des propriétaires',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Propriétaires', to: { name: 'immobilier.proprietaires' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/logements',
         name: 'immobilier.logements',
         component: () => import('../Pages/entreprise/Dashboard/components/LogementsPage.vue'),
@@ -49,6 +62,19 @@ const routes = [
                 { label: 'Accueil', to: { name: 'dashboard.master' } },
                 { label: 'Immobilier', to: { name: 'immobilier.index' } },
                 { label: 'Logements', to: { name: 'immobilier.logements' } },
+            ],
+        },
+    },
+    {
+        path: '/dashboard/immobilier/illustrations',
+        name: 'immobilier.illustrations',
+        component: () => import('../Pages/entreprise/Dashboard/components/IllustrationPage.vue'),
+        meta: {
+            title: 'Gestion des illustrations',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Illustrations', to: { name: 'immobilier.illustrations' } },
             ],
         },
     },
@@ -398,6 +424,255 @@ const routes = [
         name: 'dashboard.roles',
         component: () => import('../Pages/entreprise/Dashboard/components/RolesPermissions.vue'),
         meta: { title: 'Rôles & permissions' },
+    },
+    {
+        path: '/dashboard/company/profile',
+        name: 'dashboard.company.profile',
+        component: () => import('../Pages/entreprise/Dashboard/pages/CompanyProfile.vue'),
+        meta: {
+            title: 'Profil de l\'entreprise',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Profil de l\'entreprise', to: { name: 'dashboard.company.profile' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard',
+        redirect: '/agence/dashboard/master',
+    },
+    {
+        path: '/agence/dashboard/master',
+        name: 'agence.master',
+        component: () => import('../Pages/agence/Dashboard/components/MasterDashboard.vue'),
+        meta: {
+            title: 'Tableau de bord Agence',
+            breadcrumbs: [{ label: 'Accueil', to: { name: 'agence.master' } }],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier',
+        name: 'agence.immobilier.index',
+        component: () => import('../Pages/agence/Dashboard/components/ImmobilierDashboard.vue'),
+        meta: {
+            title: 'Gestion immobilière',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/batiments',
+        name: 'agence.immobilier.batiments',
+        component: () => import('../Pages/agence/Dashboard/components/BatimentsPage.vue'),
+        meta: {
+            title: 'Gestion des bâtiments',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Bâtiments', to: { name: 'agence.immobilier.batiments' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/logements',
+        name: 'agence.immobilier.logements',
+        component: () => import('../Pages/agence/Dashboard/components/LogementsPage.vue'),
+        meta: {
+            title: 'Gestion des logements',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Logements', to: { name: 'agence.immobilier.logements' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/illustrations',
+        name: 'agence.immobilier.illustrations',
+        component: () => import('../Pages/entreprise/Dashboard/components/IllustrationPage.vue'),
+        meta: {
+            title: 'Gestion des illustrations',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Illustrations', to: { name: 'agence.immobilier.illustrations' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/affectations',
+        name: 'agence.immobilier.affectations',
+        component: () => import('../Pages/agence/Dashboard/components/AffectationPage.vue'),
+        meta: {
+            title: 'Affectation des logements',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Affectations', to: { name: 'agence.immobilier.affectations' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/contrats',
+        name: 'agence.immobilier.contrats',
+        component: () => import('../Pages/agence/Dashboard/components/ContratsBailPage.vue'),
+        meta: {
+            title: 'Contrats de bail',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Contrats', to: { name: 'agence.immobilier.contrats' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/locataires',
+        name: 'agence.immobilier.locataires',
+        component: () => import('../Pages/agence/Dashboard/components/LocatairesPage.vue'),
+        meta: {
+            title: 'Gestion des locataires',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Locataires', to: { name: 'agence.immobilier.locataires' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/renouvellements',
+        name: 'agence.immobilier.renouvellements',
+        component: () => import('../Pages/agence/Dashboard/components/RenouvellementContratPage.vue'),
+        meta: {
+            title: 'Renouvellements de contrat',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Renouvellements', to: { name: 'agence.immobilier.renouvellements' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/engagements',
+        name: 'agence.immobilier.engagements',
+        component: () => import('../Pages/agence/Dashboard/components/EngagementPage.vue'),
+        meta: {
+            title: 'Engagements',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Engagements', to: { name: 'agence.immobilier.engagements' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/etats-des-lieux',
+        name: 'agence.immobilier.etats-des-lieux',
+        component: () => import('../Pages/agence/Dashboard/components/EtatDesLieuxPage.vue'),
+        meta: {
+            title: 'États des lieux',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'États des lieux', to: { name: 'agence.immobilier.etats-des-lieux' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/historique',
+        name: 'agence.immobilier.historique',
+        component: () => import('../Pages/agence/Dashboard/components/HistoriquePage.vue'),
+        meta: {
+            title: 'Historique immobilier',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Historique', to: { name: 'agence.immobilier.historique' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/factures',
+        name: 'agence.immobilier.factures',
+        component: () => import('../Pages/agence/Dashboard/components/FacturationLoyerPage.vue'),
+        meta: {
+            title: 'Facturation des loyers',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Facturation', to: { name: 'agence.immobilier.factures' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/paiements',
+        name: 'agence.immobilier.paiements',
+        component: () => import('../Pages/agence/Dashboard/components/PaiementsLoyerPage.vue'),
+        meta: {
+            title: 'Paiements de loyer',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Paiements', to: { name: 'agence.immobilier.paiements' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/comptabilite',
+        name: 'agence.accounting',
+        component: () => import('../Pages/agence/Dashboard/components/AccountingDashboard.vue'),
+        meta: { title: 'Comptabilité & facturation' },
+    },
+    {
+        path: '/agence/dashboard/comptabilite/factures',
+        name: 'agence.accounting.factures',
+        component: () => import('../Pages/agence/Dashboard/components/FactureListPage.vue'),
+        meta: {
+            title: 'Factures',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Comptabilité', to: { name: 'agence.accounting' } },
+                { label: 'Factures', to: { name: 'agence.accounting.factures' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/comptabilite/facture-creation',
+        name: 'agence.accounting.facture-creation',
+        component: () => import('../Pages/agence/Dashboard/components/FactureCreationPage.vue'),
+        meta: {
+            title: 'Création de facture',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Comptabilité', to: { name: 'agence.accounting' } },
+                { label: 'Création de facture', to: { name: 'agence.accounting.facture-creation' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/maintenance',
+        name: 'agence.maintenance',
+        component: () => import('../Pages/agence/Dashboard/components/MaintenanceDashboard.vue'),
+        meta: { title: 'Maintenance / SAV' },
+    },
+    {
+        path: '/agence/dashboard/rapports',
+        name: 'agence.reports',
+        component: () => import('../Pages/agence/Dashboard/components/ReportsDashboard.vue'),
+        meta: { title: 'Rapports & statistiques' },
+    },
+    {
+        path: '/agence/dashboard/employees',
+        name: 'agence.employees',
+        component: () => import('../Pages/agence/Dashboard/components/EmployeesPage.vue'),
+        meta: {
+            title: 'Collaborateurs',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Collaborateurs', to: { name: 'agence.employees' } },
+            ],
+        },
     },
 ];
 

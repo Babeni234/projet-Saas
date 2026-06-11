@@ -4,7 +4,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
-                    Gestion des Logements
+                    Gestion des Biens Immobiliers
                     <span class="text-blue-500 text-sm font-semibold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">Module Immobilier</span>
                 </h1>
                 <p class="text-slate-600 mt-1">Gérer le parc immobilier, suivre l'occupation et les revenus de location.</p>
@@ -16,17 +16,17 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Ajouter un Logement
+                Ajouter un Bien Immobilier
             </button>
         </div>
 
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Total Logements -->
+            <!-- Total Biens -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20 animate-fade-in" style="animation-delay: 0ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Logements</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Biens</p>
                         <p class="text-3xl font-bold text-slate-900 mt-1 animate-number">{{ totalLogements }}</p>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Logements Libres -->
+            <!-- Biens Libres -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20 animate-fade-in" style="animation-delay: 100ms">
                 <div class="flex items-center justify-between">
                     <div>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Logements Occupés -->
+            <!-- Biens Occupés -->
             <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20 animate-fade-in" style="animation-delay: 200ms">
                 <div class="flex items-center justify-between">
                     <div>
@@ -116,7 +116,7 @@
                         <tr class="border-b border-slate-200 bg-slate-50">
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Référence</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Bâtiment / Immeuble</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Typologie & Catégorie</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Catégorie</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Étage / Surface</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Loyer Mensuel</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut d'Occupation</th>
@@ -134,7 +134,7 @@
                                     </div>
                                     <div>
                                         <span class="font-bold text-slate-900 block">{{ logement.reference }}</span>
-                                        <span class="text-[10px] text-slate-400">ID: LOG-{{ String(logement.id).padStart(3, '0') }}</span>
+                                        <span class="text-[10px] text-slate-400" v-if="logement.agency_name">Géré par : {{ logement.agency_name }}</span>
                                     </div>
                                 </div>
                             </td>
@@ -142,11 +142,10 @@
                                 <div class="text-sm font-semibold text-slate-700">{{ logement.batiment || 'Sans bâtiment' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-slate-800 font-medium">{{ logement.categorie }}</div>
-                                <div class="text-[11px] text-slate-400 font-semibold">{{ logement.sousCategorie || 'Taille non spécifiée' }}</div>
+                                <div class="text-sm text-slate-800 font-medium">{{ logement.categorie || 'Non spécifiée' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-slate-700">Niveau : {{ logement.etage }}<sup>e</sup> étage</div>
+                                <div class="text-sm text-slate-700">Niveau : {{ logement.etage !== null ? logement.etage + 'e étage' : 'Rez-de-chaussée' }}</div>
                                 <div class="text-xs text-slate-400 font-medium">Superficie : {{ logement.surface }}m²</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -187,7 +186,7 @@
                         </tr>
                         <tr v-if="filteredLogements.length === 0">
                             <td colspan="7" class="text-center py-12 text-slate-400">
-                                Aucun logement trouvé dans la base de données.
+                                Aucun bien immobilier trouvé dans la base de données.
                             </td>
                         </tr>
                     </tbody>
@@ -207,8 +206,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">{{ editingLogement ? 'Modifier' : 'Ajouter' }} un Logement</h2>
-                            <p class="text-xs text-slate-500">Renseignez la référence, la catégorie et les paramètres financiers.</p>
+                            <h2 class="text-lg font-bold text-slate-900">{{ editingLogement ? 'Modifier' : 'Ajouter' }} un Bien Immobilier</h2>
+                            <p class="text-xs text-slate-500">Renseignez le bâtiment de rattachement, la catégorie et les paramètres.</p>
                         </div>
                     </div>
                     <button @click="closeModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
@@ -224,26 +223,28 @@
                     <div class="space-y-4">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Identification & Catégorie</h3>
 
-                        <!-- Référence -->
-                        <div>
+                        <!-- Référence (Edit Only) -->
+                        <div v-if="editingLogement">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Référence Unique</label>
                             <input 
-                                v-model="formData.reference" 
+                                :value="formData.reference" 
                                 type="text" 
-                                placeholder="Ex: APT-A101" 
-                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                                readonly 
+                                disabled
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
                             >
                         </div>
 
-                        <!-- Bâtiment (dropdown dynamically filled from system list) -->
+                        <!-- Bâtiment -->
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Bâtiment de Rattachement</label>
                             <select 
-                                v-model="formData.batiment" 
+                                v-model="formData.batiment_id" 
+                                @change="onBatimentChange"
                                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-slate-700"
                             >
-                                <option value="">Sélectionner un bâtiment</option>
-                                <option v-for="b in systemBatiments" :key="b.id" :value="b.nom">
+                                <option :value="null">Sélectionner un bâtiment</option>
+                                <option v-for="b in systemBatiments" :key="b.id" :value="b.id">
                                     {{ b.nom }} ({{ b.ville || 'Localisation non spécifiée' }})
                                 </option>
                             </select>
@@ -253,33 +254,13 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Catégorie</label>
                             <select 
-                                v-model="formData.categorie" 
+                                v-model="formData.categorie_id" 
                                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-slate-700"
                             >
-                                <option value="">Sélectionner une catégorie</option>
-                                <option value="Appartement">Appartement</option>
-                                <option value="Burreau">Burreau</option>
-                                <option value="Magasin">Magasin</option>
-                                <option value="Studio">Studio</option>
-                                <option value="Loft">Loft</option>
-                                <option value="Duplex">Duplex</option>
-                                <option value="Penthouse">Penthouse</option>
-                            </select>
-                        </div>
-
-                        <!-- Sous-catégorie -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Sous-catégorie (Typologie)</label>
-                            <select 
-                                v-model="formData.sousCategorie" 
-                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-slate-700"
-                            >
-                                <option value="">Sélectionner une sous-catégorie</option>
-                                <option value="T1">T1 (Studio)</option>
-                                <option value="T2">T2 (2 pièces)</option>
-                                <option value="T3">T3 (3 pièces)</option>
-                                <option value="T4">T4 (4 pièces)</option>
-                                <option value="T5">T5+ (5 pièces et plus)</option>
+                                <option :value="null">Sélectionner une catégorie</option>
+                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                                    {{ cat.nom }}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -349,7 +330,7 @@
                     </button>
                     <button 
                         @click="saveLogement" 
-                        :disabled="!formData.reference || !formData.batiment || !formData.categorie || !formData.loyer"
+                        :disabled="!formData.categorie_id || !formData.loyer"
                         class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm"
                     >
                         Enregistrer
@@ -366,8 +347,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce logement ?</h3>
-                <p class="text-center text-slate-555 text-sm mb-6">Cette action supprimera définitivement le logement <strong>{{ deletingLogement?.reference }}</strong> de votre base de données.</p>
+                <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce bien immobilier ?</h3>
+                <p class="text-center text-slate-555 text-sm mb-6">Cette action supprimera définitivement le bien immobilier <strong>{{ deletingLogement?.reference }}</strong> de votre base de données.</p>
 
                 <div class="flex gap-3">
                     <button @click="closeDeleteModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
@@ -409,43 +390,53 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
-const defaultLogements = [
-    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T2', etage: 1, surface: 65, loyer: 800, statut: 'Libre' },
-    { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 75, loyer: 900, statut: 'Occupé' },
-    { id: 3, reference: 'APT-A201', batiment: 'Immeuble A', categorie: 'Duplex', sousCategorie: 'T4', etage: 2, surface: 85, loyer: 1000, statut: 'Occupé' },
-    { id: 4, reference: 'APT-B101', batiment: 'Immeuble B', categorie: 'Studio', sousCategorie: 'T1', etage: 1, surface: 95, loyer: 1200, statut: 'Libre' },
-    { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', categorie: 'Appartement', sousCategorie: 'T3', etage: 1, surface: 80, loyer: 950, statut: 'Occupé' },
-    { id: 6, reference: 'APT-C101', batiment: 'Immeuble C', categorie: 'Loft', sousCategorie: 'T4', etage: 1, surface: 70, loyer: 850, statut: 'Réservé' },
-];
-
-const logements = ref(JSON.parse(localStorage.getItem('immobilier_logements')) || defaultLogements);
-if (!localStorage.getItem('immobilier_logements')) {
-    localStorage.setItem('immobilier_logements', JSON.stringify(defaultLogements));
-}
-
-const saveLogementsToStorage = () => {
-    localStorage.setItem('immobilier_logements', JSON.stringify(logements.value));
-};
+const logements = ref([]);
+const categories = ref([]);
+const systemBatiments = ref([]);
 
 const searchQuery = ref('');
 const statusFilter = ref('');
 
-// Dynamic buildings list fetched from system localStorage
-const systemBatiments = computed(() => {
-    const stored = localStorage.getItem('immobilier_batiments');
-    if (stored) {
-        return JSON.parse(stored);
+const fetchLogements = async () => {
+    try {
+        const response = await fetch('/api/logements', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            logements.value = await response.json();
+        }
+    } catch (e) {
+        console.error("Erreur lors de la récupération des biens immobiliers:", e);
     }
-    // Fallback if none in storage
-    return [
-        { id: 1, nom: 'Immeuble A', ville: 'Paris' },
-        { id: 2, nom: 'Immeuble B', ville: 'Lyon' },
-        { id: 3, nom: 'Immeuble C', ville: 'Nice' },
-        { id: 4, nom: 'Immeuble D', ville: 'Douala' }
-    ];
-});
+};
+
+const fetchCategories = async () => {
+    try {
+        const response = await fetch('/api/categories', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            categories.value = await response.json();
+        }
+    } catch (e) {
+        console.error("Erreur lors de la récupération des catégories:", e);
+    }
+};
+
+const fetchBatiments = async () => {
+    try {
+        const response = await fetch('/api/batiments', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            systemBatiments.value = await response.json();
+        }
+    } catch (e) {
+        console.error("Erreur lors de la récupération des bâtiments:", e);
+    }
+};
 
 const filteredLogements = computed(() => {
     let list = logements.value;
@@ -460,8 +451,8 @@ const filteredLogements = computed(() => {
         const query = searchQuery.value.toLowerCase();
         list = list.filter(l => 
             l.reference.toLowerCase().includes(query) ||
-            l.batiment.toLowerCase().includes(query) ||
-            l.categorie.toLowerCase().includes(query)
+            (l.batiment && l.batiment.toLowerCase().includes(query)) ||
+            (l.categorie && l.categorie.toLowerCase().includes(query))
         );
     }
     
@@ -491,13 +482,13 @@ const errorMessage = ref('');
 
 const formData = ref({
     reference: '',
-    batiment: '',
-    categorie: '',
-    sousCategorie: '',
+    batiment_id: null,
+    categorie_id: null,
     etage: '',
     surface: '',
     loyer: '',
     statut: 'Libre',
+    agency_id: null
 });
 
 // Auto-hide error modal after 5 seconds
@@ -518,13 +509,31 @@ watch(showError, (newVal) => {
 
 const openAddModal = () => {
     editingLogement.value = null;
-    formData.value = { reference: '', batiment: '', categorie: '', sousCategorie: '', etage: '', surface: '', loyer: '', statut: 'Libre' };
+    formData.value = {
+        reference: '',
+        batiment_id: null,
+        categorie_id: null,
+        etage: '',
+        surface: '',
+        loyer: '',
+        statut: 'Libre',
+        agency_id: null
+    };
     showModal.value = true;
 };
 
 const openEditModal = (logement) => {
     editingLogement.value = logement;
-    formData.value = { ...logement };
+    formData.value = {
+        reference: logement.reference,
+        batiment_id: logement.batiment_id,
+        categorie_id: logement.categorie_id,
+        etage: logement.etage !== null ? logement.etage : '',
+        surface: logement.surface !== null ? logement.surface : '',
+        loyer: logement.loyer,
+        statut: logement.statut,
+        agency_id: logement.agency_id
+    };
     showModal.value = true;
 };
 
@@ -543,52 +552,97 @@ const closeDeleteModal = () => {
     deletingLogement.value = null;
 };
 
-const saveLogement = () => {
-    if (!formData.value.reference || !formData.value.batiment || !formData.value.categorie || !formData.value.loyer) {
+const onBatimentChange = () => {
+    if (formData.value.batiment_id) {
+        const selectedBat = systemBatiments.value.find(b => b.id === Number(formData.value.batiment_id));
+        if (selectedBat && selectedBat.agency_id) {
+            formData.value.agency_id = selectedBat.agency_id;
+        } else {
+            formData.value.agency_id = null;
+        }
+    } else {
+        formData.value.agency_id = null;
+    }
+};
+
+const saveLogement = async () => {
+    if (!formData.value.categorie_id || !formData.value.loyer) {
         errorMessage.value = 'Veuillez remplir tous les champs obligatoires (*)';
         showError.value = true;
         return;
     }
 
-    const logData = {
-        reference: formData.value.reference.toUpperCase(),
-        batiment: formData.value.batiment,
-        categorie: formData.value.categorie,
-        sousCategorie: formData.value.sousCategorie || 'T1',
-        etage: Number(formData.value.etage || 0),
-        surface: Number(formData.value.surface || 0),
-        loyer: Number(formData.value.loyer || 0),
+    const payload = {
+        batiment_id: formData.value.batiment_id ? Number(formData.value.batiment_id) : null,
+        categorie_id: Number(formData.value.categorie_id),
+        etage: formData.value.etage !== '' ? Number(formData.value.etage) : null,
+        surface: formData.value.surface !== '' ? Number(formData.value.surface) : null,
+        loyer: Number(formData.value.loyer),
         statut: formData.value.statut || 'Libre',
+        agency_id: formData.value.agency_id ? Number(formData.value.agency_id) : null,
     };
 
-    if (editingLogement.value) {
-        const index = logements.value.findIndex(l => l.id === editingLogement.value.id);
-        if (index !== -1) {
-            logements.value[index] = { ...editingLogement.value, ...logData };
-        }
-        successMessage.value = 'Logement modifié avec succès';
-    } else {
-        const newId = Math.max(...logements.value.map(l => l.id), 0) + 1;
-        logements.value.unshift({
-            id: newId,
-            ...logData
-        });
-        successMessage.value = 'Logement ajouté avec succès';
-    }
+    try {
+        const url = editingLogement.value
+            ? `/api/logements/${editingLogement.value.id}`
+            : '/api/logements';
+        const method = editingLogement.value ? 'PUT' : 'POST';
 
-    saveLogementsToStorage();
-    closeModal();
-    showSuccess.value = true;
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            successMessage.value = editingLogement.value
+                ? 'Bien immobilier modifié avec succès'
+                : 'Bien immobilier ajouté avec succès';
+            closeModal();
+            fetchLogements();
+            showSuccess.value = true;
+        } else {
+            const data = await response.json();
+            errorMessage.value = data.message || 'Une erreur est survenue lors de l\'enregistrement.';
+            showError.value = true;
+        }
+    } catch (e) {
+        console.error(e);
+        errorMessage.value = 'Impossible de contacter le serveur.';
+        showError.value = true;
+    }
 };
 
-const confirmDelete = () => {
-    const index = logements.value.findIndex(l => l.id === deletingLogement.value.id);
-    if (index !== -1) {
-        logements.value.splice(index, 1);
-        successMessage.value = 'Logement supprimé avec succès';
-        saveLogementsToStorage();
-        closeDeleteModal();
-        showSuccess.value = true;
+const confirmDelete = async () => {
+    if (!deletingLogement.value) return;
+    try {
+        const response = await fetch(`/api/logements/${deletingLogement.value.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+
+        if (response.ok) {
+            successMessage.value = 'Bien immobilier supprimé avec succès';
+            closeDeleteModal();
+            fetchLogements();
+            showSuccess.value = true;
+        } else {
+            const data = await response.json();
+            errorMessage.value = data.message || 'Une erreur est survenue lors de la suppression.';
+            showError.value = true;
+        }
+    } catch (e) {
+        console.error(e);
+        errorMessage.value = 'Impossible de contacter le serveur.';
+        showError.value = true;
     }
 };
 
@@ -606,22 +660,19 @@ const formatCurrency = (val) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 };
 
-// Global refresh listener for agent actions
-import { onMounted, onUnmounted } from 'vue';
-
-const loadLogementsFromStorage = () => {
-    const stored = localStorage.getItem('immobilier_logements');
-    if (stored) {
-        logements.value = JSON.parse(stored);
-    }
+const loadAllData = () => {
+    fetchLogements();
+    fetchCategories();
+    fetchBatiments();
 };
 
 onMounted(() => {
-    window.addEventListener('enterprise:refresh', loadLogementsFromStorage);
+    loadAllData();
+    window.addEventListener('enterprise:refresh', loadAllData);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('enterprise:refresh', loadLogementsFromStorage);
+    window.removeEventListener('enterprise:refresh', loadAllData);
 });
 </script>
 

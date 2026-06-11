@@ -29,15 +29,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $agencies = [];
+        if ($user) {
+            $user->load(['company', 'role', 'employee.agency']);
+            if ($user->company_profile_id) {
+                $agencies = \App\Models\Agency::where('company_profile_id', $user->company_profile_id)->get();
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'immo' => [
                 'particulierUrl' => route('immo.particulier', absolute: false),
                 'bailleurUrl' => route('immo.bailleur', absolute: false),
             ],
+            'agencies' => $agencies,
         ];
     }
 }

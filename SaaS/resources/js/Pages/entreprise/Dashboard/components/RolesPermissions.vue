@@ -11,8 +11,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-slate-800">24</div>
-                        <div class="text-sm text-slate-500">Utilisateurs Actifs</div>
+                        <div class="text-3xl font-extrabold text-slate-800">{{ activeUsersCount }}</div>
+                        <div class="text-sm text-slate-500 font-semibold mt-1">Utilisateurs Actifs</div>
                     </div>
                 </div>
             </div>
@@ -26,8 +26,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-slate-800">5</div>
-                        <div class="text-sm text-slate-500">Rôles Configurés</div>
+                        <div class="text-3xl font-extrabold text-slate-800">{{ roles.length }}</div>
+                        <div class="text-sm text-slate-500 font-semibold mt-1">Rôles Configurés</div>
                     </div>
                 </div>
             </div>
@@ -41,8 +41,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-slate-800">3</div>
-                        <div class="text-sm text-slate-500">Demandes en Attente</div>
+                        <div class="text-3xl font-extrabold text-slate-800">{{ pendingUsers.length }}</div>
+                        <div class="text-sm text-slate-500 font-semibold mt-1 font-sans">Demandes en Attente</div>
                     </div>
                 </div>
             </div>
@@ -51,117 +51,60 @@
         <!-- Roles Section -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-800">Rôles et Permissions</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Ajouter un Rôle</button>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Rôles et Permissions</h3>
+                    <p class="text-xs text-slate-500 mt-1">Définissez et configurez les droits d'accès des différents profils d'utilisateurs.</p>
+                </div>
+                <button
+                    @click="openCreateRoleModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Rôle
+                </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Admin Role -->
-                <div class="p-5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Role Cards -->
+                <div
+                    v-for="role in roles"
+                    :key="role.id"
+                    :class="[
+                        'p-5 rounded-2xl border transition-all duration-300 hover:shadow-md relative overflow-hidden bg-gradient-to-br flex flex-col min-h-[200px]',
+                        getRoleTheme(role.slug).bg
+                    ]"
+                >
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm', getRoleTheme(role.slug).iconBg]">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
-                        <div class="px-2 py-1 bg-purple-500 text-white rounded-full text-xs font-semibold">Admin</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-2">Administrateur</div>
-                    <div class="text-sm text-slate-600 mb-4">Accès complet à toutes les fonctionnalités</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">3 utilisateurs</span>
-                        <button class="text-xs text-purple-600 font-medium hover:text-purple-700">Gérer</button>
-                    </div>
-                </div>
-
-                <!-- Manager Role -->
-                <div class="p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                        <div :class="['px-2.5 py-1 text-white rounded-full text-[10px] font-extrabold uppercase tracking-wider', getRoleTheme(role.slug).iconBg]">
+                            {{ role.slug }}
                         </div>
-                        <div class="px-2 py-1 bg-blue-500 text-white rounded-full text-xs font-semibold">Manager</div>
                     </div>
-                    <div class="font-semibold text-slate-800 mb-2">Gestionnaire</div>
-                    <div class="text-sm text-slate-600 mb-4">Gestion des opérations quotidiennes</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">8 utilisateurs</span>
-                        <button class="text-xs text-blue-600 font-medium hover:text-blue-700">Gérer</button>
-                    </div>
-                </div>
-
-                <!-- Accountant Role -->
-                <div class="p-5 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                    <div class="font-extrabold text-slate-800 text-lg mb-2">{{ role.name }}</div>
+                    <div class="text-sm text-slate-600 mb-6 flex-1">{{ role.description || 'Pas de description fournie.' }}</div>
+                    
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-200/50 mt-auto">
+                        <span class="text-xs text-slate-500 font-bold">
+                            {{ role.users_count || 0 }} {{ (role.users_count || 0) > 1 ? 'utilisateurs' : 'utilisateur' }}
+                        </span>
+                        <div class="flex gap-3">
+                            <button
+                                @click="openEditRoleModal(role)"
+                                :class="['text-xs font-bold transition-colors', getRoleTheme(role.slug).text]"
+                            >
+                                Modifier
+                            </button>
+                            <button
+                                v-if="role.slug !== 'admin'"
+                                @click="deleteRole(role)"
+                                class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                            >
+                                Supprimer
+                            </button>
                         </div>
-                        <div class="px-2 py-1 bg-emerald-500 text-white rounded-full text-xs font-semibold">Comptable</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-2">Comptable</div>
-                    <div class="text-sm text-slate-600 mb-4">Accès aux rapports financiers</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">4 utilisateurs</span>
-                        <button class="text-xs text-emerald-600 font-medium hover:text-emerald-700">Gérer</button>
-                    </div>
-                </div>
-
-                <!-- Maintenance Role -->
-                <div class="p-5 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-amber-500 text-white rounded-full text-xs font-semibold">Maintenance</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-2">Maintenance</div>
-                    <div class="text-sm text-slate-600 mb-4">Gestion des tickets de maintenance</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">5 utilisateurs</span>
-                        <button class="text-xs text-amber-600 font-medium hover:text-amber-700">Gérer</button>
-                    </div>
-                </div>
-
-                <!-- Receptionist Role -->
-                <div class="p-5 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border border-pink-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-pink-500 text-white rounded-full text-xs font-semibold">Réception</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-2">Réceptionniste</div>
-                    <div class="text-sm text-slate-600 mb-4">Gestion des réservations hôtelières</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">3 utilisateurs</span>
-                        <button class="text-xs text-pink-600 font-medium hover:text-pink-700">Gérer</button>
-                    </div>
-                </div>
-
-                <!-- Viewer Role -->
-                <div class="p-5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-10 h-10 bg-slate-500 rounded-lg flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-slate-500 text-white rounded-full text-xs font-semibold">Lecteur</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-2">Lecteur Seulement</div>
-                    <div class="text-sm text-slate-600 mb-4">Accès en lecture seule</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">1 utilisateur</span>
-                        <button class="text-xs text-slate-600 font-medium hover:text-slate-700">Gérer</button>
                     </div>
                 </div>
             </div>
@@ -169,96 +112,92 @@
 
         <!-- Users Table -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-800">Utilisateurs</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Ajouter un Utilisateur</button>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Membres et Affectation des Rôles</h3>
+                    <p class="text-xs text-slate-500 mt-1">Associez vos collaborateurs aux rôles prédéfinis pour réguler leurs permissions d'accès.</p>
+                </div>
+                <button
+                    @click="openCreateEmployeeModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] self-start sm:self-auto"
+                >
+                    Ajouter un Collaborateur
+                </button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
-                        <tr class="bg-slate-50">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Utilisateur</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Rôle</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Statut</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Dernière Connexion</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Collaborateur</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rôle Assigné</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Dernière Connexion</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr>
-                            <td class="px-4 py-4">
+                        <tr v-for="user in users" :key="user.id" class="hover:bg-slate-50/40 transition-colors">
+                            <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">AD</div>
+                                    <div :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-extrabold text-sm bg-gradient-to-br', getRoleTheme(user.role?.slug).iconBg || 'from-blue-500 to-indigo-600']">
+                                        {{ getUserInitials(user.name) }}
+                                    </div>
                                     <div>
-                                        <div class="font-semibold text-slate-800">Admin Principal</div>
-                                        <div class="text-xs text-slate-500">admin@company.com</div>
+                                        <div class="font-bold text-slate-800">{{ user.name }}</div>
+                                        <div class="text-xs text-slate-500 font-semibold mt-0.5" v-if="user.employee?.agency?.name || user.employee?.position">
+                                            <span v-if="user.employee?.agency?.name" class="text-indigo-600 font-bold">{{ user.employee.agency.name }}</span>
+                                            <span v-if="user.employee?.agency?.name && user.employee?.position" class="text-slate-300 mx-1">|</span>
+                                            <span v-if="user.employee?.position" class="text-slate-500 font-medium">{{ user.employee.position }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4 text-sm text-slate-600">admin@company.com</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">Admin</span></td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Actif</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Il y a 2h</td>
-                            <td class="px-4 py-4">
-                                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Modifier</button>
+                            <td class="px-6 py-4 text-sm text-slate-600 font-medium">{{ user.email }}</td>
+                            <td class="px-6 py-4">
+                                <select
+                                    :value="user.role_id"
+                                    @change="handleUserRoleChange(user, $event.target.value)"
+                                    class="px-3 py-2 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer"
+                                >
+                                    <option :value="null">Aucun rôle</option>
+                                    <option v-for="r in roles" :key="r.id" :value="r.id">
+                                        {{ r.name }}
+                                    </option>
+                                </select>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    :class="[
+                                        'px-3 py-1.5 rounded-full text-xs font-bold border shadow-sm transition-all',
+                                        user.status === 'active'
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                                    ]"
+                                >
+                                    {{ user.status === 'active' ? 'Actif' : 'Inactif' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600 font-medium">
+                                {{ formatLastLogin(user.last_login_at) }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <button
+                                    @click="toggleUserStatus(user)"
+                                    :class="[
+                                        'px-4 py-2 rounded-xl text-xs font-bold border transition-all shadow-sm transform hover:scale-105',
+                                        user.status === 'active'
+                                            ? 'bg-white border-slate-350 text-slate-700 hover:bg-slate-50'
+                                            : 'bg-emerald-500 text-white border-transparent hover:bg-emerald-600'
+                                    ]"
+                                >
+                                    {{ user.status === 'active' ? 'Désactiver' : 'Activer' }}
+                                </button>
                             </td>
                         </tr>
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">ML</div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Marie Lambert</div>
-                                        <div class="text-xs text-slate-500">marie.lambert@company.com</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4 text-sm text-slate-600">marie.lambert@company.com</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Manager</span></td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Actif</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Il y a 5h</td>
-                            <td class="px-4 py-4">
-                                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Modifier</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">PD</div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Pierre Dubois</div>
-                                        <div class="text-xs text-slate-500">pierre.dubois@company.com</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4 text-sm text-slate-600">pierre.dubois@company.com</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Comptable</span></td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Actif</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Hier</td>
-                            <td class="px-4 py-4">
-                                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Modifier</button>
-                            </td>
-                        </tr>
-                        <tr class="bg-amber-50">
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">SL</div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Sophie Laurent</div>
-                                        <div class="text-xs text-slate-500">sophie.laurent@company.com</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4 text-sm text-slate-600">sophie.laurent@company.com</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">Maintenance</span></td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">En attente</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Jamais</td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">Activer</button>
-                                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Modifier</button>
-                                </div>
+                        <tr v-if="users.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-slate-500 font-medium">
+                                Aucun collaborateur enregistré pour le moment.
                             </td>
                         </tr>
                     </tbody>
@@ -268,50 +207,910 @@
 
         <!-- Pending Requests -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-800">Demandes d'Accès en Attente</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Voir toutes</button>
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-slate-900">Demandes d'Accès en Attente</h3>
+                <p class="text-xs text-slate-500 mt-1">Gérez les demandes d'accès envoyées par les nouveaux membres rejoignant votre entreprise.</p>
             </div>
-            <div class="space-y-3">
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">JD</div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Jean Dupont</div>
-                        <div class="text-sm text-slate-600">Demande le 15 Juin 2026 - Rôle: Manager</div>
+            
+            <div class="space-y-4">
+                <div
+                    v-for="pUser in pendingUsers"
+                    :key="pUser.id"
+                    class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-200/80"
+                >
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded-2xl flex items-center justify-center font-extrabold text-base">
+                            {{ getUserInitials(pUser.name) }}
+                        </div>
+                        <div>
+                            <div class="font-extrabold text-slate-800">{{ pUser.name }}</div>
+                            <div class="text-sm text-slate-500 font-medium">Email: {{ pUser.email }}</div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">Approuver</button>
-                        <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Rejeter</button>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button
+                            @click="approveRequest(pUser)"
+                            class="flex-1 sm:flex-none px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-105"
+                        >
+                            Approuver
+                        </button>
+                        <button
+                            @click="rejectRequest(pUser)"
+                            class="flex-1 sm:flex-none px-5 py-2.5 bg-white border-2 border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all transform hover:scale-105"
+                        >
+                            Rejeter
+                        </button>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">AR</div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Antoine Roux</div>
-                        <div class="text-sm text-slate-600">Demande le 14 Juin 2026 - Rôle: Comptable</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">Approuver</button>
-                        <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Rejeter</button>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">CB</div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Claire Bernard</div>
-                        <div class="text-sm text-slate-600">Demande le 13 Juin 2026 - Rôle: Réceptionniste</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600 transition-colors">Approuver</button>
-                        <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Rejeter</button>
-                    </div>
+                
+                <div v-if="pendingUsers.length === 0" class="p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucune demande d'accès en attente.</p>
                 </div>
             </div>
         </div>
+
+        <!-- Categories Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Catégories de Biens Immobiliers</h3>
+                    <p class="text-xs text-slate-500 mt-1">Gérez les catégories utilisées pour classifier vos biens immobiliers.</p>
+                </div>
+                <button
+                    @click="openCreateCategoryModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter une Catégorie
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ cat.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ cat.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditCategoryModal(cat)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteCategory(cat)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="categories.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucune catégorie configurée pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Role Modal -->
+        <ModalPremium
+            :show="showRoleModal"
+            :title="isEditing ? 'Modifier le Rôle' : 'Ajouter un Rôle'"
+            :subtitle="isEditing ? 'Modifiez les informations et les permissions associées à ce rôle' : 'Créez un nouveau rôle personnalisé et attribuez-lui des permissions'"
+            size="lg"
+            type="default"
+            @close="showRoleModal = false"
+        >
+            <form @submit.prevent="submitRoleForm" class="space-y-6">
+                <!-- Basic Inputs -->
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Rôle <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="roleForm.name"
+                            type="text"
+                            required
+                            placeholder="Ex: Chef de projet, Superviseur..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+                        />
+                        <span v-if="errors.name" class="text-red-500 text-xs mt-1 block">{{ errors.name[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="roleForm.description"
+                            rows="3"
+                            placeholder="Décrivez les responsabilités de ce rôle..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="errors.description" class="text-red-500 text-xs mt-1 block">{{ errors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Permissions Selection -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Permissions Associées</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div
+                            v-for="perm in availablePermissions"
+                            :key="perm.id"
+                            @click="togglePermission(perm.id)"
+                            :class="[
+                                'flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer select-none',
+                                roleForm.permissions.includes(perm.id)
+                                    ? 'border-blue-500 bg-blue-50/20 shadow-sm'
+                                    : 'border-slate-200 hover:border-slate-350 bg-slate-50/50 hover:bg-slate-50'
+                            ]"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="roleForm.permissions.includes(perm.id)"
+                                @click.stop
+                                @change="togglePermission(perm.id)"
+                                class="mt-1 w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">{{ perm.label }}</span>
+                                <span class="block text-[11px] text-slate-500 mt-1 leading-relaxed">{{ perm.desc }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showRoleModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditing ? 'Mettre à Jour' : 'Créer le Rôle' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
+        <!-- Add Employee Modal -->
+        <ModalPremium
+            :show="showEmployeeModal"
+            title="Ajouter un Collaborateur"
+            subtitle="Créez un nouvel utilisateur et son profil d'employé associé dans votre entreprise"
+            size="lg"
+            type="default"
+            @close="showEmployeeModal = false"
+        >
+            <form @submit.prevent="submitEmployeeForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom Complet <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="employeeForm.name"
+                            type="text"
+                            required
+                            placeholder="Ex: Jean Dupont"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="employeeErrors.name" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.name[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Adresse Email <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="employeeForm.email"
+                            type="email"
+                            required
+                            placeholder="Ex: jean.dupont@entreprise.com"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="employeeErrors.email" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.email[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mot de Passe <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="employeeForm.password"
+                            type="password"
+                            required
+                            placeholder="Minimum 8 caractères"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="employeeErrors.password" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.password[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Téléphone</label>
+                        <input
+                            v-model="employeeForm.phone"
+                            type="text"
+                            placeholder="Ex: +237 670 000 000"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="employeeErrors.phone" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.phone[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Poste / Fonction</label>
+                        <input
+                            v-model="employeeForm.position"
+                            type="text"
+                            placeholder="Ex: Chef d'Agence, Comptable..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="employeeErrors.position" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.position[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rôle <span class="text-red-500">*</span></label>
+                        <select
+                            v-model="employeeForm.role_id"
+                            required
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                        >
+                            <option value="" disabled>Sélectionner un rôle</option>
+                            <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.name }}</option>
+                        </select>
+                        <span v-if="employeeErrors.role_id" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.role_id[0] }}</span>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Affectation à une Agence</label>
+                        <select
+                            v-model="employeeForm.agency_id"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                        >
+                            <option :value="null">Aucune agence (Siège / Non affecté)</option>
+                            <option v-for="agency in agencies" :key="agency.id" :value="agency.id">{{ agency.name }}</option>
+                        </select>
+                        <span v-if="employeeErrors.agency_id" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.agency_id[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showEmployeeModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isEmployeeSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isEmployeeSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>Créer le Collaborateur</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
+        <!-- Add/Edit Category Modal -->
+        <ModalPremium
+            :show="showCategoryModal"
+            :title="isEditingCategory ? 'Modifier la Catégorie' : 'Ajouter une Catégorie'"
+            :subtitle="isEditingCategory ? 'Modifiez les détails de cette catégorie' : 'Créez une nouvelle catégorie pour classifier vos biens immobiliers'"
+            size="md"
+            type="default"
+            @close="showCategoryModal = false"
+        >
+            <form @submit.prevent="submitCategoryForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom de la Catégorie <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="categoryForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Appartement, Bureau, Studio..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="categoryErrors.nom" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="categoryForm.description"
+                            rows="3"
+                            placeholder="Décrivez cette catégorie..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="categoryErrors.description" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showCategoryModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isCategorySubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isCategorySubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingCategory ? 'Mettre à Jour' : 'Créer la Catégorie' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
+        <!-- Notification -->
+        <NotificationPremium
+            :show="notification.show"
+            :type="notification.type"
+            :title="notification.title"
+            :message="notification.message"
+            @close="closeNotification"
+        />
     </div>
 </template>
 
 <script setup>
+import { ref, watch, computed, onMounted } from 'vue';
+import { usePage, router as inertiaRouter } from '@inertiajs/vue3';
+import ModalPremium from '../../../../Components/ModalPremium.vue';
+import NotificationPremium from '../../../../Components/NotificationPremium.vue';
+
+const page = usePage();
+
+const roles = ref(page.props.roles || []);
+const users = ref(page.props.users || []);
+const pendingUsers = ref(page.props.pendingUsers || []);
+
+// Categories state
+const categories = ref([]);
+const showCategoryModal = ref(false);
+const isEditingCategory = ref(false);
+const editingCategoryId = ref(null);
+const isCategorySubmitting = ref(false);
+const categoryErrors = ref({});
+const categoryForm = ref({
+    nom: '',
+    description: ''
+});
+const getAgenciesArray = (val) => {
+    if (!val) return [];
+    return Array.isArray(val) ? val : (val.data || []);
+};
+const agencies = ref(getAgenciesArray(page.props.agencies));
+
+// Modal & Form state
+const showRoleModal = ref(false);
+const isEditing = ref(false);
+const editingRoleId = ref(null);
+const isSubmitting = ref(false);
+const errors = ref({});
+
+const roleForm = ref({
+    name: '',
+    description: '',
+    permissions: []
+});
+
+const showEmployeeModal = ref(false);
+const isEmployeeSubmitting = ref(false);
+const employeeErrors = ref({});
+const employeeForm = ref({
+    name: '',
+    email: '',
+    password: '',
+    role_id: '',
+    agency_id: null,
+    position: '',
+    phone: ''
+});
+
+const notification = ref({
+    show: false,
+    type: 'success',
+    title: '',
+    message: ''
+});
+
+// Available system permissions
+const availablePermissions = [
+    { id: 'manage_agencies', label: 'Gérer les agences', desc: 'Permet de créer, modifier et supprimer des agences' },
+    { id: 'manage_properties', label: 'Gérer les biens immobiliers', desc: 'Permet de gérer les bâtiments, logements et contrats' },
+    { id: 'manage_accounting', label: 'Gérer la comptabilité', desc: 'Accès complet aux factures et paiements' },
+    { id: 'manage_maintenance', label: 'Gérer la maintenance', desc: 'Permet de gérer et attribuer des tickets de maintenance' },
+    { id: 'manage_users', label: 'Gérer les utilisateurs', desc: 'Permet de gérer les utilisateurs, rôles et permissions' },
+    { id: 'basic_access', label: 'Accès de base', desc: 'Accès limité en lecture aux fonctionnalités de base' },
+];
+
+const activeUsersCount = computed(() => {
+    return users.value.filter(u => u.status === 'active').length;
+});
+
+// Watch for props updates
+watch(
+    () => page.props.roles,
+    (val) => { if (val) roles.value = val; }
+);
+
+watch(
+    () => page.props.users,
+    (val) => { if (val) users.value = val; }
+);
+
+watch(
+    () => page.props.pendingUsers,
+    (val) => { if (val) pendingUsers.value = val; }
+);
+
+watch(
+    () => page.props.agencies,
+    (val) => { if (val) agencies.value = getAgenciesArray(val); }
+);
+
+onMounted(() => {
+    if (!page.props.roles) {
+        loadData();
+    }
+    fetchCategories();
+});
+
+const loadData = () => {
+    inertiaRouter.get(route('roles.index'), {}, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['roles', 'users', 'pendingUsers', 'agencies'],
+    });
+};
+
+const getRoleTheme = (slug) => {
+    const themes = {
+        admin: {
+            bg: 'from-purple-50 to-purple-100/50 border-purple-200',
+            badge: 'bg-purple-500 text-white',
+            iconBg: 'bg-purple-500',
+            text: 'text-purple-600 hover:text-purple-700',
+            border: 'border-purple-200',
+        },
+        chef_agence: {
+            bg: 'from-indigo-50 to-indigo-100/50 border-indigo-200',
+            badge: 'bg-indigo-500 text-white',
+            iconBg: 'bg-indigo-500',
+            text: 'text-indigo-600 hover:text-indigo-700',
+            border: 'border-indigo-200',
+        },
+        gestionnaire: {
+            bg: 'from-blue-50 to-blue-100/50 border-blue-200',
+            badge: 'bg-blue-500 text-white',
+            iconBg: 'bg-blue-500',
+            text: 'text-blue-600 hover:text-blue-700',
+            border: 'border-blue-200',
+        },
+        comptable: {
+            bg: 'from-emerald-50 to-emerald-100/50 border-emerald-200',
+            badge: 'bg-emerald-500 text-white',
+            iconBg: 'bg-emerald-500',
+            text: 'text-emerald-600 hover:text-emerald-700',
+            border: 'border-emerald-200',
+        },
+        maintenancier: {
+            bg: 'from-amber-50 to-amber-100/50 border-amber-200',
+            badge: 'bg-amber-500 text-white',
+            iconBg: 'bg-amber-500',
+            text: 'text-amber-600 hover:text-amber-700',
+            border: 'border-amber-200',
+        },
+        employer_simple: {
+            bg: 'from-slate-50 to-slate-100/50 border-slate-200',
+            badge: 'bg-slate-500 text-white',
+            iconBg: 'bg-slate-500',
+            text: 'text-slate-600 hover:text-slate-700',
+            border: 'border-slate-200',
+        },
+    };
+    return themes[slug] || {
+        bg: 'from-teal-50 to-teal-100/50 border-teal-200',
+        badge: 'bg-teal-500 text-white',
+        iconBg: 'bg-teal-500',
+        text: 'text-teal-600 hover:text-teal-700',
+        border: 'border-teal-200',
+    };
+};
+
+const getUserInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+};
+
+const formatLastLogin = (date) => {
+    if (!date) return 'Jamais';
+    const diff = new Date() - new Date(date);
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours < 1) return 'Récemment';
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (hours < 48) return 'Hier';
+    return new Date(date).toLocaleDateString('fr-FR');
+};
+
+const openCreateRoleModal = () => {
+    isEditing.value = false;
+    editingRoleId.value = null;
+    roleForm.value = {
+        name: '',
+        description: '',
+        permissions: ['basic_access']
+    };
+    errors.value = {};
+    showRoleModal.value = true;
+};
+
+const openEditRoleModal = (role) => {
+    isEditing.value = true;
+    editingRoleId.value = role.id;
+    roleForm.value = {
+        name: role.name,
+        description: role.description,
+        permissions: Array.isArray(role.permissions) ? [...role.permissions] : []
+    };
+    errors.value = {};
+    showRoleModal.value = true;
+};
+
+const togglePermission = (id) => {
+    const index = roleForm.value.permissions.indexOf(id);
+    if (index > -1) {
+        roleForm.value.permissions.splice(index, 1);
+    } else {
+        roleForm.value.permissions.push(id);
+    }
+};
+
+const submitRoleForm = async () => {
+    isSubmitting.value = true;
+    errors.value = {};
+    try {
+        const url = isEditing.value
+            ? route('roles.update', editingRoleId.value)
+            : route('roles.store');
+
+        const method = isEditing.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(roleForm.value),
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditing.value ? 'Le rôle a été mis à jour avec succès.' : 'Le rôle a été créé avec succès.'
+            );
+            showRoleModal.value = false;
+            loadData();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                errors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isSubmitting.value = false;
+    }
+};
+
+const deleteRole = async (role) => {
+    if (role.slug === 'admin') {
+        showNotification('error', 'Erreur', 'Le rôle Admin ne peut pas être supprimé.');
+        return;
+    }
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le rôle "${role.name}" ?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(route('roles.destroy', role.id), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le rôle a été supprimé avec succès.');
+            loadData();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le rôle.');
+    }
+};
+
+const handleUserRoleChange = async (user, roleId) => {
+    try {
+        const response = await fetch(route('users.update-role', user.id), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify({ role_id: roleId ? parseInt(roleId) : null })
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', `Le rôle de ${user.name} a été mis à jour.`);
+            loadData();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de modifier le rôle.');
+    }
+};
+
+const toggleUserStatus = async (user) => {
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    await updateUserStatus(user, newStatus);
+};
+
+const approveRequest = async (user) => {
+    await updateUserStatus(user, 'active');
+};
+
+const rejectRequest = async (user) => {
+    await updateUserStatus(user, 'inactive');
+};
+
+const updateUserStatus = async (user, status) => {
+    try {
+        const response = await fetch(route('users.update-status', user.id), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify({ status })
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', `Le statut de ${user.name} a été mis à jour.`);
+            loadData();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de mettre à jour le statut.');
+    }
+};
+
+const openCreateEmployeeModal = () => {
+    employeeForm.value = {
+        name: '',
+        email: '',
+        password: '',
+        role_id: '',
+        agency_id: null,
+        position: '',
+        phone: ''
+    };
+    employeeErrors.value = {};
+    showEmployeeModal.value = true;
+};
+
+const submitEmployeeForm = async () => {
+    isEmployeeSubmitting.value = true;
+    employeeErrors.value = {};
+    try {
+        const response = await fetch(route('roles.store-employee'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(employeeForm.value),
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                'Le collaborateur a été créé avec succès.'
+            );
+            showEmployeeModal.value = false;
+            loadData();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                employeeErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isEmployeeSubmitting.value = false;
+    }
+};
+
+const fetchCategories = async () => {
+    try {
+        const response = await fetch('/api/categories', {
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        if (response.ok) {
+            categories.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération des catégories:", error);
+    }
+};
+
+const openCreateCategoryModal = () => {
+    isEditingCategory.value = false;
+    editingCategoryId.value = null;
+    categoryForm.value = {
+        nom: '',
+        description: ''
+    };
+    categoryErrors.value = {};
+    showCategoryModal.value = true;
+};
+
+const openEditCategoryModal = (cat) => {
+    isEditingCategory.value = true;
+    editingCategoryId.value = cat.id;
+    categoryForm.value = {
+        nom: cat.nom,
+        description: cat.description || ''
+    };
+    categoryErrors.value = {};
+    showCategoryModal.value = true;
+};
+
+const submitCategoryForm = async () => {
+    isCategorySubmitting.value = true;
+    categoryErrors.value = {};
+    try {
+        const url = isEditingCategory.value
+            ? `/api/categories/${editingCategoryId.value}`
+            : '/api/categories';
+        const method = isEditingCategory.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(categoryForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingCategory.value ? 'La catégorie a été mise à jour avec succès.' : 'La catégorie a été créée avec succès.'
+            );
+            showCategoryModal.value = false;
+            fetchCategories();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                categoryErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isCategorySubmitting.value = false;
+    }
+};
+
+const deleteCategory = async (cat) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${cat.nom}" ?`)) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/categories/${cat.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', 'La catégorie a été supprimée avec succès.');
+            fetchCategories();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer la catégorie.');
+    }
+};
+
+let notificationTimeout = null;
+const showNotification = (type, title, message) => {
+    notification.value = {
+        show: true,
+        type,
+        title,
+        message
+    };
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+    notificationTimeout = setTimeout(() => {
+        notification.value.show = false;
+    }, 5000);
+};
+
+const closeNotification = () => {
+    notification.value.show = false;
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+};
 </script>

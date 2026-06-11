@@ -10,6 +10,7 @@
                 <p class="text-slate-600 mt-1">Gérer les immeubles, localisations et caractéristiques structurelles.</p>
             </div>
             <button
+                type="button"
                 @click="openAddModal"
                 class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
@@ -139,6 +140,9 @@
                                     <span class="text-xs text-slate-500">
                                         {{ batiment.quartier ? batiment.quartier + ', ' : '' }}{{ batiment.ville }} ({{ getCountryName(batiment.pays) }})
                                     </span>
+                                    <span v-if="batiment.agency_id" class="text-[10px] font-semibold text-emerald-600 mt-1 uppercase tracking-wider">
+                                        Géré par: {{ getAgencyName(batiment.agency_id) }}
+                                    </span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -166,8 +170,27 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button 
+                                        @click="openDetailModal(batiment)" 
+                                        class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                        title="Détails du bâtiment"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="openCompleteModal(batiment)" 
+                                        class="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                        title="Compléter les informations"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                        </svg>
+                                    </button>
+                                    <button 
                                         @click="openEditModal(batiment)" 
-                                        class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                        class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                                         title="Modifier la fiche"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,18 +266,32 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Propriétaire</label>
                             <select 
-                                v-model="formData.proprietaire" 
-                                :class="[
-                                    'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700',
-                                    formData.proprietaire ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
-                                ]"
+                                v-model="formData.proprietaire_id" 
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
                             >
-                                <option value="">Sélectionner un propriétaire</option>
-                                <option value="Jean Dupont">Jean Dupont</option>
-                                <option value="Marie Martin">Marie Martin</option>
-                                <option value="Pierre Bernard">Pierre Bernard</option>
-                                <option value="Sophie Petit">Sophie Petit</option>
-                                <option value="Michel Leroy">Michel Leroy</option>
+                                <option value="">Aucun propriétaire</option>
+                                <option v-if="loadingProprietaires" disabled>Chargement...</option>
+                                <option 
+                                    v-for="prop in proprietaires" 
+                                    :key="prop.id" 
+                                    :value="prop.id"
+                                >
+                                    {{ prop.nom_complet }} {{ prop.type === 'personne_morale' ? '(Société)' : '' }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Agence Affectée -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Agence Affectée</label>
+                            <select 
+                                v-model="formData.agency_id" 
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
+                            >
+                                <option value="">Aucune agence (Géré par le siège)</option>
+                                <option v-for="agency in agencies" :key="agency.id" :value="agency.id">
+                                    {{ agency.name }} ({{ agency.city }})
+                                </option>
                             </select>
                         </div>
 
@@ -356,6 +393,30 @@
                                 ]"
                             >
                         </div>
+
+                        <!-- Latitude & Longitude -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Latitude</label>
+                                <input 
+                                    v-model.number="formData.latitude" 
+                                    type="number" 
+                                    step="any" 
+                                    placeholder="Ex: 4.0489" 
+                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Longitude</label>
+                                <input 
+                                    v-model.number="formData.longitude" 
+                                    type="number" 
+                                    step="any" 
+                                    placeholder="Ex: 9.7002" 
+                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+                                >
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -369,10 +430,14 @@
                     </button>
                     <button 
                         @click="saveBatiment" 
-                        :disabled="!formData.nom || !formData.proprietaire || !formData.pays || !formData.ville || !formData.adresse"
-                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm"
+                        :disabled="!formData.nom || !formData.pays || !formData.ville || !formData.adresse || saving"
+                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm flex items-center gap-2"
                     >
-                        Enregistrer
+                        <svg v-if="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
                     </button>
                 </div>
             </div>
@@ -425,28 +490,284 @@
                 <button @click="closeError" class="w-full px-4 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition text-sm">Fermer</button>
             </div>
         </div>
+
+        <!-- Detail Modal -->
+        <div v-if="showDetailModal && selectedBatiment" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden animate-scale-up border border-slate-100">
+                <!-- Header -->
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-violet-50/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Détails du Bâtiment</h2>
+                            <p class="text-xs text-slate-500">Consultez les caractéristiques structurelles et administratives.</p>
+                        </div>
+                    </div>
+                    <button @click="closeDetailModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto max-h-[70vh] space-y-6">
+                    <!-- General Info -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-3">Identification</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Nom du bâtiment</span>
+                                <span class="font-bold text-slate-800">{{ selectedBatiment.nom }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Référence interne</span>
+                                <span class="font-bold text-slate-800">{{ selectedBatiment.reference || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Propriétaire</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.proprietaire_nom || 'Siège / Aucun' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Agence gérante</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.agency_name || 'Géré par le siège' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Localisation -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-3">Localisation</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="col-span-2">
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Adresse postale</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.adresse }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Ville & Quartier</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.quartier ? selectedBatiment.quartier + ', ' : '' }}{{ selectedBatiment.ville }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Pays & Code Postal</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.pays }} {{ selectedBatiment.code_postal ? '('+selectedBatiment.code_postal+')' : '' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Latitude</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.latitude || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Longitude</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.longitude || '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacity & Details -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-3">Spécifications & Capacité</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Étages</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.etages }} étages</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Appartements / Logements</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.appartements }} unités</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Surface totale</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.surface_totale ? selectedBatiment.surface_totale + ' m²' : '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Année de construction</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.annee_construction || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Type de bâtiment</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.type_batiment || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Type de structure</span>
+                                <span class="font-semibold text-slate-800">{{ selectedBatiment.type_structure || '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Description -->
+                    <div v-if="selectedBatiment.description || selectedBatiment.notes_internes">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-3">Informations complémentaires</h3>
+                        <div class="space-y-3 text-sm">
+                            <div v-if="selectedBatiment.description">
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Description</span>
+                                <p class="text-slate-600 italic whitespace-pre-wrap">"{{ selectedBatiment.description }}"</p>
+                            </div>
+                            <div v-if="selectedBatiment.notes_internes">
+                                <span class="block text-xs text-slate-400 font-semibold uppercase">Notes internes</span>
+                                <p class="text-slate-600 whitespace-pre-wrap">{{ selectedBatiment.notes_internes }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                    <button @click="closeDetailModal" class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 shadow transition text-sm">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Info Modal -->
+        <div v-if="showCompleteModal && selectedBatiment" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-up border border-slate-100">
+                <!-- Header -->
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Compléter les informations</h2>
+                            <p class="text-xs text-slate-500">Renseignez les informations manquantes pour **{{ selectedBatiment.nom }}**.</p>
+                        </div>
+                    </div>
+                    <button @click="closeCompleteModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto max-h-[60vh] space-y-4">
+                    <div v-if="emptyFields.length === 0" class="text-center py-8 text-slate-500 text-sm font-semibold">
+                        Toutes les informations essentielles de ce bâtiment sont déjà renseignées !
+                    </div>
+                    <div v-else class="space-y-4">
+                        <div v-for="field in emptyFields" :key="field.key">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">{{ field.label }}</label>
+                            
+                            <!-- Textarea -->
+                            <textarea 
+                                v-if="field.type === 'textarea'"
+                                v-model="completeFormData[field.key]"
+                                rows="3"
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+                                :placeholder="'Saisir la description ou note...'"
+                            ></textarea>
+
+                            <!-- Select -->
+                            <select
+                                v-else-if="field.type === 'select'"
+                                v-model="completeFormData[field.key]"
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
+                            >
+                                <option value="">Sélectionner...</option>
+                                <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                            </select>
+
+                            <!-- Number or Text -->
+                            <input
+                                v-else
+                                v-model="completeFormData[field.key]"
+                                :type="field.type"
+                                :step="field.step || '1'"
+                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+                                :placeholder="'Ex: ' + (field.key === 'code_postal' ? '33000' : field.key === 'surface_totale' ? '1200' : '0')"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+                    <button @click="closeCompleteModal" class="px-5 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition text-sm">Annuler</button>
+                    <button 
+                        v-if="emptyFields.length > 0"
+                        @click="saveCompleteInfo" 
+                        :disabled="saving"
+                        class="px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm flex items-center gap-2"
+                    >
+                        <svg v-if="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
-const defaultBatiments = [
-    { id: 1, nom: 'Immeuble A', adresse: '123 Rue de Paris', etages: 5, appartements: 25, statut: 'Actif', pays: 'FR', ville: 'Paris', quartier: 'Le Marais', proprietaire: 'Jean Dupont' },
-    { id: 2, nom: 'Immeuble B', adresse: '456 Avenue Lyon', etages: 7, appartements: 35, statut: 'Actif', pays: 'FR', ville: 'Lyon', quartier: 'Vieux Lyon', proprietaire: 'Marie Martin' },
-    { id: 3, nom: 'Immeuble C', adresse: '789 Boulevard Nice', etages: 3, appartements: 15, statut: 'Maintenance', pays: 'FR', ville: 'Nice', quartier: 'Vieux Nice', proprietaire: 'Pierre Bernard' },
-    { id: 4, nom: 'Immeuble D', adresse: '321 Rue Marseille', etages: 8, appartements: 40, statut: 'Actif', pays: 'CM', ville: 'Douala', quartier: 'Akwa', proprietaire: 'Sophie Petit' },
-    { id: 5, nom: 'Immeuble E', adresse: '654 Avenue Toulouse', etages: 4, appartements: 20, statut: 'Maintenance', pays: 'CM', ville: 'Yaoundé', quartier: 'Bastos', proprietaire: 'Michel Leroy' },
-];
+const page = usePage();
+const agencies = computed(() => {
+    const raw = page.props.agencies;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : (raw.data || []);
+});
 
-const batiments = ref(JSON.parse(localStorage.getItem('immobilier_batiments')) || defaultBatiments);
-if (!localStorage.getItem('immobilier_batiments')) {
-    localStorage.setItem('immobilier_batiments', JSON.stringify(defaultBatiments));
-}
-
-const saveBatimentsToStorage = () => {
-    localStorage.setItem('immobilier_batiments', JSON.stringify(batiments.value));
+const getAgencyName = (agencyId) => {
+    const agency = agencies.value.find(a => Number(a.id) === Number(agencyId));
+    return agency ? agency.name : 'Siège';
 };
+
+// ── État ─────────────────────────────────────────────────────────────────────
+const batiments = ref([]);
+const proprietaires = ref([]);
+const loadingBatiments = ref(false);
+const loadingProprietaires = ref(false);
+const saving = ref(false);
+const deleting = ref(false);
+
+// ── API calls ────────────────────────────────────────────────────────────────
+const fetchBatiments = async () => {
+    loadingBatiments.value = true;
+    try {
+        const res = await fetch('/api/batiments', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        batiments.value = await res.json();
+    } catch (err) {
+        console.error('fetchBatiments:', err);
+        batiments.value = [];
+    } finally {
+        loadingBatiments.value = false;
+    }
+};
+
+const fetchProprietaires = async () => {
+    loadingProprietaires.value = true;
+    try {
+        const res = await fetch('/api/proprietaires', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        proprietaires.value = await res.json();
+    } catch (err) {
+        console.error('fetchProprietaires:', err);
+        proprietaires.value = [];
+    } finally {
+        loadingProprietaires.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchBatiments();
+    fetchProprietaires();
+});
 
 const searchQuery = ref('');
 const statusFilter = ref('');
@@ -480,6 +801,11 @@ const batimentsActifs = computed(() => batiments.value.filter(b => b.statut === 
 const batimentsMaintenance = computed(() => batiments.value.filter(b => b.statut === 'Maintenance').length);
 
 const showModal = ref(false);
+const showDetailModal = ref(false);
+const showCompleteModal = ref(false);
+const selectedBatiment = ref(null);
+const completeFormData = ref({});
+const emptyFields = ref([]);
 const showDeleteModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
@@ -506,7 +832,7 @@ const errorMessage = ref('');
 
 const formData = ref({
     nom: '',
-    proprietaire: '',
+    proprietaire_id: '',
     pays: '',
     ville: '',
     quartier: '',
@@ -514,6 +840,9 @@ const formData = ref({
     etages: '',
     appartements: '',
     statut: 'Actif',
+    agency_id: '',
+    latitude: '',
+    longitude: '',
 });
 
 // Countries list
@@ -1286,6 +1615,8 @@ const detectLocation = async () => {
         });
 
         const { latitude, longitude } = position.coords;
+        formData.value.latitude = latitude;
+        formData.value.longitude = longitude;
 
         // Reverse geocode to get country and city
         const response = await fetch(
@@ -1319,14 +1650,17 @@ const openAddModal = () => {
     editingBatiment.value = null;
     formData.value = { 
         nom: '', 
-        proprietaire: '',
+        proprietaire_id: '',
         pays: '',
         ville: '',
         quartier: '',
         adresse: '', 
         etages: '', 
         appartements: '',
-        statut: 'Actif'
+        statut: 'Actif',
+        agency_id: '',
+        latitude: '',
+        longitude: ''
     };
     cities.value = [];
     neighborhoods.value = [];
@@ -1335,7 +1669,13 @@ const openAddModal = () => {
 
 const openEditModal = async (batiment) => {
     editingBatiment.value = batiment;
-    formData.value = { ...batiment };
+    formData.value = { 
+        ...batiment,
+        proprietaire_id: batiment.proprietaire_id || '',
+        agency_id: batiment.agency_id || '',
+        latitude: batiment.latitude !== undefined && batiment.latitude !== null ? batiment.latitude : '',
+        longitude: batiment.longitude !== undefined && batiment.longitude !== null ? batiment.longitude : ''
+    };
     showModal.value = true;
 
     if (formData.value.pays) {
@@ -1361,56 +1701,189 @@ const closeDeleteModal = () => {
     deletingBatiment.value = null;
 };
 
-const saveBatiment = () => {
+const openDetailModal = (batiment) => {
+    selectedBatiment.value = batiment;
+    showDetailModal.value = true;
+};
+
+const closeDetailModal = () => {
+    showDetailModal.value = false;
+    selectedBatiment.value = null;
+};
+
+const openCompleteModal = (batiment) => {
+    selectedBatiment.value = batiment;
+    completeFormData.value = {};
+    emptyFields.value = [];
+
+    // Fields to check for empty values
+    const fieldsToCheck = [
+        { key: 'code_postal', label: 'Code Postal', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'notes_internes', label: 'Notes Internes', type: 'textarea' },
+        { key: 'surface_totale', label: 'Surface Totale (m²)', type: 'number' },
+        { key: 'annee_construction', label: 'Année de Construction', type: 'number' },
+        { key: 'type_batiment', label: 'Type de Bâtiment', type: 'select', options: ['Résidentiel', 'Commercial', 'Mixte', 'Industriel'] },
+        { key: 'type_structure', label: 'Type de Structure', type: 'select', options: ['Béton', 'Bois', 'Métal', 'Mixte'] },
+        { key: 'nombre_parkings', label: 'Nombre de Parkings', type: 'number' },
+        { key: 'latitude', label: 'Latitude', type: 'number', step: 'any' },
+        { key: 'longitude', label: 'Longitude', type: 'number', step: 'any' }
+    ];
+
+    fieldsToCheck.forEach(field => {
+        const val = batiment[field.key];
+        if (val === null || val === undefined || val === '' || val === 0) {
+            emptyFields.value.push(field);
+            completeFormData.value[field.key] = '';
+        }
+    });
+
+    showCompleteModal.value = true;
+};
+
+const closeCompleteModal = () => {
+    showCompleteModal.value = false;
+    selectedBatiment.value = null;
+    completeFormData.value = {};
+    emptyFields.value = [];
+};
+
+const saveCompleteInfo = async () => {
+    if (!selectedBatiment.value) return;
+    saving.value = true;
+    try {
+        const payload = {
+            ...selectedBatiment.value,
+            ...completeFormData.value
+        };
+
+        const res = await fetch(`/api/batiments/${selectedBatiment.value.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Erreur lors de la mise à jour.');
+
+        await fetchBatiments();
+        closeCompleteModal();
+        successMessage.value = 'Informations complétées avec succès.';
+        showSuccess.value = true;
+    } catch (err) {
+        errorMessage.value = err.message || 'Erreur lors de la sauvegarde.';
+        showError.value = true;
+    } finally {
+        saving.value = false;
+    }
+};
+
+const saveBatiment = async () => {
     if (!formData.value.nom || !formData.value.adresse || !formData.value.pays || !formData.value.ville) {
         errorMessage.value = 'Le nom, le pays, la ville et l\'adresse sont requis.';
         showError.value = true;
         return;
     }
 
-    const batData = {
-        nom: formData.value.nom,
-        proprietaire: formData.value.proprietaire || '',
-        pays: formData.value.pays,
-        ville: formData.value.ville,
-        quartier: formData.value.quartier || '',
-        adresse: formData.value.adresse,
-        etages: Number(formData.value.etages || 0),
-        appartements: Number(formData.value.appartements || 0),
-        statut: formData.value.statut || 'Actif',
+    saving.value = true;
+
+    const payload = {
+        nom:             formData.value.nom,
+        proprietaire_id: formData.value.proprietaire_id || null,
+        pays:            formData.value.pays,
+        ville:           formData.value.ville,
+        quartier:        formData.value.quartier || null,
+        adresse:         formData.value.adresse,
+        etages:          Number(formData.value.etages || 0),
+        appartements:    Number(formData.value.appartements || 0),
+        statut:          formData.value.statut || 'Actif',
+        agency_id:       formData.value.agency_id || null,
+        latitude:        formData.value.latitude !== '' && formData.value.latitude !== null ? Number(formData.value.latitude) : null,
+        longitude:       formData.value.longitude !== '' && formData.value.longitude !== null ? Number(formData.value.longitude) : null,
     };
 
-    if (editingBatiment.value) {
-        const index = batiments.value.findIndex(b => b.id === editingBatiment.value.id);
-        if (index !== -1) {
-            batiments.value[index] = {
-                id: editingBatiment.value.id,
-                ...batData
-            };
+    try {
+        let res;
+        if (editingBatiment.value) {
+            res = await fetch(`/api/batiments/${editingBatiment.value.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
+        } else {
+            res = await fetch('/api/batiments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
         }
-        successMessage.value = 'Bâtiment modifié avec succès';
-    } else {
-        const newId = Math.max(...batiments.value.map(b => b.id), 0) + 1;
-        batiments.value.push({
-            id: newId,
-            ...batData
-        });
-        successMessage.value = 'Bâtiment ajouté avec succès';
-    }
 
-    saveBatimentsToStorage();
-    closeModal();
-    showSuccess.value = true;
+        const data = await res.json();
+
+        if (!res.ok) {
+            const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Erreur lors de la sauvegarde.');
+            errorMessage.value = msg;
+            showError.value = true;
+            return;
+        }
+
+        // Refresh list from server
+        await fetchBatiments();
+        successMessage.value = editingBatiment.value ? 'Bâtiment modifié avec succès' : 'Bâtiment ajouté avec succès';
+        closeModal();
+        showSuccess.value = true;
+
+    } catch (err) {
+        console.error('saveBatiment:', err);
+        errorMessage.value = 'Erreur de connexion. Veuillez réessayer.';
+        showError.value = true;
+    } finally {
+        saving.value = false;
+    }
 };
 
-const confirmDelete = () => {
-    const index = batiments.value.findIndex(b => b.id === deletingBatiment.value.id);
-    if (index !== -1) {
-        batiments.value.splice(index, 1);
+const confirmDelete = async () => {
+    if (!deletingBatiment.value) return;
+    deleting.value = true;
+    try {
+        const res = await fetch(`/api/batiments/${deletingBatiment.value.id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await fetchBatiments();
         successMessage.value = 'Bâtiment supprimé avec succès';
-        saveBatimentsToStorage();
         closeDeleteModal();
         showSuccess.value = true;
+    } catch (err) {
+        console.error('confirmDelete:', err);
+        errorMessage.value = 'Erreur lors de la suppression.';
+        showError.value = true;
+    } finally {
+        deleting.value = false;
     }
 };
 

@@ -6,8 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\HasCustomUuid;
+
 class CompanyProfile extends Model
 {
+    use HasCustomUuid;
     protected $fillable = [
         'user_id',
         'business_type',
@@ -33,5 +36,15 @@ class CompanyProfile extends Model
     public function legalDocuments(): HasMany
     {
         return $this->hasMany(CompanyLegalDocument::class);
+    }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    public function agencies(): HasMany
+    {
+        return $this->hasMany(Agency::class);
     }
 }

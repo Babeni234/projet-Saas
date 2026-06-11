@@ -161,8 +161,8 @@ import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { router as inertiaRouter } from '@inertiajs/vue3';
 
-const viewAgency = (id) => inertiaRouter.visit(`/agencies/${id}`);
-const createAgency = () => inertiaRouter.visit('/agencies/create');
+const viewAgency = (id) => inertiaRouter.visit(route('agencies.show', id));
+const createAgency = () => inertiaRouter.visit(route('agencies.create'));
 
 const stats = ref({
     total: 0,
@@ -179,7 +179,11 @@ const recentAgencies = computed(() => {
 
 const loadStatistics = async () => {
     try {
-        const response = await fetch('/agencies/statistics');
+        const response = await fetch(route('agencies.statistics'), {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         stats.value = await response.json();
     } catch (error) {
         console.error('Error loading statistics:', error);
@@ -188,7 +192,11 @@ const loadStatistics = async () => {
 
 const loadAgencies = async () => {
     try {
-        const response = await fetch('/agencies?per_page=5');
+        const response = await fetch(route('agencies.index') + '?per_page=5', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         const data = await response.json();
         agencies.value = data.agencies?.data || [];
     } catch (error) {

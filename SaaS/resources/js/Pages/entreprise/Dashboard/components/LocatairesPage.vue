@@ -7,7 +7,7 @@
                     Gestion des Locataires
                     <span class="text-amber-500 text-sm font-semibold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Module Immobilier</span>
                 </h1>
-                <p class="text-slate-600 mt-1">Gérer les résidents, coordonner les informations de contact et suivre les dépôts de garantie.</p>
+                <p class="text-slate-600 mt-1">Gérer les résidents, coordonner les informations de contact, affecter aux agences et suivre leurs dossiers.</p>
             </div>
             <button
                 @click="openAddModal"
@@ -23,58 +23,57 @@
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Total Locataires -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/20 animate-fade-in" style="animation-delay: 0ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/20">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Locataires</p>
-                        <p class="text-3xl font-bold text-slate-900 mt-1 animate-number">{{ totalLocataires }}</p>
+                        <p class="text-3xl font-bold text-slate-900 mt-1">{{ totalLocataires }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
-                        <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100/80 flex items-center justify-center text-amber-600">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                         </svg>
                     </div>
                 </div>
             </div>
             <!-- Locataires Actifs -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20 animate-fade-in" style="animation-delay: 100ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Membres Actifs</p>
-                        <p class="text-3xl font-bold text-emerald-600 mt-1 animate-number">{{ locatairesActifs }}</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Actifs / Affectés</p>
+                        <p class="text-3xl font-bold text-emerald-600 mt-1">{{ locatairesActifs }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
-                        <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100/80 flex items-center justify-center text-emerald-600">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
             </div>
             <!-- Suspendus -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-rose-500/20 animate-fade-in" style="animation-delay: 200ms">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-rose-500/20">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Suspendus / Litiges</p>
-                        <p class="text-3xl font-bold text-rose-600 mt-1 animate-number">{{ locatairesSuspendus }}</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Suspendus</p>
+                        <p class="text-3xl font-bold text-rose-600 mt-1">{{ locatairesSuspendus }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-rose-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
-                        <svg class="w-6 h-6 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="w-12 h-12 rounded-xl bg-rose-100/80 flex items-center justify-center text-rose-600">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
             </div>
-            <!-- Total Garanties -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/20 animate-fade-in" style="animation-delay: 300ms">
+            <!-- Inactifs -->
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100 transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-slate-500/20">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Total Cautions</p>
-                        <p class="text-3xl font-bold text-slate-900 mt-1 animate-number">{{ formatCurrency(totalGaranties) }}</p>
+                        <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Inactifs</p>
+                        <p class="text-3xl font-bold text-slate-500 mt-1">{{ locatairesInactifs }}</p>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-violet-100/80 flex items-center justify-center transform transition-transform duration-300 hover:rotate-12">
-                        <svg class="w-6 h-6 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.312-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.312.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
+                    <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
@@ -90,7 +89,7 @@
                 <input
                     v-model="searchQuery"
                     type="text"
-                    placeholder="Rechercher par nom, email ou référence de logement..."
+                    placeholder="Rechercher par nom, email ou agence..."
                     class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm"
                 >
             </div>
@@ -102,6 +101,7 @@
                 >
                     <option value="">Tous les statuts</option>
                     <option value="Actif">Actifs</option>
+                    <option value="Affecté">Affectés</option>
                     <option value="Suspendu">Suspendus</option>
                     <option value="Inactif">Inactifs</option>
                 </select>
@@ -115,9 +115,9 @@
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Locataire</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Coordonnées de Contact</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Coordonnées</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Agence gérante</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Logement Occupé</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Dépôt de Garantie</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut Dossier</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -126,7 +126,13 @@
                         <tr v-for="locataire in filteredLocataires" :key="locataire.id" class="hover:bg-slate-50/80 transition-all duration-150">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                                    <img 
+                                        v-if="locataire.profil_url" 
+                                        :src="locataire.profil_url" 
+                                        class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm"
+                                        @click="zoomImage(locataire.profil_url)"
+                                    />
+                                    <div v-else class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
                                         {{ locataire.nom.charAt(0).toUpperCase() }}
                                     </div>
                                     <div>
@@ -143,13 +149,18 @@
                                         </svg>
                                         {{ locataire.email }}
                                     </span>
-                                    <span class="flex items-center gap-1.5 text-xs text-slate-500">
+                                    <span class="flex items-center gap-1.5 text-xs text-slate-500" v-if="locataire.telephone">
                                         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                         </svg>
                                         {{ locataire.telephone }}
                                     </span>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                                <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs border border-slate-200">
+                                    {{ locataire.agency_name || 'Siège / Toutes' }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
@@ -165,24 +176,35 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-bold text-amber-600 text-sm bg-amber-50/60 border border-amber-100 px-3 py-1.5 rounded-xl">
-                                    {{ formatCurrency(locataire.garantie) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="[
                                     'px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 shadow-sm',
-                                    locataire.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : locataire.statut === 'Suspendu' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                    locataire.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                    locataire.statut === 'Affecté' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    locataire.statut === 'Suspendu' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                    'bg-slate-50 text-slate-600 border-slate-200'
                                 ]">
                                     <span :class="[
                                         'w-1.5 h-1.5 rounded-full',
-                                        locataire.statut === 'Actif' ? 'bg-emerald-500' : locataire.statut === 'Suspendu' ? 'bg-rose-500' : 'bg-slate-400'
+                                        locataire.statut === 'Actif' ? 'bg-emerald-500' :
+                                        locataire.statut === 'Affecté' ? 'bg-blue-500' :
+                                        locataire.statut === 'Suspendu' ? 'bg-rose-500' :
+                                        'bg-slate-400'
                                     ]"></span>
                                     {{ locataire.statut }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center justify-end gap-1.5">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button 
+                                        @click="openProfileModal(locataire)" 
+                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                        title="Voir le profil"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
                                     <button 
                                         @click="openEditModal(locataire)" 
                                         class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition"
@@ -190,6 +212,28 @@
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="toggleStatus(locataire)" 
+                                        class="p-2 text-slate-500 hover:bg-slate-50 rounded-lg transition"
+                                        :title="locataire.statut === 'Suspendu' ? 'Activer' : 'Suspendre'"
+                                    >
+                                        <svg v-if="locataire.statut === 'Suspendu'" class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <svg v-else class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        v-if="locataire.statut !== 'Inactif'"
+                                        @click="deactivateLocataire(locataire)" 
+                                        class="p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition"
+                                        title="Désactiver (Passer inactif)"
+                                    >
+                                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                         </svg>
                                     </button>
                                     <button 
@@ -227,7 +271,7 @@
                         </div>
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">{{ editingLocataire ? 'Modifier' : 'Ajouter' }} un Locataire</h2>
-                            <p class="text-xs text-slate-500">Renseignez les informations personnelles et locatives.</p>
+                            <p class="text-xs text-slate-500">Renseignez les informations personnelles et les documents justificatifs.</p>
                         </div>
                     </div>
                     <button @click="closeModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
@@ -238,7 +282,7 @@
                 </div>
 
                 <!-- Form Body -->
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form @submit.prevent="saveLocataire" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6" enctype="multipart/form-data">
                     <!-- Column 1: Personal Details -->
                     <div class="space-y-4">
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Informations Personnelles</h3>
@@ -251,10 +295,8 @@
                                     v-model="formData.nom" 
                                     type="text" 
                                     placeholder="Ex: Jean Dupont" 
-                                    :class="[
-                                        'w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white',
-                                        formData.nom ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
-                                    ]"
+                                    required
+                                    class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white"
                                 >
                                 <span class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,10 +314,8 @@
                                     v-model="formData.email" 
                                     type="email" 
                                     placeholder="Ex: jean.dupont@email.com" 
-                                    :class="[
-                                        'w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white',
-                                        isEmailValid ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'
-                                    ]"
+                                    required
+                                    class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white"
                                 >
                                 <span class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +333,7 @@
                                 <input 
                                     v-model="formData.telephone" 
                                     type="tel" 
-                                    placeholder="Ex: 06 12 34 56 78" 
+                                    placeholder="Ex: +237 6xx xxx xxx" 
                                     class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white"
                                 >
                                 <span class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400">
@@ -303,73 +343,197 @@
                                 </span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Column 2: Rental & Financial Details -->
-                    <div class="space-y-4">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Détails Locatifs & Financiers</h3>
-
-                        <!-- Logement (Dropdown selected from system units) -->
+                        <!-- Agence de rattachement -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Logement Assigné</label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Affecter à une agence</label>
                             <select 
-                                v-model="formData.logement" 
+                                v-model="formData.agency_id" 
                                 class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white text-slate-700"
                             >
-                                <option value="Aucun">Aucun logement</option>
-                                <option v-for="logement in systemLogements" :key="logement.id" :value="logement.reference">
-                                    {{ logement.reference }} - {{ logement.batiment || 'Sans bâtiment' }} ({{ logement.statut }})
+                                <option :value="null">Siège (Aucune agence)</option>
+                                <option v-for="agency in agencies" :key="agency.id" :value="agency.id">
+                                    {{ agency.name }}
                                 </option>
                             </select>
-                            <p class="text-[10px] text-slate-400 mt-1">La liste affiche les logements créés dans le module Immobilier.</p>
                         </div>
+                    </div>
 
-                        <!-- Garantie (Caution) -->
+                    <!-- Column 2: Photo and Documents -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5 mb-2">Photo & Documentations</h3>
+
+                        <!-- Image de Profil -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dépôt de Garantie (Caution)</label>
-                            <div class="relative">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photo de Profil</label>
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner">
+                                    <img v-if="photoPreview" :src="photoPreview" class="w-full h-full object-cover" />
+                                    <svg v-else class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
                                 <input 
-                                    v-model="formData.garantie" 
-                                    type="number" 
-                                    placeholder="Ex: 1500" 
-                                    class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white"
-                                >
-                                <span class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-sm font-bold text-slate-400">€</span>
+                                    type="file" 
+                                    accept="image/*" 
+                                    @change="onPhotoSelected"
+                                    class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 transition cursor-pointer"
+                                />
                             </div>
                         </div>
 
-                        <!-- Statut -->
+                        <!-- Documents justificatifs -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Statut Dossier</label>
-                            <select 
-                                v-model="formData.statut" 
-                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition bg-white text-slate-700"
-                            >
-                                <option value="Actif">Actif (Dossier validé & en règle)</option>
-                                <option value="Suspendu">Suspendu (Impayés ou litiges)</option>
-                                <option value="Inactif">Inactif (Départ ou dossier archivé)</option>
-                            </select>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Documents justificatifs (Max 10 à la fois)</label>
+                            <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 transition relative">
+                                <input 
+                                    type="file" 
+                                    multiple 
+                                    accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                                    @change="onDocsSelected"
+                                    class="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                </svg>
+                                <span class="text-xs text-slate-500 block">Glissez ou sélectionnez vos fichiers</span>
+                                <span class="text-[10px] text-slate-400">PDF, Word, Images jusqu'à 10 Mo</span>
+                            </div>
+
+                            <!-- Selected Docs list -->
+                            <div v-if="selectedDocFiles.length > 0" class="mt-3 space-y-1">
+                                <div v-for="(file, i) in selectedDocFiles" :key="i" class="flex items-center justify-between text-xs bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                    <span class="truncate max-w-[200px] text-slate-600 font-medium">{{ file.name }}</span>
+                                    <button type="button" @click="removeSelectedDoc(i)" class="text-rose-500 hover:text-rose-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </form>
 
                 <!-- Footer -->
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
                     <button 
+                        type="button"
                         @click="closeModal" 
                         class="px-5 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition text-sm"
                     >
                         Annuler
                     </button>
                     <button 
+                        type="button"
                         @click="saveLocataire" 
-                        :disabled="!formData.nom || !formData.email || !isEmailValid"
+                        :disabled="!formData.nom || !formData.email || !isEmailValid || saving"
                         class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium rounded-xl hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition text-sm"
                     >
-                        Enregistrer
+                        {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Locataire Profile / Details Modal -->
+        <div v-if="showProfileModal && selectedLocataire" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-up border border-slate-100 max-h-[90vh] flex flex-col">
+                <!-- Header -->
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50/55">
+                    <h2 class="text-lg font-bold text-slate-900">Profil du Locataire</h2>
+                    <button @click="closeProfileModal" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body (Scrollable) -->
+                <div class="p-6 space-y-6 overflow-y-auto flex-1">
+                    <div class="flex flex-col items-center text-center">
+                        <img 
+                            v-if="selectedLocataire.profil_url" 
+                            :src="selectedLocataire.profil_url" 
+                            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md cursor-pointer hover:scale-105 transition"
+                            @click="zoomImage(selectedLocataire.profil_url)"
+                        />
+                        <div v-else class="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-3xl shadow-md">
+                            {{ selectedLocataire.nom.charAt(0).toUpperCase() }}
+                        </div>
+                        <h3 class="font-bold text-xl text-slate-900 mt-3">{{ selectedLocataire.nom }}</h3>
+                        <span class="text-xs text-slate-400">LOC-{{ String(selectedLocataire.id).padStart(3, '0') }}</span>
+
+                        <span :class="[
+                            'px-3 py-1 rounded-full text-xs font-semibold border mt-2 shadow-sm',
+                            selectedLocataire.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            selectedLocataire.statut === 'Affecté' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            selectedLocataire.statut === 'Suspendu' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            'bg-slate-50 text-slate-600 border-slate-200'
+                        ]">
+                            {{ selectedLocataire.statut }}
+                        </span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5">Détails généraux</h4>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-slate-400 block text-xs">Email</span>
+                                <span class="text-slate-800 font-medium break-all">{{ selectedLocataire.email }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-xs">Téléphone</span>
+                                <span class="text-slate-800 font-medium">{{ selectedLocataire.telephone || 'Non renseigné' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-xs">Agence responsable</span>
+                                <span class="text-slate-800 font-medium">{{ selectedLocataire.agency_name || 'Siège / Toutes' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-xs">Bien loué</span>
+                                <span class="text-slate-800 font-medium">{{ selectedLocataire.logement || 'Aucun' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5">Documents</h4>
+                        
+                        <div v-if="selectedLocataire.documents && selectedLocataire.documents.length > 0" class="space-y-2">
+                            <div 
+                                v-for="(doc, idx) in selectedLocataire.documents" 
+                                :key="idx" 
+                                class="flex items-center justify-between bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-sm"
+                            >
+                                <a :href="doc.url" target="_blank" class="flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium truncate max-w-[320px]">
+                                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {{ doc.filename }}
+                                </a>
+                                <button @click="deleteLocDoc(idx)" class="p-1 hover:bg-rose-50 text-rose-500 rounded-lg transition" title="Supprimer le document">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p v-else class="text-xs text-slate-400 italic">Aucun document joint pour ce locataire.</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 text-right">
+                    <button @click="closeProfileModal" class="px-5 py-2 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition text-sm">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zoom Lightbox Modal -->
+        <div v-if="zoomedImageUrl" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-4" @click="zoomedImageUrl = null">
+            <img :src="zoomedImageUrl" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain animate-scale-up" />
         </div>
 
         <!-- Delete Modal -->
@@ -381,7 +545,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Supprimer ce locataire ?</h3>
-                <p class="text-center text-slate-500 mb-6 text-sm">Cette action est définitive et supprimera toutes les informations liées à <strong>{{ deletingLocataire?.nom }}</strong>.</p>
+                <p class="text-center text-slate-500 mb-6 text-sm">Cette action est définitive et supprimera toutes les informations liées à <strong>{{ deletingLocataire?.nom }}</strong> ainsi que son compte utilisateur associé.</p>
 
                 <div class="flex gap-3">
                     <button @click="closeDeleteModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
@@ -399,7 +563,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-bold text-center text-slate-900 mb-2">{{ successMessage }}</h3>
-                <p class="text-center text-slate-500 text-sm mb-6">Fiche locataire enregistrée dans le système.</p>
+                <p class="text-center text-slate-500 text-sm mb-6">Le dossier du locataire a été mis à jour dans PropertyAI.</p>
 
                 <button @click="closeSuccess" class="w-full px-4 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 shadow shadow-emerald-500/20 transition text-sm">Fermer</button>
             </div>
@@ -423,52 +587,80 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
-const defaultLocataires = [
-    { id: 1, nom: 'Jean Dupont', email: 'jean.dupont@email.com', telephone: '06 12 34 56 78', logement: 'APT-A101', garantie: 2400, statut: 'Actif' },
-    { id: 2, nom: 'Marie Martin', email: 'marie.martin@email.com', telephone: '06 98 76 54 32', logement: 'APT-A201', garantie: 3000, statut: 'Actif' },
-    { id: 3, nom: 'Pierre Bernard', email: 'pierre.bernard@email.com', telephone: '06 11 22 33 44', logement: 'APT-B101', garantie: 3600, statut: 'Suspendu' },
-    { id: 4, nom: 'Sophie Richard', email: 'sophie.richard@email.com', telephone: '06 44 55 66 77', logement: 'APT-C101', garantie: 2400, statut: 'Actif' },
-    { id: 5, nom: 'Lucas Petit', email: 'lucas.petit@email.com', telephone: '06 55 66 77 88', logement: 'APT-B102', garantie: 2800, statut: 'Actif' },
-    { id: 6, nom: 'Emma Leroy', email: 'emma.leroy@email.com', telephone: '06 77 88 99 00', logement: 'APT-A102', garantie: 3200, statut: 'Inactif' },
-];
+const page = usePage();
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-const locataires = ref(JSON.parse(localStorage.getItem('immobilier_locataires')) || defaultLocataires);
-if (!localStorage.getItem('immobilier_locataires')) {
-    localStorage.setItem('immobilier_locataires', JSON.stringify(defaultLocataires));
-}
+// Load agencies list from Inertia props
+const agencies = computed(() => {
+    const raw = page.props.agencies;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : (raw.data || []);
+});
 
-const saveLocatairesToStorage = () => {
-    localStorage.setItem('immobilier_locataires', JSON.stringify(locataires.value));
-};
-
+const locataires = ref([]);
 const searchQuery = ref('');
 const statusFilter = ref('');
 
-// Dynamic Lodgings List loaded from System
-const systemLogements = computed(() => {
-    const stored = localStorage.getItem('immobilier_logements');
-    if (stored) {
-        return JSON.parse(stored);
-    }
-    // Fallback if none in localStorage
-    return [
-        { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', statut: 'Occupé' },
-        { id: 2, reference: 'APT-A201', batiment: 'Immeuble A', statut: 'Occupé' },
-        { id: 3, reference: 'APT-B101', batiment: 'Immeuble B', statut: 'Occupé' },
-        { id: 4, reference: 'APT-C101', batiment: 'Immeuble C', statut: 'Occupé' },
-        { id: 5, reference: 'APT-B102', batiment: 'Immeuble B', statut: 'Occupé' },
-        { id: 6, reference: 'APT-A102', batiment: 'Immeuble A', statut: 'Libre' }
-    ];
+const showModal = ref(false);
+const showProfileModal = ref(false);
+const showDeleteModal = ref(false);
+const showSuccess = ref(false);
+const showError = ref(false);
+const saving = ref(false);
+
+const editingLocataire = ref(null);
+const selectedLocataire = ref(null);
+const deletingLocataire = ref(null);
+const successMessage = ref('');
+const errorMessage = ref('');
+
+const photoPreview = ref(null);
+const selectedPhotoFile = ref(null);
+const selectedDocFiles = ref([]);
+const zoomedImageUrl = ref(null);
+
+const formData = ref({
+    nom: '',
+    email: '',
+    telephone: '',
+    agency_id: null,
 });
+
+// Client-side validation
+const isEmailValid = computed(() => {
+    if (!formData.value.email) return false;
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(formData.value.email);
+});
+
+// Load Locataires from DB API
+const fetchLocataires = async () => {
+    try {
+        const res = await fetch('/api/locataires', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            }
+        });
+        if (res.ok) {
+            locataires.value = await res.json();
+        } else {
+            console.error('Failed to load tenants');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 const filteredLocataires = computed(() => {
     let list = locataires.value;
     
     // Status Filter
     if (statusFilter.value) {
-        list = list.filter(l => l.statut === statusFilter.value);
+        list = list.filter(l => l.statut.toLowerCase() === statusFilter.value.toLowerCase());
     }
     
     // Search Query
@@ -477,8 +669,8 @@ const filteredLocataires = computed(() => {
         list = list.filter(l => 
             l.nom.toLowerCase().includes(query) ||
             l.email.toLowerCase().includes(query) ||
-            l.telephone.includes(query) ||
-            l.logement.toLowerCase().includes(query)
+            (l.telephone && l.telephone.includes(query)) ||
+            (l.agency_name && l.agency_name.toLowerCase().includes(query))
         );
     }
     
@@ -486,66 +678,46 @@ const filteredLocataires = computed(() => {
 });
 
 const totalLocataires = computed(() => locataires.value.length);
-const locatairesActifs = computed(() => locataires.value.filter(l => l.statut === 'Actif').length);
+const locatairesActifs = computed(() => locataires.value.filter(l => l.statut === 'Actif' || l.statut === 'Affecté').length);
 const locatairesSuspendus = computed(() => locataires.value.filter(l => l.statut === 'Suspendu').length);
-const totalGaranties = computed(() => locataires.value.reduce((sum, l) => sum + l.garantie, 0));
-
-const showModal = ref(false);
-const showDeleteModal = ref(false);
-const showSuccess = ref(false);
-const showError = ref(false);
-const editingLocataire = ref(null);
-const deletingLocataire = ref(null);
-const successMessage = ref('');
-const errorMessage = ref('');
-
-const formData = ref({
-    nom: '',
-    email: '',
-    telephone: '',
-    logement: 'Aucun',
-    garantie: 0,
-    statut: 'Actif',
-});
-
-// Watch Error Alert to auto-hide after 5 seconds
-let errorTimeout = null;
-watch(showError, (newVal) => {
-    if (newVal) {
-        if (errorTimeout) clearTimeout(errorTimeout);
-        errorTimeout = setTimeout(() => {
-            showError.value = false;
-        }, 5000);
-    } else {
-        if (errorTimeout) {
-            clearTimeout(errorTimeout);
-            errorTimeout = null;
-        }
-    }
-});
-
-// Client-side validations
-const isEmailValid = computed(() => {
-    if (!formData.value.email) return false;
-    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return re.test(formData.value.email);
-});
+const locatairesInactifs = computed(() => locataires.value.filter(l => l.statut === 'Inactif').length);
 
 const openAddModal = () => {
     editingLocataire.value = null;
-    formData.value = { nom: '', email: '', telephone: '', logement: 'Aucun', garantie: 0, statut: 'Actif' };
+    formData.value = { nom: '', email: '', telephone: '', agency_id: null };
+    photoPreview.value = null;
+    selectedPhotoFile.value = null;
+    selectedDocFiles.value = [];
     showModal.value = true;
 };
 
 const openEditModal = (locataire) => {
     editingLocataire.value = locataire;
-    formData.value = { ...locataire };
+    formData.value = { 
+        nom: locataire.nom, 
+        email: locataire.email, 
+        telephone: locataire.telephone || '', 
+        agency_id: locataire.agency_id 
+    };
+    photoPreview.value = locataire.profil_url;
+    selectedPhotoFile.value = null;
+    selectedDocFiles.value = [];
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
     editingLocataire.value = null;
+};
+
+const openProfileModal = (locataire) => {
+    selectedLocataire.value = locataire;
+    showProfileModal.value = true;
+};
+
+const closeProfileModal = () => {
+    showProfileModal.value = false;
+    selectedLocataire.value = null;
 };
 
 const openDeleteModal = (locataire) => {
@@ -558,56 +730,179 @@ const closeDeleteModal = () => {
     deletingLocataire.value = null;
 };
 
-const saveLocataire = () => {
+const zoomImage = (url) => {
+    zoomedImageUrl.value = url;
+};
+
+// Handle files selection
+const onPhotoSelected = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        selectedPhotoFile.value = file;
+        photoPreview.value = URL.createObjectURL(file);
+    }
+};
+
+const onDocsSelected = (e) => {
+    const files = Array.from(e.target.files);
+    if (selectedDocFiles.value.length + files.length > 10) {
+        alert("Vous ne pouvez importer que 10 documents à la fois.");
+        return;
+    }
+    selectedDocFiles.value = [...selectedDocFiles.value, ...files];
+};
+
+const removeSelectedDoc = (index) => {
+    selectedDocFiles.value.splice(index, 1);
+};
+
+// Save Tenant (Create or Update)
+const saveLocataire = async () => {
     if (!formData.value.nom || !formData.value.email) {
         errorMessage.value = 'Le nom et l\'email sont requis.';
         showError.value = true;
         return;
     }
 
-    if (!isEmailValid.value) {
-        errorMessage.value = 'L\'adresse email saisie est incorrecte.';
-        showError.value = true;
-        return;
+    saving.value = true;
+    const dataObj = new FormData();
+    dataObj.append('nom', formData.value.nom);
+    dataObj.append('email', formData.value.email);
+    dataObj.append('telephone', formData.value.telephone);
+    
+    if (formData.value.agency_id) {
+        dataObj.append('agency_id', formData.value.agency_id);
     }
 
-    const locData = {
-        nom: formData.value.nom,
-        email: formData.value.email,
-        telephone: formData.value.telephone,
-        logement: formData.value.logement || 'Aucun',
-        garantie: Number(formData.value.garantie || 0),
-        statut: formData.value.statut || 'Actif',
-    };
+    if (selectedPhotoFile.value) {
+        dataObj.append('profil', selectedPhotoFile.value);
+    }
 
-    if (editingLocataire.value) {
-        const index = locataires.value.findIndex(l => l.id === editingLocataire.value.id);
-        if (index !== -1) {
-            locataires.value[index] = { ...editingLocataire.value, ...locData };
-        }
-        successMessage.value = 'Locataire modifié avec succès';
-    } else {
-        const newId = Math.max(...locataires.value.map(l => l.id), 0) + 1;
-        locataires.value.push({
-            id: newId,
-            ...locData
+    selectedDocFiles.value.forEach((file) => {
+        dataObj.append('documentations[]', file);
+    });
+
+    const url = editingLocataire.value 
+        ? `/api/locataires/${editingLocataire.value.id}` 
+        : '/api/locataires';
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            body: dataObj,
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            }
         });
-        successMessage.value = 'Locataire ajouté avec succès';
-    }
 
-    saveLocatairesToStorage();
-    closeModal();
-    showSuccess.value = true;
+        const data = await res.json();
+        if (res.ok) {
+            successMessage.value = editingLocataire.value 
+                ? 'Locataire modifié avec succès' 
+                : 'Locataire ajouté avec succès. Un mail contenant son mot de passe lui a été envoyé.';
+            closeModal();
+            fetchLocataires();
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = data.message || 'Une erreur est survenue.';
+            showError.value = true;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = 'Impossible de communiquer avec le serveur.';
+        showError.value = true;
+    } finally {
+        saving.value = false;
+    }
 };
 
-const confirmDelete = () => {
-    const index = locataires.value.findIndex(l => l.id === deletingLocataire.value.id);
-    if (index !== -1) {
-        locataires.value.splice(index, 1);
-        successMessage.value = 'Locataire supprimé avec succès';
-        saveLocatairesToStorage();
-        closeDeleteModal();
-        showSuccess.value = true;
+// Toggle suspend/active
+const toggleStatus = async (loc) => {
+    const newStatus = loc.statut.toLowerCase() === 'suspendu' ? 'actif' : 'suspendu';
+    try {
+        const res = await fetch(`/api/locataires/${loc.id}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+            body: JSON.stringify({ statut: newStatus })
+        });
+        if (res.ok) {
+            fetchLocataires();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+// Deactivate tenant (statut = inactif)
+const deactivateLocataire = async (loc) => {
+    try {
+        const res = await fetch(`/api/locataires/${loc.id}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+            body: JSON.stringify({ statut: 'inactif' })
+        });
+        if (res.ok) {
+            fetchLocataires();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+// Delete a document from server
+const deleteLocDoc = async (index) => {
+    if (!confirm("Voulez-vous vraiment supprimer ce document ?")) return;
+    try {
+        const res = await fetch(`/api/locataires/${selectedLocataire.value.id}/documents/${index}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            }
+        });
+        if (res.ok) {
+            const updated = await res.json();
+            // Update modal data
+            selectedLocataire.value = updated;
+            fetchLocataires();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+// Delete locataire
+const confirmDelete = async () => {
+    try {
+        const res = await fetch(`/api/locataires/${deletingLocataire.value.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            }
+        });
+        if (res.ok) {
+            successMessage.value = 'Locataire supprimé avec succès';
+            closeDeleteModal();
+            fetchLocataires();
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = 'Erreur lors de la suppression.';
+            showError.value = true;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = 'Erreur de connexion.';
+        showError.value = true;
     }
 };
 
@@ -619,63 +914,17 @@ const closeError = () => {
     showError.value = false;
 };
 
-// Formatting helpers
 const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return '0 €';
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 };
 
-// Global refresh listener for agent actions
-import { onMounted, onUnmounted } from 'vue';
-
-const loadLocatairesFromStorage = () => {
-    const stored = localStorage.getItem('immobilier_locataires');
-    if (stored) {
-        locataires.value = JSON.parse(stored);
-    }
-};
-
 onMounted(() => {
-    window.addEventListener('enterprise:refresh', loadLocatairesFromStorage);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('enterprise:refresh', loadLocatairesFromStorage);
+    fetchLocataires();
 });
 </script>
 
 <style scoped>
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-    opacity: 0;
-}
-
-.animate-number {
-    animation: countUp 0.5s ease-out;
-}
-
-@keyframes countUp {
-    from {
-        opacity: 0;
-        transform: scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
 @keyframes scaleUp {
     from {
         opacity: 0;
@@ -686,8 +935,7 @@ onUnmounted(() => {
         transform: scale(1);
     }
 }
-
 .animate-scale-up {
-    animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>

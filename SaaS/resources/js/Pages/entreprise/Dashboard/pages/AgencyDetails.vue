@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div class="space-y-8">
         <!-- Premium Header with Actions -->
         <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl shadow-slate-200/50 p-10 border border-slate-100/50 flex items-center justify-between">
@@ -36,12 +36,12 @@
                         Supprimer
                     </span>
                 </button>
-                <RouterLink
-                    :to="{ name: 'dashboard.agencies' }"
+                <Link
+                    :href="route('agencies.index')"
                     class="px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-slate-100 hover:border-slate-400 transition-all duration-300 font-bold transform hover:scale-105"
                 >
                     Retour
-                </RouterLink>
+                </Link>
             </div>
         </div>
 
@@ -227,6 +227,7 @@
         >
             <AgencyFormContent
                 :agency="agency"
+                :errors="formErrors"
                 @submit="handleEditSubmit"
                 @cancel="closeEditModal"
             />
@@ -274,7 +275,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { usePage, router as inertiaRouter } from '@inertiajs/vue3';
+import { usePage, router as inertiaRouter, Link } from '@inertiajs/vue3';
 import ModalPremium from '../../../../components/ModalPremium.vue';
 import NotificationPremium from '../../../../components/NotificationPremium.vue';
 import AgencyFormContent from '../../../../components/AgencyFormContent.vue';
@@ -292,6 +293,7 @@ watch(
 // Modal states
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const formErrors = ref({});
 
 // Notification state
 const notification = ref({
@@ -324,19 +326,23 @@ const closeNotification = () => {
 };
 
 const openEditModal = () => {
+    formErrors.value = {};
     showEditModal.value = true;
 };
 
 const closeEditModal = () => {
     showEditModal.value = false;
+    formErrors.value = {};
 };
 
 const handleEditSubmit = async (formData) => {
+    formErrors.value = {};
     try {
-        const response = await fetch(`/agencies/${agency.value.id}`, {
+        const response = await fetch(route('agencies.update', agency.value.id), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(formData),
@@ -349,6 +355,9 @@ const handleEditSubmit = async (formData) => {
             window.location.reload();
         } else {
             const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                formErrors.value = data.errors;
+            }
             showNotification('error', 'Erreur', data.message || 'Une erreur est survenue');
         }
     } catch (error) {
@@ -367,7 +376,7 @@ const closeDeleteModal = () => {
 
 const confirmDeleteAction = async () => {
     try {
-        const response = await fetch(`/agencies/${agency.value.id}`, {
+        const response = await fetch(route('agencies.destroy', agency.value.id), {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -379,7 +388,7 @@ const confirmDeleteAction = async () => {
             showNotification('success', 'Succès', 'L\'agence a été supprimée avec succès');
             closeDeleteModal();
             setTimeout(() => {
-                inertiaRouter.visit('/agencies');
+                inertiaRouter.visit(route('agencies.index'));
             }, 1500);
         } else {
             showNotification('error', 'Erreur', 'Une erreur est survenue lors de la suppression');

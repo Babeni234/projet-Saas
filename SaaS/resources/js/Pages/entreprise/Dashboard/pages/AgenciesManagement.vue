@@ -391,7 +391,7 @@
                                         class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-xl transition-all duration-300 transform hover:scale-110 shadow-sm border border-blue-100/50"
                                         title="Voir les détails"
                                     >
-                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
@@ -401,7 +401,7 @@
                                         class="p-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 rounded-xl transition-all duration-300 transform hover:scale-110 shadow-sm border border-amber-100/50"
                                         title="Modifier"
                                     >
-                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
@@ -410,7 +410,7 @@
                                         class="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl transition-all duration-300 transform hover:scale-110 shadow-sm border border-red-100/50"
                                         title="Supprimer"
                                     >
-                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
@@ -514,6 +514,8 @@
         >
             <AgencyFormContent
                 :agency="editingAgency"
+                :errors="formErrors"
+                :eligible-managers="eligibleManagers"
                 @submit="handleFormSubmit"
                 @cancel="closeModal"
             />
@@ -566,7 +568,23 @@ import NotificationPremium from '../../../../components/NotificationPremium.vue'
 import AgencyFormContent from '../../../../components/AgencyFormContent.vue';
 
 const page = usePage();
-const agencies = ref(page.props.agencies || { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 });
+
+const getInitialAgencies = () => {
+    const raw = page.props.agencies;
+    if (!raw) {
+        return { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    if (Array.isArray(raw)) {
+        return { data: raw, current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    if (!raw.data) {
+        return { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+    }
+    return raw;
+};
+
+const agencies = ref(getInitialAgencies());
+const eligibleManagers = ref(page.props.eligibleManagers || []);
 const initialStats = page.props.stats || {
     total: 0,
     active: 0,
@@ -581,6 +599,7 @@ const stats = ref(initialStats);
 const showModal = ref(false);
 const showDeleteModal = ref(false);
 const editingAgency = ref(null);
+const formErrors = ref({});
 const deletingAgencyId = ref(null);
 const modalTitle = ref('');
 const modalSubtitle = ref('');
@@ -645,10 +664,11 @@ const submitQuickAssign = async () => {
             establishment_date: selected.establishment_date,
         };
 
-        const response = await fetch(`/agencies/${selected.id}`, {
+        const response = await fetch(route('agencies.update', selected.id), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(payload),
@@ -712,7 +732,15 @@ const selectedIds = ref([]);
 watch(
     () => page.props.agencies,
     (value) => {
-        if (value) agencies.value = value;
+        if (value) {
+            if (Array.isArray(value)) {
+                agencies.value = { data: value, current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+            } else if (!value.data) {
+                agencies.value = { data: [], current_page: 1, last_page: 1, from: 0, to: 0, total: 0 };
+            } else {
+                agencies.value = value;
+            }
+        }
     },
 );
 
@@ -723,8 +751,18 @@ watch(
     },
 );
 
+watch(
+    () => page.props.eligibleManagers,
+    (value) => {
+        if (value) eligibleManagers.value = value;
+    },
+);
+
 onMounted(() => {
     loadStateFromStorage();
+    if (!page.props.agencies || Array.isArray(page.props.agencies) || !page.props.agencies.data) {
+        loadAgencies();
+    }
     window.addEventListener('enterprise:refresh', loadAgencies);
 });
 
@@ -774,6 +812,7 @@ const closeNotification = () => {
 
 const openCreateModal = () => {
     editingAgency.value = null;
+    formErrors.value = {};
     modalTitle.value = 'Créer une nouvelle agence';
     modalSubtitle.value = 'Remplissez les informations ci-dessous pour créer une nouvelle agence';
     showModal.value = true;
@@ -781,6 +820,7 @@ const openCreateModal = () => {
 
 const openEditModal = (agency) => {
     editingAgency.value = agency;
+    formErrors.value = {};
     modalTitle.value = 'Modifier l\'agence';
     modalSubtitle.value = `Modifiez les informations de l'agence ${agency.name}`;
     showModal.value = true;
@@ -789,6 +829,7 @@ const openEditModal = (agency) => {
 const closeModal = () => {
     showModal.value = false;
     editingAgency.value = null;
+    formErrors.value = {};
 };
 
 const confirmDelete = (id) => {
@@ -803,7 +844,7 @@ const closeDeleteModal = () => {
 
 const confirmDeleteAction = async () => {
     try {
-        const response = await fetch(`/agencies/${deletingAgencyId.value}`, {
+        const response = await fetch(route('agencies.destroy', deletingAgencyId.value), {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -825,14 +866,16 @@ const confirmDeleteAction = async () => {
 };
 
 const handleFormSubmit = async (formData) => {
+    formErrors.value = {};
     try {
         const method = editingAgency.value ? 'PUT' : 'POST';
-        const url = editingAgency.value ? `/agencies/${editingAgency.value.id}` : '/agencies';
+        const url = editingAgency.value ? route('agencies.update', editingAgency.value.id) : route('agencies.store');
 
         const response = await fetch(url, {
             method,
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
             },
             body: JSON.stringify(formData),
@@ -844,6 +887,9 @@ const handleFormSubmit = async (formData) => {
             loadAgencies();
         } else {
             const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                formErrors.value = data.errors;
+            }
             showNotification('error', 'Erreur', data.message || 'Une erreur est survenue');
         }
     } catch (error) {
@@ -867,10 +913,10 @@ const handleFilter = () => {
 
 const loadAgencies = () => {
     const params = new URLSearchParams(filters.value);
-    inertiaRouter.get(`/agencies?${params.toString()}`, {}, {
+    inertiaRouter.get(route('agencies.index') + `?${params.toString()}`, {}, {
         preserveState: true,
         preserveScroll: true,
-        only: ['agencies', 'stats', 'filters'],
+        only: ['agencies', 'stats', 'filters', 'eligibleManagers'],
     });
 };
 
@@ -899,7 +945,7 @@ const clearSelection = () => {
 };
 
 const viewAgency = (id) => {
-    inertiaRouter.visit(`/agencies/${id}`);
+    inertiaRouter.visit(route('agencies.show', id));
 };
 
 const editAgency = (id) => {
@@ -919,7 +965,7 @@ const bulkMarkInactive = async () => {
 
 const bulkUpdateStatus = async (status) => {
     try {
-        const response = await fetch('/agencies/bulk/status', {
+        const response = await fetch(route('agencies.bulk-status'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -952,7 +998,7 @@ const confirmBulkDelete = () => {
 
 const bulkDelete = async () => {
     try {
-        const response = await fetch('/agencies/bulk/delete', {
+        const response = await fetch(route('agencies.bulk-delete'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -977,7 +1023,7 @@ const bulkDelete = async () => {
 };
 
 const exportData = () => {
-    window.location.href = '/agencies/export';
+    window.location.href = route('agencies.export');
 };
 
 const getPaginationPages = () => {
