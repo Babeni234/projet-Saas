@@ -477,7 +477,11 @@ const page = usePage();
 const roles = ref(page.props.roles || []);
 const users = ref(page.props.users || []);
 const pendingUsers = ref(page.props.pendingUsers || []);
-const agencies = ref(page.props.agencies || []);
+const getAgenciesArray = (val) => {
+    if (!val) return [];
+    return Array.isArray(val) ? val : (val.data || []);
+};
+const agencies = ref(getAgenciesArray(page.props.agencies));
 
 // Modal & Form state
 const showRoleModal = ref(false);
@@ -544,7 +548,7 @@ watch(
 
 watch(
     () => page.props.agencies,
-    (val) => { if (val) agencies.value = val; }
+    (val) => { if (val) agencies.value = getAgenciesArray(val); }
 );
 
 onMounted(() => {

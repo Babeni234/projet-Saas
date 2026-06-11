@@ -455,7 +455,11 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const page = usePage();
-const agencies = computed(() => page.props.agencies || []);
+const agencies = computed(() => {
+    const raw = page.props.agencies;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : (raw.data || []);
+});
 
 const getAgencyName = (agencyId) => {
     const agency = agencies.value.find(a => Number(a.id) === Number(agencyId));

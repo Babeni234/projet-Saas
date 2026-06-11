@@ -801,7 +801,11 @@ const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_i
 // Illustrations fetched via AJAX (not from Inertia props, since the page is an SPA sub-route)
 const illustrationsData = ref([]);
 const illustrationsLoading = ref(false);
-const agencies = computed(() => page.props.agencies || []);
+const agencies = computed(() => {
+    const raw = page.props.agencies;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : (raw.data || []);
+});
 
 // Fetch illustrations from our JSON API endpoint
 const fetchIllustrations = async () => {
