@@ -238,7 +238,7 @@
                                         class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                     >
                                         <option value="">Sélectionner</option>
-                                        <option v-for="b in dbBatiments" :key="b.id" :value="b.id">{{ b.nom }}</option>
+                                        <option v-for="b in filteredBuildingsForForm" :key="b.id" :value="b.id">{{ b.nom }}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -268,10 +268,11 @@
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Locataire</label>
                                 <select 
                                     v-model="formData.locataire_id" 
+                                    @change="onLocataireChange"
                                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
                                 >
                                     <option value="">Sélectionner un locataire</option>
-                                    <option v-for="t in dbLocataires" :key="t.id" :value="t.id">
+                                    <option v-for="t in filteredLocatairesForForm" :key="t.id" :value="t.id">
                                         {{ t.nom }} ({{ t.email }})
                                     </option>
                                 </select>
@@ -605,6 +606,30 @@ const availableLogements = computed(() => {
     );
 });
 
+// Dynamic filtering of tenants in the form by building's agency
+const filteredLocatairesForForm = computed(() => {
+    let list = dbLocataires.value;
+    if (formData.value.batiment_id) {
+        const selectedBuilding = dbBatiments.value.find(b => b.id === Number(formData.value.batiment_id));
+        if (selectedBuilding) {
+            list = list.filter(t => t.agency_id === selectedBuilding.agency_id);
+        }
+    }
+    return list;
+});
+
+// Dynamic filtering of buildings in the form by tenant's agency
+const filteredBuildingsForForm = computed(() => {
+    let list = dbBatiments.value;
+    if (formData.value.locataire_id) {
+        const selectedLoc = dbLocataires.value.find(t => t.id === Number(formData.value.locataire_id));
+        if (selectedLoc) {
+            list = list.filter(b => b.agency_id === selectedLoc.agency_id);
+        }
+    }
+    return list;
+});
+
 // Selected property full details
 const selectedLogementDetails = computed(() => {
     if (!formData.value.logement_id) return null;
@@ -666,6 +691,29 @@ const onBuildingChange = () => {
     formData.value.logement_id = '';
     formData.value.loyer = 0;
     formData.value.caution = 0;
+
+    // Clear tenant if it doesn't belong to the selected building's agency
+    if (formData.value.batiment_id) {
+        const selectedBuilding = dbBatiments.value.find(b => b.id === Number(formData.value.batiment_id));
+        const selectedLoc = dbLocataires.value.find(t => t.id === Number(formData.value.locataire_id));
+        if (selectedBuilding && selectedLoc && selectedLoc.agency_id !== selectedBuilding.agency_id) {
+            formData.value.locataire_id = '';
+        }
+    }
+};
+
+const onLocataireChange = () => {
+    // Clear building/logement if it doesn't belong to the selected tenant's agency
+    if (formData.value.locataire_id) {
+        const selectedLoc = dbLocataires.value.find(t => t.id === Number(formData.value.locataire_id));
+        const selectedBuilding = dbBatiments.value.find(b => b.id === Number(formData.value.batiment_id));
+        if (selectedLoc && selectedBuilding && selectedBuilding.agency_id !== selectedLoc.agency_id) {
+            formData.value.batiment_id = '';
+            formData.value.logement_id = '';
+            formData.value.loyer = 0;
+            formData.value.caution = 0;
+        }
+    }
 };
 
 // Autofill fields when property is selected

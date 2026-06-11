@@ -119,7 +119,7 @@ class LocataireController extends Controller
 
         // Envoyer le mot de passe par mail
         try {
-            Mail::to($locataire->user->email)->send(new LocataireCreatedMail($locataire->user, $plainPassword));
+            Mail::to($locataire->user->email)->send(new LocataireCreatedMail($locataire, $plainPassword));
         } catch (\Exception $e) {
             // Logger l'erreur sans bloquer la réponse de succès
             logger()->error("Erreur lors de l'envoi de mail de création locataire : " . $e->getMessage());
@@ -293,7 +293,7 @@ class LocataireController extends Controller
             'telephone'          => $l->telephone,
             'agency_id'          => $l->agency_id,
             'agency_name'        => $l->agency?->name,
-            'profil_url'         => $l->profil ? Storage::disk('public')->url($l->profil) : null,
+            'profil_url'         => $l->profil ? '/storage/' . $l->profil : null,
             'statut'             => ucfirst($l->statut), // Actif, Inactif, Suspendu, Affecté
             'logement'           => $logementRef ?? 'Aucun',
             'garantie'           => (float)($activeAffectation ? $activeAffectation->caution : 0),
@@ -301,7 +301,7 @@ class LocataireController extends Controller
                 'name'     => $d['name'] ?? '',
                 'filename' => $d['filename'] ?? '',
                 'path'     => $d['path'] ?? '',
-                'url'      => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+                'url'      => isset($d['path']) ? '/storage/' . $d['path'] : null,
             ])->toArray() : [],
             'created_at'         => $l->created_at?->toDateString(),
         ];

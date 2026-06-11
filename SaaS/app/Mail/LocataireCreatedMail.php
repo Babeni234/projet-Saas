@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\User;
+use App\Models\Locataire;
 
 class LocataireCreatedMail extends Mailable
 {
@@ -15,14 +16,20 @@ class LocataireCreatedMail extends Mailable
 
     public $user;
     public $password;
+    public $companyName;
+    public $agencyName;
+    public $agencyCity;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user, $password)
+    public function __construct(Locataire $locataire, $password)
     {
-        $this->user = $user;
+        $this->user = $locataire->user;
         $this->password = $password;
+        $this->companyName = $locataire->company?->legal_name;
+        $this->agencyName = $locataire->agency?->name;
+        $this->agencyCity = $locataire->agency?->city;
     }
 
     /**

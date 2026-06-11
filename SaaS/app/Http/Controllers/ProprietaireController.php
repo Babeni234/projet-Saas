@@ -51,7 +51,7 @@ class ProprietaireController extends Controller
                 'date_debut_contrat' => $p->date_debut_contrat?->toDateString(),
                 'date_fin_contrat' => $p->date_fin_contrat?->toDateString(),
                 'notes'         => $p->notes,
-                'photo_path'    => $p->photo_path ? Storage::disk('public')->url($p->photo_path) : null,
+                'photo_path'    => $p->photo_path ? '/storage/' . $p->photo_path : null,
                 'batiments'     => $p->batiments->map(fn($b) => [
                     'id'           => $b->id,
                     'nom'          => $b->nom,
@@ -66,7 +66,7 @@ class ProprietaireController extends Controller
                     'name' => $d['name'] ?? '',
                     'filename' => $d['filename'] ?? '',
                     'path' => $d['path'] ?? '',
-                    'url' => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+                    'url' => isset($d['path']) ? '/storage/' . $d['path'] : null,
                 ])->toArray() : [],
             ]);
 
@@ -187,7 +187,7 @@ class ProprietaireController extends Controller
         $proprietaire->update(['photo_path' => $path]);
 
         return response()->json([
-            'photo_url' => Storage::disk('public')->url($path),
+            'photo_url' => '/storage/' . $path,
         ]);
     }
 
@@ -236,7 +236,7 @@ class ProprietaireController extends Controller
             'name'     => $d['name'] ?? '',
             'filename' => $d['filename'] ?? '',
             'path'     => $d['path'] ?? '',
-            'url'      => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+            'url'      => isset($d['path']) ? '/storage/' . $d['path'] : null,
         ])->toArray();
 
         return response()->json([
@@ -269,7 +269,7 @@ class ProprietaireController extends Controller
             'name'     => $d['name'] ?? '',
             'filename' => $d['filename'] ?? '',
             'path'     => $d['path'] ?? '',
-            'url'      => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+            'url'      => isset($d['path']) ? '/storage/' . $d['path'] : null,
         ])->toArray();
 
         return response()->json([

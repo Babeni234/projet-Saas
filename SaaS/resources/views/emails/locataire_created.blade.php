@@ -86,8 +86,19 @@
         </div>
         <div class="content">
             <p>Bonjour {{ $user->name }},</p>
-            <p>Votre compte locataire a été créé avec succès par votre agence de gestion. Vous pouvez désormais vous connecter à votre espace personnel pour suivre vos affectations, vos documents de bail et vos factures.</p>
-            
+            <p>Votre compte locataire a été créé avec succès par votre agence de gestion.</p>
+
+            <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: left;">
+                <h3 style="margin-top: 0; color: #1e293b; font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-weight: 700;">Informations de gestion</h3>
+                <p style="margin: 8px 0; font-size: 14px;"><span style="color: #475569; font-weight: 600;">Compagnie :</span> <strong style="color: #0f172a;">{{ $companyName ?? 'N/A' }}</strong></p>
+                @if(!empty($agencyName))
+                    <p style="margin: 8px 0; font-size: 14px;"><span style="color: #475569; font-weight: 600;">Agence gérante :</span> <strong style="color: #0f172a;">{{ $agencyName }}</strong></p>
+                    <p style="margin: 8px 0; font-size: 14px;"><span style="color: #475569; font-weight: 600;">Ville de l'agence :</span> <strong style="color: #0f172a;">{{ $agencyCity ?? 'N/A' }}</strong></p>
+                @endif
+            </div>
+
+            <p>Vous pouvez désormais vous connecter à votre espace personnel pour suivre vos affectations, vos documents de bail et vos factures.</p>
+
             <p>Voici vos identifiants de connexion temporaires :</p>
             
             <div class="credentials-container">
