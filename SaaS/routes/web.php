@@ -215,6 +215,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/proprietaires/{proprietaire}', [ProprietaireController::class, 'destroy'])->name('proprietaires.destroy');
     Route::post('/api/proprietaires/{proprietaire}/photo', [ProprietaireController::class, 'uploadPhoto'])->name('proprietaires.photo');
     Route::delete('/api/proprietaires/{proprietaire}/photo', [ProprietaireController::class, 'deletePhoto'])->name('proprietaires.photo.delete');
+    Route::post('/api/proprietaires/{proprietaire}/documents', [ProprietaireController::class, 'uploadDocument'])->name('proprietaires.documents.upload');
+    Route::delete('/api/proprietaires/{proprietaire}/documents/{index}', [ProprietaireController::class, 'deleteDocument'])->name('proprietaires.documents.delete');
 
     // Page Proprietaires
     Route::get('/immobilier/proprietaires', function () {

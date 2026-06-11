@@ -41,11 +41,13 @@ class Proprietaire extends Model
         'type_contrat',
         'notes',
         'metadata',
+        'documents',
         'deleted',
     ];
 
     protected $casts = [
         'metadata'           => 'array',
+        'documents'          => 'array',
         'date_debut_contrat' => 'date',
         'date_fin_contrat'   => 'date',
         'commission_taux'    => 'decimal:2',

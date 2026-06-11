@@ -94,7 +94,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-                                        <img v-if="p.photo_path" :src="p.photo_path" :alt="p.nom_complet" class="w-full h-full object-cover" />
+                                        <img v-if="p.photo_path" :src="p.photo_path" :alt="p.nom_complet" class="w-full h-full object-cover cursor-zoom-in" @click.stop="lightboxPhotoUrl = p.photo_path" />
                                         <div v-else class="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
                                             {{ p.initiales }}
                                         </div>
@@ -198,7 +198,7 @@
                         <div class="flex flex-col items-center gap-3">
                             <div class="relative group">
                                 <div class="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white/30 shadow-xl">
-                                    <img v-if="profileProp.photo_path" :src="profileProp.photo_path" :alt="profileProp.nom_complet" class="w-full h-full object-cover" />
+                                    <img v-if="profileProp.photo_path" :src="profileProp.photo_path" :alt="profileProp.nom_complet" class="w-full h-full object-cover cursor-zoom-in" @click="lightboxPhotoUrl = profileProp.photo_path" />
                                     <div v-else class="w-full h-full bg-white/20 flex items-center justify-center text-3xl font-bold">
                                         {{ profileProp.initiales }}
                                     </div>
@@ -287,11 +287,65 @@
                             </div>
                         </section>
 
-                        <!-- Bâtiments liés (placeholder) -->
+                        <!-- Bâtiments liés -->
                         <section>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Bâtiments associés</p>
-                            <div class="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-500 italic">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Bâtiments associés ({{ profileProp.batiments?.length || 0 }})</p>
+                            <div v-if="profileProp.batiments && profileProp.batiments.length > 0" class="space-y-2">
+                                <div 
+                                    v-for="b in profileProp.batiments" 
+                                    :key="b.id"
+                                    @click="openBatimentDetail(b)"
+                                    class="p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-xl cursor-pointer transition-all duration-200 group flex items-center justify-between"
+                                >
+                                    <div class="min-w-0">
+                                        <h4 class="font-semibold text-slate-800 text-sm group-hover:text-indigo-700 transition truncate">{{ b.nom }}</h4>
+                                        <p class="text-xs text-slate-500 mt-0.5 truncate">{{ b.adresse }}, {{ b.ville }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <span :class="b.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'" class="px-2 py-0.5 text-[10px] font-semibold rounded border">
+                                            {{ b.statut }}
+                                        </span>
+                                        <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-500 italic">
                                 Aucun bâtiment associé pour l'instant.
+                            </div>
+                        </section>
+
+                        <!-- Documents Légaux -->
+                        <section>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Documents légaux</p>
+                            <div v-if="profileProp.documents && profileProp.documents.length > 0" class="space-y-2">
+                                <div v-for="(doc, idx) in profileProp.documents" :key="idx" class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-semibold text-slate-700 truncate" :title="doc.filename">{{ doc.filename }}</p>
+                                            <p class="text-[10px] text-slate-400 uppercase font-bold">{{ doc.name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                                        <a v-if="doc.url" :href="doc.url" target="_blank" download class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Télécharger">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                        </a>
+                                        <button type="button" @click="deleteDocument(idx)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Supprimer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-500 italic">
+                                Aucun document légal importé pour l'instant.
                             </div>
                         </section>
                     </div>
@@ -478,6 +532,35 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Documents Légaux -->
+                            <div class="space-y-3 md:col-span-2">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1.5">Documents légaux</h3>
+                                <div v-if="form.type === 'personne_physique'" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="field-label">Carte Nationale d'Identité (CNI)</label>
+                                        <input type="file" @change="e => onFileSelected(e, 'cni')" class="field-input py-1.5" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Autre document utile</label>
+                                        <input type="file" @change="e => onFileSelected(e, 'autre')" class="field-input py-1.5" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" />
+                                    </div>
+                                </div>
+                                <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="field-label">Registre du Commerce (KBIS)</label>
+                                        <input type="file" @change="e => onFileSelected(e, 'kbis')" class="field-input py-1.5" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Statuts de l'entreprise</label>
+                                        <input type="file" @change="e => onFileSelected(e, 'statuts')" class="field-input py-1.5" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Autre document utile</label>
+                                        <input type="file" @change="e => onFileSelected(e, 'autre')" class="field-input py-1.5" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -539,6 +622,86 @@
                 {{ toast.message }}
             </div>
         </Transition>
+
+        <!-- Lightbox Modal -->
+        <Transition name="modal">
+            <div v-if="lightboxPhotoUrl" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm" @click="lightboxPhotoUrl = null">
+                <button type="button" @click="lightboxPhotoUrl = null" class="absolute top-6 right-6 text-white/70 hover:text-white hover:bg-white/10 p-2.5 rounded-full transition">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <img :src="lightboxPhotoUrl" class="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl border border-white/10 object-contain animate-scale-up" @click.stop />
+            </div>
+        </Transition>
+
+        <!-- Batiment Detail Modal -->
+        <Transition name="modal">
+            <div v-if="selectedBatimentDetail" class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-up border border-slate-100 animate-fade-in">
+                    <!-- Header -->
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-violet-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">Détails du Bâtiment</h2>
+                                <p class="text-xs text-slate-500">Informations structurelles et géographiques.</p>
+                            </div>
+                        </div>
+                        <button @click="selectedBatimentDetail = null" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-6 space-y-4 text-sm">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Nom du bâtiment</span>
+                                <span class="text-slate-900 font-semibold text-base">{{ selectedBatimentDetail.nom }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Ville</span>
+                                <span class="text-slate-800 font-medium">{{ selectedBatimentDetail.ville || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Quartier</span>
+                                <span class="text-slate-800 font-medium">{{ selectedBatimentDetail.quartier || '—' }}</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Adresse</span>
+                                <span class="text-slate-800 font-medium">{{ selectedBatimentDetail.adresse || '—' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Étages</span>
+                                <span class="text-slate-800 font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs inline-block mt-0.5">{{ selectedBatimentDetail.etages }} étages</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Appartements</span>
+                                <span class="text-slate-800 font-semibold bg-violet-50 text-violet-700 px-2 py-0.5 rounded text-xs inline-block mt-0.5">{{ selectedBatimentDetail.appartements }} unités</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Statut</span>
+                                <span :class="selectedBatimentDetail.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-0.5">
+                                    {{ selectedBatimentDetail.statut }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                        <button @click="selectedBatimentDetail = null" class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 shadow transition text-sm">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -559,6 +722,28 @@ const editingProp = ref(null);
 const deletingProp = ref(null);
 const profileProp = ref(null);
 const toast = ref({ show: false, type: 'success', message: '' });
+
+const lightboxPhotoUrl = ref(null);
+const selectedBatimentDetail = ref(null);
+const selectedFiles = ref({
+    cni: null,
+    kbis: null,
+    statuts: null,
+    autre: null,
+});
+
+const openBatimentDetail = (b) => {
+    selectedBatimentDetail.value = b;
+};
+
+const onFileSelected = (e, key) => {
+    const file = e.target.files[0];
+    if (file) {
+        selectedFiles.value[key] = file;
+    } else {
+        selectedFiles.value[key] = null;
+    }
+};
 
 const emptyForm = () => ({
     type: 'personne_physique',
@@ -663,7 +848,49 @@ const save = async () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat().join(' '));
+
+        const proprietaireId = data.id || (editingProp.value ? editingProp.value.id : null);
+
+        if (proprietaireId) {
+            // Upload selected files
+            for (const [key, file] of Object.entries(selectedFiles.value)) {
+                if (file) {
+                    const fd = new FormData();
+                    fd.append('document', file);
+                    fd.append('name', key.toUpperCase()); // CNI, KBIS, STATUTS, AUTRE
+
+                    const uploadRes = await fetch(`/api/proprietaires/${proprietaireId}/documents`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrf(),
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: fd,
+                    });
+
+                    if (!uploadRes.ok) {
+                        const uploadData = await uploadRes.json();
+                        console.error('Failed to upload document:', key, uploadData);
+                    }
+                }
+            }
+        }
+
+        // Reset selected files
+        selectedFiles.value = { cni: null, kbis: null, statuts: null, autre: null };
+
         await fetchProprietaires();
+
+        // If the profile side panel was open, refresh it with updated data
+        if (profileProp.value && profileProp.value.id === proprietaireId) {
+            const updated = proprietaires.value.find(p => p.id === proprietaireId);
+            if (updated) {
+                profileProp.value = updated;
+            }
+        }
+
         closeModal();
         showToast(editingProp.value ? 'Propriétaire modifié.' : 'Propriétaire ajouté.', 'success');
     } catch (e) {
@@ -738,6 +965,32 @@ const deletePhoto = async () => {
         showToast('Erreur.', 'error');
     } finally {
         uploadingPhoto.value = false;
+    }
+};
+
+const deleteDocument = async (index) => {
+    if (!profileProp.value) return;
+    const confirmDeleteDoc = confirm("Voulez-vous vraiment supprimer ce document ?");
+    if (!confirmDeleteDoc) return;
+    
+    try {
+        const res = await fetch(`/api/proprietaires/${profileProp.value.id}/documents/${index}`, {
+            method: 'DELETE',
+            headers: headers(),
+            credentials: 'same-origin',
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Erreur lors de la suppression');
+        
+        // Update local state
+        profileProp.value = { ...profileProp.value, documents: data.documents };
+        const idx = proprietaires.value.findIndex(p => p.id === profileProp.value.id);
+        if (idx !== -1) {
+            proprietaires.value[idx] = { ...proprietaires.value[idx], documents: data.documents };
+        }
+        showToast('Document supprimé.', 'success');
+    } catch (err) {
+        showToast(err.message || 'Erreur lors de la suppression du document.', 'error');
     }
 };
 

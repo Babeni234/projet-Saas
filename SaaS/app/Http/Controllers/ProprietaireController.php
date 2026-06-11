@@ -19,6 +19,7 @@ class ProprietaireController extends Controller
 
         $proprietaires = Proprietaire::where('company_profile_id', $companyProfileId)
             ->where('deleted', false)
+            ->with('batiments')
             ->orderBy('nom')
             ->get()
             ->map(fn($p) => [
@@ -28,16 +29,45 @@ class ProprietaireController extends Controller
                 'nom'           => $p->nom,
                 'prenom'        => $p->prenom,
                 'raison_sociale'=> $p->raison_sociale,
+                'siret'         => $p->siret,
+                'numero_contribuable' => $p->numero_contribuable,
+                'piece_identite_type' => $p->piece_identite_type,
+                'piece_identite_numero' => $p->piece_identite_numero,
                 'nom_complet'   => $p->nom_complet,
                 'initiales'     => $p->initiales,
                 'email'         => $p->email,
                 'telephone'     => $p->telephone,
+                'telephone_secondaire' => $p->telephone_secondaire,
+                'adresse'       => $p->adresse,
                 'ville'         => $p->ville,
                 'pays'          => $p->pays,
+                'code_postal'   => $p->code_postal,
+                'banque'        => $p->banque,
+                'rib'           => $p->rib,
+                'swift'         => $p->swift,
                 'statut'        => $p->statut,
                 'type_contrat'  => $p->type_contrat,
                 'commission_taux' => $p->commission_taux,
+                'date_debut_contrat' => $p->date_debut_contrat?->toDateString(),
+                'date_fin_contrat' => $p->date_fin_contrat?->toDateString(),
+                'notes'         => $p->notes,
                 'photo_path'    => $p->photo_path ? Storage::disk('public')->url($p->photo_path) : null,
+                'batiments'     => $p->batiments->map(fn($b) => [
+                    'id'           => $b->id,
+                    'nom'          => $b->nom,
+                    'ville'        => $b->ville,
+                    'quartier'     => $b->quartier,
+                    'adresse'      => $b->adresse,
+                    'appartements' => $b->appartements,
+                    'etages'       => $b->etages,
+                    'statut'       => $b->statut,
+                ]),
+                'documents'     => $p->documents ? collect($p->documents)->map(fn($d) => [
+                    'name' => $d['name'] ?? '',
+                    'filename' => $d['filename'] ?? '',
+                    'path' => $d['path'] ?? '',
+                    'url' => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+                ])->toArray() : [],
             ]);
 
         return response()->json($proprietaires);
@@ -175,6 +205,77 @@ class ProprietaireController extends Controller
         $proprietaire->update(['photo_path' => null]);
 
         return response()->json(['message' => 'Photo supprimée.']);
+    }
+
+    /**
+     * Upload un document légal pour le propriétaire.
+     */
+    public function uploadDocument(Request $request, Proprietaire $proprietaire)
+    {
+        $this->authorize_company($proprietaire);
+
+        $request->validate([
+            'document' => 'required|file|mimes:pdf,jpeg,png,jpg,webp,doc,docx|max:10240', // 10 MB max
+            'name'     => 'required|string|max:100', // e.g. "cni", "kbis", "statuts", "autre"
+        ]);
+
+        $file = $request->file('document');
+        $filename = $file->getClientOriginalName();
+        $path = $file->store('proprietaires/documents', 'public');
+
+        $docs = $proprietaire->documents ?? [];
+        $docs[] = [
+            'name'     => $request->input('name'),
+            'filename' => $filename,
+            'path'     => $path,
+        ];
+
+        $proprietaire->update(['documents' => $docs]);
+
+        $formattedDocs = collect($docs)->map(fn($d) => [
+            'name'     => $d['name'] ?? '',
+            'filename' => $d['filename'] ?? '',
+            'path'     => $d['path'] ?? '',
+            'url'      => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+        ])->toArray();
+
+        return response()->json([
+            'message'   => 'Document importé avec succès.',
+            'documents' => $formattedDocs,
+        ]);
+    }
+
+    /**
+     * Supprime un document légal du propriétaire.
+     */
+    public function deleteDocument(Request $request, Proprietaire $proprietaire, $index)
+    {
+        $this->authorize_company($proprietaire);
+
+        $docs = $proprietaire->documents ?? [];
+        $index = (int)$index;
+
+        if (isset($docs[$index])) {
+            $doc = $docs[$index];
+            if (isset($doc['path']) && Storage::disk('public')->exists($doc['path'])) {
+                Storage::disk('public')->delete($doc['path']);
+            }
+            array_splice($docs, $index, 1);
+            $docs = array_values($docs);
+            $proprietaire->update(['documents' => $docs]);
+        }
+
+        $formattedDocs = collect($docs)->map(fn($d) => [
+            'name'     => $d['name'] ?? '',
+            'filename' => $d['filename'] ?? '',
+            'path'     => $d['path'] ?? '',
+            'url'      => isset($d['path']) ? Storage::disk('public')->url($d['path']) : null,
+        ])->toArray();
+
+        return response()->json([
+            'message'   => 'Document supprimé.',
+            'documents' => $formattedDocs,
+        ]);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
