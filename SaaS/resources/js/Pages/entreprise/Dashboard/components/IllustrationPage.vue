@@ -10,7 +10,7 @@
                         isAgency ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-indigo-50 text-indigo-600 border-indigo-200'
                     ]">Module Immobilier</span>
                 </h1>
-                <p class="text-slate-600 mt-1">Affecter des images et des vidéos aux logements ou bâtiments et gérer les galeries.</p>
+                <p class="text-slate-600 mt-1">Affecter des images et des vidéos aux biens immobiliers ou bâtiments et gérer les galeries.</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Agency Filter (Enterprise dashboard only, when not locked to agency) -->
@@ -155,7 +155,7 @@
                                     'px-3 py-1 rounded-full text-xs font-semibold',
                                     target.type === 'batiment' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 ]">
-                                    {{ target.type === 'batiment' ? 'Bâtiment' : 'Logement' }}
+                                    {{ target.type === 'batiment' ? 'Bâtiment' : 'Bien Immobilier' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
@@ -194,7 +194,7 @@
                         </tr>
                         <tr v-else-if="groupedTargets.length === 0">
                             <td colspan="6" class="text-center py-12 text-slate-400">
-                                Aucun logement ou bâtiment n'a encore d'illustration affectée. Cliquez sur "Nouvelle Illustration" pour commencer.
+                                Aucun bien immobilier ou bâtiment n'a encore d'illustration affectée. Cliquez sur "Nouvelle Illustration" pour commencer.
                             </td>
                         </tr>
                     </tbody>
@@ -215,7 +215,7 @@
                         </div>
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">Affecter des Médias</h2>
-                            <p class="text-xs text-slate-500">Sélectionnez un logement ou un bâtiment pour y lier des images ou vidéos.</p>
+                            <p class="text-xs text-slate-500">Sélectionnez un bien immobilier ou un bâtiment pour y lier des images ou vidéos.</p>
                         </div>
                     </div>
                     <button @click="closeAddModal" class="text-slate-400 hover:text-slate-600 transition p-1.5 hover:bg-slate-100 rounded-lg">
@@ -253,7 +253,7 @@
                                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                                 ]"
                             >
-                                Logement
+                                Bien Immobilier
                             </button>
                         </div>
                     </div>
@@ -261,7 +261,7 @@
                     <!-- Target selection -->
                     <div v-if="newForm.target_type">
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">
-                            Sélectionner le {{ newForm.target_type === 'batiment' ? 'bâtiment' : 'logement' }}
+                            Sélectionner le {{ newForm.target_type === 'batiment' ? 'bâtiment' : 'bien immobilier' }}
                         </label>
                         <select
                             v-model="selectedTargetKey"
@@ -853,33 +853,35 @@ const totalMedias = computed(() => filteredIllustrations.value.length);
 const totalImages = computed(() => filteredIllustrations.value.filter(m => m.media_type === 'image').length);
 const totalVideos = computed(() => filteredIllustrations.value.filter(m => m.media_type === 'video').length);
 
-// Fallbacks for batiments and logements
-const fallbackBatiments = [
-    { id: 1, nom: 'Immeuble A', ville: 'Paris', agency_id: 1 },
-    { id: 2, nom: 'Immeuble B', ville: 'Lyon', agency_id: 1 },
-    { id: 3, nom: 'Immeuble C', ville: 'Nice', agency_id: 2 },
-];
-
-const fallbackLogements = [
-    { id: 1, reference: 'APT-A101', batiment: 'Immeuble A', categorie: 'Appartement' },
-    { id: 2, reference: 'APT-A102', batiment: 'Immeuble A', categorie: 'Appartement' },
-    { id: 3, reference: 'APT-B101', batiment: 'Immeuble B', categorie: 'Studio' },
-];
-
-// Load local buildings & units from localStorage
 const localBatiments = ref([]);
 const localLogements = ref([]);
+const dbBatiments = ref([]);
+const dbLogements = ref([]);
 
-const loadLocalData = () => {
-    const rawBat = localStorage.getItem('immobilier_batiments');
-    const rawLog = localStorage.getItem('immobilier_logements');
-    
-    let bats = rawBat ? JSON.parse(rawBat) : fallbackBatiments;
-    let logs = rawLog ? JSON.parse(rawLog) : fallbackLogements;
-    
-    // Filter by agency if inside agency portal or if user is scoped/filtered to an agency
+const fetchDbData = async () => {
+    try {
+        const [resBat, resLog] = await Promise.all([
+            fetch('/api/batiments', { headers: { 'Accept': 'application/json' } }),
+            fetch('/api/logements', { headers: { 'Accept': 'application/json' } })
+        ]);
+        if (resBat.ok) {
+            dbBatiments.value = await resBat.json();
+        }
+        if (resLog.ok) {
+            dbLogements.value = await resLog.json();
+        }
+        filterData();
+    } catch (err) {
+        console.error('Error fetching database batiments/logements:', err);
+    }
+};
+
+const filterData = () => {
+    let bats = [...dbBatiments.value];
+    let logs = [...dbLogements.value];
+
     const activeAgencyId = isAgency.value ? currentAgencyId.value : selectedAgencyFilter.value;
-    
+
     if (activeAgencyId) {
         if (activeAgencyId === 'none') {
             bats = bats.filter(b => !b.agency_id);
@@ -887,19 +889,24 @@ const loadLocalData = () => {
             const agencyIdNum = Number(activeAgencyId);
             bats = bats.filter(b => Number(b.agency_id) === agencyIdNum);
         }
-        
-        // Filter housings: keep housing if its building belongs to the filtered buildings
-        const validBuildingNames = bats.map(b => b.nom);
-        logs = logs.filter(l => validBuildingNames.includes(l.batiment));
     }
-    
+
+    if (activeAgencyId) {
+        if (activeAgencyId === 'none') {
+            logs = logs.filter(l => !l.agency_id);
+        } else {
+            const agencyIdNum = Number(activeAgencyId);
+            logs = logs.filter(l => Number(l.agency_id) === agencyIdNum);
+        }
+    }
+
     localBatiments.value = bats;
     localLogements.value = logs;
 };
 
 // Re-load data when filter changes
 watch(selectedAgencyFilter, () => {
-    loadLocalData();
+    filterData();
 });
 
 // ==========================================
@@ -952,7 +959,7 @@ const handleKeydown = (e) => {
 };
 
 onMounted(async () => {
-    loadLocalData();
+    await fetchDbData();
     await fetchIllustrations();
     window.addEventListener('keydown', handleKeydown);
 });
