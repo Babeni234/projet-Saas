@@ -252,6 +252,62 @@
             </div>
         </div>
 
+        <!-- Categories Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Catégories de Biens Immobiliers</h3>
+                    <p class="text-xs text-slate-500 mt-1">Gérez les catégories utilisées pour classifier vos biens immobiliers.</p>
+                </div>
+                <button
+                    @click="openCreateCategoryModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter une Catégorie
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ cat.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ cat.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditCategoryModal(cat)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteCategory(cat)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="categories.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucune catégorie configurée pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Add/Edit Role Modal -->
         <ModalPremium
             :show="showRoleModal"
@@ -455,6 +511,62 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit Category Modal -->
+        <ModalPremium
+            :show="showCategoryModal"
+            :title="isEditingCategory ? 'Modifier la Catégorie' : 'Ajouter une Catégorie'"
+            :subtitle="isEditingCategory ? 'Modifiez les détails de cette catégorie' : 'Créez une nouvelle catégorie pour classifier vos biens immobiliers'"
+            size="md"
+            type="default"
+            @close="showCategoryModal = false"
+        >
+            <form @submit.prevent="submitCategoryForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom de la Catégorie <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="categoryForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Appartement, Bureau, Studio..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="categoryErrors.nom" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="categoryForm.description"
+                            rows="3"
+                            placeholder="Décrivez cette catégorie..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="categoryErrors.description" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showCategoryModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isCategorySubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isCategorySubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingCategory ? 'Mettre à Jour' : 'Créer la Catégorie' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -477,6 +589,18 @@ const page = usePage();
 const roles = ref(page.props.roles || []);
 const users = ref(page.props.users || []);
 const pendingUsers = ref(page.props.pendingUsers || []);
+
+// Categories state
+const categories = ref([]);
+const showCategoryModal = ref(false);
+const isEditingCategory = ref(false);
+const editingCategoryId = ref(null);
+const isCategorySubmitting = ref(false);
+const categoryErrors = ref({});
+const categoryForm = ref({
+    nom: '',
+    description: ''
+});
 const getAgenciesArray = (val) => {
     if (!val) return [];
     return Array.isArray(val) ? val : (val.data || []);
@@ -555,6 +679,7 @@ onMounted(() => {
     if (!page.props.roles) {
         loadData();
     }
+    fetchCategories();
 });
 
 const loadData = () => {
@@ -860,6 +985,113 @@ const submitEmployeeForm = async () => {
         showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
     } finally {
         isEmployeeSubmitting.value = false;
+    }
+};
+
+const fetchCategories = async () => {
+    try {
+        const response = await fetch('/api/categories', {
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        if (response.ok) {
+            categories.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération des catégories:", error);
+    }
+};
+
+const openCreateCategoryModal = () => {
+    isEditingCategory.value = false;
+    editingCategoryId.value = null;
+    categoryForm.value = {
+        nom: '',
+        description: ''
+    };
+    categoryErrors.value = {};
+    showCategoryModal.value = true;
+};
+
+const openEditCategoryModal = (cat) => {
+    isEditingCategory.value = true;
+    editingCategoryId.value = cat.id;
+    categoryForm.value = {
+        nom: cat.nom,
+        description: cat.description || ''
+    };
+    categoryErrors.value = {};
+    showCategoryModal.value = true;
+};
+
+const submitCategoryForm = async () => {
+    isCategorySubmitting.value = true;
+    categoryErrors.value = {};
+    try {
+        const url = isEditingCategory.value
+            ? `/api/categories/${editingCategoryId.value}`
+            : '/api/categories';
+        const method = isEditingCategory.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(categoryForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingCategory.value ? 'La catégorie a été mise à jour avec succès.' : 'La catégorie a été créée avec succès.'
+            );
+            showCategoryModal.value = false;
+            fetchCategories();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                categoryErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isCategorySubmitting.value = false;
+    }
+};
+
+const deleteCategory = async (cat) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${cat.nom}" ?`)) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/categories/${cat.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', 'La catégorie a été supprimée avec succès.');
+            fetchCategories();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer la catégorie.');
     }
 };
 

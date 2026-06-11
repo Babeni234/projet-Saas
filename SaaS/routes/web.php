@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\BatimentController;
 use App\Http\Controllers\ProprietaireController;
+use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\LogementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -217,6 +219,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/proprietaires/{proprietaire}/photo', [ProprietaireController::class, 'deletePhoto'])->name('proprietaires.photo.delete');
     Route::post('/api/proprietaires/{proprietaire}/documents', [ProprietaireController::class, 'uploadDocument'])->name('proprietaires.documents.upload');
     Route::delete('/api/proprietaires/{proprietaire}/documents/{index}', [ProprietaireController::class, 'deleteDocument'])->name('proprietaires.documents.delete');
+
+    // Categories API routes
+    Route::get('/api/categories', [CategorieController::class, 'index'])->name('categories.json');
+    Route::post('/api/categories', [CategorieController::class, 'store'])->name('categories.store');
+    Route::put('/api/categories/{categorie}', [CategorieController::class, 'update'])->name('categories.update');
+    Route::delete('/api/categories/{categorie}', [CategorieController::class, 'destroy'])->name('categories.destroy');
+
+    // Logements API routes
+    Route::get('/api/logements', [LogementController::class, 'index'])->name('logements.json');
+    Route::post('/api/logements', [LogementController::class, 'store'])->name('logements.store');
+    Route::put('/api/logements/{logement}', [LogementController::class, 'update'])->name('logements.update');
+    Route::delete('/api/logements/{logement}', [LogementController::class, 'destroy'])->name('logements.destroy');
 
     // Page Proprietaires
     Route::get('/immobilier/proprietaires', function () {
