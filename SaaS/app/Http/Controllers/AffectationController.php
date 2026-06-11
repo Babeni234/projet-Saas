@@ -22,7 +22,7 @@ class AffectationController extends Controller
 
         $query = Affectation::where('company_profile_id', $companyProfileId)
                             ->where('deleted', false)
-                            ->with(['locataire.user', 'logement.batiment']);
+                            ->with(['locataire.user', 'logement.batiment', 'typeContrat']);
 
         // Filtrage par agence si l'utilisateur connecté est un agent
         $isAgent = $user->employee && $user->employee->agency_id !== null;
@@ -44,15 +44,16 @@ class AffectationController extends Controller
         $companyProfileId = $currentUser->company_profile_id;
 
         $request->validate([
-            'locataire_id'   => 'required|integer|exists:locataires,id',
-            'logement_id'    => 'required|integer|exists:logements,id',
-            'loyer'          => 'required|numeric|min:0',
-            'caution'        => 'required|numeric|min:0',
-            'date_debut'     => 'required|date',
-            'date_fin'       => 'nullable|date|after_or_equal:date_debut',
-            'type_bail'      => 'required|string|max:100',
-            'duree'          => 'required|string|max:100',
-            'cycle_paiement' => 'required|string|max:100',
+            'locataire_id'    => 'required|integer|exists:locataires,id',
+            'logement_id'     => 'required|integer|exists:logements,id',
+            'type_contrat_id' => 'required|integer|exists:type_contrats,id',
+            'loyer'           => 'required|numeric|min:0',
+            'caution'         => 'required|numeric|min:0',
+            'date_debut'      => 'required|date',
+            'date_fin'        => 'nullable|date|after_or_equal:date_debut',
+            'type_bail'       => 'nullable|string|max:100',
+            'duree'           => 'required|string|max:100',
+            'cycle_paiement'  => 'required|string|max:100',
         ]);
 
         $locataire = Locataire::where('id', $request->input('locataire_id'))
@@ -76,17 +77,25 @@ class AffectationController extends Controller
         }
 
         $affectation = DB::transaction(function () use ($request, $companyProfileId, $agencyId, $locataire, $logement) {
+            $typeContratId = $request->input('type_contrat_id');
+            $typeBail = $request->input('type_bail');
+            if (empty($typeBail) && $typeContratId) {
+                $tc = \App\Models\TypeContrat::find($typeContratId);
+                $typeBail = $tc?->nom;
+            }
+
             // 1. Créer l'affectation
             $aff = Affectation::create([
                 'company_profile_id' => $companyProfileId,
                 'agency_id'          => $agencyId,
                 'locataire_id'       => $locataire->id,
                 'logement_id'        => $logement->id,
+                'type_contrat_id'    => $typeContratId,
                 'loyer'              => $request->input('loyer'),
                 'caution'            => $request->input('caution'),
                 'date_debut'         => $request->input('date_debut'),
                 'date_fin'           => $request->input('date_fin'),
-                'type_bail'          => $request->input('type_bail'),
+                'type_bail'          => $typeBail,
                 'duree'              => $request->input('duree'),
                 'cycle_paiement'     => $request->input('cycle_paiement'),
                 'statut'             => 'Actif',
@@ -102,7 +111,7 @@ class AffectationController extends Controller
             return $aff;
         });
 
-        $affectation->load(['locataire.user', 'logement.batiment']);
+        $affectation->load(['locataire.user', 'logement.batiment', 'typeContrat']);
 
         return response()->json($this->formatAffectation($affectation), 201);
     }
@@ -172,22 +181,24 @@ class AffectationController extends Controller
     private function formatAffectation(Affectation $a): array
     {
         return [
-            'id'             => $a->id,
-            'uuid'           => $a->uuid,
-            'reference'      => $a->logement?->reference ?? 'Bien Supprimé',
-            'batiment'       => $a->logement?->batiment?->nom ?? 'Sans bâtiment',
-            'locataire'      => $a->locataire?->user?->name ?? 'Locataire Supprimé',
-            'locataire_id'   => $a->locataire_id,
-            'logement_id'    => $a->logement_id,
-            'loyer'          => (float)$a->loyer,
-            'caution'        => (float)$a->caution,
-            'dateEffet'      => $a->date_debut?->toDateString(),
-            'dateFin'        => $a->date_fin?->toDateString(),
-            'duree'          => $a->duree,
-            'typeBail'       => $a->type_bail,
-            'cyclePaiement'  => $a->cycle_paiement,
-            'statut'         => $a->statut, // Actif, Terminé
-            'created_at'     => $a->created_at?->toDateString(),
+            'id'               => $a->id,
+            'uuid'             => $a->uuid,
+            'reference'        => $a->logement?->reference ?? 'Bien Supprimé',
+            'batiment'         => $a->logement?->batiment?->nom ?? 'Sans bâtiment',
+            'locataire'        => $a->locataire?->user?->name ?? 'Locataire Supprimé',
+            'locataire_id'     => $a->locataire_id,
+            'logement_id'      => $a->logement_id,
+            'type_contrat_id'  => $a->type_contrat_id,
+            'type_contrat_nom' => $a->typeContrat?->nom ?? $a->type_bail,
+            'loyer'            => (float)$a->loyer,
+            'caution'          => (float)$a->caution,
+            'dateEffet'        => $a->date_debut?->toDateString(),
+            'dateFin'          => $a->date_fin?->toDateString(),
+            'duree'            => $a->duree,
+            'typeBail'         => $a->typeContrat?->nom ?? $a->type_bail,
+            'cyclePaiement'    => $a->cycle_paiement,
+            'statut'           => $a->statut, // Actif, Terminé
+            'created_at'       => $a->created_at?->toDateString(),
         ];
     }
 

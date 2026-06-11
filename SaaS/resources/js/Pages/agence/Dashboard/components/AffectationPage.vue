@@ -310,16 +310,14 @@
                                     >
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Type de bail</label>
-                                    <select 
-                                        v-model="formData.type_bail" 
-                                        class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
-                                    >
-                                        <option value="Habitation">Bail d'Habitation</option>
-                                        <option value="Commercial">Bail Commercial</option>
-                                        <option value="Professionnel">Bail Professionnel</option>
-                                        <option value="Mixte">Bail Mixte</option>
-                                    </select>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Type de bail (Automatique)</label>
+                                    <input 
+                                        :value="selectedTypeContratNom" 
+                                        type="text" 
+                                        readonly
+                                        placeholder="Auto-rempli selon le logement"
+                                        class="w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed focus:outline-none transition"
+                                    />
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -564,10 +562,11 @@ const formData = ref({
     batiment_id: '',
     logement_id: '',
     locataire_id: '',
+    type_contrat_id: '',
     loyer: 0,
     caution: 0,
     date_debut: '',
-    type_bail: 'Habitation',
+    type_bail: '',
     duree: '1 an',
     cycle_paiement: 'Mensuel',
 });
@@ -655,6 +654,11 @@ const selectedLogementRef = computed(() => {
     return log ? log.reference : 'Non spécifié';
 });
 
+const selectedTypeContratNom = computed(() => {
+    const log = dbLogements.value.find(l => l.id === Number(formData.value.logement_id));
+    return log && log.type_contrat_nom ? log.type_contrat_nom : 'Non spécifié';
+});
+
 // KPI Calculations
 const totalLogements = computed(() => dbLogements.value.length);
 const activeLeases = computed(() => affectations.value.filter(a => a.statut === 'Actif').length);
@@ -722,9 +726,11 @@ const onLogementChange = () => {
     if (details) {
         formData.value.loyer = Number(details.loyer || 0);
         formData.value.caution = Number(details.loyer || 0);
+        formData.value.type_contrat_id = details.type_contrat_id || '';
     } else {
         formData.value.loyer = 0;
         formData.value.caution = 0;
+        formData.value.type_contrat_id = '';
     }
 };
 
@@ -733,10 +739,11 @@ const openAddModal = () => {
         batiment_id: '',
         logement_id: '',
         locataire_id: '',
+        type_contrat_id: '',
         loyer: 0,
         caution: 0,
         date_debut: new Date().toISOString().substring(0, 10),
-        type_bail: 'Habitation',
+        type_bail: '',
         duree: '1 an',
         cycle_paiement: 'Mensuel',
     };
@@ -771,10 +778,9 @@ const triggerPrint = () => {
     window.print();
 };
 
-// Create new lease assignment in DB
 const saveAffectation = async () => {
-    if (!formData.value.locataire_id || !formData.value.logement_id || !formData.value.loyer || !formData.value.date_debut) {
-        alert("Veuillez remplir toutes les informations requises.");
+    if (!formData.value.locataire_id || !formData.value.logement_id || !formData.value.loyer || !formData.value.date_debut || !formData.value.type_contrat_id) {
+        alert("Veuillez remplir toutes les informations requises (assurez-vous que le logement a un type de contrat associé).");
         return;
     }
 

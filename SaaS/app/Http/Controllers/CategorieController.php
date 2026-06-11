@@ -15,6 +15,7 @@ class CategorieController extends Controller
 
         $categories = Categorie::where('company_profile_id', $companyProfileId)
             ->where('deleted', false)
+            ->with('typeContrat')
             ->orderBy('nom')
             ->get();
 
@@ -26,8 +27,9 @@ class CategorieController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'nom'         => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'nom'             => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'type_contrat_id' => 'required|integer|exists:type_contrats,id',
         ]);
 
         $categorie = Categorie::create([
@@ -35,7 +37,7 @@ class CategorieController extends Controller
             'company_profile_id' => $user->company_profile_id,
         ]);
 
-        return response()->json($categorie, 201);
+        return response()->json($categorie->load('typeContrat'), 201);
     }
 
     public function update(Request $request, Categorie $categorie)
@@ -43,13 +45,14 @@ class CategorieController extends Controller
         $this->authorizeCompany($categorie);
 
         $validated = $request->validate([
-            'nom'         => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
+            'nom'             => 'sometimes|required|string|max:255',
+            'description'     => 'nullable|string',
+            'type_contrat_id' => 'sometimes|required|integer|exists:type_contrats,id',
         ]);
 
         $categorie->update($validated);
 
-        return response()->json($categorie->fresh());
+        return response()->json($categorie->fresh('typeContrat'));
     }
 
     public function destroy(Categorie $categorie)

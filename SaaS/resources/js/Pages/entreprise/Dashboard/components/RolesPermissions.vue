@@ -252,6 +252,62 @@
             </div>
         </div>
 
+        <!-- Types de Contrat Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types de Contrat de Location</h3>
+                    <p class="text-xs text-slate-500 mt-1">Gérez les types de contrat (baux) applicables pour l'affectation de vos biens.</p>
+                </div>
+                <button
+                    @click="openCreateTypeContratModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type de Contrat
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeContrats"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeContratModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeContrat(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeContrats.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type de contrat configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Categories Section -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
@@ -281,6 +337,9 @@
                         </div>
                     </div>
                     <div class="font-extrabold text-slate-800 text-base mb-1">{{ cat.nom }}</div>
+                    <div class="text-[10px] bg-indigo-50 text-indigo-750 font-bold px-2 py-0.5 rounded border border-indigo-200 self-start mb-2" v-if="cat.type_contrat">
+                        Contrat : {{ cat.type_contrat.nom }}
+                    </div>
                     <div class="text-xs text-slate-500 mb-4 flex-1">{{ cat.description || 'Aucune description.' }}</div>
                     
                     <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
@@ -544,6 +603,21 @@
                         ></textarea>
                         <span v-if="categoryErrors.description" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.description[0] }}</span>
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Type de Contrat Associé <span class="text-red-500">*</span></label>
+                        <select
+                            v-model="categoryForm.type_contrat_id"
+                            required
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                        >
+                            <option value="" disabled>Sélectionner un type de contrat</option>
+                            <option v-for="type in typeContrats" :key="type.id" :value="type.id">
+                                {{ type.nom }}
+                            </option>
+                        </select>
+                        <span v-if="categoryErrors.type_contrat_id" class="text-red-500 text-xs mt-1 block">{{ categoryErrors.type_contrat_id[0] }}</span>
+                    </div>
                 </div>
 
                 <!-- Actions -->
@@ -562,6 +636,62 @@
                     >
                         <span v-if="isCategorySubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                         <span>{{ isEditingCategory ? 'Mettre à Jour' : 'Créer la Catégorie' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
+        <!-- Add/Edit TypeContrat Modal -->
+        <ModalPremium
+            :show="showTypeContratModal"
+            :title="isEditingTypeContrat ? 'Modifier le Type de Contrat' : 'Ajouter un Type de Contrat'"
+            :subtitle="isEditingTypeContrat ? 'Modifiez les détails de ce type de contrat' : 'Créez un nouveau type de contrat pour vos locations'"
+            size="md"
+            type="default"
+            @close="showTypeContratModal = false"
+        >
+            <form @submit.prevent="submitTypeContratForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type de Contrat <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeContratForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Habitation, Commercial, Professionnel..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="typeContratErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeContratErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeContratForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type de contrat..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="typeContratErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeContratErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeContratModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeContratSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeContratSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeContrat ? 'Mettre à Jour' : 'Créer le Type' }}</span>
                     </button>
                 </div>
             </form>
@@ -598,6 +728,19 @@ const editingCategoryId = ref(null);
 const isCategorySubmitting = ref(false);
 const categoryErrors = ref({});
 const categoryForm = ref({
+    nom: '',
+    description: '',
+    type_contrat_id: ''
+});
+
+// TypeContrats state
+const typeContrats = ref([]);
+const showTypeContratModal = ref(false);
+const isEditingTypeContrat = ref(false);
+const editingTypeContratId = ref(null);
+const isTypeContratSubmitting = ref(false);
+const typeContratErrors = ref({});
+const typeContratForm = ref({
     nom: '',
     description: ''
 });
@@ -679,6 +822,7 @@ onMounted(() => {
     if (!page.props.roles) {
         loadData();
     }
+    fetchTypeContrats();
     fetchCategories();
 });
 
@@ -1008,7 +1152,8 @@ const openCreateCategoryModal = () => {
     editingCategoryId.value = null;
     categoryForm.value = {
         nom: '',
-        description: ''
+        description: '',
+        type_contrat_id: ''
     };
     categoryErrors.value = {};
     showCategoryModal.value = true;
@@ -1019,10 +1164,120 @@ const openEditCategoryModal = (cat) => {
     editingCategoryId.value = cat.id;
     categoryForm.value = {
         nom: cat.nom,
-        description: cat.description || ''
+        description: cat.description || '',
+        type_contrat_id: cat.type_contrat_id || ''
     };
     categoryErrors.value = {};
     showCategoryModal.value = true;
+};
+
+const fetchTypeContrats = async () => {
+    try {
+        const response = await fetch('/api/type-contrats', {
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        if (response.ok) {
+            typeContrats.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération des types de contrat:", error);
+    }
+};
+
+const openCreateTypeContratModal = () => {
+    isEditingTypeContrat.value = false;
+    editingTypeContratId.value = null;
+    typeContratForm.value = {
+        nom: '',
+        description: ''
+    };
+    typeContratErrors.value = {};
+    showTypeContratModal.value = true;
+};
+
+const openEditTypeContratModal = (type) => {
+    isEditingTypeContrat.value = true;
+    editingTypeContratId.value = type.id;
+    typeContratForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeContratErrors.value = {};
+    showTypeContratModal.value = true;
+};
+
+const submitTypeContratForm = async () => {
+    isTypeContratSubmitting.value = true;
+    typeContratErrors.value = {};
+    try {
+        const url = isEditingTypeContrat.value
+            ? `/api/type-contrats/${editingTypeContratId.value}`
+            : '/api/type-contrats';
+        const method = isEditingTypeContrat.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeContratForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeContrat.value ? 'Le type de contrat a été mis à jour avec succès.' : 'Le type de contrat a été créé avec succès.'
+            );
+            showTypeContratModal.value = false;
+            fetchTypeContrats();
+            fetchCategories(); // Refresh list to reflect potential name changes
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeContratErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeContratSubmitting.value = false;
+    }
+};
+
+const deleteTypeContrat = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type de contrat "${type.nom}" ?`)) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/type-contrats/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type de contrat a été supprimé avec succès.');
+            fetchTypeContrats();
+            fetchCategories();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type de contrat.');
+    }
 };
 
 const submitCategoryForm = async () => {

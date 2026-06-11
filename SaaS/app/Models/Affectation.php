@@ -20,6 +20,7 @@ class Affectation extends Model
         'agency_id',
         'locataire_id',
         'logement_id',
+        'type_contrat_id',
         'loyer',
         'caution',
         'date_debut',
@@ -74,5 +75,10 @@ class Affectation extends Model
     public function logement(): BelongsTo
     {
         return $this->belongsTo(Logement::class, 'logement_id');
+    }
+
+    public function typeContrat(): BelongsTo
+    {
+        return $this->belongsTo(TypeContrat::class, 'type_contrat_id');
     }
 }

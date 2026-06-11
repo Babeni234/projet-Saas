@@ -16,7 +16,7 @@ class LogementController extends Controller
 
         $query = Logement::where('company_profile_id', $companyProfileId)
             ->where('deleted', false)
-            ->with(['batiment', 'categorie', 'agency']);
+            ->with(['batiment', 'categorie.typeContrat', 'agency']);
 
         // Filter by agency if the user is an agent
         if ($user->employee && $user->employee->agency_id !== null) {
@@ -128,6 +128,8 @@ class LogementController extends Controller
             'batiment'           => $l->batiment?->nom,
             'categorie_id'       => $l->categorie_id,
             'categorie'          => $l->categorie?->nom,
+            'type_contrat_id'    => $l->categorie?->type_contrat_id,
+            'type_contrat_nom'   => $l->categorie?->typeContrat?->nom,
             'etage'              => $l->etage,
             'surface'            => $l->surface,
             'loyer'              => $l->loyer,

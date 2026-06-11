@@ -6,13 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Categorie extends Model
+class TypeContrat extends Model
 {
-    protected $table = 'categories';
+    protected $table = 'type_contrats';
 
     protected $fillable = [
         'company_profile_id',
-        'type_contrat_id',
         'nom',
         'description',
         'deleted',
@@ -27,13 +26,13 @@ class Categorie extends Model
         return $this->belongsTo(CompanyProfile::class, 'company_profile_id');
     }
 
-    public function typeContrat(): BelongsTo
+    public function categories(): HasMany
     {
-        return $this->belongsTo(TypeContrat::class, 'type_contrat_id');
+        return $this->hasMany(Categorie::class, 'type_contrat_id');
     }
 
-    public function logements(): HasMany
+    public function affectations(): HasMany
     {
-        return $this->hasMany(Logement::class, 'categorie_id');
+        return $this->hasMany(Affectation::class, 'type_contrat_id');
     }
 }
