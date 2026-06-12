@@ -11,6 +11,7 @@ class RegleLoyer extends Model
 
     protected $fillable = [
         'company_profile_id',
+        'cycle',
         'jour_declenchement',
         'taux_penalite',
     ];

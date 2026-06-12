@@ -596,8 +596,24 @@
                         <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm border border-amber-200">
                             <i class="fa-solid fa-clock-badge text-lg"></i>
                         </div>
+                        <span 
+                            :class="[
+                                'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border',
+                                rule.cycle === 'Trimestriel' 
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : rule.cycle === 'Annuel'
+                                        ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                            ]"
+                        >
+                            {{ rule.cycle || 'Mensuel' }}
+                        </span>
                     </div>
-                    <div class="font-extrabold text-slate-800 text-base mb-1">Le {{ rule.jour_declenchement }} du mois</div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">
+                        <span v-if="rule.cycle === 'Trimestriel'">Après {{ rule.jour_declenchement }} jours</span>
+                        <span v-else-if="rule.cycle === 'Annuel'">Après {{ rule.jour_declenchement }} jours</span>
+                        <span v-else>Le {{ rule.jour_declenchement }} du mois</span>
+                    </div>
                     <div class="text-xs text-slate-500 mb-4 flex-1">Pénalité de retard appliquée : <strong class="text-red-500 font-extrabold text-sm">{{ rule.taux_penalite }}%</strong></div>
                     
                     <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
@@ -1130,18 +1146,41 @@
             <form @submit.prevent="submitRegleLoyerForm" class="space-y-6">
                 <div class="grid grid-cols-1 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jour de déclenchement (du mois) <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Cycle de Facturation <span class="text-red-500">*</span></label>
+                        <select
+                            v-model="regleLoyerForm.cycle"
+                            required
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-705 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                        >
+                            <option value="Mensuel">Mensuel</option>
+                            <option value="Trimestriel">Trimestriel</option>
+                            <option value="Annuel">Annuel</option>
+                        </select>
+                        <span v-if="regleLoyerErrors.cycle" class="text-red-500 text-xs mt-1 block">{{ regleLoyerErrors.cycle[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                            <span v-if="regleLoyerForm.cycle === 'Mensuel'">Jour de déclenchement (du mois)</span>
+                            <span v-else-if="regleLoyerForm.cycle === 'Trimestriel'">Jours de retard (depuis début trimestre)</span>
+                            <span v-else>Jours de retard (depuis début année de bail)</span>
+                            <span class="text-red-500"> *</span>
+                        </label>
                         <input
                             v-model.number="regleLoyerForm.jour_declenchement"
                             type="number"
                             min="1"
-                            max="31"
+                            :max="regleLoyerForm.cycle === 'Trimestriel' ? 90 : (regleLoyerForm.cycle === 'Annuel' ? 365 : 31)"
                             required
-                            placeholder="Ex: 11"
+                            :placeholder="regleLoyerForm.cycle === 'Trimestriel' ? 'Ex: 15' : (regleLoyerForm.cycle === 'Annuel' ? 'Ex: 30' : 'Ex: 11')"
                             class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-705 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
                         />
                         <span v-if="regleLoyerErrors.jour_declenchement" class="text-red-500 text-xs mt-1 block">{{ regleLoyerErrors.jour_declenchement[0] }}</span>
-                        <p class="text-[10px] text-slate-400 mt-1">La pénalité s'appliquera automatiquement si le loyer du mois en cours n'est pas réglé à cette date.</p>
+                        <p class="text-[10px] text-slate-400 mt-1">
+                            <span v-if="regleLoyerForm.cycle === 'Mensuel'">La pénalité s'appliquera automatiquement si le loyer du mois n'est pas réglé à cette date.</span>
+                            <span v-else-if="regleLoyerForm.cycle === 'Trimestriel'">La pénalité s'appliquera si le trimestre de loyer est réglé après ce nombre de jours écoulés depuis le début du trimestre.</span>
+                            <span v-else>La pénalité s'appliquera si l'année de loyer est réglée après ce nombre de jours écoulés depuis le début de l'année de bail.</span>
+                        </p>
                     </div>
                     
                     <div>
@@ -1254,6 +1293,7 @@ const editingRegleLoyerId = ref(null);
 const isRegleLoyerSubmitting = ref(false);
 const regleLoyerErrors = ref({});
 const regleLoyerForm = ref({
+    cycle: 'Mensuel',
     jour_declenchement: 11,
     taux_penalite: 10
 });
@@ -2277,6 +2317,7 @@ const openCreateRegleLoyerModal = () => {
     isEditingRegleLoyer.value = false;
     editingRegleLoyerId.value = null;
     regleLoyerForm.value = {
+        cycle: 'Mensuel',
         jour_declenchement: 11,
         taux_penalite: 10
     };
@@ -2288,6 +2329,7 @@ const openEditRegleLoyerModal = (rule) => {
     isEditingRegleLoyer.value = true;
     editingRegleLoyerId.value = rule.id;
     regleLoyerForm.value = {
+        cycle: rule.cycle || 'Mensuel',
         jour_declenchement: rule.jour_declenchement,
         taux_penalite: rule.taux_penalite
     };

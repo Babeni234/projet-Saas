@@ -377,7 +377,7 @@
                                         <div class="mt-3">
                                             <div class="text-[10px] font-semibold text-slate-400">Loyer: {{ formatCurrency(m.loyer) }}</div>
                                             <div v-if="m.penalite > 0" class="text-[9px] font-bold text-red-500 mt-0.5">
-                                                Pén: +{{ formatCurrency(m.penalite) }}
+                                                Pén: +{{ m.penaliteRate }}% (+{{ formatCurrency(m.penalite) }})
                                             </div>
                                             <div class="text-xs font-extrabold text-slate-800 mt-1">
                                                 Dû: {{ formatCurrency(Number(m.loyer) + Number(m.penalite)) }}
@@ -455,7 +455,10 @@
                                     <tr v-for="item in receiptPreviewData.items" :key="item.periode" class="border-b border-slate-100/50">
                                         <td class="py-2 font-bold text-slate-800">{{ formatPeriod(item.periode) }}</td>
                                         <td class="py-2 text-right text-slate-650">{{ formatCurrency(item.loyer) }}</td>
-                                        <td class="py-2 text-right text-red-500 font-semibold">+{{ formatCurrency(item.penalite) }}</td>
+                                        <td class="py-2 text-right text-red-500 font-semibold">
+                                            +{{ formatCurrency(item.penalite) }}
+                                            <span v-if="item.penaliteRate > 0" class="text-[9px] font-bold text-red-400 block">({{ item.penaliteRate }}%)</span>
+                                        </td>
                                         <td class="py-2 text-right font-extrabold text-slate-800">{{ formatCurrency(Number(item.loyer) + Number(item.penalite)) }}</td>
                                     </tr>
                                     <tr v-if="receiptPreviewData.items.length === 0">
@@ -904,16 +907,17 @@ const contractMonthsList = computed(() => {
 
         const isPaid = paidMonthsList.value.includes(period);
         const loyer = Number(contrat.loyer);
-        const penalite = isPaid ? 0 : calculatePenalty(period, loyer);
+        const penaltyInfo = isPaid ? { amount: 0, rate: 0 } : calculatePenaltyInfo(period, loyer, contrat.cycle_paiement);
 
         list.push({
             periode: period,
             loyer,
-            penalite,
+            penalite: penaltyInfo.amount,
+            penaliteRate: penaltyInfo.rate,
             isPaid
         });
-        current.setMonth(current.setMonth() + 1); // increment
-        current = new Date(yr, current.getMonth(), 1);
+        current.setMonth(current.getMonth() + 1);
+        current = new Date(current.getFullYear(), current.getMonth(), 1);
     }
     return list;
 });
@@ -945,58 +949,76 @@ const receiptPreviewData = computed(() => {
     };
 });
 
-// Penalty calculation logic
-const calculatePenalty = (periode, baseRent) => {
+// Penalty calculation logic by cycle and days elapsed since block start
+const calculatePenaltyInfo = (periode, baseRent, cycle) => {
+    const activeCycle = cycle || 'Mensuel';
+    const rules = regleLoyers.value.filter(r => (r.cycle || 'Mensuel') === activeCycle);
+    if (rules.length === 0) {
+        return { amount: 0, rate: 0 };
+    }
+
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // 1-indexed
-    const currentDay = today.getDate();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const parts = periode.split('-');
-    const targetYear = parseInt(parts[0], 10);
-    const targetMonth = parseInt(parts[1], 10);
+    const dueYear = parseInt(parts[0], 10);
+    const dueMonth = parseInt(parts[1], 10) - 1; // 0-indexed
+    const dueDate = new Date(dueYear, dueMonth, 1);
+
+    const diffTime = todayMidnight - dueDate;
+    const daysElapsed = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     // Future month -> No penalty
-    if (targetYear > currentYear || (targetYear === currentYear && targetMonth > currentMonth)) {
-        return 0;
+    if (daysElapsed <= 0) {
+        return { amount: 0, rate: 0 };
     }
 
-    // Past month -> Max penalty rate from rules
-    if (targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth)) {
-        if (regleLoyers.value.length === 0) return 0;
-        const maxRate = Math.max(...regleLoyers.value.map(r => Number(r.taux_penalite)));
-        return Number((baseRent * (maxRate / 100)).toFixed(2));
+    // Filter rules where trigger is <= daysElapsed
+    const matchingRules = rules.filter(r => Number(r.jour_declenchement) <= daysElapsed);
+    if (matchingRules.length === 0) {
+        return { amount: 0, rate: 0 };
     }
 
-    // Current month -> Check today's day compared to rules
-    if (targetYear === currentYear && targetMonth === currentMonth) {
-        if (regleLoyers.value.length === 0) return 0;
-        const matchingRules = regleLoyers.value.filter(r => Number(r.jour_declenchement) <= currentDay);
-        if (matchingRules.length === 0) return 0;
-        const maxRate = Math.max(...matchingRules.map(r => Number(r.taux_penalite)));
-        return Number((baseRent * (maxRate / 100)).toFixed(2));
-    }
-
-    return 0;
+    // Get max rate matching
+    const maxRate = Math.max(...matchingRules.map(r => Number(r.taux_penalite)));
+    const amount = Number((baseRent * (maxRate / 100)).toFixed(2));
+    return { amount, rate: maxRate };
 };
 
-// Selection of month cards ensuring sequential selection (no skip)
+// Selection of month cards ensuring sequential selection in waves of cycle
 const selectMonthCard = (monthObj, idx) => {
     const isSelected = selectedMonths.value.includes(monthObj.periode);
     const unpaidList = contractMonthsList.value.filter(m => !m.isPaid);
     const relativeIdx = unpaidList.findIndex(m => m.periode === monthObj.periode);
+    if (relativeIdx === -1) return;
+
+    const cycle = selectedContrat.value?.cycle_paiement || 'Mensuel';
+    let k = 1;
+    if (cycle === 'Trimestriel') k = 3;
+    else if (cycle === 'Annuel') k = 12;
 
     if (!isSelected) {
-        // Select this month and all unpaid months before it
-        for (let i = 0; i <= relativeIdx; i++) {
-            if (!selectedMonths.value.includes(unpaidList[i].periode)) {
-                selectedMonths.value.push(unpaidList[i].periode);
-            }
+        // Select this month and round UP to the next multiple of k
+        const targetCount = relativeIdx + 1;
+        const remainder = targetCount % k;
+        const neededCount = remainder === 0 ? targetCount : targetCount + (k - remainder);
+        const limit = Math.min(neededCount, unpaidList.length);
+        
+        const newSelection = [];
+        for (let i = 0; i < limit; i++) {
+            newSelection.push(unpaidList[i].periode);
         }
+        selectedMonths.value = newSelection;
     } else {
-        // Deselect this month and all selected months after it
-        const periodesToDeselect = unpaidList.slice(relativeIdx).map(m => m.periode);
-        selectedMonths.value = selectedMonths.value.filter(p => !periodesToDeselect.includes(p));
+        // Deselect this month and round DOWN remaining selected count to the nearest multiple of k
+        const targetCount = relativeIdx;
+        const neededCount = targetCount - (targetCount % k);
+        
+        const newSelection = [];
+        for (let i = 0; i < neededCount; i++) {
+            newSelection.push(unpaidList[i].periode);
+        }
+        selectedMonths.value = newSelection;
     }
 };
 
@@ -1108,15 +1130,17 @@ const closeModal = () => {
 const triggerPaymentMethodSetup = () => {
     const cycle = selectedContrat.value?.cycle_paiement || 'Mensuel';
     const count = selectedMonths.value.length;
+    const unpaidList = contractMonthsList.value.filter(m => !m.isPaid);
+    const isPayingAllRemaining = count === unpaidList.length;
 
-    // Apply cycle business rules
-    if (cycle === 'Trimestriel' && count % 3 !== 0) {
+    // Apply cycle business rules (unless paying all remaining months at the end of lease)
+    if (cycle === 'Trimestriel' && count % 3 !== 0 && !isPayingAllRemaining) {
         errorMessage.value = "Pour un cycle trimestriel, le paiement doit être effectué par tranche obligatoire de 3 mois.";
         showError.value = true;
         return;
     }
 
-    if (cycle === 'Annuel' && count % 12 !== 0) {
+    if (cycle === 'Annuel' && count % 12 !== 0 && !isPayingAllRemaining) {
         errorMessage.value = "Pour un cycle annuel, le paiement doit être effectué par tranche obligatoire de 12 mois (1 an).";
         showError.value = true;
         return;

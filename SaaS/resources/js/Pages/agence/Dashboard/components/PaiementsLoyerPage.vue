@@ -776,16 +776,17 @@ const contractMonthsList = computed(() => {
 
         const isPaid = paidMonthsList.value.includes(period);
         const loyer = Number(contrat.loyer);
-        const penalite = isPaid ? 0 : calculatePenalty(period, loyer);
+        const penaltyInfo = isPaid ? { amount: 0, rate: 0 } : calculatePenaltyInfo(period, loyer, contrat.cycle_paiement);
 
         list.push({
             periode: period,
             loyer,
-            penalite,
+            penalite: penaltyInfo.amount,
+            penaliteRate: penaltyInfo.rate,
             isPaid
         });
-        current.setMonth(current.getMonth() + 1); // increment
-        current = new Date(yr, current.getMonth(), 1);
+        current.setMonth(current.getMonth() + 1);
+        current = new Date(current.getFullYear(), current.getMonth(), 1);
     }
     return list;
 });
@@ -817,39 +818,40 @@ const receiptPreviewData = computed(() => {
     };
 });
 
-// Penalty calculation logic
-const calculatePenalty = (periode, baseRent) => {
+// Penalty calculation logic by cycle and days elapsed since block start
+const calculatePenaltyInfo = (periode, baseRent, cycle) => {
+    const activeCycle = cycle || 'Mensuel';
+    const rules = regleLoyers.value.filter(r => (r.cycle || 'Mensuel') === activeCycle);
+    if (rules.length === 0) {
+        return { amount: 0, rate: 0 };
+    }
+
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // 1-indexed
-    const currentDay = today.getDate();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const parts = periode.split('-');
-    const targetYear = parseInt(parts[0], 10);
-    const targetMonth = parseInt(parts[1], 10);
+    const dueYear = parseInt(parts[0], 10);
+    const dueMonth = parseInt(parts[1], 10) - 1; // 0-indexed
+    const dueDate = new Date(dueYear, dueMonth, 1);
+
+    const diffTime = todayMidnight - dueDate;
+    const daysElapsed = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     // Future month -> No penalty
-    if (targetYear > currentYear || (targetYear === currentYear && targetMonth > currentMonth)) {
-        return 0;
+    if (daysElapsed <= 0) {
+        return { amount: 0, rate: 0 };
     }
 
-    // Past month -> Max penalty rate from rules
-    if (targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth)) {
-        if (regleLoyers.value.length === 0) return 0;
-        const maxRate = Math.max(...regleLoyers.value.map(r => Number(r.taux_penalite)));
-        return Number((baseRent * (maxRate / 100)).toFixed(2));
+    // Filter rules where trigger is <= daysElapsed
+    const matchingRules = rules.filter(r => Number(r.jour_declenchement) <= daysElapsed);
+    if (matchingRules.length === 0) {
+        return { amount: 0, rate: 0 };
     }
 
-    // Current month -> Check today's day compared to rules
-    if (targetYear === currentYear && targetMonth === currentMonth) {
-        if (regleLoyers.value.length === 0) return 0;
-        const matchingRules = regleLoyers.value.filter(r => Number(r.jour_declenchement) <= currentDay);
-        if (matchingRules.length === 0) return 0;
-        const maxRate = Math.max(...matchingRules.map(r => Number(r.taux_penalite)));
-        return Number((baseRent * (maxRate / 100)).toFixed(2));
-    }
-
-    return 0;
+    // Get max rate matching
+    const maxRate = Math.max(...matchingRules.map(r => Number(r.taux_penalite)));
+    const amount = Number((baseRent * (maxRate / 100)).toFixed(2));
+    return { amount, rate: maxRate };
 };
 
 // Selection of month cards ensuring sequential selection (no skip)
