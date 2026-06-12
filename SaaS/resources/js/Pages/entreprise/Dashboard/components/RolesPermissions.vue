@@ -161,7 +161,7 @@
                                     class="px-3 py-2 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer"
                                 >
                                     <option :value="null">Aucun rôle</option>
-                                    <option v-for="r in roles" :key="r.id" :value="r.id">
+                                    <option v-for="r in getFilteredRolesForUser(user)" :key="r.id" :value="r.id">
                                         {{ r.name }}
                                     </option>
                                 </select>
@@ -803,7 +803,7 @@
                             class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
                         >
                             <option value="" disabled>Sélectionner un rôle</option>
-                            <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.name }}</option>
+                            <option v-for="r in filteredRolesForCreate" :key="r.id" :value="r.id">{{ r.name }}</option>
                         </select>
                         <span v-if="employeeErrors.role_id" class="text-red-500 text-xs mt-1 block">{{ employeeErrors.role_id[0] }}</span>
                     </div>
@@ -1001,6 +1001,17 @@
                             class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
                         ></textarea>
                         <span v-if="typeEngagementErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeEngagementErrors.description[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modèle de document (template par défaut)</label>
+                        <textarea
+                            v-model="typeEngagementForm.template"
+                            rows="5"
+                            placeholder="Saisissez le modèle textuel d'engagement par défaut..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono text-xs"
+                        ></textarea>
+                        <span v-if="typeEngagementErrors.template" class="text-red-500 text-xs mt-1 block">{{ typeEngagementErrors.template[0] }}</span>
                     </div>
                 </div>
 
@@ -1324,6 +1335,38 @@ const employeeForm = ref({
     phone: ''
 });
 
+const filteredRolesForCreate = computed(() => {
+    const agencyId = employeeForm.value.agency_id;
+    if (!agencyId) return roles.value;
+    const selectedAgency = agencies.value.find(a => Number(a.id) === Number(agencyId));
+    if (selectedAgency && selectedAgency.chef_id) {
+        return roles.value.filter(r => r.slug !== 'chef_agence');
+    }
+    return roles.value;
+});
+
+const getFilteredRolesForUser = (user) => {
+    const agencyId = user.employee?.agency_id;
+    if (!agencyId) return roles.value;
+    const agency = agencies.value.find(a => Number(a.id) === Number(agencyId));
+    if (agency && agency.chef_id && Number(agency.chef_id) !== Number(user.id)) {
+        return roles.value.filter(r => r.slug !== 'chef_agence');
+    }
+    return roles.value;
+};
+
+watch(() => employeeForm.value.agency_id, (newAgencyId) => {
+    if (newAgencyId) {
+        const agency = agencies.value.find(a => Number(a.id) === Number(newAgencyId));
+        if (agency && agency.chef_id) {
+            const chefRole = roles.value.find(r => r.slug === 'chef_agence');
+            if (chefRole && Number(employeeForm.value.role_id) === Number(chefRole.id)) {
+                employeeForm.value.role_id = '';
+            }
+        }
+    }
+});
+
 const notification = ref({
     show: false,
     type: 'success',
@@ -1340,7 +1383,8 @@ const isTypeEngagementSubmitting = ref(false);
 const typeEngagementErrors = ref({});
 const typeEngagementForm = ref({
     nom: '',
-    description: ''
+    description: '',
+    template: ''
 });
 
 // TypeEtatDesLieux state
@@ -1964,7 +2008,7 @@ const fetchTypeEngagements = async () => {
 const openCreateTypeEngagementModal = () => {
     isEditingTypeEngagement.value = false;
     editingTypeEngagementId.value = null;
-    typeEngagementForm.value = { nom: '', description: '' };
+    typeEngagementForm.value = { nom: '', description: '', template: '' };
     typeEngagementErrors.value = {};
     showTypeEngagementModal.value = true;
 };
@@ -1974,7 +2018,8 @@ const openEditTypeEngagementModal = (type) => {
     editingTypeEngagementId.value = type.id;
     typeEngagementForm.value = {
         nom: type.nom,
-        description: type.description || ''
+        description: type.description || '',
+        template: type.template || ''
     };
     typeEngagementErrors.value = {};
     showTypeEngagementModal.value = true;

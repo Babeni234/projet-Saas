@@ -564,10 +564,15 @@
                     <button 
                         @click="savePayment" 
                         :disabled="savingPayment"
-                        class="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 transition-all text-xs flex items-center justify-center gap-2"
+                        class="flex-1 px-4 py-3 text-white rounded-xl font-bold shadow-lg transition-all text-xs flex items-center justify-center gap-2"
+                        :class="[
+                            savingPayment 
+                                ? 'shimmer-bg pulse-btn shadow-emerald-500/10 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98]'
+                        ]"
                     >
                         <i v-if="savingPayment" class="fa-solid fa-spinner animate-spin"></i>
-                        Confirmer & Payer
+                        <span>{{ savingPayment ? 'Validation en cours...' : 'Confirmer & Payer' }}</span>
                     </button>
                 </div>
             </div>
@@ -1357,5 +1362,22 @@ const getAvatarGradient = (name) => {
 
 .animate-scale-up {
     animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-btn {
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+.shimmer-bg {
+    background-size: 200% auto;
+    background-image: linear-gradient(to right, #10b981 0%, #059669 25%, #34d399 50%, #10b981 100%);
+    animation: shimmer 1.5s infinite linear;
+}
+@keyframes shimmer {
+    to { background-position: -200% center; }
 }
 </style>

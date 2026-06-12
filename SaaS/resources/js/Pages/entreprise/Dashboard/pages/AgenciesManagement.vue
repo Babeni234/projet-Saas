@@ -644,6 +644,7 @@ const submitQuickAssign = async () => {
     quickAssignSubmitting.value = true;
     try {
         const payload = {
+            chef_id: selected.chef_id,
             name: selected.name,
             code: selected.code,
             description: selected.description,

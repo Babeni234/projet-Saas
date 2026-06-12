@@ -240,6 +240,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/type-engagements/{typeEngagement}', [\App\Http\Controllers\TypeEngagementController::class, 'update'])->name('type-engagements.update');
     Route::delete('/api/type-engagements/{typeEngagement}', [\App\Http\Controllers\TypeEngagementController::class, 'destroy'])->name('type-engagements.destroy');
 
+    // Engagements API routes
+    Route::get('/api/engagements', [\App\Http\Controllers\EngagementController::class, 'index'])->name('engagements.json');
+    Route::post('/api/engagements', [\App\Http\Controllers\EngagementController::class, 'store'])->name('engagements.store');
+    Route::put('/api/engagements/{engagement}', [\App\Http\Controllers\EngagementController::class, 'update'])->name('engagements.update');
+    Route::delete('/api/engagements/{engagement}', [\App\Http\Controllers\EngagementController::class, 'destroy'])->name('engagements.destroy');
+    Route::post('/api/engagements/{engagement}/confirm-honor', [\App\Http\Controllers\EngagementController::class, 'confirmHonor'])->name('engagements.confirm-honor');
+
     // TypeEtatDesLieux API routes
     Route::get('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'index'])->name('type-etat-des-lieux.json');
     Route::post('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'store'])->name('type-etat-des-lieux.store');

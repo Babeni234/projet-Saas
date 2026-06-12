@@ -24,22 +24,34 @@ class AgencyController extends Controller
     /**
      * Get eligible managers (employees with manage_agencies or * permission)
      */
-    private function getEligibleManagers(?int $companyProfileId)
+    private function getEligibleManagers(?int $companyProfileId, ?int $currentAgencyId = null)
     {
         if ($companyProfileId === null) {
             return collect();
         }
 
+        // Get IDs of users who are already chefs of other agencies
+        $otherChefsQuery = Agency::where('company_profile_id', $companyProfileId)
+            ->whereNotNull('chef_id');
+        
+        if ($currentAgencyId !== null) {
+            $otherChefsQuery->where('id', '!=', $currentAgencyId);
+        }
+        
+        $otherChefUserIds = $otherChefsQuery->pluck('chef_id')->toArray();
+
         return Employee::with(['user.role'])
             ->where('company_profile_id', $companyProfileId)
             ->whereHas('user.role', function ($query) {
-                $query->whereJsonContains('permissions', 'manage_agencies')
-                      ->orWhereJsonContains('permissions', '*');
+                $query->where('slug', 'chef_agence');
+            })
+            ->whereHas('user', function ($query) use ($otherChefUserIds) {
+                $query->whereNotIn('id', $otherChefUserIds);
             })
             ->get()
             ->map(function ($employee) {
                 return [
-                    'id' => $employee->id,
+                    'id' => $employee->user->id, // Use user ID because chef_id references users.id
                     'name' => $employee->user->name,
                     'email' => $employee->user->email,
                     'phone' => $employee->phone ?? $employee->user->phone ?? '',
@@ -194,6 +206,7 @@ class AgencyController extends Controller
             'country' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'chef_id' => 'nullable|integer|exists:users,id',
             'manager_name' => 'nullable|string|max:255',
             'manager_email' => 'nullable|email|max:255',
             'manager_phone' => 'nullable|string|max:20',
@@ -210,8 +223,8 @@ class AgencyController extends Controller
 
         $agency = Agency::create($validated);
 
-        if (!empty($agency->manager_email)) {
-            $user = User::where('email', $agency->manager_email)->first();
+        if ($agency->chef_id) {
+            $user = User::find($agency->chef_id);
             if ($user && $user->employee) {
                 $user->employee->update(['agency_id' => $agency->id]);
             }
@@ -249,7 +262,7 @@ class AgencyController extends Controller
         $this->checkAgencyAccess($agency);
         $companyProfileId = auth()->user()->company_profile_id;
 
-        $eligibleManagers = $this->getEligibleManagers($companyProfileId);
+        $eligibleManagers = $this->getEligibleManagers($companyProfileId, $agency->id);
 
         return $this->enterpriseDashboard("immobilier/agencies/{$agency->id}/edit", [
             'agency' => $agency,
@@ -285,6 +298,7 @@ class AgencyController extends Controller
             'country' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'chef_id' => 'nullable|integer|exists:users,id',
             'manager_name' => 'nullable|string|max:255',
             'manager_email' => 'nullable|email|max:255',
             'manager_phone' => 'nullable|string|max:20',
@@ -297,12 +311,26 @@ class AgencyController extends Controller
             unset($validated['code']);
         }
 
+        $oldChefId = $agency->chef_id;
+        $newChefId = $request->input('chef_id');
+
         $agency->update($validated);
 
-        if (!empty($agency->manager_email)) {
-            $user = User::where('email', $agency->manager_email)->first();
-            if ($user && $user->employee) {
-                $user->employee->update(['agency_id' => $agency->id]);
+        if ($oldChefId != $newChefId) {
+            // Clear old chef's agency affectation
+            if ($oldChefId) {
+                $oldUser = User::find($oldChefId);
+                if ($oldUser && $oldUser->employee) {
+                    $oldUser->employee->update(['agency_id' => null]);
+                }
+            }
+
+            // Set new chef's agency affectation
+            if ($newChefId) {
+                $newUser = User::find($newChefId);
+                if ($newUser && $newUser->employee) {
+                    $newUser->employee->update(['agency_id' => $agency->id]);
+                }
             }
         }
 

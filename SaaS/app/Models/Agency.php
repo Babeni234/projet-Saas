@@ -48,6 +48,7 @@ class Agency extends Model
         'establishment_date',
         'metadata',
         'company_profile_id',
+        'chef_id',
     ];
 
     public function companyProfile(): \Illuminate\Database\Eloquent\Relations\BelongsTo

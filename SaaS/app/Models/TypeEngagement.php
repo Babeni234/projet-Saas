@@ -13,6 +13,7 @@ class TypeEngagement extends Model
         'company_profile_id',
         'nom',
         'description',
+        'template',
     ];
 
     public function company(): BelongsTo

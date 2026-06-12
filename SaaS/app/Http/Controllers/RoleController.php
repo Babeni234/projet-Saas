@@ -215,6 +215,19 @@ class RoleController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'position' => $validated['position'] ?? null,
             ]);
+
+            // 3. Automatically assign as agency chef if role is 'chef_agence' and agency_id is selected
+            if (!empty($validated['agency_id'])) {
+                $role = Role::find($validated['role_id']);
+                if ($role && $role->slug === 'chef_agence') {
+                    Agency::where('id', $validated['agency_id'])->update([
+                        'chef_id' => $user->id,
+                        'manager_name' => $user->name,
+                        'manager_email' => $user->email,
+                        'manager_phone' => $validated['phone'] ?? null,
+                    ]);
+                }
+            }
         });
 
         return redirect()->back()->with('success', 'Collaborateur créé avec succès.');
@@ -240,9 +253,39 @@ class RoleController extends Controller
             ],
         ]);
 
-        $user->update([
-            'role_id' => $validated['role_id'],
-        ]);
+        $oldRole = $user->role;
+        $newRole = $validated['role_id'] ? Role::find($validated['role_id']) : null;
+
+        DB::transaction(function () use ($user, $validated, $oldRole, $newRole) {
+            $user->update([
+                'role_id' => $validated['role_id'],
+            ]);
+
+            // If user was a chef and is no longer a chef, clear chef_id from agencies
+            if ($oldRole && $oldRole->slug === 'chef_agence' && (!$newRole || $newRole->slug !== 'chef_agence')) {
+                Agency::where('chef_id', $user->id)->update([
+                    'chef_id' => null,
+                    'manager_name' => null,
+                    'manager_email' => null,
+                    'manager_phone' => null,
+                ]);
+            }
+
+            // If user becomes a chef and is assigned to an agency, update agency chef_id if empty
+            if ((!$oldRole || $oldRole->slug !== 'chef_agence') && $newRole && $newRole->slug === 'chef_agence') {
+                if ($user->employee && $user->employee->agency_id) {
+                    $agency = Agency::find($user->employee->agency_id);
+                    if ($agency && !$agency->chef_id) {
+                        $agency->update([
+                            'chef_id' => $user->id,
+                            'manager_name' => $user->name,
+                            'manager_email' => $user->email,
+                            'manager_phone' => $user->employee->phone ?? $user->phone ?? null,
+                        ]);
+                    }
+                }
+            }
+        });
 
         return redirect()->back()->with('success', 'Rôle de l\'utilisateur mis à jour.');
     }

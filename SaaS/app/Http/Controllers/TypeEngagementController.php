@@ -27,6 +27,7 @@ class TypeEngagementController extends Controller
         $validated = $request->validate([
             'nom'         => 'required|string|max:255',
             'description' => 'nullable|string',
+            'template'    => 'nullable|string',
         ]);
 
         $type = TypeEngagement::create([
@@ -44,6 +45,7 @@ class TypeEngagementController extends Controller
         $validated = $request->validate([
             'nom'         => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'template'    => 'nullable|string',
         ]);
 
         $typeEngagement->update($validated);

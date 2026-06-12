@@ -214,15 +214,15 @@
                     <div class="grid grid-cols-1 gap-3">
                         <div>
                             <select
+                                :value="formData.chef_id || ''"
                                 @change="handleManagerChange"
                                 class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-slate-700 cursor-pointer"
                             >
                                 <option value="">Sélectionner un responsable...</option>
                                 <option 
-                                    v-for="mgr in eligibleManagers" 
+                                    v-for="mgr in allEligibleManagers" 
                                     :key="mgr.id" 
                                     :value="mgr.id"
-                                    :selected="formData.manager_name === mgr.name || formData.manager_email === mgr.email"
                                 >
                                     {{ mgr.name }} ({{ mgr.email }})
                                 </option>
@@ -283,7 +283,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
     agency: {
@@ -303,6 +303,7 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel']);
 
 const formData = ref({
+    chef_id: props.agency?.chef_id || null,
     name: props.agency?.name || '',
     code: props.agency?.code || '',
     description: props.agency?.description || '',
@@ -325,9 +326,26 @@ const formData = ref({
 
 const isSubmitting = ref(false);
 
+const allEligibleManagers = computed(() => {
+    const list = [...props.eligibleManagers];
+    if (props.agency && props.agency.chef_id) {
+        const exists = list.some(m => Number(m.id) === Number(props.agency.chef_id));
+        if (!exists) {
+            list.push({
+                id: props.agency.chef_id,
+                name: props.agency.manager_name || 'Chef Actuel',
+                email: props.agency.manager_email || '',
+                phone: props.agency.manager_phone || ''
+            });
+        }
+    }
+    return list;
+});
+
 watch(() => props.agency, (newAgency) => {
     if (newAgency) {
         formData.value = {
+            chef_id: newAgency.chef_id || null,
             name: newAgency.name || '',
             code: newAgency.code || '',
             description: newAgency.description || '',
@@ -352,12 +370,14 @@ watch(() => props.agency, (newAgency) => {
 
 const handleManagerChange = (event) => {
     const selectedId = parseInt(event.target.value);
-    const manager = props.eligibleManagers.find(m => m.id === selectedId);
+    const manager = allEligibleManagers.value.find(m => m.id === selectedId);
     if (manager) {
+        formData.value.chef_id = manager.id;
         formData.value.manager_name = manager.name;
         formData.value.manager_email = manager.email;
         formData.value.manager_phone = manager.phone || '';
     } else {
+        formData.value.chef_id = null;
         formData.value.manager_name = '';
         formData.value.manager_email = '';
         formData.value.manager_phone = '';

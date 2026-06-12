@@ -78,45 +78,68 @@
         </div>
 
         <!-- Filter & Search Panel -->
-        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="relative w-full md:w-96">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </span>
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Rechercher par référence, partie..."
-                    class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-sm font-semibold transition-all shadow-sm"
-                />
-            </div>
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase text-slate-400">Type :</span>
-                    <select v-model="typeFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                        <option value="All">Tous les types</option>
-                        <option value="Convention">Convention</option>
-                        <option value="Promesse">Promesse</option>
-                        <option value="Avenant">Avenant</option>
-                        <option value="Accord">Accord</option>
-                    </select>
+        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150 flex flex-col gap-4">
+            <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full lg:w-80">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Rechercher par référence, locataire..."
+                        class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-sm font-semibold transition-all shadow-sm"
+                    />
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase text-slate-400">Statut :</span>
-                    <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                        <option value="All">Tous les statuts</option>
-                        <option value="Actif">Actif</option>
-                        <option value="En cours">En cours</option>
-                        <option value="Expiré">Expiré</option>
-                    </select>
+                <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                    <!-- Agency Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase text-slate-400">Agence :</span>
+                        <select v-model="agencyFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
+                            <option value="All">Toutes les agences</option>
+                            <option v-for="a in agencies" :key="a.id" :value="a.id">{{ a.nom }}</option>
+                        </select>
+                    </div>
+                    <!-- Building Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase text-slate-400">Bâtiment :</span>
+                        <select v-model="buildingFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
+                            <option value="All">Tous les bâtiments</option>
+                            <option v-for="b in filterBuildings" :key="b.id" :value="b.id">{{ b.nom }}</option>
+                        </select>
+                    </div>
+                    <!-- Type Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase text-slate-400">Type :</span>
+                        <select v-model="typeFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
+                            <option value="All">Tous les types</option>
+                            <option v-for="t in typeEngagements" :key="t.id" :value="t.id">{{ t.nom }}</option>
+                        </select>
+                    </div>
+                    <!-- Status Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase text-slate-400">Statut :</span>
+                        <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
+                            <option value="All">Tous les statuts</option>
+                            <option value="actif">Actif</option>
+                            <option value="en cours">En cours</option>
+                            <option value="expirer">Expiré</option>
+                            <option value="valider">Validé</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Loading state -->
+        <div v-if="isInitialLoading" class="flex justify-center items-center py-12">
+            <span class="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full"></span>
+        </div>
+
         <!-- Table Section -->
-        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-150">
+        <div v-else class="bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-150">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -133,34 +156,60 @@
                     <tbody class="divide-y divide-slate-150">
                         <tr v-for="eng in filteredEngagements" :key="eng.id" class="hover:bg-slate-50/80 transition-colors">
                             <td class="px-6 py-4 text-sm font-bold text-slate-850">{{ eng.reference }}</td>
-                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">{{ eng.type }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">{{ eng.type_engagement?.nom || 'N/A' }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div :class="['w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-xs shadow-sm bg-gradient-to-br', getAvatarGradient(eng.partie)]">
-                                        {{ getInitials(eng.partie) }}
+                                    <div :class="['w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-xs shadow-sm bg-gradient-to-br', getAvatarGradient(eng.locataire?.nom)]">
+                                        {{ getInitials(eng.locataire?.nom) }}
                                     </div>
-                                    <div class="font-bold text-slate-800 text-sm">{{ eng.partie }}</div>
+                                    <div class="flex flex-col">
+                                        <div class="font-bold text-slate-800 text-sm">{{ eng.locataire?.nom || 'N/A' }}</div>
+                                        <div v-if="eng.agency" class="text-[10px] font-bold text-slate-450 uppercase tracking-wider">{{ eng.agency.nom }}</div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatDate(eng.dateDebut) }} au {{ formatDate(eng.dateFin) }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatDate(eng.date_debut) }} au {{ formatDate(eng.date_fin) }}</td>
                             <td class="px-6 py-4 text-sm text-slate-800 font-extrabold">{{ formatCurrency(eng.montant) }}</td>
                             <td class="px-6 py-4">
-                                <span :class="[
-                                    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border',
-                                    eng.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
-                                    eng.statut === 'En cours' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                    'bg-rose-50 text-rose-700 border-rose-200'
-                                ]">
-                                    <span :class="['w-1.5 h-1.5 rounded-full',
-                                        eng.statut === 'Actif' ? 'bg-emerald-500' :
-                                        eng.statut === 'En cours' ? 'bg-amber-500 animate-pulse' :
-                                        'bg-rose-500'
-                                    ]"></span>
-                                    {{ eng.statut }}
-                                </span>
+                                <div class="flex flex-col gap-1.5">
+                                    <span :class="[
+                                        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border w-fit',
+                                        eng.statut === 'actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
+                                        eng.statut === 'en cours' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                        eng.statut === 'valider' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                        'bg-rose-50 text-rose-700 border-rose-200'
+                                    ]">
+                                        <span :class="['w-1.5 h-1.5 rounded-full',
+                                            eng.statut === 'actif' ? 'bg-emerald-500' :
+                                            eng.statut === 'en cours' ? 'bg-amber-500 animate-pulse' :
+                                            eng.statut === 'valider' ? 'bg-purple-500' :
+                                            'bg-rose-500'
+                                        ]"></span>
+                                        {{ eng.statut === 'actif' ? 'Actif' : eng.statut === 'en cours' ? 'En cours' : eng.statut === 'valider' ? 'Validé' : 'Expiré' }}
+                                    </span>
+                                    <span v-if="eng.statut_honneur" :class="[
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border w-fit',
+                                        eng.statut_honneur === 'honner' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-650 border-rose-100'
+                                    ]">
+                                        {{ eng.statut_honneur === 'honner' ? 'Honoré' : 'Non Honoré' }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
+                                    <!-- Confirm Honor button -->
+                                    <button 
+                                        v-if="eng.statut !== 'valider'"
+                                        @click="confirmHonor(eng)" 
+                                        :disabled="confirmingId === eng.id"
+                                        class="p-2 text-emerald-650 hover:bg-emerald-50 rounded-xl transition-all relative flex items-center justify-center disabled:opacity-50"
+                                        title="Valider & Honorer"
+                                    >
+                                        <span v-if="confirmingId === eng.id" class="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin"></span>
+                                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
                                     <button 
                                         v-if="eng.content" 
                                         @click="viewEngagement(eng)" 
@@ -227,7 +276,7 @@
                     </div>
 
                     <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Reference -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Référence *</label>
@@ -237,56 +286,80 @@
                             <!-- Type -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'engagement *</label>
-                                <select v-model="formData.type" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm">
-                                    <option value="Convention">Convention</option>
-                                    <option value="Promesse">Promesse</option>
-                                    <option value="Avenant">Avenant</option>
-                                    <option value="Accord">Accord</option>
+                                <select v-model="formData.type_engagement_id" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm">
+                                    <option value="" disabled>Sélectionner le type</option>
+                                    <option v-for="t in typeEngagements" :key="t.id" :value="t.id">{{ t.nom }}</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Active Tenants selection for counterpart -->
-                        <div class="group">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Partie Concernée (Locataire Actif) *</label>
-                            <select 
-                                v-model="formData.partie" 
-                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                            >
-                                <option value="" disabled>Sélectionner la contrepartie</option>
-                                <option v-for="c in contratsActifs" :key="c.id" :value="c.locataire">
-                                    {{ c.locataire }} (Bail {{ c.numero }} - {{ c.reference }})
-                                </option>
-                            </select>
+                        <!-- 3-level cascade selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Agency Select -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Agence *</label>
+                                <select 
+                                    v-model="formData.agency_id" 
+                                    required
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                    @change="onAgencyChange"
+                                >
+                                    <option value="" disabled>Sélectionner une agence</option>
+                                    <option v-for="a in agencies" :key="a.id" :value="a.id">{{ a.nom }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Building Select -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
+                                <select 
+                                    v-model="formData.batiment_id" 
+                                    required
+                                    :disabled="!formData.agency_id"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
+                                    @change="onBatimentChange"
+                                >
+                                    <option value="" disabled>Sélectionner un bâtiment</option>
+                                    <option v-for="b in modalFilteredBatiments" :key="b.id" :value="b.id">{{ b.nom }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Contract / Tenant Select -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrepartie (Locataire Actif) *</label>
+                                <select 
+                                    v-model="formData.contrat_id" 
+                                    required
+                                    :disabled="!formData.batiment_id"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
+                                    @change="onContratChange"
+                                >
+                                    <option value="" disabled>Sélectionner le locataire</option>
+                                    <option v-for="c in modalFilteredContrats" :key="c.id" :value="c.id">
+                                        {{ c.locataire }} (Bail {{ c.numero }} - {{ c.reference }})
+                                    </option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Date Debut -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date Début *</label>
-                                <input v-model="formData.dateDebut" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
+                                <input v-model="formData.date_debut" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
                             </div>
                             <!-- Date Fin -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date Fin *</label>
-                                <input v-model="formData.dateFin" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
+                                <input v-model="formData.date_fin" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Montant -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant (€)</label>
                                 <input v-model.number="formData.montant" type="number" placeholder="Ex: 5000" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
-                            </div>
-                            <!-- Statut -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Statut *</label>
-                                <select v-model="formData.statut" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm">
-                                    <option value="Actif">Actif</option>
-                                    <option value="En cours">En cours</option>
-                                    <option value="Expiré">Expiré</option>
-                                </select>
                             </div>
                         </div>
 
@@ -301,7 +374,7 @@
                         </div>
 
                         <!-- Canvas Template display -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <div v-if="canevasTemplate" class="bg-slate-55 border border-slate-200 rounded-2xl p-4">
                             <span class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Modèle de Canevas Actuel :</span>
                             <div class="text-[11px] text-slate-550 leading-relaxed font-mono whitespace-pre-line max-h-24 overflow-y-auto">
                                 {{ canevasTemplate }}
@@ -341,22 +414,24 @@
                     <span class="text-xs font-bold text-slate-400">TinyMCE Workspace</span>
                 </div>
                 
-                <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50">
                     <textarea id="engagement-editor"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-4">
                     <button 
                         @click="closeEditorModal" 
-                        class="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-250 transition-all text-xs"
+                        class="px-6 py-3 bg-slate-100 text-slate-650 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
                     >
                         Fermer sans enregistrer
                     </button>
                     <button 
                         @click="confirmRedaction" 
-                        class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-650 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/35 transition-all text-xs"
+                        :disabled="isSaving"
+                        class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-650 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/35 transition-all text-xs flex items-center gap-2"
                     >
-                        Valider & Enregistrer l'Acte
+                        <span v-if="isSaving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span>Valider & Enregistrer l'Acte</span>
                     </button>
                 </div>
             </div>
@@ -367,7 +442,7 @@
             <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
                 <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                     <div>
-                        <span class="text-[10px] font-bold text-purple-600 uppercase">{{ viewingEngagementRef?.type }}</span>
+                        <span class="text-[10px] font-bold text-purple-600 uppercase">{{ viewingEngagementRef?.type_engagement?.nom }}</span>
                         <h3 class="text-lg font-extrabold text-slate-850">Acte {{ viewingEngagementRef?.reference }}</h3>
                     </div>
                     <button @click="closeViewContentModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
@@ -401,7 +476,10 @@
 
                     <div class="flex gap-4">
                         <button @click="closeDeleteModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
-                        <button @click="confirmDelete" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all hover:scale-[1.01] text-xs">Supprimer</button>
+                        <button @click="confirmDelete" :disabled="isDeleting" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all hover:scale-[1.01] text-xs flex items-center justify-center gap-2">
+                            <span v-if="isDeleting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span>Supprimer</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -418,7 +496,7 @@
                     </div>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-1">Succès !</h3>
                     <p class="text-slate-500 text-sm mb-6">{{ successMessage }}</p>
-                    <button @click="closeSuccess" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
+                    <button @click="closeSuccess" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-650 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
                 </div>
             </div>
         </div>
@@ -443,15 +521,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import axios from 'axios';
 
 const engagements = ref([]);
+const typeEngagements = ref([]);
+const agencies = ref([]);
+const batiments = ref([]);
 const contratsActifs = ref([]);
 
 const searchQuery = ref('');
 const typeFilter = ref('All');
 const statusFilter = ref('All');
+const agencyFilter = ref('All');
+const buildingFilter = ref('All');
 
 const showModal = ref(false);
 const showEditorModal = ref(false);
@@ -464,55 +547,107 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const deleteTarget = ref(null);
 const isGenerating = ref(false);
+const isSaving = ref(false);
+const isDeleting = ref(false);
+const confirmingId = ref(null);
+const isInitialLoading = ref(false);
 
 const viewingEngagementRef = ref(null);
 const editorContent = ref('');
-
-const canevasTemplate = ref(`CONVENTION D'ENGAGEMENT DE TYPE [Type]
-Entre l'organisme Enterprise Property Corp (le Bailleur), et la Partie Concernée [Partie].
-
-Il est convenu ce qui suit :
-1. Objet : La partie concernée s'engage à respecter les obligations stipulées dans le cadre de la convention.
-2. Montant financier : L'engagement porte sur une enveloppe financière estimée à [Montant].
-3. Durée : Cet engagement prend effet le [Date Début] et prend fin le [Date Fin].
-4. Litiges : Tout litige relatif à l'interprétation ou à l'exécution de cet acte sera soumis au tribunal compétent.
-
-Fait le [Date], en double exemplaire.`);
+const canevasTemplate = ref('');
 
 const formData = ref({
+    id: null,
     reference: '',
-    type: 'Convention',
-    partie: '',
-    dateDebut: '',
-    dateFin: '',
+    type_engagement_id: '',
+    agency_id: '',
+    batiment_id: '',
+    contrat_id: '',
+    locataire_id: '',
+    date_debut: '',
+    date_fin: '',
     montant: '',
-    statut: 'Actif',
     instructions: '',
     content: ''
 });
 
-onMounted(() => {
-    // 1. Load engagements from localStorage
-    const storedEng = localStorage.getItem('immobilier_engagements');
-    if (storedEng) {
-        engagements.value = JSON.parse(storedEng);
-    } else {
-        // Mock fallback
-        engagements.value = [
-            { id: 1, reference: 'ENG-2026-001', type: 'Convention', partie: 'Jean Dupont', dateDebut: '2026-01-01', dateFin: '2026-12-31', montant: 12000, statut: 'Actif', content: '<h3>CONVENTION D\'ENGAGEMENT</h3><p>Contenu mocké.</p>' },
-            { id: 2, reference: 'ENG-2026-002', type: 'Promesse', partie: 'Marie Lambert', dateDebut: '2026-02-15', dateFin: '2027-02-14', montant: 8500, statut: 'En cours', content: '<h3>PROMESSE DE BAIL</h3><p>Contenu mocké.</p>' },
-            { id: 3, reference: 'ENG-2026-003', type: 'Avenant', partie: 'Pierre Martin', dateDebut: '2026-03-01', dateFin: '2026-08-31', montant: 5000, statut: 'Expiré', content: '<h3>AVENANT</h3><p>Contenu mocké.</p>' }
-        ];
-        localStorage.setItem('immobilier_engagements', JSON.stringify(engagements.value));
+// Load database data
+const fetchEngagementsData = async () => {
+    isInitialLoading.value = true;
+    try {
+        const response = await axios.get('/api/engagements');
+        engagements.value = response.data.engagements || [];
+        typeEngagements.value = response.data.typeEngagements || [];
+        agencies.value = response.data.agencies || [];
+        batiments.value = response.data.batiments || [];
+        contratsActifs.value = response.data.contrats || [];
+    } catch (err) {
+        console.error("Erreur de chargement des engagements:", err);
+        errorMessage.value = "Une erreur est survenue lors de la récupération des données.";
+        showError.value = true;
+    } finally {
+        isInitialLoading.value = false;
     }
+};
 
-    // 2. Load active contracts
-    const storedContrats = localStorage.getItem('immobilier_contrats');
-    if (storedContrats) {
-        contratsActifs.value = JSON.parse(storedContrats).filter(c => c.statut === 'Actif');
+onMounted(() => {
+    fetchEngagementsData();
+});
+
+// 3-level cascade methods
+const onAgencyChange = () => {
+    formData.value.batiment_id = '';
+    formData.value.contrat_id = '';
+    formData.value.locataire_id = '';
+};
+
+const onBatimentChange = () => {
+    formData.value.contrat_id = '';
+    formData.value.locataire_id = '';
+};
+
+const onContratChange = () => {
+    const selectedC = contratsActifs.value.find(c => c.id === formData.value.contrat_id);
+    if (selectedC) {
+        formData.value.locataire_id = selectedC.locataire_id;
+    } else {
+        formData.value.locataire_id = '';
+    }
+};
+
+// Watch Type Engagement to pre-fill template
+watch(() => formData.value.type_engagement_id, (newVal) => {
+    const selectedType = typeEngagements.value.find(t => t.id === newVal);
+    if (selectedType) {
+        canevasTemplate.value = selectedType.template || '';
+    } else {
+        canevasTemplate.value = '';
     }
 });
 
+// Filter Buildings in filter panel based on selected Agency filter
+const filterBuildings = computed(() => {
+    if (agencyFilter.value === 'All') return batiments.value;
+    return batiments.value.filter(b => b.agency_id === Number(agencyFilter.value));
+});
+
+// Reset Building Filter if Agency filter changes
+watch(agencyFilter, () => {
+    buildingFilter.value = 'All';
+});
+
+// Computed properties for add/edit modal cascades
+const modalFilteredBatiments = computed(() => {
+    if (!formData.value.agency_id) return [];
+    return batiments.value.filter(b => b.agency_id === formData.value.agency_id);
+});
+
+const modalFilteredContrats = computed(() => {
+    if (!formData.value.batiment_id) return [];
+    return contratsActifs.value.filter(c => c.batiment_id === formData.value.batiment_id);
+});
+
+// Table & KPI filtering
 const filteredEngagements = computed(() => {
     let result = engagements.value;
 
@@ -520,47 +655,75 @@ const filteredEngagements = computed(() => {
         const query = searchQuery.value.toLowerCase();
         result = result.filter(e => 
             e.reference.toLowerCase().includes(query) ||
-            e.partie.toLowerCase().includes(query)
+            (e.locataire && e.locataire.nom.toLowerCase().includes(query))
         );
     }
 
     if (typeFilter.value !== 'All') {
-        result = result.filter(e => e.type === typeFilter.value);
+        result = result.filter(e => e.type_engagement_id === Number(typeFilter.value));
     }
 
     if (statusFilter.value !== 'All') {
         result = result.filter(e => e.statut === statusFilter.value);
     }
 
+    if (agencyFilter.value !== 'All') {
+        result = result.filter(e => e.agency_id === Number(agencyFilter.value));
+    }
+
+    if (buildingFilter.value !== 'All') {
+        result = result.filter(e => e.batiment_id === Number(buildingFilter.value));
+    }
+
     return result;
 });
 
-const totalEngagements = computed(() => engagements.value.length);
-const actifs = computed(() => engagements.value.filter(e => e.statut === 'Actif').length);
-const enCours = computed(() => engagements.value.filter(e => e.statut === 'En cours').length);
-const expires = computed(() => engagements.value.filter(e => e.statut === 'Expiré').length);
+// KPIs recalculated dynamically based on filters
+const totalEngagements = computed(() => filteredEngagements.value.length);
+const actifs = computed(() => filteredEngagements.value.filter(e => e.statut === 'actif').length);
+const enCours = computed(() => filteredEngagements.value.filter(e => e.statut === 'en cours').length);
+const expires = computed(() => filteredEngagements.value.filter(e => e.statut === 'expirer').length);
 
 const openAddModal = () => {
     editingEngagement.value = null;
     formData.value = {
+        id: null,
         reference: `ENG-${new Date().getFullYear()}-${String(engagements.value.length + 1).padStart(3, '0')}`,
-        type: 'Convention',
-        partie: '',
-        dateDebut: new Date().toISOString().split('T')[0],
-        dateFin: '',
+        type_engagement_id: '',
+        agency_id: '',
+        batiment_id: '',
+        contrat_id: '',
+        locataire_id: '',
+        date_debut: new Date().toISOString().split('T')[0],
+        date_fin: '',
         montant: '',
-        statut: 'Actif',
         instructions: '',
         content: ''
     };
     editorContent.value = '';
+    canevasTemplate.value = '';
     showModal.value = true;
 };
 
 const editEngagement = (engagement) => {
     editingEngagement.value = engagement;
-    formData.value = { ...engagement };
+    formData.value = {
+        id: engagement.id,
+        reference: engagement.reference,
+        type_engagement_id: engagement.type_engagement_id,
+        agency_id: engagement.agency_id || '',
+        batiment_id: engagement.batiment_id,
+        contrat_id: engagement.contrat_id,
+        locataire_id: engagement.locataire_id,
+        date_debut: engagement.date_debut,
+        date_fin: engagement.date_fin,
+        montant: engagement.montant,
+        instructions: engagement.instructions || '',
+        content: engagement.content || ''
+    };
     editorContent.value = engagement.content || '';
+    const selectedType = typeEngagements.value.find(t => t.id === engagement.type_engagement_id);
+    canevasTemplate.value = selectedType ? (selectedType.template || '') : '';
     showModal.value = true;
 };
 
@@ -575,7 +738,7 @@ const initTinyMCE = () => {
         if (typeof tinymce !== 'undefined') {
             tinymce.init({
                 selector: '#engagement-editor',
-                height: 500,
+                height: 450,
                 menubar: false,
                 plugins: 'lists link image code table wordcount',
                 toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | code',
@@ -593,8 +756,8 @@ const initTinyMCE = () => {
 };
 
 const openManualEditor = () => {
-    if (!formData.value.partie) {
-        alert("Veuillez sélectionner la partie concernée.");
+    if (!formData.value.contrat_id) {
+        alert("Veuillez d'abord sélectionner le locataire concerné.");
         return;
     }
 
@@ -609,30 +772,40 @@ const openManualEditor = () => {
 };
 
 const buildInitialEngagementFromTemplate = () => {
-    let tpl = canevasTemplate.value;
-    tpl = tpl.replace(/\[Partie\]/g, formData.value.partie || 'Non spécifiée');
+    let tpl = canevasTemplate.value || '';
+    const contract = contratsActifs.value.find(c => c.id === formData.value.contrat_id);
+    const tenantName = contract ? contract.locataire : 'Non spécifié';
+    const typeObj = typeEngagements.value.find(t => t.id === formData.value.type_engagement_id);
+    const typeName = typeObj ? typeObj.nom : 'Non spécifié';
+
+    tpl = tpl.replace(/\[Partie\]/g, tenantName);
     tpl = tpl.replace(/\[Montant\]/g, formatCurrency(formData.value.montant) || 'Non spécifié');
-    tpl = tpl.replace(/\[Date Début\]/g, formatDate(formData.value.dateDebut) || 'Non spécifiée');
-    tpl = tpl.replace(/\[Date Fin\]/g, formatDate(formData.value.dateFin) || 'Non spécifiée');
-    tpl = tpl.replace(/\[Type\]/g, formData.value.type || 'Non spécifié');
+    tpl = tpl.replace(/\[Date Début\]/g, formatDate(formData.value.date_debut) || 'Non spécifiée');
+    tpl = tpl.replace(/\[Date Fin\]/g, formatDate(formData.value.date_fin) || 'Non spécifiée');
+    tpl = tpl.replace(/\[Type\]/g, typeName);
     tpl = tpl.replace(/\[Date\]/g, getTodayDate());
     return tpl.replace(/\n/g, '<br>');
 };
 
 const generateWithIA = async () => {
-    if (!formData.value.partie) {
-        alert("Veuillez d'abord sélectionner la partie concernée.");
+    if (!formData.value.contrat_id) {
+        alert("Veuillez d'abord sélectionner le locataire concerné.");
         return;
     }
 
     isGenerating.value = true;
     try {
+        const contract = contratsActifs.value.find(c => c.id === formData.value.contrat_id);
+        const tenantName = contract ? contract.locataire : 'Non spécifié';
+        const typeObj = typeEngagements.value.find(t => t.id === formData.value.type_engagement_id);
+        const typeName = typeObj ? typeObj.nom : 'Non spécifié';
+
         const payload = {
-            partie: formData.value.partie,
+            partie: tenantName,
             montant: formData.value.montant,
-            type: formData.value.type,
-            dateDebut: formData.value.dateDebut,
-            dateFin: formData.value.dateFin,
+            type: typeName,
+            dateDebut: formData.value.date_debut,
+            dateFin: formData.value.date_fin,
             template: canevasTemplate.value,
             instructions: formData.value.instructions,
         };
@@ -675,34 +848,57 @@ const closeEditorModal = () => {
     showEditorModal.value = false;
 };
 
-const saveAndPersist = () => {
-    const engagementData = {
-        id: editingEngagement.value ? editingEngagement.value.id : (engagements.value.length ? Math.max(...engagements.value.map(e => e.id)) + 1 : 1),
-        reference: formData.value.reference,
-        type: formData.value.type,
-        partie: formData.value.partie,
-        dateDebut: formData.value.dateDebut,
-        dateFin: formData.value.dateFin,
-        montant: Number(formData.value.montant || 0),
-        statut: formData.value.statut,
-        instructions: formData.value.instructions,
-        content: editorContent.value
-    };
+const saveAndPersist = async () => {
+    isSaving.value = true;
+    try {
+        const payload = {
+            reference: formData.value.reference,
+            type_engagement_id: formData.value.type_engagement_id,
+            agency_id: formData.value.agency_id || null,
+            batiment_id: formData.value.batiment_id,
+            contrat_id: formData.value.contrat_id,
+            locataire_id: formData.value.locataire_id,
+            date_debut: formData.value.date_debut,
+            date_fin: formData.value.date_fin,
+            montant: formData.value.montant || 0,
+            instructions: formData.value.instructions || '',
+            content: editorContent.value || ''
+        };
 
-    if (editingEngagement.value) {
-        const index = engagements.value.findIndex(e => e.id === editingEngagement.value.id);
-        if (index !== -1) {
-            engagements.value[index] = engagementData;
+        if (editingEngagement.value) {
+            await axios.put(`/api/engagements/${editingEngagement.value.id}`, payload);
+            successMessage.value = "Engagement mis à jour avec succès.";
+        } else {
+            await axios.post('/api/engagements', payload);
+            successMessage.value = "Engagement enregistré et archivé avec succès.";
         }
-        successMessage.value = "Engagement mis à jour avec succès.";
-    } else {
-        engagements.value.unshift(engagementData);
-        successMessage.value = "Engagement enregistré et archivé avec succès.";
-    }
 
-    localStorage.setItem('immobilier_engagements', JSON.stringify(engagements.value));
-    closeModal();
-    showSuccess.value = true;
+        await fetchEngagementsData();
+        closeModal();
+        showSuccess.value = true;
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = err.response?.data?.message || "Erreur lors de l'enregistrement de l'engagement.";
+        showError.value = true;
+    } finally {
+        isSaving.value = false;
+    }
+};
+
+const confirmHonor = async (engagement) => {
+    confirmingId.value = engagement.id;
+    try {
+        await axios.post(`/api/engagements/${engagement.id}/confirm-honor`);
+        await fetchEngagementsData();
+        successMessage.value = "L'engagement a été validé et honoré avec succès !";
+        showSuccess.value = true;
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = err.response?.data?.message || "Erreur lors de la confirmation de l'engagement.";
+        showError.value = true;
+    } finally {
+        confirmingId.value = null;
+    }
 };
 
 const viewEngagement = (eng) => {
@@ -725,13 +921,21 @@ const closeDeleteModal = () => {
     deleteTarget.value = null;
 };
 
-const confirmDelete = () => {
-    if (deleteTarget.value) {
-        engagements.value = engagements.value.filter(e => e.id !== deleteTarget.value.id);
-        localStorage.setItem('immobilier_engagements', JSON.stringify(engagements.value));
+const confirmDelete = async () => {
+    if (!deleteTarget.value) return;
+    isDeleting.value = true;
+    try {
+        await axios.delete(`/api/engagements/${deleteTarget.value.id}`);
+        await fetchEngagementsData();
         successMessage.value = "Engagement supprimé avec succès.";
         closeDeleteModal();
         showSuccess.value = true;
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = err.response?.data?.message || "Erreur lors de la suppression de l'engagement.";
+        showError.value = true;
+    } finally {
+        isDeleting.value = false;
     }
 };
 
@@ -800,5 +1004,9 @@ const getAvatarGradient = (name) => {
 
 .animate-scale-up {
     animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.bg-slate-55 {
+    background-color: #f8fafc;
 }
 </style>

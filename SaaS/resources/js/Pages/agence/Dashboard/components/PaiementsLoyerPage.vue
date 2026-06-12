@@ -499,10 +499,22 @@
                     <button 
                         @click="savePayment" 
                         :disabled="savingPayment"
-                        class="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 transition-all text-xs flex items-center justify-center gap-2"
+                        :class="[
+                            'flex-1 px-4 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden relative',
+                            savingPayment
+                                ? 'bg-emerald-400 text-white cursor-wait shadow-md shadow-emerald-400/20'
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-[1.03] active:scale-[0.97]'
+                        ]"
                     >
-                        <i v-if="savingPayment" class="fa-solid fa-spinner animate-spin"></i>
-                        Confirmer & Payer
+                        <template v-if="savingPayment">
+                            <span class="absolute inset-0 bg-white/10 animate-pulse rounded-xl"></span>
+                            <i class="fa-solid fa-circle-notch fa-spin text-sm relative z-10"></i>
+                            <span class="relative z-10">Traitement en cours...</span>
+                        </template>
+                        <template v-else>
+                            <i class="fa-solid fa-shield-check text-sm"></i>
+                            <span>Confirmer &amp; Payer</span>
+                        </template>
                     </button>
                 </div>
             </div>
