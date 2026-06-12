@@ -9,6 +9,8 @@ use App\Models\Affectation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContratActivatedMail;
 
 class ContratController extends Controller
 {
@@ -133,6 +135,14 @@ class ContratController extends Controller
         });
 
         $contrat->load(['locataire.user', 'logement.batiment', 'typeContrat']);
+
+        // Envoyer le mail d'activation au locataire
+        try {
+            $duree = $affectation?->duree ?? '1 an';
+            Mail::to($contrat->locataire->user->email)->send(new ContratActivatedMail($contrat, $duree));
+        } catch (\Exception $e) {
+            logger()->error("Erreur lors de l'envoi de mail d'activation de contrat : " . $e->getMessage());
+        }
 
         return response()->json($this->formatContrat($contrat), 201);
     }

@@ -234,6 +234,22 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/type-contrats/{typeContrat}', [\App\Http\Controllers\TypeContratController::class, 'update'])->name('type-contrats.update');
     Route::delete('/api/type-contrats/{typeContrat}', [\App\Http\Controllers\TypeContratController::class, 'destroy'])->name('type-contrats.destroy');
 
+    // TypeEngagements API routes
+    Route::get('/api/type-engagements', [\App\Http\Controllers\TypeEngagementController::class, 'index'])->name('type-engagements.json');
+    Route::post('/api/type-engagements', [\App\Http\Controllers\TypeEngagementController::class, 'store'])->name('type-engagements.store');
+    Route::put('/api/type-engagements/{typeEngagement}', [\App\Http\Controllers\TypeEngagementController::class, 'update'])->name('type-engagements.update');
+    Route::delete('/api/type-engagements/{typeEngagement}', [\App\Http\Controllers\TypeEngagementController::class, 'destroy'])->name('type-engagements.destroy');
+
+    // TypeEtatDesLieux API routes
+    Route::get('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'index'])->name('type-etat-des-lieux.json');
+    Route::post('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'store'])->name('type-etat-des-lieux.store');
+    Route::put('/api/type-etat-des-lieux/{typeEtatDesLieux}', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'update'])->name('type-etat-des-lieux.update');
+    Route::delete('/api/type-etat-des-lieux/{typeEtatDesLieux}', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'destroy'])->name('type-etat-des-lieux.destroy');
+
+    // Devise API routes
+    Route::get('/api/devise', [\App\Http\Controllers\DeviseController::class, 'show'])->name('devise.show');
+    Route::post('/api/devise', [\App\Http\Controllers\DeviseController::class, 'storeOrUpdate'])->name('devise.storeOrUpdate');
+
     // Contrats API routes
     Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');
     Route::post('/api/contrats', [\App\Http\Controllers\ContratController::class, 'store'])->name('contrats.store');

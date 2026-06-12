@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Votre compte Locataire - PropertyAI</title>
+    <title>Votre compte Locataire - {{ $agencyName ?? 'PropertyAI' }}</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -82,7 +82,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>PropertyAI</h1>
+            <h1>{{ $agencyName ?? 'PropertyAI' }}</h1>
         </div>
         <div class="content">
             <p>Bonjour {{ $user->name }},</p>
@@ -97,7 +97,8 @@
                 @endif
             </div>
 
-            <p>Vous pouvez désormais vous connecter à votre espace personnel pour suivre vos affectations, vos documents de bail et vos factures.</p>
+            <p>Vous pourrez vous connecter à votre espace personnel pour suivre vos affectations, vos documents de bail et vos factures quand votre contrat sera activé. 
+            A cet effet, vous recevrez un mail de votre agence de gestion.</p>
 
             <p>Voici vos identifiants de connexion temporaires :</p>
             

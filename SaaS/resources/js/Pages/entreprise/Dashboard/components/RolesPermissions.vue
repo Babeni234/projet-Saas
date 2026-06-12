@@ -367,6 +367,154 @@
             </div>
         </div>
 
+        <!-- Types d'Engagement Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types d'Engagement</h3>
+                    <p class="text-xs text-slate-500 mt-1">Gérez les types d'engagement (cautions, obligations de bail) applicables pour vos dossiers.</p>
+                </div>
+                <button
+                    @click="openCreateTypeEngagementModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type d'Engagement
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeEngagements"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeEngagementModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeEngagement(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeEngagements.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type d'engagement configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Types d'État des Lieux Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types d'État des Lieux</h3>
+                    <p class="text-xs text-slate-500 mt-1">Configurez les différents types d'état des lieux (entrée, sortie, intermédiaire) pour vos logements.</p>
+                </div>
+                <button
+                    @click="openCreateTypeEtatDesLieuxModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type d'État des Lieux
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeEtatDesLieux"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeEtatDesLieuxModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeEtatDesLieux(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeEtatDesLieux.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type d'état des lieux configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devise Configuration Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-slate-900">Configuration de la Devise</h3>
+                <p class="text-xs text-slate-500 mt-1 font-medium">Définissez la devise monétaire principale utilisée pour la facturation et les rapports financiers.</p>
+            </div>
+            
+            <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-150 max-w-xl">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Choisir la Devise Monétaire</label>
+                        <div class="flex gap-4">
+                            <select
+                                v-model="selectedCurrency"
+                                class="flex-1 px-5 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer"
+                            >
+                                <option value="" disabled>Sélectionner une devise</option>
+                                <option v-for="opt in currencyOptions" :key="opt.label" :value="opt.label">
+                                    {{ opt.label }}
+                                </option>
+                            </select>
+                            
+                            <button
+                                @click="saveCurrency"
+                                :disabled="!selectedCurrency || savingCurrency"
+                                class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                            >
+                                <span v-if="savingCurrency" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                <span>Enregistrer</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Add/Edit Role Modal -->
         <ModalPremium
             :show="showRoleModal"
@@ -697,6 +845,118 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit TypeEngagement Modal -->
+        <ModalPremium
+            :show="showTypeEngagementModal"
+            :title="isEditingTypeEngagement ? 'Modifier le Type d\'Engagement' : 'Ajouter un Type d\'Engagement'"
+            :subtitle="isEditingTypeEngagement ? 'Modifiez les détails de ce type d\'engagement' : 'Créez un nouveau type d\'engagement pour vos baux'"
+            size="md"
+            type="default"
+            @close="showTypeEngagementModal = false"
+        >
+            <form @submit.prevent="submitTypeEngagementForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type d'Engagement <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeEngagementForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Caution solidaire, Garantie bancaire..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="typeEngagementErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeEngagementErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeEngagementForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type d'engagement..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="typeEngagementErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeEngagementErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeEngagementModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeEngagementSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeEngagementSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeEngagement ? 'Mettre à Jour' : 'Créer le Type' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
+        <!-- Add/Edit TypeEtatDesLieux Modal -->
+        <ModalPremium
+            :show="showTypeEtatDesLieuxModal"
+            :title="isEditingTypeEtatDesLieux ? 'Modifier le Type d\'État des Lieux' : 'Ajouter un Type d\'État des Lieux'"
+            :subtitle="isEditingTypeEtatDesLieux ? 'Modifiez les détails de ce type d\'état des lieux' : 'Créez un nouveau type d\'état des lieux'"
+            size="md"
+            type="default"
+            @close="showTypeEtatDesLieuxModal = false"
+        >
+            <form @submit.prevent="submitTypeEtatDesLieuxForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type d'État des Lieux <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeEtatDesLieuxForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: État des lieux d'entrée, de sortie..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="typeEtatDesLieuxErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeEtatDesLieuxErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeEtatDesLieuxForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type d'état des lieux..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="typeEtatDesLieuxErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeEtatDesLieuxErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeEtatDesLieuxModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeEtatDesLieuxSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeEtatDesLieuxSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeEtatDesLieux ? 'Mettre à Jour' : 'Créer le Type' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -783,6 +1043,50 @@ const notification = ref({
     message: ''
 });
 
+// TypeEngagements state
+const typeEngagements = ref([]);
+const showTypeEngagementModal = ref(false);
+const isEditingTypeEngagement = ref(false);
+const editingTypeEngagementId = ref(null);
+const isTypeEngagementSubmitting = ref(false);
+const typeEngagementErrors = ref({});
+const typeEngagementForm = ref({
+    nom: '',
+    description: ''
+});
+
+// TypeEtatDesLieux state
+const typeEtatDesLieux = ref([]);
+const showTypeEtatDesLieuxModal = ref(false);
+const isEditingTypeEtatDesLieux = ref(false);
+const editingTypeEtatDesLieuxId = ref(null);
+const isTypeEtatDesLieuxSubmitting = ref(false);
+const typeEtatDesLieuxErrors = ref({});
+const typeEtatDesLieuxForm = ref({
+    nom: '',
+    description: ''
+});
+
+// Currency state
+const selectedCurrency = ref('');
+const savingCurrency = ref(false);
+
+const currencyOptions = [
+    { label: "France - Euro (€)", code: "EUR", symbole: "€" },
+    { label: "États-Unis - Dollar ($)", code: "USD", symbole: "$" },
+    { label: "Royaume-Uni - Livre Sterling (£)", code: "GBP", symbole: "£" },
+    { label: "Cameroun - Franc CFA (FCFA)", code: "XAF", symbole: "FCFA" },
+    { label: "Sénégal - Franc CFA (FCFA)", code: "XOF", symbole: "FCFA" },
+    { label: "Côte d'Ivoire - Franc CFA (FCFA)", code: "XOF", symbole: "FCFA" },
+    { label: "Gabon - Franc CFA (FCFA)", code: "XAF", symbole: "FCFA" },
+    { label: "Congo - Franc CFA (FCFA)", code: "XAF", symbole: "FCFA" },
+    { label: "Maroc - Dirham Marocain (DH)", code: "MAD", symbole: "DH" },
+    { label: "Canada - Dollar Canadien (C$)", code: "CAD", symbole: "C$" },
+    { label: "Suisse - Franc Suisse (CHF)", code: "CHF", symbole: "CHF" },
+    { label: "Chine - Yuan (¥)", code: "CNY", symbole: "¥" },
+    { label: "Japon - Yen (¥)", code: "JPY", symbole: "¥" },
+];
+
 // Available system permissions
 const availablePermissions = [
     { id: 'manage_agencies', label: 'Gérer les agences', desc: 'Permet de créer, modifier et supprimer des agences' },
@@ -824,6 +1128,9 @@ onMounted(() => {
     }
     fetchTypeContrats();
     fetchCategories();
+    fetchTypeEngagements();
+    fetchTypeEtatDesLieux();
+    fetchCurrency();
 });
 
 const loadData = () => {
@@ -1347,6 +1654,258 @@ const deleteCategory = async (cat) => {
     } catch (error) {
         console.error(error);
         showNotification('error', 'Erreur', 'Impossible de supprimer la catégorie.');
+    }
+};
+
+// TypeEngagement CRUD methods
+const fetchTypeEngagements = async () => {
+    try {
+        const response = await fetch('/api/type-engagements', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            typeEngagements.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération engagements:", error);
+    }
+};
+
+const openCreateTypeEngagementModal = () => {
+    isEditingTypeEngagement.value = false;
+    editingTypeEngagementId.value = null;
+    typeEngagementForm.value = { nom: '', description: '' };
+    typeEngagementErrors.value = {};
+    showTypeEngagementModal.value = true;
+};
+
+const openEditTypeEngagementModal = (type) => {
+    isEditingTypeEngagement.value = true;
+    editingTypeEngagementId.value = type.id;
+    typeEngagementForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeEngagementErrors.value = {};
+    showTypeEngagementModal.value = true;
+};
+
+const submitTypeEngagementForm = async () => {
+    isTypeEngagementSubmitting.value = true;
+    typeEngagementErrors.value = {};
+    try {
+        const url = isEditingTypeEngagement.value
+            ? `/api/type-engagements/${editingTypeEngagementId.value}`
+            : '/api/type-engagements';
+        const method = isEditingTypeEngagement.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeEngagementForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeEngagement.value ? 'Le type d\'engagement a été mis à jour.' : 'Le type d\'engagement a été créé.'
+            );
+            showTypeEngagementModal.value = false;
+            fetchTypeEngagements();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeEngagementErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeEngagementSubmitting.value = false;
+    }
+};
+
+const deleteTypeEngagement = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type d'engagement "${type.nom}" ?`)) return;
+    try {
+        const response = await fetch(`/api/type-engagements/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type d\'engagement a été supprimé.');
+            fetchTypeEngagements();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type d\'engagement.');
+    }
+};
+
+// TypeEtatDesLieux CRUD methods
+const fetchTypeEtatDesLieux = async () => {
+    try {
+        const response = await fetch('/api/type-etat-des-lieux', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            typeEtatDesLieux.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération états des lieux:", error);
+    }
+};
+
+const openCreateTypeEtatDesLieuxModal = () => {
+    isEditingTypeEtatDesLieux.value = false;
+    editingTypeEtatDesLieuxId.value = null;
+    typeEtatDesLieuxForm.value = { nom: '', description: '' };
+    typeEtatDesLieuxErrors.value = {};
+    showTypeEtatDesLieuxModal.value = true;
+};
+
+const openEditTypeEtatDesLieuxModal = (type) => {
+    isEditingTypeEtatDesLieux.value = true;
+    editingTypeEtatDesLieuxId.value = type.id;
+    typeEtatDesLieuxForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeEtatDesLieuxErrors.value = {};
+    showTypeEtatDesLieuxModal.value = true;
+};
+
+const submitTypeEtatDesLieuxForm = async () => {
+    isTypeEtatDesLieuxSubmitting.value = true;
+    typeEtatDesLieuxErrors.value = {};
+    try {
+        const url = isEditingTypeEtatDesLieux.value
+            ? `/api/type-etat-des-lieux/${editingTypeEtatDesLieuxId.value}`
+            : '/api/type-etat-des-lieux';
+        const method = isEditingTypeEtatDesLieux.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeEtatDesLieuxForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeEtatDesLieux.value ? 'Le type d\'état des lieux a été mis à jour.' : 'Le type d\'état des lieux a été créé.'
+            );
+            showTypeEtatDesLieuxModal.value = false;
+            fetchTypeEtatDesLieux();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeEtatDesLieuxErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeEtatDesLieuxSubmitting.value = false;
+    }
+};
+
+const deleteTypeEtatDesLieux = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type d'état des lieux "${type.nom}" ?`)) return;
+    try {
+        const response = await fetch(`/api/type-etat-des-lieux/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type d\'état des lieux a été supprimé.');
+            fetchTypeEtatDesLieux();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type d\'état des lieux.');
+    }
+};
+
+// Currency Config methods
+const fetchCurrency = async () => {
+    try {
+        const response = await fetch('/api/devise', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.devise) {
+                selectedCurrency.value = data.devise;
+            }
+        }
+    } catch (error) {
+        console.error("Erreur récupération devise:", error);
+    }
+};
+
+const saveCurrency = async () => {
+    if (!selectedCurrency.value) return;
+    savingCurrency.value = true;
+    try {
+        const option = currencyOptions.find(o => o.label === selectedCurrency.value);
+        if (!option) return;
+
+        const response = await fetch('/api/devise', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify({
+                devise: option.label,
+                code: option.code,
+                symbole: option.symbole
+            })
+        });
+
+        if (response.ok) {
+            showNotification('success', 'Succès', 'La devise de l\'entreprise a été configurée avec succès.');
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de sauvegarder la devise.');
+    } finally {
+        savingCurrency.value = false;
     }
 };
 

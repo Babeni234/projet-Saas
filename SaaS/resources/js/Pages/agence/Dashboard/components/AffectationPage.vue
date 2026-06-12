@@ -591,7 +591,7 @@ const fetchAllData = async () => {
         const resLoc = await fetch('/api/locataires', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
         if (resLoc.ok) {
             const tenants = await resLoc.json();
-            dbLocataires.value = tenants.filter(t => t.statut.toLowerCase() !== 'affecté');
+            dbLocataires.value = tenants.filter(t => t.statut.toLowerCase() === 'inactif');
         }
     } catch (err) {
         console.error(err);

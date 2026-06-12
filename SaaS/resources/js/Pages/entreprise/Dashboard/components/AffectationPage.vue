@@ -590,9 +590,9 @@ const fetchAllData = async () => {
         // Fetch Locataires
         const resLoc = await fetch('/api/locataires', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } });
         if (resLoc.ok) {
-            // Can assign any tenant who is not active/assigned already, or is currently associated
+            // Can assign any tenant who is inactive
             const tenants = await resLoc.json();
-            dbLocataires.value = tenants.filter(t => t.statut.toLowerCase() !== 'affecté');
+            dbLocataires.value = tenants.filter(t => t.statut.toLowerCase() === 'inactif');
         }
     } catch (err) {
         console.error(err);

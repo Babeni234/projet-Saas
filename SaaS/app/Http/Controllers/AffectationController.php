@@ -60,6 +60,11 @@ class AffectationController extends Controller
                               ->where('company_profile_id', $companyProfileId)
                               ->firstOrFail();
 
+        // Si le locataire n'est pas inactif, renvoyer une erreur
+        if (strtolower($locataire->statut) !== 'inactif') {
+            return response()->json(['error' => 'Le locataire sélectionné doit avoir un statut inactif.'], 422);
+        }
+
         $logement = Logement::where('id', $request->input('logement_id'))
                             ->where('company_profile_id', $companyProfileId)
                             ->firstOrFail();
