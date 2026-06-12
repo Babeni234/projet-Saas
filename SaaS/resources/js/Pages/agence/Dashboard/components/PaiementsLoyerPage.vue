@@ -319,7 +319,7 @@
                                         <div class="mt-3">
                                             <div class="text-[10px] font-semibold text-slate-400">Loyer: {{ formatCurrency(m.loyer) }}</div>
                                             <div v-if="m.penalite > 0" class="text-[9px] font-bold text-red-500 mt-0.5">
-                                                Pén: +{{ formatCurrency(m.penalite) }}
+                                                Pén: +{{ m.penaliteRate }}% (+{{ formatCurrency(m.penalite) }})
                                             </div>
                                             <div class="text-xs font-extrabold text-slate-800 mt-1">
                                                 Dû: {{ formatCurrency(Number(m.loyer) + Number(m.penalite)) }}
@@ -424,7 +424,7 @@
         </div>
 
         <!-- Payment Settlement Mode Modal (Pro Pop-up for Cash / Wallet) -->
-        <div v-if="showPaymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-55 flex items-center justify-center p-4">
+        <div v-if="showPaymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
             <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-scale-up" @click.stop>
                 <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                     <h3 class="text-lg font-extrabold text-slate-800">Finaliser le règlement</h3>
@@ -764,12 +764,23 @@ const contractMonthsList = computed(() => {
     const contrat = selectedContrat.value;
     if (!contrat) return [];
 
-    const start = new Date(contrat.debut);
-    const end = new Date(contrat.fin);
+    // Parse dates safely using local time to avoid timezone issues
+    const startParts = (contrat.debut || '').split('-');
+    const endParts = (contrat.fin || '').split('-');
+    if (startParts.length < 2 || endParts.length < 2) return [];
+
+    const start = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, 1);
+    const endYear = parseInt(endParts[0]);
+    const endMonth = parseInt(endParts[1]) - 1;
     const list = [];
 
     let current = new Date(start.getFullYear(), start.getMonth(), 1);
-    while (current <= end) {
+    // Safety limit: max 120 months (10 years) to prevent infinite loop on very long leases
+    while (
+        (current.getFullYear() < endYear ||
+        (current.getFullYear() === endYear && current.getMonth() <= endMonth))
+        && list.length < 120
+    ) {
         const yr = current.getFullYear();
         const mo = String(current.getMonth() + 1).padStart(2, '0');
         const period = `${yr}-${mo}`;
@@ -785,8 +796,7 @@ const contractMonthsList = computed(() => {
             penaliteRate: penaltyInfo.rate,
             isPaid
         });
-        current.setMonth(current.getMonth() + 1);
-        current = new Date(current.getFullYear(), current.getMonth(), 1);
+        current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
     }
     return list;
 });
@@ -854,23 +864,41 @@ const calculatePenaltyInfo = (periode, baseRent, cycle) => {
     return { amount, rate: maxRate };
 };
 
-// Selection of month cards ensuring sequential selection (no skip)
+// Selection of month cards ensuring sequential selection in waves of cycle
+// Mensuel: 1 month, Trimestriel: 3 months, Annuel: 12 months
 const selectMonthCard = (monthObj, idx) => {
     const isSelected = selectedMonths.value.includes(monthObj.periode);
     const unpaidList = contractMonthsList.value.filter(m => !m.isPaid);
     const relativeIdx = unpaidList.findIndex(m => m.periode === monthObj.periode);
+    if (relativeIdx === -1) return;
+
+    const cycle = selectedContrat.value?.cycle_paiement || 'Mensuel';
+    let k = 1;
+    if (cycle === 'Trimestriel') k = 3;
+    else if (cycle === 'Annuel') k = 12;
 
     if (!isSelected) {
-        // Select this month and all unpaid months before it
-        for (let i = 0; i <= relativeIdx; i++) {
-            if (!selectedMonths.value.includes(unpaidList[i].periode)) {
-                selectedMonths.value.push(unpaidList[i].periode);
-            }
+        // Select this month and round UP to the next multiple of k
+        const targetCount = relativeIdx + 1;
+        const remainder = targetCount % k;
+        const neededCount = remainder === 0 ? targetCount : targetCount + (k - remainder);
+        const limit = Math.min(neededCount, unpaidList.length);
+
+        const newSelection = [];
+        for (let i = 0; i < limit; i++) {
+            newSelection.push(unpaidList[i].periode);
         }
+        selectedMonths.value = newSelection;
     } else {
-        // Deselect this month and all selected months after it
-        const periodesToDeselect = unpaidList.slice(relativeIdx).map(m => m.periode);
-        selectedMonths.value = selectedMonths.value.filter(p => !periodesToDeselect.includes(p));
+        // Deselect this month and round DOWN remaining selected count to the nearest multiple of k
+        const targetCount = relativeIdx;
+        const neededCount = targetCount - (targetCount % k);
+
+        const newSelection = [];
+        for (let i = 0; i < neededCount; i++) {
+            newSelection.push(unpaidList[i].periode);
+        }
+        selectedMonths.value = newSelection;
     }
 };
 
@@ -962,15 +990,17 @@ const closeModal = () => {
 const triggerPaymentMethodSetup = () => {
     const cycle = selectedContrat.value?.cycle_paiement || 'Mensuel';
     const count = selectedMonths.value.length;
+    const unpaidList = contractMonthsList.value.filter(m => !m.isPaid);
+    const isPayingAllRemaining = count === unpaidList.length;
 
-    // Apply cycle business rules
-    if (cycle === 'Trimestriel' && count % 3 !== 0) {
+    // Apply cycle business rules (unless paying all remaining months at the end of lease)
+    if (cycle === 'Trimestriel' && count % 3 !== 0 && !isPayingAllRemaining) {
         errorMessage.value = "Pour un cycle trimestriel, le paiement doit être effectué par tranche obligatoire de 3 mois.";
         showError.value = true;
         return;
     }
 
-    if (cycle === 'Annuel' && count % 12 !== 0) {
+    if (cycle === 'Annuel' && count % 12 !== 0 && !isPayingAllRemaining) {
         errorMessage.value = "Pour un cycle annuel, le paiement doit être effectué par tranche obligatoire de 12 mois (1 an).";
         showError.value = true;
         return;

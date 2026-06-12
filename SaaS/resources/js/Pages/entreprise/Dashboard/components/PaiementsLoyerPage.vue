@@ -489,7 +489,7 @@
         </div>
 
         <!-- Payment Settlement Mode Modal (Pro Pop-up for Cash / Wallet) -->
-        <div v-if="showPaymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-55 flex items-center justify-center p-4">
+        <div v-if="showPaymentMethodModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
             <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-scale-up" @click.stop>
                 <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                     <h3 class="text-lg font-extrabold text-slate-800">Finaliser le règlement</h3>
