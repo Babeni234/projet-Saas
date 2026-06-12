@@ -19,7 +19,7 @@ class FactureController extends Controller
 
         $query = Facture::where('company_profile_id', $companyProfileId)
             ->where('deleted', false)
-            ->with(['locataire.user', 'contrat.logement.batiment', 'typeFacture']);
+            ->with(['locataire.user', 'contrat.logement.batiment', 'typeFacture', 'agency', 'company']);
 
         // Scope by agency if the user is an agency employee
         $isAgent = $user->employee && $user->employee->agency_id !== null;
@@ -77,7 +77,7 @@ class FactureController extends Controller
             'statut'             => 'Impayé',
         ]);
 
-        $facture->load(['locataire.user', 'contrat.logement.batiment', 'typeFacture']);
+        $facture->load(['locataire.user', 'contrat.logement.batiment', 'typeFacture', 'agency', 'company']);
 
         return response()->json($this->formatFacture($facture), 201);
     }
@@ -99,7 +99,7 @@ class FactureController extends Controller
             'mode_reglement' => $request->input('mode_reglement'),
         ]);
 
-        return response()->json($this->formatFacture($facture->fresh(['locataire.user', 'contrat.logement.batiment', 'typeFacture'])));
+        return response()->json($this->formatFacture($facture->fresh(['locataire.user', 'contrat.logement.batiment', 'typeFacture', 'agency', 'company'])));
     }
 
     /**
@@ -108,6 +108,10 @@ class FactureController extends Controller
     public function destroy(Facture $facture)
     {
         $this->authorizeCompany($facture);
+
+        $user = Auth::user();
+        $isAgent = $user->employee && $user->employee->agency_id !== null;
+        abort_if($isAgent, 403, 'Les agences n\'ont pas le droit de supprimer une facture.');
 
         $facture->update(['deleted' => true]);
         $facture->delete();
@@ -123,6 +127,9 @@ class FactureController extends Controller
             'id'               => $f->id,
             'uuid'             => $f->uuid,
             'numero'           => $f->numero,
+            'company_name'     => $f->company?->legal_name ?? 'Siège Social',
+            'agency_id'        => $f->agency_id,
+            'agency_name'      => $f->agency?->name ?? 'Siège Social',
             'locataire'        => $f->locataire?->user?->name ?? 'Locataire Supprimé',
             'locataire_id'     => $f->locataire_id,
             'logement'         => $f->contrat?->logement?->reference ?? 'Logement Supprimé',

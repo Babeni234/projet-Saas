@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <!-- Premium KPI Cards -->
+        <!-- Premium KPI Cards (Dynamically responsive to filters) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-blue-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-blue-500/5 group-hover:scale-150 transition-transform duration-500"></div>
@@ -64,29 +64,52 @@
         </div>
 
         <!-- Filter Panel -->
-        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="relative w-full md:w-96">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </span>
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Rechercher par locataire, facture, logement..."
-                    class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm font-semibold transition-all shadow-sm"
-                />
-            </div>
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase text-slate-400">Période :</span>
-                    <input type="month" v-model="periodFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2 text-xs font-bold text-slate-700 focus:outline-none shadow-sm" />
+        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150 flex flex-col gap-4">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-450" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Rechercher par locataire, facture, logement..."
+                        class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm font-semibold transition-all shadow-sm"
+                    />
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase text-slate-400">Statut :</span>
-                    <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                        <option value="All">Tous</option>
+            </div>
+
+            <!-- Advanced Filters Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <!-- 1. Invoice Type Filter -->
+                <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Type de Facture :</span>
+                    <select v-model="typeFactureFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm cursor-pointer">
+                        <option value="All">Tous les types</option>
+                        <option v-for="type in typeFactures" :key="type.id" :value="type.id">
+                            {{ type.nom }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 2. Period Filter (Select format) -->
+                <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Période :</span>
+                    <select v-model="periodFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm cursor-pointer">
+                        <option value="All">Toutes les périodes</option>
+                        <option v-for="period in availablePeriods" :key="period" :value="period">
+                            {{ formatPeriod(period) }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 3. Status Filter -->
+                <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Statut :</span>
+                    <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm cursor-pointer">
+                        <option value="All">Tous les statuts</option>
                         <option value="Payé">Payé</option>
                         <option value="Impayé">Impayé</option>
                     </select>
@@ -124,12 +147,12 @@
                                     <div class="font-bold text-slate-800 text-sm">{{ inv.locataire }}</div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-650 font-semibold">
+                            <td class="px-6 py-4 text-sm text-slate-655 font-semibold">
                                 <div>{{ inv.logement }}</div>
                                 <div class="text-[10px] text-slate-400 font-medium">{{ inv.batiment }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-650 font-semibold">
-                                <div class="font-bold text-slate-750">{{ inv.type_facture_nom }}</div>
+                            <td class="px-6 py-4 text-sm text-slate-655 font-semibold">
+                                <div class="font-bold text-slate-755">{{ inv.type_facture_nom }}</div>
                                 <div class="text-[10px] text-slate-400" v-if="inv.periode">{{ formatPeriod(inv.periode) }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm text-slate-800 font-extrabold">{{ formatCurrency(inv.total) }}</td>
@@ -140,32 +163,34 @@
                             <td class="px-6 py-4">
                                 <span :class="[
                                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border',
-                                    inv.statut === 'Payé' ? 'bg-emerald-55 text-emerald-700 border-emerald-200' : 'bg-red-55 text-red-700 border-red-200'
+                                    inv.statut === 'Payé' ? 'bg-emerald-55 text-emerald-800 border-emerald-200' : 'bg-red-55 text-red-800 border-red-200'
                                 ]">
                                     <span :class="['w-1.5 h-1.5 rounded-full', inv.statut === 'Payé' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse']"></span>
                                     {{ inv.statut }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 items-center">
+                                    <!-- Settle payment button: disappears when paid -->
                                     <button 
                                         v-if="inv.statut !== 'Payé'"
                                         @click="openPaymentModal(inv)" 
-                                        class="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm transition-all"
+                                        class="px-2.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm transition-all"
                                         title="Enregistrer un règlement"
                                     >
                                         Régler
                                     </button>
-                                    <button @click="viewInvoice(inv)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all" title="Aperçu / Imprimer">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                        </svg>
+                                    
+                                    <!-- Details Button -->
+                                    <button 
+                                        @click="viewInvoice(inv)" 
+                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                                        title="Voir les détails"
+                                    >
+                                        Détails
                                     </button>
-                                    <button @click="deleteInvoice(inv)" class="p-2 text-red-650 hover:bg-red-50 rounded-xl transition-all" title="Supprimer">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+
+                                    <!-- WARNING: NO DELETE BUTTON HERE! Only Enterprise dashboard is allowed to delete. -->
                                 </div>
                             </td>
                         </tr>
@@ -196,7 +221,7 @@
                         </div>
 
                         <div class="space-y-4">
-                            <!-- 1. Building Searchable Select (Starts cascade here) -->
+                            <!-- 1. Building Searchable Select -->
                             <div class="relative">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
                                 <div class="relative">
@@ -223,7 +248,7 @@
                                                 :key="building.id" 
                                                 @click="selectBuilding(building)" 
                                                 type="button" 
-                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-blue-600 transition-colors"
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-55 text-slate-700 hover:text-blue-600 transition-colors"
                                             >
                                                 {{ building.nom }}
                                             </button>
@@ -337,7 +362,7 @@
                                         <input 
                                             v-model="dateEcheance" 
                                             type="date" 
-                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-805 text-sm shadow-sm"
                                         />
                                     </div>
                                 </div>
@@ -381,7 +406,7 @@
                                                     type="number" 
                                                     min="0" 
                                                     placeholder="P.U." 
-                                                    class="w-full px-2 py-2 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-right"
+                                                    class="w-full px-2 py-2 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-550 bg-white text-right"
                                                 />
                                             </div>
                                             <!-- P.T. -->
@@ -427,13 +452,14 @@
 
                 <!-- Right: Live Printable Style Invoice Preview (col-span-5) -->
                 <div class="lg:col-span-5 border-l border-slate-200 pl-8 hidden lg:flex flex-col justify-between max-h-[80vh]">
-                    <div class="bg-white border-2 border-slate-100 shadow-lg rounded-2xl p-6 flex-1 flex flex-col justify-between font-sans text-xs text-slate-800 overflow-y-auto">
+                    <div class="bg-white border-2 border-slate-100 shadow-lg rounded-2xl p-6 flex-1 flex flex-col justify-between font-sans text-xs text-slate-805 overflow-y-auto relative">
                         <div>
                             <!-- Header -->
                             <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
                                 <div>
                                     <div class="font-extrabold text-slate-900 text-sm">FACTURE IMMOBILIÈRE</div>
-                                    <div class="text-[10px] text-slate-400">Générée le {{ formatDateFr(dateEmission) }}</div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">{{ currentCompanyName || 'Votre Compagnie' }}</div>
+                                    <div class="text-[9px] text-slate-400" v-if="selectedBuildingName">Bâtiment: {{ selectedBuildingName }}</div>
                                 </div>
                                 <div class="text-right">
                                     <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-150">DRAFT</span>
@@ -508,11 +534,16 @@
                 </div>
 
                 <!-- Printable invoice format -->
-                <div id="invoice-print-area" class="border border-slate-200 rounded-2xl p-6 bg-white font-sans text-xs text-slate-850 shadow-inner">
+                <div id="invoice-print-area" class="border border-slate-200 rounded-2xl p-6 bg-white font-sans text-xs text-slate-850 shadow-inner relative overflow-hidden">
+                    <!-- Subtle Watermark in Print Interface -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[30deg]">
+                        <span class="text-4xl font-extrabold tracking-widest text-slate-900 uppercase">{{ viewingInvoice?.agency_name || 'Siège Social' }}</span>
+                    </div>
+
                     <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
                         <div>
-                            <div class="font-extrabold text-slate-900 text-sm">QUITTANCE / FACTURE</div>
-                            <div class="text-[9px] text-slate-400">Émise le {{ formatDateFr(viewingInvoice?.dateEmission) }}</div>
+                            <div class="font-extrabold text-slate-900 text-sm uppercase">{{ viewingInvoice?.company_name || currentCompanyName }}</div>
+                            <div class="text-[9px] text-slate-400">Agence gérante : {{ viewingInvoice?.agency_name || 'Siège Social' }}</div>
                         </div>
                         <div class="text-right">
                             <div class="font-extrabold text-blue-600 text-sm">ENREGISTRÉE</div>
@@ -534,7 +565,7 @@
                             <span class="block text-[9px] text-slate-400 mt-3">Statut actuel</span>
                             <span :class="[
                                 'inline-flex px-2 py-0.5 rounded text-[10px] font-bold mt-1 uppercase border',
-                                viewingInvoice?.statut === 'Payé' ? 'bg-emerald-55 text-emerald-800 border-emerald-200' : 'bg-red-55 text-red-850 border-red-200'
+                                viewingInvoice?.statut === 'Payé' ? 'bg-emerald-55 text-emerald-800 border-emerald-200' : 'bg-red-55 text-red-800 border-red-200'
                             ]">{{ viewingInvoice?.statut }}</span>
                         </div>
                     </div>
@@ -552,7 +583,7 @@
                             <tr v-for="(item, idx) in viewingInvoice?.items" :key="idx" class="border-b border-slate-50/50">
                                 <td class="py-2 text-slate-700 font-medium">{{ item.motif }}</td>
                                 <td class="py-2 text-center text-slate-650">{{ item.quantite || 1 }}</td>
-                                <td class="py-2 text-right text-slate-650">{{ formatCurrency(item.prix_unitaire || 0) }}</td>
+                                <td class="py-2 text-right text-slate-655">{{ formatCurrency(item.prix_unitaire || 0) }}</td>
                                 <td class="py-2 text-right font-bold text-slate-800">{{ formatCurrency((item.quantite || 1) * (item.prix_unitaire || 0)) }}</td>
                             </tr>
                         </tbody>
@@ -617,7 +648,7 @@
                                 @click="paymentMode = 'cash'"
                                 :class="[
                                     'p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 font-bold text-xs',
-                                    paymentMode === 'cash' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
+                                    paymentMode === 'cash' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-655'
                                 ]"
                             >
                                 <span class="text-2xl">💵</span>
@@ -628,7 +659,7 @@
                                 @click="paymentMode = 'wallet'"
                                 :class="[
                                     'p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 font-bold text-xs',
-                                    paymentMode === 'wallet' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
+                                    paymentMode === 'wallet' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-655'
                                 ]"
                             >
                                 <span class="text-2xl">💼</span>
@@ -639,7 +670,7 @@
                 </div>
 
                 <div class="flex gap-3">
-                    <button @click="closePaymentModal" class="flex-1 px-4 py-3 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
+                    <button @click="closePaymentModal" class="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
                     <button 
                         @click="confirmPayment" 
                         :disabled="savingPayment"
@@ -701,6 +732,7 @@ const batiments = ref([]);
 const logements = ref([]);
 const typeFactures = ref([]);
 const deviseSymbol = ref('€');
+const currentCompanyName = ref('');
 
 // Loading state indicators
 const loading = ref(false);
@@ -710,7 +742,8 @@ const savingPayment = ref(false);
 // Filters
 const searchQuery = ref('');
 const statusFilter = ref('All');
-const periodFilter = ref('');
+const periodFilter = ref('All');
+const typeFactureFilter = ref('All');
 
 // Form state variables
 const showModal = ref(false);
@@ -862,44 +895,58 @@ const fetchPageData = async () => {
             typeFacturesRes,
             deviseRes
         ] = await Promise.all([
-            axios.get('/api/factures'),
-            axios.get('/api/contrats'),
-            axios.get('/api/batiments'),
-            axios.get('/api/logements'),
-            axios.get('/api/type-factures'),
-            axios.get('/api/devise').catch(() => null)
+            axios.get('/api/factures').catch(err => { console.error("Error loading invoices:", err); return { data: [] }; }),
+            axios.get('/api/contrats').catch(err => { console.error("Error loading contrats:", err); return { data: [] }; }),
+            axios.get('/api/batiments').catch(err => { console.error("Error loading batiments:", err); return { data: [] }; }),
+            axios.get('/api/logements').catch(err => { console.error("Error loading logements:", err); return { data: [] }; }),
+            axios.get('/api/type-factures').catch(err => { console.error("Error loading type-factures:", err); return { data: [] }; }),
+            axios.get('/api/devise').catch(err => { console.error("Error loading devise:", err); return null; })
         ]);
 
-        invoices.value = invoicesRes.data;
-        contratsActifs.value = contratsRes.data.filter(c => c.statut === 'Actif');
-        batiments.value = batimentsRes.data;
-        logements.value = logementsRes.data;
-        typeFactures.value = typeFacturesRes.data.filter(t => !t.deleted);
+        invoices.value = invoicesRes.data || [];
+        contratsActifs.value = (contratsRes.data || []).filter(c => c.statut === 'Actif');
+        batiments.value = batimentsRes.data || [];
+        logements.value = logementsRes.data || [];
+        typeFactures.value = (typeFacturesRes.data || []).filter(t => !t.deleted);
         
         if (deviseRes && deviseRes.data) {
             deviseSymbol.value = deviseRes.data.symbole || '€';
         }
+
+        // Get company name from first invoice if available
+        if (invoices.value.length > 0) {
+            currentCompanyName.value = invoices.value[0].company_name || '';
+        }
     } catch (err) {
-        console.error("Error loading page data:", err);
-        errorMessage.value = "Une erreur est survenue lors du chargement des données.";
+        console.error("Critical error loading page data:", err);
+        errorMessage.value = "Une erreur critique est survenue lors du chargement des données.";
         showError.value = true;
     } finally {
         loading.value = false;
     }
 };
 
-// Computed KPIs
-const totalInvoiced = computed(() => invoices.value.reduce((sum, i) => sum + i.total, 0));
-const totalPaid = computed(() => invoices.value.reduce((sum, i) => sum + i.montantPaye, 0));
-const totalDue = computed(() => totalInvoiced.value - totalPaid.value);
-const recoveryRate = computed(() => {
-    if (!totalInvoiced.value) return 0;
-    return Math.round((totalPaid.value / totalInvoiced.value) * 100);
+// Available unique periods
+const availablePeriods = computed(() => {
+    const periods = invoices.value.map(i => i.periode).filter(Boolean);
+    return [...new Set(periods)].sort().reverse();
 });
 
-// Filtered invoices
+// Filtered invoices (Filters list and dynamically updates KPIs!)
 const filteredInvoices = computed(() => {
     let result = invoices.value;
+
+    if (typeFactureFilter.value !== 'All') {
+        result = result.filter(i => Number(i.type_facture_id) === Number(typeFactureFilter.value));
+    }
+
+    if (periodFilter.value !== 'All') {
+        result = result.filter(i => i.periode === periodFilter.value);
+    }
+
+    if (statusFilter.value !== 'All') {
+        result = result.filter(i => i.statut === statusFilter.value);
+    }
 
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
@@ -910,15 +957,16 @@ const filteredInvoices = computed(() => {
         );
     }
 
-    if (periodFilter.value) {
-        result = result.filter(i => i.periode === periodFilter.value);
-    }
-
-    if (statusFilter.value !== 'All') {
-        result = result.filter(i => i.statut === statusFilter.value);
-    }
-
     return result;
+});
+
+// Computed KPIs (Dynamically updates based on selected filters!)
+const totalInvoiced = computed(() => filteredInvoices.value.reduce((sum, i) => sum + i.total, 0));
+const totalPaid = computed(() => filteredInvoices.value.reduce((sum, i) => sum + i.montantPaye, 0));
+const totalDue = computed(() => totalInvoiced.value - totalPaid.value);
+const recoveryRate = computed(() => {
+    if (!totalInvoiced.value) return 0;
+    return Math.round((totalPaid.value / totalInvoiced.value) * 100);
 });
 
 // Items Editor Methods
@@ -1027,6 +1075,7 @@ const closeViewModal = () => {
 };
 
 const deleteInvoice = async (inv) => {
+    // Only Enterprise dashboard is allowed to trigger delete, but we double check
     if (confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) {
         try {
             await axios.delete(`/api/factures/${inv.id}`);
@@ -1082,15 +1131,60 @@ const printInvoice = () => {
     const printContent = document.getElementById('invoice-print-area').innerHTML;
     const w = window.open();
     w.document.write('<html><head><title>Facture</title>');
-    w.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">');
-    w.document.write('<style>body{font-family:"Inter",sans-serif;padding:40px;color:#334155;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left;}th{color:#94a3b8;font-size:10px;text-transform:uppercase;}td{font-size:11px;}body{background:#fff;}</style>');
-    w.document.write('</head><body>');
+    
+    // Copy all style sheets and style elements from the main document to preserve Tailwind layout
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'));
+    styles.forEach(style => {
+        w.document.write(style.outerHTML);
+    });
+    
+    w.document.write('<style>');
+    w.document.write(`
+        body {
+            font-family: "Inter", sans-serif;
+            padding: 40px !important;
+            color: #334155 !important;
+            position: relative;
+            min-height: 100vh;
+            background: #white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .watermark {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(-30deg) !important;
+            font-size: 70px !important;
+            color: rgba(148, 163, 184, 0.09) !important;
+            font-weight: 850 !important;
+            text-transform: uppercase !important;
+            white-space: nowrap !important;
+            pointer-events: none !important;
+            z-index: -10 !important;
+        }
+        @media print {
+            body {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .absolute.inset-0.flex {
+                display: none !important;
+            }
+        }
+    `);
+    w.document.write('</style>');
+    w.document.write('</head><body class="bg-white">');
+    const agencyName = viewingInvoice.value?.agency_name || 'Siège Social';
+    w.document.write(`<div class="watermark">${agencyName}</div>`);
     w.document.write(printContent);
     w.document.write('</body></html>');
     w.document.close();
     w.focus();
-    w.print();
-    w.close();
+    setTimeout(() => {
+        w.print();
+        w.close();
+    }, 500);
 };
 
 const closeSuccess = () => {
