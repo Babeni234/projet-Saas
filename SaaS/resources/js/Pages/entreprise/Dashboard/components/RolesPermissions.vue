@@ -571,6 +571,58 @@
             </div>
         </div>
 
+        <!-- Règles de gestion loyer / pénalités Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Règles de gestion loyer & pénalités</h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Définissez les jours de déclenchement et les taux de pénalités applicables en cas de retard de loyer.</p>
+                </div>
+                <button
+                    @click="openCreateRegleLoyerModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter une Règle
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="rule in regleLoyers"
+                    :key="rule.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[140px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm border border-amber-200">
+                            <i class="fa-solid fa-clock-badge text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">Le {{ rule.jour_declenchement }} du mois</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">Pénalité de retard appliquée : <strong class="text-red-500 font-extrabold text-sm">{{ rule.taux_penalite }}%</strong></div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditRegleLoyerModal(rule)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteRegleLoyer(rule)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="regleLoyers.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border border-slate-200">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl mx-auto text-slate-300 mb-3 block"></i>
+                    <p class="font-semibold text-slate-500 text-sm">Aucune règle de pénalité de loyer configurée pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Add/Edit Role Modal -->
         <ModalPremium
             :show="showRoleModal"
@@ -1069,6 +1121,66 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit RegleLoyer Modal -->
+        <ModalPremium
+            :show="showRegleLoyerModal"
+            :title="isEditingRegleLoyer ? 'Modifier la règle de pénalité' : 'Ajouter une règle de pénalité'"
+            @close="showRegleLoyerModal = false"
+        >
+            <form @submit.prevent="submitRegleLoyerForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jour de déclenchement (du mois) <span class="text-red-500">*</span></label>
+                        <input
+                            v-model.number="regleLoyerForm.jour_declenchement"
+                            type="number"
+                            min="1"
+                            max="31"
+                            required
+                            placeholder="Ex: 11"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-705 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                        />
+                        <span v-if="regleLoyerErrors.jour_declenchement" class="text-red-500 text-xs mt-1 block">{{ regleLoyerErrors.jour_declenchement[0] }}</span>
+                        <p class="text-[10px] text-slate-400 mt-1">La pénalité s'appliquera automatiquement si le loyer du mois en cours n'est pas réglé à cette date.</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Taux de pénalité (%) <span class="text-red-500">*</span></label>
+                        <input
+                            v-model.number="regleLoyerForm.taux_penalite"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            required
+                            placeholder="Ex: 10"
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-705 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                        />
+                        <span v-if="regleLoyerErrors.taux_penalite" class="text-red-500 text-xs mt-1 block">{{ regleLoyerErrors.taux_penalite[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showRegleLoyerModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isRegleLoyerSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isRegleLoyerSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingRegleLoyer ? 'Mettre à Jour' : 'Créer la Règle' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -1132,6 +1244,18 @@ const typeFactureErrors = ref({});
 const typeFactureForm = ref({
     nom: '',
     description: ''
+});
+
+// RegleLoyers state
+const regleLoyers = ref([]);
+const showRegleLoyerModal = ref(false);
+const isEditingRegleLoyer = ref(false);
+const editingRegleLoyerId = ref(null);
+const isRegleLoyerSubmitting = ref(false);
+const regleLoyerErrors = ref({});
+const regleLoyerForm = ref({
+    jour_declenchement: 11,
+    taux_penalite: 10
 });
 
 // Modal & Form state
@@ -1256,6 +1380,7 @@ onMounted(() => {
     fetchTypeEtatDesLieux();
     fetchCurrency();
     fetchTypeFactures();
+    fetchRegleLoyers();
 });
 
 const loadData = () => {
@@ -2131,6 +2256,115 @@ const saveCurrency = async () => {
         showNotification('error', 'Erreur', 'Impossible de sauvegarder la devise.');
     } finally {
         savingCurrency.value = false;
+    }
+};
+
+// RegleLoyers CRUD methods
+const fetchRegleLoyers = async () => {
+    try {
+        const response = await fetch('/api/regle-loyers', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            regleLoyers.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération règles de loyer:", error);
+    }
+};
+
+const openCreateRegleLoyerModal = () => {
+    isEditingRegleLoyer.value = false;
+    editingRegleLoyerId.value = null;
+    regleLoyerForm.value = {
+        jour_declenchement: 11,
+        taux_penalite: 10
+    };
+    regleLoyerErrors.value = {};
+    showRegleLoyerModal.value = true;
+};
+
+const openEditRegleLoyerModal = (rule) => {
+    isEditingRegleLoyer.value = true;
+    editingRegleLoyerId.value = rule.id;
+    regleLoyerForm.value = {
+        jour_declenchement: rule.jour_declenchement,
+        taux_penalite: rule.taux_penalite
+    };
+    regleLoyerErrors.value = {};
+    showRegleLoyerModal.value = true;
+};
+
+const submitRegleLoyerForm = async () => {
+    isRegleLoyerSubmitting.value = true;
+    regleLoyerErrors.value = {};
+    try {
+        const url = isEditingRegleLoyer.value
+            ? `/api/regle-loyers/${editingRegleLoyerId.value}`
+            : '/api/regle-loyers';
+        const method = isEditingRegleLoyer.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(regleLoyerForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingRegleLoyer.value 
+                    ? 'La règle de pénalité a été mise à jour.' 
+                    : 'La règle de pénalité a été créée.'
+            );
+            showRegleLoyerModal.value = false;
+            fetchRegleLoyers();
+        } else {
+            const data = await response.json();
+            if (response.status === 422) {
+                if (data.errors) {
+                    regleLoyerErrors.value = data.errors;
+                } else {
+                    showNotification('error', 'Erreur', data.message || 'Jour de déclenchement invalide.');
+                }
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isRegleLoyerSubmitting.value = false;
+    }
+};
+
+const deleteRegleLoyer = async (rule) => {
+    if (!confirm(`Etes-vous sûr de vouloir supprimer cette règle pour le ${rule.jour_declenchement} du mois ?`)) return;
+    try {
+        const response = await fetch(`/api/regle-loyers/${rule.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'La règle de pénalité a été supprimée.');
+            fetchRegleLoyers();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer la règle.');
     }
 };
 

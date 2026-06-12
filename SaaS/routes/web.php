@@ -298,6 +298,17 @@ Route::middleware('auth')->group(function () {
             'initialRoute' => 'immobilier/proprietaires'
         ]);
     })->name('immobilier.proprietaires');
+
+    // RegleLoyers API routes
+    Route::get('/api/regle-loyers', [\App\Http\Controllers\RegleLoyerController::class, 'index'])->name('regle-loyers.json');
+    Route::post('/api/regle-loyers', [\App\Http\Controllers\RegleLoyerController::class, 'store'])->name('regle-loyers.store');
+    Route::put('/api/regle-loyers/{regleLoyer}', [\App\Http\Controllers\RegleLoyerController::class, 'update'])->name('regle-loyers.update');
+    Route::delete('/api/regle-loyers/{regleLoyer}', [\App\Http\Controllers\RegleLoyerController::class, 'destroy'])->name('regle-loyers.destroy');
+
+    // PaiementLoyers API routes
+    Route::get('/api/paiement-loyers', [\App\Http\Controllers\PaiementLoyerController::class, 'index'])->name('paiement-loyers.json');
+    Route::post('/api/paiement-loyers', [\App\Http\Controllers\PaiementLoyerController::class, 'store'])->name('paiement-loyers.store');
+    Route::delete('/api/paiement-loyers/{paiementLoyer}', [\App\Http\Controllers\PaiementLoyerController::class, 'destroy'])->name('paiement-loyers.destroy');
 });
 
 require __DIR__.'/auth.php';
