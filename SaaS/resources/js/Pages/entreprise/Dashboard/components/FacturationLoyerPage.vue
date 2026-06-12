@@ -712,7 +712,10 @@
                                     paymentMode === 'cash' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
                                 ]"
                             >
-                                <span class="text-2xl">💵</span>
+                                <i :class="[
+                                    'fa-solid fa-money-bill-wave text-2xl transition-all',
+                                    paymentMode === 'cash' ? 'text-blue-600 scale-110' : 'text-slate-400'
+                                ]"></i>
                                 <span>Espèces (Cash)</span>
                             </button>
                             <button 
@@ -723,7 +726,10 @@
                                     paymentMode === 'wallet' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
                                 ]"
                             >
-                                <span class="text-2xl">💼</span>
+                                <i :class="[
+                                    'fa-solid fa-wallet text-2xl transition-all',
+                                    paymentMode === 'wallet' ? 'text-blue-600 scale-110' : 'text-slate-400'
+                                ]"></i>
                                 <span>Portefeuille (Wallet)</span>
                             </button>
                         </div>
