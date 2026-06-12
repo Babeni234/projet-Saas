@@ -32,7 +32,7 @@ export const navigation = [
                     { name: 'agence.immobilier.affectations', label: 'Affectation' },
                     { name: 'agence.immobilier.contrats', label: 'Contrats de bail' },
                     { name: 'agence.immobilier.locataires', label: 'Locataires' },
-                    { name: 'agence.immobilier.factures', label: 'Facturation' },
+                    { name: 'agence.immobilier.factures', label: 'Facturation/quittances' },
                     { name: 'agence.immobilier.paiements', label: 'Paiements' },
                     { name: 'agence.immobilier.renouvellements', label: 'Renouvellements' },
                     { name: 'agence.immobilier.engagements', label: 'Engagements' },
@@ -66,7 +66,7 @@ export const navigation = [
 export const routeTitles = {
     'agence.master': 'Tableau de bord Agence',
     'agence.immobilier.index': 'Gestion immobilière',
-    'agence.immobilier.factures': 'Facturation des loyers',
+    'agence.immobilier.factures': 'Facturation/quittances',
     'agence.immobilier.paiements': 'Paiements de loyer',
     'agence.immobilier.batiments': 'Gestion des bâtiments',
     'agence.immobilier.logements': 'Gestion des biens immobiliers',

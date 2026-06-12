@@ -7,8 +7,8 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
                 <div>
                     <span class="text-blue-400 text-xs font-bold tracking-widest uppercase bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/30">Comptabilité Locative</span>
-                    <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent mt-2">Facturation des Loyers</h1>
-                    <p class="text-slate-400 text-sm mt-1">Émettez des factures mensuelles pour vos locataires actifs et suivez le recouvrement en temps réel.</p>
+                    <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent mt-2">Facturation/quittances</h1>
+                    <p class="text-slate-400 text-sm mt-1">Émettez des factures et quittances pour vos locataires actifs et suivez le recouvrement en temps réel.</p>
                 </div>
                 <button
                     @click="openAddModal"
@@ -27,7 +27,9 @@
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-blue-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-blue-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 font-bold shadow-sm">€</div>
+                    <div class="w-10 h-10 bg-blue-550/10 rounded-xl flex items-center justify-center text-blue-600 font-bold shadow-sm">
+                        <span>{{ deviseSymbol }}</span>
+                    </div>
                 </div>
                 <div class="text-2xl font-extrabold text-slate-800 mb-1 tracking-tight">{{ formatCurrency(totalInvoiced) }}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Facturé</div>
@@ -36,7 +38,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-emerald-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-emerald-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 font-bold shadow-sm">✓</div>
+                    <div class="w-10 h-10 bg-emerald-550/10 rounded-xl flex items-center justify-center text-emerald-600 font-bold shadow-sm">✓</div>
                 </div>
                 <div class="text-2xl font-extrabold text-emerald-600 mb-1 tracking-tight">{{ formatCurrency(totalPaid) }}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Montant Recouvré</div>
@@ -45,7 +47,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-rose-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-rose-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 font-bold shadow-sm">!</div>
+                    <div class="w-10 h-10 bg-rose-550/10 rounded-xl flex items-center justify-center text-rose-600 font-bold shadow-sm">!</div>
                 </div>
                 <div class="text-2xl font-extrabold text-rose-600 mb-1 tracking-tight">{{ formatCurrency(totalDue) }}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Solde Dû / Impayés</div>
@@ -54,7 +56,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-violet-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-violet-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 font-bold shadow-sm">%</div>
+                    <div class="w-10 h-10 bg-violet-550/10 rounded-xl flex items-center justify-center text-violet-600 font-bold shadow-sm">%</div>
                 </div>
                 <div class="text-2xl font-extrabold text-violet-600 mb-1 tracking-tight">{{ recoveryRate }}%</div>
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Taux de Recouvrement</div>
@@ -86,7 +88,6 @@
                     <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
                         <option value="All">Tous</option>
                         <option value="Payé">Payé</option>
-                        <option value="Partiellement payé">Partiel</option>
                         <option value="Impayé">Impayé</option>
                     </select>
                 </div>
@@ -102,7 +103,7 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Facture</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Locataire</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Logement</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Période</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Type / Période</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Total</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Reçu</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Statut</th>
@@ -111,7 +112,10 @@
                     </thead>
                     <tbody class="divide-y divide-slate-150">
                         <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-slate-800">{{ inv.numero }}</td>
+                            <td class="px-6 py-4 text-sm font-bold text-slate-800">
+                                <div>{{ inv.numero }}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">Émise le {{ formatDateFr(inv.dateEmission) }}</div>
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div :class="['w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-xs shadow-sm bg-gradient-to-br', getAvatarGradient(inv.locataire)]">
@@ -120,28 +124,39 @@
                                     <div class="font-bold text-slate-800 text-sm">{{ inv.locataire }}</div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ inv.logement }} ({{ inv.batiment }})</td>
-                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatPeriod(inv.periode) }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-650 font-semibold">
+                                <div>{{ inv.logement }}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">{{ inv.batiment }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-650 font-semibold">
+                                <div class="font-bold text-slate-750">{{ inv.type_facture_nom }}</div>
+                                <div class="text-[10px] text-slate-400" v-if="inv.periode">{{ formatPeriod(inv.periode) }}</div>
+                            </td>
                             <td class="px-6 py-4 text-sm text-slate-800 font-extrabold">{{ formatCurrency(inv.total) }}</td>
-                            <td class="px-6 py-4 text-sm text-emerald-600 font-bold">{{ formatCurrency(inv.montantPaye) }}</td>
+                            <td class="px-6 py-4 text-sm text-emerald-600 font-bold">
+                                <div>{{ formatCurrency(inv.montantPaye) }}</div>
+                                <div class="text-[9px] text-slate-400 font-medium" v-if="inv.modeReglement">via {{ inv.modeReglement }}</div>
+                            </td>
                             <td class="px-6 py-4">
                                 <span :class="[
                                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border',
-                                    inv.statut === 'Payé' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                    inv.statut === 'Partiellement payé' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                    'bg-red-50 text-red-700 border-red-200'
+                                    inv.statut === 'Payé' ? 'bg-emerald-55 text-emerald-700 border-emerald-200' : 'bg-red-55 text-red-700 border-red-200'
                                 ]">
-                                    <span :class="['w-1.5 h-1.5 rounded-full',
-                                        inv.statut === 'Payé' ? 'bg-emerald-500' :
-                                        inv.statut === 'Partiellement payé' ? 'bg-amber-500 animate-pulse' :
-                                        'bg-red-500 animate-pulse'
-                                    ]"></span>
+                                    <span :class="['w-1.5 h-1.5 rounded-full', inv.statut === 'Payé' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse']"></span>
                                     {{ inv.statut }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
-                                    <button @click="viewInvoice(inv)" class="p-2 text-slate-650 hover:bg-slate-100 rounded-xl transition-all" title="Aperçu / Imprimer">
+                                    <button 
+                                        v-if="inv.statut !== 'Payé'"
+                                        @click="openPaymentModal(inv)" 
+                                        class="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm transition-all"
+                                        title="Enregistrer un règlement"
+                                    >
+                                        Régler
+                                    </button>
+                                    <button @click="viewInvoice(inv)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all" title="Aperçu / Imprimer">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                         </svg>
@@ -166,9 +181,10 @@
 
         <!-- Add Modal (Generate Invoices) -->
         <div v-if="showModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-blue-50/20 rounded-3xl shadow-2xl max-w-4xl w-full p-8 border border-blue-100/50 relative overflow-hidden animate-scale-up grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-6xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up grid grid-cols-1 lg:grid-cols-12 gap-8 max-h-[90vh]">
                 
-                <div class="relative z-10 flex flex-col justify-between">
+                <!-- Left: Form Editor (col-span-7) -->
+                <div class="lg:col-span-7 flex flex-col justify-between max-h-[80vh] overflow-y-auto pr-4 scrollbar-thin">
                     <div>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-650 flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -176,94 +192,215 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <h2 class="text-2xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Générer une Facture</h2>
+                            <h2 class="text-2xl font-extrabold text-slate-800">Générer une Facture</h2>
                         </div>
 
-                        <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
-                            <!-- Lease Selection -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire Actif *</label>
-                                <select 
-                                    v-model="selectedContratNo" 
-                                    @change="handleContratChange"
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                >
-                                    <option value="" disabled>Sélectionner le locataire</option>
-                                    <option v-for="c in contratsActifs" :key="c.id" :value="c.numero">
-                                        {{ c.locataire }} (Bail {{ c.numero }} - Loyer: {{ c.loyer }}€)
-                                    </option>
-                                </select>
-                            </div>
-
-                            <!-- Invoice Type Selector -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type de Facture *</label>
-                                <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
+                        <div class="space-y-4">
+                            <!-- 1. Building Searchable Select (Starts cascade here) -->
+                            <div class="relative">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
+                                <div class="relative">
                                     <button 
                                         type="button" 
-                                        @click="typeFacture = 'loyer'" 
-                                        :class="['py-2 text-xs font-bold rounded-lg transition-all', typeFacture === 'loyer' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-550 hover:text-slate-800']"
+                                        @click="toggleBuildingDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-805 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                     >
-                                        Facture Loyer
+                                        <span>{{ selectedBuildingName || 'Sélectionner le bâtiment' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isBuildingDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
                                     </button>
-                                    <button 
-                                        type="button" 
-                                        @click="typeFacture = 'libre'" 
-                                        :class="['py-2 text-xs font-bold rounded-lg transition-all', typeFacture === 'libre' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-550 hover:text-slate-800']"
-                                    >
-                                        Facture libre / Motifs
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Rent Invoice months selection grid -->
-                            <div class="group" v-if="typeFacture === 'loyer' && selectedContratNo">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Sélectionner les mois à facturer *</label>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <label 
-                                        v-for="month in contractMonths" 
-                                        :key="month" 
-                                        :class="[
-                                            'flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer select-none text-center',
-                                            isMonthPaid(month) ? 'bg-slate-50 border-slate-100 text-slate-350 cursor-not-allowed opacity-60' :
-                                            selectedMonths.includes(month) ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-350'
-                                        ]"
-                                    >
+                                    <div v-if="isBuildingDropdownOpen" class="absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
                                         <input 
-                                            type="checkbox" 
-                                            :value="month" 
-                                            v-model="selectedMonths" 
-                                            :disabled="isMonthPaid(month)"
-                                            class="sr-only"
+                                            v-model="buildingSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un bâtiment..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-blue-500"
                                         />
-                                        <span class="text-[11px] font-extrabold">{{ formatPeriod(month) }}</span>
-                                        <span class="text-[9px] font-bold mt-1" :class="isMonthPaid(month) ? 'text-emerald-600' : selectedMonths.includes(month) ? 'text-blue-650' : 'text-slate-450'">
-                                            {{ isMonthPaid(month) ? 'Déjà Payé' : 'Sélectionner' }}
-                                        </span>
-                                    </label>
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="building in filteredBuildingsDropdown" 
+                                                :key="building.id" 
+                                                @click="selectBuilding(building)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                {{ building.nom }}
+                                            </button>
+                                            <div v-if="filteredBuildingsDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun résultat trouvé
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p v-if="contractMonths.length === 0" class="text-xs text-amber-600 font-semibold mt-1">Aucune période disponible.</p>
                             </div>
 
-                            <!-- Libre Invoice fields -->
-                            <div class="space-y-4" v-if="typeFacture === 'libre'">
-                                <!-- Billing Month -->
-                                <div class="group">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Période de Facturation (Mois) *</label>
-                                    <input type="month" v-model="formData.periode" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-850 text-sm shadow-sm" />
+                            <!-- 2. Tenant Searchable Select -->
+                            <div class="relative" v-if="selectedBuildingId">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire Actif *</label>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click="toggleTenantDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-805 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    >
+                                        <span>{{ selectedTenantLabel || 'Sélectionner le locataire' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isTenantDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isTenantDropdownOpen" class="absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="tenantSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un locataire..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-blue-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="contract in filteredTenantsDropdown" 
+                                                :key="contract.id" 
+                                                @click="selectTenant(contract)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                {{ contract.locataire }} (Bail {{ contract.numero }} - Loyer: {{ contract.loyer }} {{ deviseSymbol }})
+                                            </button>
+                                            <div v-if="filteredTenantsDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun résultat trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Invoice Type Searchable Select -->
+                            <div class="relative" v-if="selectedLocataireId">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type de Facture *</label>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click="toggleTypeFactureDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-805 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    >
+                                        <span>{{ selectedTypeFactureNom || 'Sélectionner le type de facture' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isTypeFactureDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isTypeFactureDropdownOpen" class="absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="typeFactureSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un type..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-blue-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="type in filteredTypeFacturesDropdown" 
+                                                :key="type.id" 
+                                                @click="selectTypeFacture(type)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-55 text-slate-700 hover:text-blue-600 transition-colors"
+                                            >
+                                                {{ type.nom }}
+                                            </button>
+                                            <div v-if="filteredTypeFacturesDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun résultat trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Billing Month (Period) & Dates -->
+                            <div class="space-y-4" v-if="selectedLocataireId">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Période (Mois) *</label>
+                                        <input 
+                                            v-model="periode" 
+                                            type="month" 
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date d'émission *</label>
+                                        <input 
+                                            v-model="dateEmission" 
+                                            type="date" 
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date d'échéance *</label>
+                                        <input 
+                                            v-model="dateEcheance" 
+                                            type="date" 
+                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                        />
+                                    </div>
                                 </div>
 
-                                <!-- Items listing -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Détails de facturation</span>
-                                        <button @click="addInvoiceItem" type="button" class="text-xs font-bold text-blue-650 hover:underline">+ Ajouter une ligne</button>
+                                <!-- Multi-line items editor -->
+                                <div class="mt-6">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Lignes de facturation (Multifonction) *</label>
+                                        <button type="button" @click="addItem" class="text-xs font-bold text-blue-650 hover:text-blue-600 flex items-center gap-1 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Ajouter une ligne
+                                        </button>
                                     </div>
-                                    <div class="space-y-2">
-                                        <div v-for="(item, idx) in formData.items" :key="idx" class="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-200/50">
-                                            <input type="text" v-model="item.libelle" placeholder="Libellé / Motif" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold focus:outline-none" />
-                                            <input type="number" v-model.number="item.montant" placeholder="Montant" class="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold focus:outline-none" />
-                                            <button @click="removeInvoiceItem(idx)" type="button" class="text-red-500 font-bold px-2 hover:bg-slate-200 rounded-lg" :disabled="formData.items.length === 1">×</button>
+                                    <div class="space-y-3">
+                                        <div v-for="(item, idx) in items" :key="idx" class="grid grid-cols-12 gap-3 items-center bg-slate-55 p-3 rounded-xl border border-slate-100 shadow-sm">
+                                            <!-- Description -->
+                                            <div class="col-span-5">
+                                                <input 
+                                                    v-model="item.motif" 
+                                                    type="text" 
+                                                    placeholder="Motif / Description" 
+                                                    class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                                                />
+                                            </div>
+                                            <!-- Qty -->
+                                            <div class="col-span-2">
+                                                <input 
+                                                    v-model.number="item.quantite" 
+                                                    type="number" 
+                                                    min="1" 
+                                                    placeholder="Qté" 
+                                                    class="w-full px-2 py-2 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-center"
+                                                />
+                                            </div>
+                                            <!-- P.U. -->
+                                            <div class="col-span-2">
+                                                <input 
+                                                    v-model.number="item.prix_unitaire" 
+                                                    type="number" 
+                                                    min="0" 
+                                                    placeholder="P.U." 
+                                                    class="w-full px-2 py-2 text-xs font-semibold border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-right"
+                                                />
+                                            </div>
+                                            <!-- P.T. -->
+                                            <div class="col-span-2 text-right text-xs font-bold text-slate-700">
+                                                {{ formatCurrency(Number(item.quantite || 0) * Number(item.prix_unitaire || 0)) }}
+                                            </div>
+                                            <!-- Actions -->
+                                            <div class="col-span-1 text-center">
+                                                <button 
+                                                    type="button" 
+                                                    @click="removeItem(idx)" 
+                                                    :disabled="items.length <= 1"
+                                                    class="text-red-500 hover:text-red-650 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                                >
+                                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -273,24 +410,33 @@
 
                     <!-- Footers -->
                     <div class="flex gap-4 mt-6 border-t border-slate-100 pt-5">
-                        <button @click="closeModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
-                        <button @click="saveInvoice" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-650 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/35 transition-all text-xs">Générer la facture</button>
+                        <button @click="closeModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
+                        <button 
+                            @click="saveInvoice" 
+                            :disabled="savingInvoice || !selectedLocataireId"
+                            class="flex-1 px-5 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-650 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/35 transition-all text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <svg v-if="savingInvoice" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Générer la facture
+                        </button>
                     </div>
                 </div>
 
-                <!-- Live Printable Style Invoice Preview -->
-                <div class="border-l border-slate-200 pl-8 hidden lg:flex flex-col justify-between h-[65vh]">
+                <!-- Right: Live Printable Style Invoice Preview (col-span-5) -->
+                <div class="lg:col-span-5 border-l border-slate-200 pl-8 hidden lg:flex flex-col justify-between max-h-[80vh]">
                     <div class="bg-white border-2 border-slate-100 shadow-lg rounded-2xl p-6 flex-1 flex flex-col justify-between font-sans text-xs text-slate-800 overflow-y-auto">
                         <div>
                             <!-- Header -->
                             <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
                                 <div>
-                                    <div class="font-extrabold text-slate-900 text-sm">Enterprise Property Corp</div>
-                                    <div class="text-[10px] text-slate-400">Gestion locative & Immobilière</div>
+                                    <div class="font-extrabold text-slate-900 text-sm">FACTURE IMMOBILIÈRE</div>
+                                    <div class="text-[10px] text-slate-400">Générée le {{ formatDateFr(dateEmission) }}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="font-extrabold text-blue-600">FACTURE</div>
-                                    <div class="text-[10px] text-slate-500">{{ formData.numero || 'Draft' }}</div>
+                                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-150">DRAFT</span>
                                 </div>
                             </div>
 
@@ -298,18 +444,17 @@
                             <div class="grid grid-cols-2 gap-4 mb-6">
                                 <div>
                                     <span class="block text-[9px] font-bold text-slate-400 uppercase">Destinataire</span>
-                                    <strong class="text-slate-800 text-xs">{{ formData.locataire || 'Locataire non sélectionné' }}</strong>
-                                    <span class="block text-slate-550 mt-1">Logement: {{ formData.logement || 'Aucun' }}</span>
-                                    <span class="block text-slate-550">{{ formData.batiment || '' }}</span>
+                                    <strong class="text-slate-800 text-xs" v-if="selectedTenantLabel">{{ selectedTenantLabel }}</strong>
+                                    <strong class="text-slate-450 italic" v-else>Sélectionner un locataire</strong>
+                                    <span class="block text-slate-550 mt-1" v-if="selectedBuildingName">Bâtiment: {{ selectedBuildingName }}</span>
                                 </div>
                                 <div class="text-right">
                                     <span class="block text-[9px] font-bold text-slate-400 uppercase">Période</span>
-                                    <strong class="text-slate-800 text-xs" v-if="typeFacture === 'libre'">{{ formatPeriod(formData.periode) }}</strong>
-                                    <strong class="text-slate-800 text-xs" v-else-if="selectedMonths.length === 1">{{ formatPeriod(selectedMonths[0]) }}</strong>
-                                    <strong class="text-slate-800 text-xs" v-else-if="selectedMonths.length > 1">Multiples ({{ selectedMonths.length }})</strong>
-                                    <strong class="text-slate-800 text-xs" v-else>Aucun mois sélectionné</strong>
-                                    <span class="block text-[9px] text-slate-400 mt-2">Date d'émission</span>
-                                    <span>{{ getTodayDate() }}</span>
+                                    <strong class="text-slate-850" v-if="periode">{{ formatPeriod(periode) }}</strong>
+                                    <strong class="text-slate-400 italic" v-else>Non définie</strong>
+                                    <span class="block text-[9px] text-slate-400 mt-2">Date d'échéance</span>
+                                    <strong class="text-red-650" v-if="dateEcheance">{{ formatDateFr(dateEcheance) }}</strong>
+                                    <strong class="text-slate-400 italic" v-else>Non définie</strong>
                                 </div>
                             </div>
 
@@ -317,35 +462,22 @@
                             <div class="border-b border-slate-100 mb-4">
                                 <table class="w-full">
                                     <thead>
-                                        <tr class="border-b border-slate-100 text-[9px] text-slate-400 font-bold">
-                                            <th class="text-left pb-2">Description</th>
-                                            <th class="text-right pb-2">Montant</th>
+                                        <tr class="border-b border-slate-100 text-[9px] text-slate-400 font-bold uppercase text-left">
+                                            <th class="pb-2">Description</th>
+                                            <th class="text-center pb-2">Qté</th>
+                                            <th class="text-right pb-2">P.U.</th>
+                                            <th class="text-right pb-2">Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody v-if="typeFacture === 'libre'">
-                                        <tr v-for="(item, idx) in formData.items" :key="idx" class="text-slate-700">
-                                            <td class="py-2">{{ item.libelle || 'Ligne de frais' }}</td>
-                                            <td class="py-2 text-right font-bold">{{ formatCurrency(item.montant) }}</td>
+                                    <tbody>
+                                        <tr v-for="(item, idx) in items" :key="idx" class="border-b border-slate-50/50">
+                                            <td class="py-2 text-slate-700 font-medium">{{ item.motif || 'Ligne ' + (idx + 1) }}</td>
+                                            <td class="py-2 text-center text-slate-650">{{ item.quantite || 1 }}</td>
+                                            <td class="py-2 text-right text-slate-650">{{ formatCurrency(item.prix_unitaire || 0) }}</td>
+                                            <td class="py-2 text-right font-bold text-slate-800">{{ formatCurrency((item.quantite || 1) * (item.prix_unitaire || 0)) }}</td>
                                         </tr>
-                                    </tbody>
-                                    <tbody v-else-if="typeFacture === 'loyer' && selectedMonths.length > 0">
-                                        <tr class="text-slate-700">
-                                            <td class="py-2">Loyer mensuel HC (par mois)</td>
-                                            <td class="py-2 text-right font-bold">{{ formatCurrency(selectedContractLoyer) }}</td>
-                                        </tr>
-                                        <tr class="text-slate-700">
-                                            <td class="py-2">Provisions de charges (par mois)</td>
-                                            <td class="py-2 text-right font-bold">{{ formatCurrency(75) }}</td>
-                                        </tr>
-                                        <tr class="text-[10px] text-blue-500 italic bg-blue-50/30 font-semibold" v-if="selectedMonths.length > 1">
-                                            <td class="py-2 px-1" colspan="2">
-                                                Génération par lot : {{ selectedMonths.length }} factures distinctes de {{ formatCurrency(selectedContractLoyer + 75) }} chacune.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tbody v-else>
-                                        <tr>
-                                            <td colspan="2" class="py-4 text-center text-slate-400 italic">Veuillez cocher au moins un mois</td>
+                                        <tr v-if="items.length === 0">
+                                            <td colspan="4" class="py-4 text-center text-slate-400 italic">Veuillez ajouter des lignes de facturation</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -353,10 +485,9 @@
                         </div>
 
                         <!-- Total display -->
-                        <div class="flex justify-between items-center border-t-2 border-slate-100 pt-4 bg-slate-50 p-3 rounded-xl">
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner">
                             <span class="font-extrabold text-slate-900 text-sm">TOTAL À PAYER</span>
-                            <span class="font-extrabold text-blue-600 text-base" v-if="typeFacture === 'libre'">{{ formatCurrency(invoiceTotalCalculated) }}</span>
-                            <span class="font-extrabold text-blue-600 text-base" v-else>{{ formatCurrency((selectedContractLoyer + 75) * (selectedMonths.length || 1)) }}</span>
+                            <span class="font-extrabold text-blue-600 text-base">{{ formatCurrency(invoiceTotalCalculated) }}</span>
                         </div>
                     </div>
                 </div>
@@ -380,11 +511,11 @@
                 <div id="invoice-print-area" class="border border-slate-200 rounded-2xl p-6 bg-white font-sans text-xs text-slate-850 shadow-inner">
                     <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
                         <div>
-                            <div class="font-extrabold text-slate-900 text-sm">Enterprise Property Corp</div>
-                            <div class="text-[9px] text-slate-400">Services d'administration locative</div>
+                            <div class="font-extrabold text-slate-900 text-sm">QUITTANCE / FACTURE</div>
+                            <div class="text-[9px] text-slate-400">Émise le {{ formatDateFr(viewingInvoice?.dateEmission) }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="font-extrabold text-blue-600 text-sm">FACTURE ENREGISTRÉE</div>
+                            <div class="font-extrabold text-blue-600 text-sm">ENREGISTRÉE</div>
                             <div class="text-xs font-bold text-slate-800 mt-1">{{ viewingInvoice?.numero }}</div>
                         </div>
                     </div>
@@ -397,39 +528,44 @@
                             <span class="block text-slate-500">{{ viewingInvoice?.batiment }}</span>
                         </div>
                         <div class="text-right">
-                            <span class="block text-[9px] font-bold text-slate-450 uppercase mb-0.5">Période</span>
-                            <strong class="text-slate-800">{{ formatPeriod(viewingInvoice?.periode) }}</strong>
+                            <span class="block text-[9px] font-bold text-slate-450 uppercase mb-0.5">Période / Type</span>
+                            <strong class="text-slate-800 block">{{ viewingInvoice?.type_facture_nom }}</strong>
+                            <span class="block text-[10px] text-slate-550" v-if="viewingInvoice?.periode">{{ formatPeriod(viewingInvoice?.periode) }}</span>
                             <span class="block text-[9px] text-slate-400 mt-3">Statut actuel</span>
                             <span :class="[
-                                'inline-flex px-2 py-0.5 rounded text-[10px] font-bold mt-1 uppercase',
-                                viewingInvoice?.statut === 'Payé' ? 'bg-emerald-100 text-emerald-800' :
-                                viewingInvoice?.statut === 'Partiellement payé' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                                'inline-flex px-2 py-0.5 rounded text-[10px] font-bold mt-1 uppercase border',
+                                viewingInvoice?.statut === 'Payé' ? 'bg-emerald-55 text-emerald-800 border-emerald-200' : 'bg-red-55 text-red-850 border-red-200'
                             ]">{{ viewingInvoice?.statut }}</span>
                         </div>
                     </div>
 
                     <table class="w-full mb-6">
                         <thead>
-                            <tr class="border-b border-slate-100 text-[9px] text-slate-400 font-bold text-left">
+                            <tr class="border-b border-slate-150 text-[9px] text-slate-400 font-bold uppercase text-left">
                                 <th class="pb-2">Description</th>
-                                <th class="text-right pb-2">Montant</th>
+                                <th class="text-center pb-2">Qté</th>
+                                <th class="text-right pb-2">P.U.</th>
+                                <th class="text-right pb-2">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(item, idx) in viewingInvoice?.items" :key="idx" class="border-b border-slate-50/50">
-                                <td class="py-2 text-slate-700 font-medium">{{ item.libelle }}</td>
-                                <td class="py-2 text-right font-bold text-slate-800">{{ formatCurrency(item.montant) }}</td>
+                                <td class="py-2 text-slate-700 font-medium">{{ item.motif }}</td>
+                                <td class="py-2 text-center text-slate-650">{{ item.quantite || 1 }}</td>
+                                <td class="py-2 text-right text-slate-650">{{ formatCurrency(item.prix_unitaire || 0) }}</td>
+                                <td class="py-2 text-right font-bold text-slate-800">{{ formatCurrency((item.quantite || 1) * (item.prix_unitaire || 0)) }}</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl">
+                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <div>
-                            <span class="block text-[9px] text-slate-400 uppercase">Déjà réglé</span>
-                            <strong class="text-emerald-600">{{ formatCurrency(viewingInvoice?.montantPaye) }}</strong>
+                            <span class="block text-[9px] text-slate-405 uppercase">Déjà réglé</span>
+                            <strong class="text-emerald-600 font-bold text-sm">{{ formatCurrency(viewingInvoice?.montantPaye) }}</strong>
+                            <span class="block text-[8px] text-slate-400 mt-0.5" v-if="viewingInvoice?.modeReglement">via {{ viewingInvoice?.modeReglement }}</span>
                         </div>
                         <div class="text-right">
-                            <span class="block text-[9px] text-slate-400 uppercase">Total Facturé</span>
+                            <span class="block text-[9px] text-slate-405 uppercase">Total Facturé</span>
                             <strong class="text-blue-600 text-sm font-extrabold">{{ formatCurrency(viewingInvoice?.total) }}</strong>
                         </div>
                     </div>
@@ -445,16 +581,90 @@
             </div>
         </div>
 
+        <!-- Payment Settlement Modal -->
+        <div v-if="showPaymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-scale-up" @click.stop>
+                <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                    <h3 class="text-lg font-extrabold text-slate-800">Régler la facture</h3>
+                    <button @click="closePaymentModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all">
+                        <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-slate-400 font-medium text-xs">Facture</span>
+                            <span class="font-extrabold text-slate-800 text-xs">{{ paymentInvoice?.numero }}</span>
+                        </div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-slate-400 font-medium text-xs">Locataire</span>
+                            <span class="font-bold text-slate-800 text-xs">{{ paymentInvoice?.locataire }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400 font-medium text-xs">Montant total</span>
+                            <span class="font-extrabold text-blue-600 text-sm">{{ formatCurrency(paymentInvoice?.total) }}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Mode de règlement</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button 
+                                type="button" 
+                                @click="paymentMode = 'cash'"
+                                :class="[
+                                    'p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 font-bold text-xs',
+                                    paymentMode === 'cash' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
+                                ]"
+                            >
+                                <span class="text-2xl">💵</span>
+                                <span>Espèces (Cash)</span>
+                            </button>
+                            <button 
+                                type="button" 
+                                @click="paymentMode = 'wallet'"
+                                :class="[
+                                    'p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 font-bold text-xs',
+                                    paymentMode === 'wallet' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 text-slate-650'
+                                ]"
+                            >
+                                <span class="text-2xl">💼</span>
+                                <span>Portefeuille (Wallet)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button @click="closePaymentModal" class="flex-1 px-4 py-3 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
+                    <button 
+                        @click="confirmPayment" 
+                        :disabled="savingPayment"
+                        class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-650 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/35 transition-all text-xs flex items-center justify-center gap-2"
+                    >
+                        <svg v-if="savingPayment" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Valider le règlement
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Success Toast -->
         <div v-if="showSuccess" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-emerald-100/50 relative overflow-hidden animate-scale-up">
-                <div class="relative z-10 text-center">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="text-center">
                     <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mx-auto mb-5 shadow-lg shadow-emerald-500/30">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-extrabold text-slate-800 mb-1">Succès !</h3>
+                    <h3 class="text-xl font-extrabold text-slate-805 mb-1">Succès !</h3>
                     <p class="text-slate-500 text-sm mb-6">{{ successMessage }}</p>
                     <button @click="closeSuccess" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
                 </div>
@@ -463,14 +673,14 @@
 
         <!-- Error Toast -->
         <div v-if="showError" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-red-50/20 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-red-100/50 relative overflow-hidden animate-scale-up">
-                <div class="relative z-10 text-center">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="text-center">
                     <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 mx-auto mb-5 shadow-lg shadow-red-500/30">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-extrabold text-slate-800 mb-1">Erreur</h3>
+                    <h3 class="text-xl font-extrabold text-slate-805 mb-1">Erreur</h3>
                     <p class="text-slate-500 text-sm mb-6">{{ errorMessage }}</p>
                     <button @click="closeError" class="w-full px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-md shadow-red-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
                 </div>
@@ -482,48 +692,27 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 
-const page = usePage();
-const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id);
-
-const systemBatiments = computed(() => {
-    const stored = localStorage.getItem('immobilier_batiments');
-    let bats = [];
-    if (stored) {
-        bats = JSON.parse(stored);
-    } else {
-        bats = [
-            { id: 1, nom: 'Immeuble A', ville: 'Paris' },
-            { id: 2, nom: 'Immeuble B', ville: 'Lyon' },
-            { id: 3, nom: 'Immeuble C', ville: 'Nice' },
-            { id: 4, nom: 'Immeuble D', ville: 'Douala' }
-        ];
-    }
-    const agencyId = currentAgencyId.value;
-    return bats.filter(b => Number(b.agency_id) === Number(agencyId));
-});
-
-const buildingsList = computed(() => systemBatiments.value.map(b => b.nom));
-
+// Loaded from Backend APIs
 const invoices = ref([]);
-const rawContratsActifs = ref([]);
+const contratsActifs = ref([]);
+const batiments = ref([]);
+const logements = ref([]);
+const typeFactures = ref([]);
+const deviseSymbol = ref('€');
 
-const contratsActifs = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return rawContratsActifs.value.filter(c => agencyBuildingNames.includes(c.batiment));
-});
+// Loading state indicators
+const loading = ref(false);
+const savingInvoice = ref(false);
+const savingPayment = ref(false);
 
-const scopedInvoices = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return invoices.value.filter(i => agencyBuildingNames.includes(i.batiment));
-});
-
+// Filters
 const searchQuery = ref('');
 const statusFilter = ref('All');
 const periodFilter = ref('');
 
-const selectedContratNo = ref('');
+// Form state variables
 const showModal = ref(false);
 const showViewModal = ref(false);
 const showSuccess = ref(false);
@@ -532,55 +721,185 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const viewingInvoice = ref(null);
 
-const typeFacture = ref('loyer'); // 'loyer' or 'libre'
-const contractMonths = ref([]);
-const selectedMonths = ref([]);
+// Form selections
+const selectedBuildingId = ref(null);
+const selectedBuildingName = ref('');
+const selectedLocataireId = ref(null);
+const selectedTenantLabel = ref('');
+const selectedContratId = ref(null);
+const selectedTypeFactureId = ref(null);
+const selectedTypeFactureNom = ref('');
 
-const formData = ref({
-    numero: '',
-    locataire: '',
-    logement: '',
-    batiment: '',
-    periode: '',
-    items: [],
-    total: 0,
-    montantPaye: 0,
-    statut: 'Impayé'
-});
+const dateEmission = ref('');
+const dateEcheance = ref('');
+const periode = ref('');
+const items = ref([]);
+
+// Search queries inside dropdowns
+const buildingSearchQuery = ref('');
+const tenantSearchQuery = ref('');
+const typeFactureSearchQuery = ref('');
+
+// Dropdown visibility flags
+const isBuildingDropdownOpen = ref(false);
+const isTenantDropdownOpen = ref(false);
+const isTypeFactureDropdownOpen = ref(false);
+
+// Settle payments state
+const showPaymentModal = ref(false);
+const paymentInvoice = ref(null);
+const paymentMode = ref('cash');
 
 onMounted(() => {
-    // 1. Load invoices
-    const storedInvoices = localStorage.getItem('immobilier_factures');
-    if (storedInvoices) {
-        invoices.value = JSON.parse(storedInvoices);
-    } else {
-        // Mock default invoices
-        invoices.value = [
-            { id: 1, numero: 'FAC-2026-001', locataire: 'Jean Dupont', logement: 'APT-A101', batiment: 'Immeuble A', periode: '2026-05', items: [{ libelle: 'Loyer mensuel HC', montant: 1200 }, { libelle: 'Provisions de charges', montant: 80 }], total: 1280, montantPaye: 1280, statut: 'Payé' },
-            { id: 2, numero: 'FAC-2026-002', locataire: 'Marie Lambert', logement: 'APT-A201', batiment: 'Immeuble A', periode: '2026-05', items: [{ libelle: 'Loyer commercial HC', montant: 2500 }, { libelle: 'Charges syndic', montant: 150 }], total: 2650, montantPaye: 1000, statut: 'Partiellement payé' },
-            { id: 3, numero: 'FAC-2026-003', locataire: 'Pierre Martin', logement: 'APT-B101', batiment: 'Immeuble B', periode: '2026-05', items: [{ libelle: 'Loyer mensuel HC', montant: 950 }], total: 950, montantPaye: 0, statut: 'Impayé' }
-        ];
-        localStorage.setItem('immobilier_factures', JSON.stringify(invoices.value));
-    }
-
-    // 2. Load active contracts
-    const storedContrats = localStorage.getItem('immobilier_contrats');
-    if (storedContrats) {
-        rawContratsActifs.value = JSON.parse(storedContrats).filter(c => c.statut === 'Actif');
-    }
+    fetchPageData();
+    window.addEventListener('click', closeAllDropdowns);
 });
 
+// Dropdowns management
+const closeAllDropdowns = () => {
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+    isTypeFactureDropdownOpen.value = false;
+};
+
+const toggleBuildingDropdown = (e) => {
+    e.stopPropagation();
+    const state = isBuildingDropdownOpen.value;
+    closeAllDropdowns();
+    isBuildingDropdownOpen.value = !state;
+};
+
+const toggleTenantDropdown = (e) => {
+    e.stopPropagation();
+    const state = isTenantDropdownOpen.value;
+    closeAllDropdowns();
+    isTenantDropdownOpen.value = !state;
+};
+
+const toggleTypeFactureDropdown = (e) => {
+    e.stopPropagation();
+    const state = isTypeFactureDropdownOpen.value;
+    closeAllDropdowns();
+    isTypeFactureDropdownOpen.value = !state;
+};
+
+// Dropdown filter computed
+const filteredBuildingsDropdown = computed(() => {
+    let list = batiments.value;
+    if (buildingSearchQuery.value) {
+        const q = buildingSearchQuery.value.toLowerCase();
+        list = list.filter(b => b.nom.toLowerCase().includes(q));
+    }
+    return list;
+});
+
+const filteredTenantsDropdown = computed(() => {
+    if (!selectedBuildingId.value) return [];
+    
+    // Get all logement IDs that belong to the selected building
+    const buildingLogementIds = logements.value
+        .filter(l => Number(l.batiment_id) === Number(selectedBuildingId.value))
+        .map(l => l.id);
+        
+    let list = contratsActifs.value.filter(c => buildingLogementIds.includes(Number(c.logement_id)));
+    
+    if (tenantSearchQuery.value) {
+        const q = tenantSearchQuery.value.toLowerCase();
+        list = list.filter(c => c.locataire.toLowerCase().includes(q) || c.numero.toLowerCase().includes(q));
+    }
+    return list;
+});
+
+const filteredTypeFacturesDropdown = computed(() => {
+    let list = typeFactures.value;
+    if (typeFactureSearchQuery.value) {
+        const q = typeFactureSearchQuery.value.toLowerCase();
+        list = list.filter(t => t.nom.toLowerCase().includes(q));
+    }
+    return list;
+});
+
+// Selection handlers
+const selectBuilding = (building) => {
+    selectedBuildingId.value = building.id;
+    selectedBuildingName.value = building.nom;
+    isBuildingDropdownOpen.value = false;
+    
+    // Reset subsequent selections
+    selectedLocataireId.value = null;
+    selectedTenantLabel.value = '';
+    selectedContratId.value = null;
+};
+
+const selectTenant = (contract) => {
+    selectedLocataireId.value = contract.locataire_id;
+    selectedContratId.value = contract.id;
+    selectedTenantLabel.value = `${contract.locataire} (Bail ${contract.numero})`;
+    isTenantDropdownOpen.value = false;
+    
+    // Autofill defaults based on contract details
+    items.value = [
+        { motif: 'Loyer mensuel HC', quantite: 1, prix_unitaire: Number(contract.loyer || 0), prix_total: Number(contract.loyer || 0) },
+        { motif: 'Provisions de charges', quantite: 1, prix_unitaire: 75, prix_total: 75 }
+    ];
+};
+
+const selectTypeFacture = (type) => {
+    selectedTypeFactureId.value = type.id;
+    selectedTypeFactureNom.value = type.nom;
+    isTypeFactureDropdownOpen.value = false;
+};
+
+// Fetch page data
+const fetchPageData = async () => {
+    loading.value = true;
+    try {
+        const [
+            invoicesRes,
+            contratsRes,
+            batimentsRes,
+            logementsRes,
+            typeFacturesRes,
+            deviseRes
+        ] = await Promise.all([
+            axios.get('/api/factures'),
+            axios.get('/api/contrats'),
+            axios.get('/api/batiments'),
+            axios.get('/api/logements'),
+            axios.get('/api/type-factures'),
+            axios.get('/api/devise').catch(() => null)
+        ]);
+
+        invoices.value = invoicesRes.data;
+        contratsActifs.value = contratsRes.data.filter(c => c.statut === 'Actif');
+        batiments.value = batimentsRes.data;
+        logements.value = logementsRes.data;
+        typeFactures.value = typeFacturesRes.data.filter(t => !t.deleted);
+        
+        if (deviseRes && deviseRes.data) {
+            deviseSymbol.value = deviseRes.data.symbole || '€';
+        }
+    } catch (err) {
+        console.error("Error loading page data:", err);
+        errorMessage.value = "Une erreur est survenue lors du chargement des données.";
+        showError.value = true;
+    } finally {
+        loading.value = false;
+    }
+};
+
 // Computed KPIs
-const totalInvoiced = computed(() => scopedInvoices.value.reduce((sum, i) => sum + i.total, 0));
-const totalPaid = computed(() => scopedInvoices.value.reduce((sum, i) => sum + i.montantPaye, 0));
+const totalInvoiced = computed(() => invoices.value.reduce((sum, i) => sum + i.total, 0));
+const totalPaid = computed(() => invoices.value.reduce((sum, i) => sum + i.montantPaye, 0));
 const totalDue = computed(() => totalInvoiced.value - totalPaid.value);
 const recoveryRate = computed(() => {
     if (!totalInvoiced.value) return 0;
     return Math.round((totalPaid.value / totalInvoiced.value) * 100);
 });
 
+// Filtered invoices
 const filteredInvoices = computed(() => {
-    let result = scopedInvoices.value;
+    let result = invoices.value;
 
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
@@ -602,75 +921,40 @@ const filteredInvoices = computed(() => {
     return result;
 });
 
+// Items Editor Methods
+const addItem = () => {
+    items.value.push({ motif: '', quantite: 1, prix_unitaire: 0, prix_total: 0 });
+};
+
+const removeItem = (idx) => {
+    items.value.splice(idx, 1);
+};
+
 const invoiceTotalCalculated = computed(() => {
-    return formData.value.items.reduce((sum, item) => sum + Number(item.montant || 0), 0);
+    return items.value.reduce((sum, item) => sum + (Number(item.quantite || 0) * Number(item.prix_unitaire || 0)), 0);
 });
 
-const selectedContractLoyer = computed(() => {
-    const selected = contratsActifs.value.find(c => c.numero === selectedContratNo.value);
-    return selected ? Number(selected.loyer) : 0;
-});
-
-const getMonthsBetweenDates = (startDateStr, endDateStr) => {
-    if (!startDateStr || !endDateStr) return [];
-    
-    const startParts = startDateStr.split('-');
-    const endParts = endDateStr.split('-');
-    
-    const startYear = parseInt(startParts[0], 10);
-    const startMonth = parseInt(startParts[1], 10) - 1;
-    
-    const endYear = parseInt(endParts[0], 10);
-    const endMonth = parseInt(endParts[1], 10) - 1;
-    
-    const months = [];
-    let currentYear = startYear;
-    let currentMonth = startMonth;
-    
-    while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
-        const yyyy = currentYear;
-        const mm = String(currentMonth + 1).padStart(2, '0');
-        months.push(`${yyyy}-${mm}`);
-        
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-    }
-    return months;
-};
-
-const isMonthPaid = (month) => {
-    if (!formData.value.locataire) return false;
-    return invoices.value.some(inv => 
-        inv.locataire.toLowerCase() === formData.value.locataire.toLowerCase() && 
-        inv.periode === month && 
-        inv.statut === 'Payé'
-    );
-};
-
+// Open/Close Modals
 const openAddModal = () => {
-    selectedContratNo.value = '';
-    typeFacture.value = 'loyer';
-    selectedMonths.value = [];
-    contractMonths.value = [];
-    
-    // Default current month
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    closeAllDropdowns();
+    selectedBuildingId.value = null;
+    selectedBuildingName.value = '';
+    selectedLocataireId.value = null;
+    selectedTenantLabel.value = '';
+    selectedContratId.value = null;
+    selectedTypeFactureId.value = null;
+    selectedTypeFactureNom.value = '';
 
-    formData.value = {
-        numero: `FAC-${now.getFullYear()}-${String(invoices.value.length + 1).padStart(3, '0')}`,
-        locataire: '',
-        logement: '',
-        batiment: '',
-        periode: currentMonth,
-        items: [{ libelle: 'Loyer mensuel HC', montant: 0 }],
-        total: 0,
-        montantPaye: 0,
-        statut: 'Impayé'
-    };
+    buildingSearchQuery.value = '';
+    tenantSearchQuery.value = '';
+    typeFactureSearchQuery.value = '';
+
+    const now = new Date();
+    dateEmission.value = now.toISOString().split('T')[0];
+    dateEcheance.value = '';
+    periode.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    items.value = [{ motif: '', quantite: 1, prix_unitaire: 0, prix_total: 0 }];
+    
     showModal.value = true;
 };
 
@@ -678,108 +962,58 @@ const closeModal = () => {
     showModal.value = false;
 };
 
-const handleContratChange = () => {
-    const selected = contratsActifs.value.find(c => c.numero === selectedContratNo.value);
-    if (selected) {
-        formData.value.locataire = selected.locataire;
-        formData.value.logement = selected.reference;
-        formData.value.batiment = selected.batiment;
-        
-        // Auto-populate default invoice items
-        formData.value.items = [
-            { libelle: 'Loyer mensuel HC', montant: selected.loyer },
-            { libelle: 'Provisions de charges', montant: 75 }
-        ];
-        
-        if (selected.debut && selected.fin) {
-            contractMonths.value = getMonthsBetweenDates(selected.debut, selected.fin);
-        } else {
-            contractMonths.value = [];
-        }
-        selectedMonths.value = [];
+const saveInvoice = async () => {
+    if (!selectedLocataireId.value || !selectedContratId.value) {
+        errorMessage.value = "Veuillez sélectionner un locataire actif.";
+        showError.value = true;
+        return;
     }
-};
-
-const addInvoiceItem = () => {
-    formData.value.items.push({ libelle: '', montant: 0 });
-};
-
-const removeInvoiceItem = (idx) => {
-    formData.value.items.splice(idx, 1);
-};
-
-const saveInvoice = () => {
-    if (!formData.value.locataire) {
-        errorMessage.value = "Veuillez sélectionner un locataire.";
+    if (!selectedTypeFactureId.value) {
+        errorMessage.value = "Veuillez sélectionner un type de facture.";
+        showError.value = true;
+        return;
+    }
+    if (!dateEmission.value || !dateEcheance.value) {
+        errorMessage.value = "Veuillez renseigner les dates d'émission et d'échéance.";
+        showError.value = true;
+        return;
+    }
+    if (items.value.some(item => !item.motif || item.quantite <= 0 || item.prix_unitaire < 0)) {
+        errorMessage.value = "Veuillez remplir correctement toutes les lignes de facturation.";
         showError.value = true;
         return;
     }
 
-    if (typeFacture.value === 'libre') {
-        if (!formData.value.periode || invoiceTotalCalculated.value <= 0) {
-            errorMessage.value = "Veuillez renseigner la période et les lignes de frais.";
-            showError.value = true;
-            return;
-        }
+    savingInvoice.value = true;
+    try {
+        const payload = {
+            locataire_id: selectedLocataireId.value,
+            contrat_id: selectedContratId.value,
+            type_facture_id: selectedTypeFactureId.value,
+            periode: periode.value,
+            date_emission: dateEmission.value,
+            date_echeance: dateEcheance.value,
+            items: items.value.map(i => ({
+                motif: i.motif,
+                quantite: i.quantite,
+                prix_unitaire: i.prix_unitaire,
+                prix_total: Number(i.quantite) * Number(i.prix_unitaire)
+            })),
+            total: invoiceTotalCalculated.value
+        };
 
-        formData.value.total = invoiceTotalCalculated.value;
-        invoices.value.unshift({
-            ...formData.value,
-            id: invoices.value.length ? Math.max(...invoices.value.map(i => i.id)) + 1 : 1
-        });
-        
-        const dashboardKpi = localStorage.getItem('kpi_simulated_monthly_revenue');
-        if (dashboardKpi) {
-            localStorage.setItem('kpi_simulated_monthly_revenue', Number(dashboardKpi) + formData.value.total);
-        }
-    } else {
-        // Loyer invoice type
-        if (selectedMonths.value.length === 0) {
-            errorMessage.value = "Veuillez cocher au moins un mois à facturer.";
-            showError.value = true;
-            return;
-        }
-
-        const selectedContract = contratsActifs.value.find(c => c.numero === selectedContratNo.value);
-        if (!selectedContract) return;
-
-        let startLength = invoices.value.length;
-        let startMaxId = invoices.value.length ? Math.max(...invoices.value.map(i => i.id)) : 0;
-        let totalAdded = 0;
-
-        selectedMonths.value.forEach((m, idx) => {
-            const nextId = startMaxId + idx + 1;
-            const invoiceNo = `FAC-${new Date().getFullYear()}-${String(startLength + idx + 1).padStart(3, '0')}`;
-            
-            const newInv = {
-                id: nextId,
-                numero: invoiceNo,
-                locataire: formData.value.locataire,
-                logement: formData.value.logement,
-                batiment: formData.value.batiment,
-                periode: m,
-                items: [
-                    { libelle: 'Loyer mensuel HC', montant: selectedContract.loyer },
-                    { libelle: 'Provisions de charges', montant: 75 }
-                ],
-                total: selectedContract.loyer + 75,
-                montantPaye: 0,
-                statut: 'Impayé'
-            };
-            invoices.value.unshift(newInv);
-            totalAdded += newInv.total;
-        });
-
-        const dashboardKpi = localStorage.getItem('kpi_simulated_monthly_revenue');
-        if (dashboardKpi) {
-            localStorage.setItem('kpi_simulated_monthly_revenue', Number(dashboardKpi) + totalAdded);
-        }
+        const res = await axios.post('/api/factures', payload);
+        invoices.value.unshift(res.data);
+        showModal.value = false;
+        successMessage.value = "Facture locative générée et enregistrée avec succès.";
+        showSuccess.value = true;
+    } catch (err) {
+        console.error("Error saving invoice:", err);
+        errorMessage.value = err.response?.data?.message || "Une erreur est survenue lors de la création de la facture.";
+        showError.value = true;
+    } finally {
+        savingInvoice.value = false;
     }
-
-    localStorage.setItem('immobilier_factures', JSON.stringify(invoices.value));
-    showModal.value = false;
-    successMessage.value = "Facture(s) locative(s) générée(s) avec succès.";
-    showSuccess.value = true;
 };
 
 const viewInvoice = (inv) => {
@@ -792,22 +1026,64 @@ const closeViewModal = () => {
     viewingInvoice.value = null;
 };
 
-const deleteInvoice = (inv) => {
-    invoices.value = invoices.value.filter(i => i.id !== inv.id);
-    localStorage.setItem('immobilier_factures', JSON.stringify(invoices.value));
-    successMessage.value = "Facture supprimée avec succès.";
-    showSuccess.value = true;
+const deleteInvoice = async (inv) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) {
+        try {
+            await axios.delete(`/api/factures/${inv.id}`);
+            invoices.value = invoices.value.filter(i => i.id !== inv.id);
+            successMessage.value = "La facture a été supprimée avec succès.";
+            showSuccess.value = true;
+        } catch (err) {
+            console.error("Error deleting invoice:", err);
+            errorMessage.value = err.response?.data?.message || "Une erreur est survenue lors de la suppression.";
+            showError.value = true;
+        }
+    }
+};
+
+// Payment actions
+const openPaymentModal = (inv) => {
+    paymentInvoice.value = inv;
+    paymentMode.value = 'cash';
+    showPaymentModal.value = true;
+};
+
+const closePaymentModal = () => {
+    showPaymentModal.value = false;
+    paymentInvoice.value = null;
+};
+
+const confirmPayment = async () => {
+    if (!paymentInvoice.value) return;
+    savingPayment.value = true;
+    try {
+        const res = await axios.post(`/api/factures/${paymentInvoice.value.id}/regler`, {
+            mode_reglement: paymentMode.value
+        });
+        
+        const idx = invoices.value.findIndex(i => i.id === paymentInvoice.value.id);
+        if (idx !== -1) {
+            invoices.value[idx] = res.data;
+        }
+        
+        closePaymentModal();
+        successMessage.value = "Le règlement de la facture a été enregistré avec succès.";
+        showSuccess.value = true;
+    } catch (err) {
+        console.error("Error setting payment:", err);
+        errorMessage.value = err.response?.data?.message || "Une erreur est survenue lors de l'enregistrement du règlement.";
+        showError.value = true;
+    } finally {
+        savingPayment.value = false;
+    }
 };
 
 const printInvoice = () => {
     const printContent = document.getElementById('invoice-print-area').innerHTML;
-    const originalContent = document.body.innerHTML;
-
-    // Simulate print window popup or style override
     const w = window.open();
     w.document.write('<html><head><title>Facture</title>');
     w.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">');
-    w.document.write('<style>body{font-family:"Inter",sans-serif;padding:40px;color:#334155;}</style>');
+    w.document.write('<style>body{font-family:"Inter",sans-serif;padding:40px;color:#334155;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left;}th{color:#94a3b8;font-size:10px;text-transform:uppercase;}td{font-size:11px;}body{background:#fff;}</style>');
     w.document.write('</head><body>');
     w.document.write(printContent);
     w.document.write('</body></html>');
@@ -827,8 +1103,11 @@ const closeError = () => {
 
 // Formatting helpers
 const formatCurrency = (val) => {
-    if (val === undefined || val === null || isNaN(val) || val === '') return '0 €';
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
+    if (val === undefined || val === null || isNaN(val) || val === '') {
+        return `0 ${deviseSymbol.value}`;
+    }
+    const formattedVal = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(val);
+    return `${formattedVal} ${deviseSymbol.value}`;
 };
 
 const formatPeriod = (periodStr) => {
@@ -840,8 +1119,10 @@ const formatPeriod = (periodStr) => {
     return `${months[monthIdx]} ${parts[0]}`;
 };
 
-const getTodayDate = () => {
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
+const formatDateFr = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 };
 
 const getInitials = (name) => {

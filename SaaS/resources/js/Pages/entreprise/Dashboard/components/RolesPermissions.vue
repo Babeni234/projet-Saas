@@ -515,6 +515,62 @@
             </div>
         </div>
 
+        <!-- Types de Factures Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types de Factures</h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Définissez les différents types de factures (ex: Loyers, Charges, Travaux, Rénovations) utilisables par vos agences.</p>
+                </div>
+                <button
+                    @click="openCreateTypeFactureModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type de Facture
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeFactures"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeFactureModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeFacture(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeFactures.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type de facture configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Add/Edit Role Modal -->
         <ModalPremium
             :show="showRoleModal"
@@ -957,6 +1013,62 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit TypeFacture Modal -->
+        <ModalPremium
+            :show="showTypeFactureModal"
+            :title="isEditingTypeFacture ? 'Modifier le Type de Facture' : 'Ajouter un Type de Facture'"
+            :subtitle="isEditingTypeFacture ? 'Modifiez les détails de ce type de facture' : 'Créez un nouveau type de facture pour vos agences'"
+            size="md"
+            type="default"
+            @close="showTypeFactureModal = false"
+        >
+            <form @submit.prevent="submitTypeFactureForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type de Facture <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeFactureForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Loyer, Charges, Rénovation..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="typeFactureErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeFactureErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeFactureForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type de facture..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="typeFactureErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeFactureErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeFactureModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeFactureSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeFactureSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeFacture ? 'Mettre à Jour' : 'Créer le Type' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -1009,6 +1121,18 @@ const getAgenciesArray = (val) => {
     return Array.isArray(val) ? val : (val.data || []);
 };
 const agencies = ref(getAgenciesArray(page.props.agencies));
+
+// TypeFactures state
+const typeFactures = ref([]);
+const showTypeFactureModal = ref(false);
+const isEditingTypeFacture = ref(false);
+const editingTypeFactureId = ref(null);
+const isTypeFactureSubmitting = ref(false);
+const typeFactureErrors = ref({});
+const typeFactureForm = ref({
+    nom: '',
+    description: ''
+});
 
 // Modal & Form state
 const showRoleModal = ref(false);
@@ -1131,6 +1255,7 @@ onMounted(() => {
     fetchTypeEngagements();
     fetchTypeEtatDesLieux();
     fetchCurrency();
+    fetchTypeFactures();
 });
 
 const loadData = () => {
@@ -1854,6 +1979,106 @@ const deleteTypeEtatDesLieux = async (type) => {
     } catch (error) {
         console.error(error);
         showNotification('error', 'Erreur', 'Impossible de supprimer le type d\'état des lieux.');
+    }
+};
+
+// TypeFacture CRUD methods
+const fetchTypeFactures = async () => {
+    try {
+        const response = await fetch('/api/type-factures', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            typeFactures.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération type factures:", error);
+    }
+};
+
+const openCreateTypeFactureModal = () => {
+    isEditingTypeFacture.value = false;
+    editingTypeFactureId.value = null;
+    typeFactureForm.value = { nom: '', description: '' };
+    typeFactureErrors.value = {};
+    showTypeFactureModal.value = true;
+};
+
+const openEditTypeFactureModal = (type) => {
+    isEditingTypeFacture.value = true;
+    editingTypeFactureId.value = type.id;
+    typeFactureForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeFactureErrors.value = {};
+    showTypeFactureModal.value = true;
+};
+
+const submitTypeFactureForm = async () => {
+    isTypeFactureSubmitting.value = true;
+    typeFactureErrors.value = {};
+    try {
+        const url = isEditingTypeFacture.value
+            ? `/api/type-factures/${editingTypeFactureId.value}`
+            : '/api/type-factures';
+        const method = isEditingTypeFacture.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeFactureForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeFacture.value ? 'Le type de facture a été mis à jour.' : 'Le type de facture a été créé.'
+            );
+            showTypeFactureModal.value = false;
+            fetchTypeFactures();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeFactureErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeFactureSubmitting.value = false;
+    }
+};
+
+const deleteTypeFacture = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type de facture "${type.nom}" ?`)) return;
+    try {
+        const response = await fetch(`/api/type-factures/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type de facture a été supprimé.');
+            fetchTypeFactures();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type de facture.');
     }
 };
 

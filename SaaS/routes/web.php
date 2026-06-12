@@ -250,6 +250,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/devise', [\App\Http\Controllers\DeviseController::class, 'show'])->name('devise.show');
     Route::post('/api/devise', [\App\Http\Controllers\DeviseController::class, 'storeOrUpdate'])->name('devise.storeOrUpdate');
 
+    // TypeFactures API routes
+    Route::get('/api/type-factures', [\App\Http\Controllers\TypeFactureController::class, 'index'])->name('type-factures.json');
+    Route::post('/api/type-factures', [\App\Http\Controllers\TypeFactureController::class, 'store'])->name('type-factures.store');
+    Route::put('/api/type-factures/{typeFacture}', [\App\Http\Controllers\TypeFactureController::class, 'update'])->name('type-factures.update');
+    Route::delete('/api/type-factures/{typeFacture}', [\App\Http\Controllers\TypeFactureController::class, 'destroy'])->name('type-factures.destroy');
+
+    // Factures API routes
+    Route::get('/api/factures', [\App\Http\Controllers\FactureController::class, 'index'])->name('factures.json');
+    Route::post('/api/factures', [\App\Http\Controllers\FactureController::class, 'store'])->name('factures.store');
+    Route::post('/api/factures/{facture}/regler', [\App\Http\Controllers\FactureController::class, 'regler'])->name('factures.regler');
+    Route::delete('/api/factures/{facture}', [\App\Http\Controllers\FactureController::class, 'destroy'])->name('factures.destroy');
+
     // Contrats API routes
     Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');
     Route::post('/api/contrats', [\App\Http\Controllers\ContratController::class, 'store'])->name('contrats.store');
