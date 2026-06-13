@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
     // Contract AI generation routes
     Route::post('/api/ai/generate-contract', [\App\Http\Controllers\ContractGenerationController::class, 'generate'])->name('ai.generate-contract');
     Route::post('/api/ai/generate-engagement', [\App\Http\Controllers\ContractGenerationController::class, 'generateEngagement'])->name('ai.generate-engagement');
+    Route::post('/api/ai/generate-etat-des-lieux', [\App\Http\Controllers\ContractGenerationController::class, 'generateEtatDesLieux'])->name('ai.generate-etat-des-lieux');
     Route::post('/api/ai/assistant', [\App\Http\Controllers\ContractGenerationController::class, 'assistantChat'])->name('ai.assistant');
 
     // Agencies routes
@@ -252,6 +253,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'store'])->name('type-etat-des-lieux.store');
     Route::put('/api/type-etat-des-lieux/{typeEtatDesLieux}', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'update'])->name('type-etat-des-lieux.update');
     Route::delete('/api/type-etat-des-lieux/{typeEtatDesLieux}', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'destroy'])->name('type-etat-des-lieux.destroy');
+
+    // EtatDesLieux API routes
+    Route::get('/api/etat-des-lieux', [\App\Http\Controllers\EtatDesLieuxController::class, 'index'])->name('etat-des-lieux.json');
+    Route::post('/api/etat-des-lieux', [\App\Http\Controllers\EtatDesLieuxController::class, 'store'])->name('etat-des-lieux.store');
+    Route::put('/api/etat-des-lieux/{etatDesLieux}', [\App\Http\Controllers\EtatDesLieuxController::class, 'update'])->name('etat-des-lieux.update');
+    Route::delete('/api/etat-des-lieux/{etatDesLieux}', [\App\Http\Controllers\EtatDesLieuxController::class, 'destroy'])->name('etat-des-lieux.destroy');
 
     // Devise API routes
     Route::get('/api/devise', [\App\Http\Controllers\DeviseController::class, 'show'])->name('devise.show');

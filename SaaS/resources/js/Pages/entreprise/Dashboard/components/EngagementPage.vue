@@ -425,40 +425,21 @@
                                 <input v-model="formData.reference" type="text" readonly class="w-full px-4 py-3 bg-slate-100 cursor-not-allowed select-none border border-slate-200 rounded-xl font-semibold text-slate-800 text-sm shadow-sm" />
                             </div>
                             <!-- Type -->
-                            <div class="group relative">
+                            <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'engagement *</label>
-                                <div class="relative">
-                                    <button 
-                                        type="button" 
-                                        @click.stop="toggleFormTypeDropdown" 
-                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-800 shadow-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                <select 
+                                    v-model="formData.type_engagement_id"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm force-black-text"
+                                >
+                                    <option value="" disabled>Sélectionner le type</option>
+                                    <option 
+                                        v-for="t in typeEngagements" 
+                                        :key="t.id" 
+                                        :value="t.id"
                                     >
-                                        <span>{{ selectedFormTypeLabel || 'Sélectionner le type' }}</span>
-                                        <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-xs" :class="{'rotate-180': isFormTypeDropdownOpen}"></i>
-                                    </button>
-                                    <div v-if="isFormTypeDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
-                                        <input 
-                                            v-model="formTypeSearchQuery" 
-                                            type="text" 
-                                            placeholder="Rechercher un type..." 
-                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
-                                        />
-                                        <div class="space-y-1">
-                                            <button 
-                                                v-for="t in filteredFormTypes" 
-                                                :key="t.id" 
-                                                @click="selectFormType(t)" 
-                                                type="button" 
-                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
-                                            >
-                                                {{ t.nom }}
-                                            </button>
-                                            <div v-if="filteredFormTypes.length === 0" class="text-center py-4 text-xs text-slate-400">
-                                                Aucun type d'engagement configuré
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                        {{ t.nom }}
+                                    </option>
+                                </select>
                             </div>
                         </div>
 
@@ -1120,7 +1101,7 @@ const selectedStatusFilterLabel = computed(() => {
 
 const selectedFormTypeLabel = computed(() => {
     if (!formData.value.type_engagement_id) return '';
-    const t = typeEngagements.value.find(type => type.id === formData.value.type_engagement_id);
+    const t = typeEngagements.value.find(type => type.id == formData.value.type_engagement_id);
     return t ? t.nom : '';
 });
 

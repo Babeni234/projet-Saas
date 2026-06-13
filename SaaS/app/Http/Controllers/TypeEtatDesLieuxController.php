@@ -27,6 +27,7 @@ class TypeEtatDesLieuxController extends Controller
         $validated = $request->validate([
             'nom'         => 'required|string|max:255',
             'description' => 'nullable|string',
+            'template'    => 'nullable|string',
         ]);
 
         $type = TypeEtatDesLieux::create([
@@ -44,6 +45,7 @@ class TypeEtatDesLieuxController extends Controller
         $validated = $request->validate([
             'nom'         => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'template'    => 'nullable|string',
         ]);
 
         $typeEtatDesLieux->update($validated);

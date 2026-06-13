@@ -71,4 +71,9 @@ class Locataire extends Model
     {
         return $this->hasMany(Affectation::class, 'locataire_id');
     }
+
+    public function contrats(): HasMany
+    {
+        return $this->hasMany(Contrat::class, 'locataire_id');
+    }
 }

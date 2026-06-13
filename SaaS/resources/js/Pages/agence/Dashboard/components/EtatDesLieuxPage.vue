@@ -66,7 +66,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-violet-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-violet-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-650 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
+                    <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-655 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -93,28 +93,42 @@
                 />
             </div>
             <div class="flex items-center gap-4 w-full md:w-auto">
+                <!-- Building Filter -->
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold uppercase text-slate-400">Type :</span>
-                    <select v-model="typeFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                        <option value="All">Tous les types</option>
-                        <option value="Entrée">Entrée</option>
-                        <option value="Sortie">Sortie</option>
+                    <span class="text-xs font-bold uppercase text-slate-400">Bâtiment :</span>
+                    <select v-model="buildingFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
+                        <option value="All" style="color: #000000 !important; background-color: #ffffff !important;">Tous les bâtiments</option>
+                        <option v-for="b in batiments" :key="b.id" :value="b.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ b.nom }}</option>
                     </select>
                 </div>
+                <!-- Type Filter -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase text-slate-400">Type :</span>
+                    <select v-model="typeFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
+                        <option value="All" style="color: #000000 !important; background-color: #ffffff !important;">Tous les types</option>
+                        <option v-for="t in typeEtatDesLieux" :key="t.id" :value="t.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ t.nom }}</option>
+                    </select>
+                </div>
+                <!-- Status Filter -->
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold uppercase text-slate-400">Statut :</span>
-                    <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                        <option value="All">Tous les statuts</option>
-                        <option value="Brouillon">Brouillon</option>
-                        <option value="En attente">En attente</option>
-                        <option value="Validé">Validé</option>
+                    <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
+                        <option value="All" style="color: #000000 !important; background-color: #ffffff !important;">Tous les statuts</option>
+                        <option value="Brouillon" style="color: #000000 !important; background-color: #ffffff !important;">Brouillon</option>
+                        <option value="En attente" style="color: #000000 !important; background-color: #ffffff !important;">En attente</option>
+                        <option value="Validé" style="color: #000000 !important; background-color: #ffffff !important;">Validé</option>
                     </select>
                 </div>
             </div>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="isInitialLoading" class="flex justify-center items-center py-12">
+            <span class="animate-spin h-10 w-10 border-4 border-teal-500 border-t-transparent rounded-full"></span>
+        </div>
+
         <!-- Table Section -->
-        <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-150">
+        <div v-else class="bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-150">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -129,45 +143,60 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-150">
-                        <tr v-for="role in filteredEtats" :key="role.id" class="hover:bg-slate-50/80 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-slate-850">{{ role.reference }}</td>
-                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">{{ role.logement }}</td>
+                        <tr v-for="etat in filteredEtats" :key="etat.id" class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-slate-850">{{ etat.reference }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">{{ etat.logement?.reference || 'N/A' }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div :class="['w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-xs shadow-sm bg-gradient-to-br', getAvatarGradient(role.locataire)]">
-                                        {{ getInitials(role.locataire) }}
+                                    <div :class="['w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-xs shadow-sm bg-gradient-to-br', getAvatarGradient(etat.locataire?.nom)]">
+                                        {{ getInitials(etat.locataire?.nom) }}
                                     </div>
-                                    <div class="font-bold text-slate-800 text-sm">{{ role.locataire }}</div>
+                                    <div class="font-bold text-slate-800 text-sm">{{ etat.locataire?.nom || 'N/A' }}</div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <span :class="[
-                                    'inline-flex px-3 py-1 rounded-full text-xs font-bold border',
-                                    role.type === 'Entrée' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
-                                ]">
-                                    {{ role.type }}
-                                </span>
+                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">
+                                {{ etat.type_etat_des_lieux?.nom || 'N/A' }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatDate(role.date) }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatDate(etat.date) }}</td>
                             <td class="px-6 py-4">
                                 <span :class="[
                                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border',
-                                    role.statut === 'Validé' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
-                                    role.statut === 'En attente' ? 'bg-violet-50 text-violet-750 border-violet-200' :
-                                    'bg-slate-50 text-slate-600 border-slate-200'
+                                    etat.statut === 'Validé' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
+                                    etat.statut === 'En attente' ? 'bg-violet-50 text-violet-750 border-violet-200' :
+                                    'bg-slate-550 text-slate-600 border-slate-200'
                                 ]">
                                     <span :class="['w-1.5 h-1.5 rounded-full',
-                                        role.statut === 'Validé' ? 'bg-emerald-500' :
-                                        role.statut === 'En attente' ? 'bg-violet-500 animate-pulse' :
+                                        etat.statut === 'Validé' ? 'bg-emerald-500' :
+                                        etat.statut === 'En attente' ? 'bg-violet-500 animate-pulse' :
                                         'bg-slate-550'
                                     ]"></span>
-                                    {{ role.statut }}
+                                    {{ etat.statut }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
                                     <button 
-                                        @click="editEtat(role)" 
+                                        v-if="etat.content"
+                                        @click="viewEtatContent(etat)" 
+                                        class="p-2 text-slate-655 hover:bg-slate-100 rounded-xl transition-all"
+                                        title="Voir le document"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="printEtat(etat)" 
+                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                        title="Imprimer"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        @click="editEtat(etat)" 
                                         class="p-2 text-teal-600 hover:bg-teal-50 rounded-xl transition-all"
                                         title="Modifier"
                                     >
@@ -175,15 +204,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <button 
-                                        @click="deleteEtat(role)" 
-                                        class="p-2 text-red-650 hover:bg-red-50 rounded-xl transition-all"
-                                        title="Supprimer"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    <!-- NO DELETE BUTTON (ONLY SEATS CAN DELETE ENGAGEMENTS OR ETATS DES LIEUX) -->
                                 </div>
                             </td>
                         </tr>
@@ -210,7 +231,7 @@
                                 </svg>
                             </div>
                             <h2 class="text-2xl font-extrabold text-slate-800">
-                                {{ editingEtat ? 'Modifier' : 'Nouvel' }} État des Lieux
+                                {{ formData.id ? 'Modifier' : 'Nouvel' }} État des Lieux
                             </h2>
                         </div>
                         <button @click="closeModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
@@ -222,7 +243,7 @@
 
                     <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Reference -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Référence *</label>
@@ -234,123 +255,207 @@
                                 />
                             </div>
 
-                            <!-- Active Lease Selection -->
+                            <!-- Type -->
                             <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrat / Locataire Associé *</label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'État *</label>
                                 <select 
-                                    v-model="selectedContratNo" 
-                                    @change="handleContratChange"
+                                    v-model="formData.type_etat_des_lieux_id" 
+                                    required
                                     class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                    :disabled="editingEtat"
+                                    style="color: #000000 !important; background-color: #ffffff !important;"
                                 >
-                                    <option value="" disabled>Sélectionner un contrat actif</option>
-                                    <option v-for="c in contratsActifs" :key="c.id" :value="c.numero">
-                                        {{ c.numero }} - {{ c.locataire }} ({{ c.reference }})
+                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le type</option>
+                                    <option v-for="t in typeEtatDesLieux" :key="t.id" :value="t.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ t.nom }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 2-level cascade selection (Building -> Tenant) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Building Select -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
+                                <select 
+                                    v-model="formData.batiment_id" 
+                                    required
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                    @change="onBatimentChange"
+                                    style="color: #000000 !important; background-color: #ffffff !important;"
+                                >
+                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner un bâtiment</option>
+                                    <option v-for="b in batiments" :key="b.id" :value="b.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ b.nom }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Tenant Select -->
+                            <div class="group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire *</label>
+                                <select 
+                                    v-model="formData.locataire_id" 
+                                    required
+                                    :disabled="!formData.batiment_id"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
+                                    @change="onLocataireChange"
+                                    style="color: #000000 !important; background-color: #ffffff !important;"
+                                >
+                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le locataire</option>
+                                    <option v-for="loc in modalFilteredLocataires" :key="loc.id" :value="loc.id" style="color: #000000 !important; background-color: #ffffff !important;">
+                                        {{ loc.nom }}
                                     </option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Logement (Auto) -->
+                        <!-- Conditional Contract Selector & Auto Logement -->
+                        <div v-if="formData.locataire_id" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-scale-up">
+                            <!-- Contract Select -->
                             <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Logement</label>
-                                <input 
-                                    v-model="formData.logement" 
-                                    type="text" 
-                                    placeholder="Auto-rempli" 
-                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-500 text-sm focus:outline-none cursor-not-allowed shadow-sm" 
-                                    readonly
-                                />
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrat Associé *</label>
+                                <select 
+                                    v-model="formData.contrat_id" 
+                                    required
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
+                                    @change="onContratChange"
+                                    style="color: #000000 !important; background-color: #ffffff !important;"
+                                >
+                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le contrat</option>
+                                    <option v-for="c in modalFilteredContrats" :key="c.id" :value="c.id" style="color: #000000 !important; background-color: #ffffff !important;">
+                                        Bail N° {{ c.numero }} ({{ c.statut }})
+                                    </option>
+                                </select>
                             </div>
 
-                            <!-- Locataire (Auto) -->
+                            <!-- Logement (Auto Filled) -->
                             <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire</label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Logement / Local</label>
                                 <input 
-                                    v-model="formData.locataire" 
+                                    v-model="logementRefDisplay" 
                                     type="text" 
-                                    placeholder="Auto-rempli" 
+                                    placeholder="Logement automatiquement détecté" 
                                     class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-500 text-sm focus:outline-none cursor-not-allowed shadow-sm" 
                                     readonly
                                 />
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4">
-                            <!-- Type -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'État *</label>
-                                <select 
-                                    v-model="formData.type" 
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                >
-                                    <option value="Entrée">Entrée</option>
-                                    <option value="Sortie">Sortie</option>
-                                </select>
-                            </div>
-
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Date -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date d'Inspection *</label>
-                                <input 
-                                    v-model="formData.date" 
-                                    type="date" 
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                />
+                                <input v-model="formData.date" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
                             </div>
-
                             <!-- Statut -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Statut *</label>
-                                <select 
-                                    v-model="formData.statut" 
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                >
-                                    <option value="Brouillon">Brouillon</option>
-                                    <option value="En attente">En attente</option>
-                                    <option value="Validé">Validé</option>
+                                <select v-model="formData.statut" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
+                                    <option value="Brouillon" style="color: #000000 !important; background-color: #ffffff !important;">Brouillon</option>
+                                    <option value="En attente" style="color: #000000 !important; background-color: #ffffff !important;">En attente</option>
+                                    <option value="Validé" style="color: #000000 !important; background-color: #ffffff !important;">Validé</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- Instructions IA -->
+                        <div class="group">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Consignes additionnelles ou anomalies observées (IA)</label>
+                            <textarea 
+                                v-model="formData.instructions" 
+                                placeholder="Indiquez ici les pièces spécifiques, meubles, ou anomalies de peinture, robinetterie à notifier..." 
+                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800 text-sm shadow-sm h-20"
+                            ></textarea>
+                        </div>
+
+                        <!-- Canvas Template display -->
+                        <div v-if="canevasTemplate" class="bg-slate-55 border border-slate-200 rounded-2xl p-4">
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Modèle de Canevas Actuel :</span>
+                            <div class="text-[11px] text-slate-550 leading-relaxed font-mono whitespace-pre-line max-h-24 overflow-y-auto">
+                                {{ canevasTemplate }}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="flex gap-4 mt-8 border-t border-slate-100 pt-5">
+                    <!-- Action buttons for Editor -->
+                    <div class="grid grid-cols-2 gap-4 mt-6 border-t border-slate-100 pt-5">
                         <button 
-                            @click="closeModal" 
-                            class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs"
+                            @click="openManualEditor" 
+                            class="px-4 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 hover:border-slate-350 transition-all text-xs"
                         >
-                            Annuler
+                            ✏️ Rédiger Manuellement
                         </button>
                         <button 
-                            @click="saveEtat" 
-                            class="flex-1 px-5 py-3.5 bg-teal-600 hover:bg-teal-750 text-white rounded-xl font-bold shadow-md transition-all text-xs"
+                            @click="generateWithIA" 
+                            class="px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+                            :disabled="isGenerating"
                         >
-                            Enregistrer
+                            <span v-if="isGenerating" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            🤖 Générer avec l'IA
                         </button>
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <button @click="closeModal" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 text-xs font-bold transition-all">Fermer</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Delete Modal -->
-        <div v-if="showDeleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-gradient-to-br from-white via-white to-red-50/20 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-red-100/50 relative overflow-hidden animate-scale-up">
-                <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-red-400/10 to-pink-500/10 rounded-full blur-3xl"></div>
-                <div class="relative z-10 text-center">
-                    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 mx-auto mb-5 shadow-lg shadow-red-500/30">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-extrabold text-slate-800 mb-2">Supprimer cet état des lieux ?</h3>
-                    <p class="text-slate-500 text-sm mb-6">Cette action est définitive.</p>
+        <!-- Rich Text TinyMCE Editor Modal (Fullscreen) -->
+        <div v-if="showEditorModal" class="fixed inset-0 bg-white z-50 flex flex-col p-6 animate-scale-up">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-800">Éditeur de Procès-verbal d'État des Lieux</h3>
+                    <p class="text-xs font-bold text-slate-400">Rédigez ou modifiez le contenu officiel du procès-verbal d'inspection</p>
+                </div>
+                <span class="text-xs font-bold text-teal-650 uppercase bg-teal-50 px-3 py-1 rounded-full border border-teal-100">Mode Plein Écran</span>
+            </div>
+            
+            <div class="flex-1 min-h-0 mb-4 border border-slate-200 rounded-2xl overflow-hidden bg-slate-55 flex flex-col">
+                <textarea id="etat-editor" class="flex-1"></textarea>
+            </div>
 
-                    <div class="flex gap-4">
-                        <button @click="closeDeleteModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
-                        <button @click="confirmDelete" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all hover:scale-[1.01] text-xs">Supprimer</button>
+            <div class="flex justify-end gap-4 border-t border-slate-150 pt-4">
+                <button 
+                    @click="closeEditorModal" 
+                    class="px-6 py-3.5 bg-slate-150 text-slate-655 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
+                >
+                    Fermer sans enregistrer
+                </button>
+                <button 
+                    @click="confirmRedaction" 
+                    :disabled="isSaving"
+                    class="px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-650 text-white font-bold rounded-xl shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/35 transition-all text-xs flex items-center gap-2"
+                >
+                    <span v-if="isSaving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Valider & Enregistrer l'Acte</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- View Content Modal -->
+        <div v-if="showViewContentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
+                <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-teal-600 uppercase">{{ viewingEtatRef?.type_etat_des_lieux?.nom }}</span>
+                        <h3 class="text-lg font-extrabold text-slate-855">Procès-verbal {{ viewingEtatRef?.reference }}</h3>
                     </div>
+                    <button @click="closeViewContentModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
+                        <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Document Viewer -->
+                <div class="bg-slate-50 border border-slate-200/60 rounded-2xl p-6 md:p-8 max-h-[50vh] overflow-y-auto scrollbar-thin shadow-inner font-serif text-slate-855 text-sm leading-relaxed whitespace-pre-line" v-html="viewingEtatRef?.content"></div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="printEtat(viewingEtatRef)" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Imprimer
+                    </button>
+                    <button @click="closeViewContentModal" class="px-6 py-2.5 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all">Fermer</button>
                 </div>
             </div>
         </div>
@@ -366,7 +471,7 @@
                     </div>
                     <h3 class="text-xl font-extrabold text-slate-800 mb-1">Succès !</h3>
                     <p class="text-slate-500 text-sm mb-6">{{ successMessage }}</p>
-                    <button @click="closeSuccess" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
+                    <button @click="closeSuccess" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-650 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
                 </div>
             </div>
         </div>
@@ -391,104 +496,164 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id);
-
-const systemBatiments = computed(() => {
-    const stored = localStorage.getItem('immobilier_batiments');
-    let bats = [];
-    if (stored) {
-        bats = JSON.parse(stored);
-    } else {
-        bats = [
-            { id: 1, nom: 'Immeuble A', ville: 'Paris' },
-            { id: 2, nom: 'Immeuble B', ville: 'Lyon' },
-            { id: 3, nom: 'Immeuble C', ville: 'Nice' },
-            { id: 4, nom: 'Immeuble D', ville: 'Douala' }
-        ];
-    }
-    const agencyId = currentAgencyId.value;
-    return bats.filter(b => Number(b.agency_id) === Number(agencyId));
-});
-
-const buildingsList = computed(() => systemBatiments.value.map(b => b.nom));
-
-const agencyLogementRefs = computed(() => {
-    const stored = localStorage.getItem('immobilier_logements');
-    let logs = [];
-    if (stored) {
-        logs = JSON.parse(stored);
-    } else {
-        logs = [
-            { id: 1, reference: 'APT-A101', batiment: 'Immeuble A' },
-            { id: 2, reference: 'APT-A201', batiment: 'Immeuble A' },
-            { id: 3, reference: 'APT-B101', batiment: 'Immeuble B' },
-            { id: 4, reference: 'APT-C101', batiment: 'Immeuble C' },
-            { id: 5, reference: 'APT-B102', batiment: 'Immeuble B' },
-            { id: 6, reference: 'APT-A102', batiment: 'Immeuble A' }
-        ];
-    }
-    const agencyBuildingNames = buildingsList.value;
-    return logs.filter(l => agencyBuildingNames.includes(l.batiment)).map(l => l.reference);
-});
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import axios from 'axios';
 
 const etats = ref([]);
-const rawContratsActifs = ref([]);
-
-const contratsActifs = computed(() => {
-    const agencyBuildingNames = buildingsList.value;
-    return rawContratsActifs.value.filter(c => agencyBuildingNames.includes(c.batiment));
-});
-
-const scopedEtats = computed(() => {
-    const refs = agencyLogementRefs.value;
-    return etats.value.filter(e => refs.includes(e.logement));
-});
+const typeEtatDesLieux = ref([]);
+const batiments = ref([]);
+const locataires = ref([]);
 
 const searchQuery = ref('');
 const typeFilter = ref('All');
 const statusFilter = ref('All');
+const buildingFilter = ref('All');
 
-const selectedContratNo = ref('');
+const showModal = ref(false);
+const showEditorModal = ref(false);
+const showViewContentModal = ref(false);
+const showSuccess = ref(false);
+const showError = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
+const isGenerating = ref(false);
+const isSaving = ref(false);
+const isInitialLoading = ref(false);
+
+const viewingEtatRef = ref(null);
+const editorContent = ref('');
+const canevasTemplate = ref('');
+
+const formData = ref({
+    id: null,
+    reference: '',
+    type_etat_des_lieux_id: '',
+    batiment_id: '',
+    locataire_id: '',
+    contrat_id: '',
+    logement_id: '',
+    date: '',
+    statut: 'Brouillon',
+    instructions: '',
+    content: ''
+});
+
+// Display of associated logement reference
+const logementRefDisplay = computed(() => {
+    if (!formData.value.contrat_id || !formData.value.locataire_id) return '';
+    const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+    if (!selectedLoc || !selectedLoc.contrats) return '';
+    const contract = selectedLoc.contrats.find(c => c.id === formData.value.contrat_id);
+    return contract && contract.logement ? contract.logement.reference : '';
+});
+
+// Load database data
+const fetchEtatsData = async () => {
+    isInitialLoading.value = true;
+    try {
+        const response = await axios.get('/api/etat-des-lieux');
+        etats.value = response.data.etats || [];
+        typeEtatDesLieux.value = response.data.typeEtatDesLieux || [];
+        batiments.value = response.data.batiments || [];
+        locataires.value = response.data.locataires || [];
+    } catch (err) {
+        console.error("Erreur de chargement des états des lieux:", err);
+        errorMessage.value = "Une erreur est survenue lors de la récupération des données.";
+        showError.value = true;
+    } finally {
+        isInitialLoading.value = false;
+    }
+};
 
 onMounted(() => {
-    // 1. Load inspections from localStorage
-    const storedEtats = localStorage.getItem('immobilier_etats-des-lieux');
-    if (storedEtats) {
-        etats.value = JSON.parse(storedEtats);
-    } else {
-        etats.value = [
-            { id: 1, reference: 'EDL-2026-001', logement: 'APT-A101', locataire: 'Jean Dupont', type: 'Entrée', date: '2025-07-01', statut: 'Validé' },
-            { id: 2, reference: 'EDL-2026-002', logement: 'APT-A201', locataire: 'Marie Lambert', type: 'Entrée', date: '2025-07-16', statut: 'Validé' },
-            { id: 3, reference: 'EDL-2026-003', logement: 'APT-B101', locataire: 'Pierre Martin', type: 'Entrée', date: '2025-06-01', statut: 'Brouillon' }
-        ];
-        localStorage.setItem('immobilier_etats-des-lieux', JSON.stringify(etats.value));
-    }
+    fetchEtatsData();
+});
 
-    // 2. Load active contracts
-    const storedContrats = localStorage.getItem('immobilier_contrats');
-    if (storedContrats) {
-        rawContratsActifs.value = JSON.parse(storedContrats).filter(c => c.statut === 'Actif');
+// 2-level cascade methods
+const onBatimentChange = () => {
+    formData.value.locataire_id = '';
+    formData.value.contrat_id = '';
+    formData.value.logement_id = '';
+};
+
+const onLocataireChange = () => {
+    formData.value.contrat_id = '';
+    formData.value.logement_id = '';
+};
+
+const onContratChange = () => {
+    const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+    if (!selectedLoc || !selectedLoc.contrats) {
+        formData.value.logement_id = '';
+        return;
+    }
+    const contract = selectedLoc.contrats.find(c => c.id === formData.value.contrat_id);
+    if (contract) {
+        formData.value.logement_id = contract.logement_id;
+    } else {
+        formData.value.logement_id = '';
+    }
+};
+
+// Watch Type d'État to pre-fill template
+watch(() => formData.value.type_etat_des_lieux_id, (newVal) => {
+    const selectedType = typeEtatDesLieux.value.find(t => t.id === newVal);
+    if (selectedType) {
+        canevasTemplate.value = selectedType.template || '';
+    } else {
+        canevasTemplate.value = '';
     }
 });
 
+// Computed properties for add/edit modal cascades
+const modalFilteredLocataires = computed(() => {
+    if (!formData.value.batiment_id) return [];
+    return locataires.value.filter(loc => {
+        return loc.contrats && loc.contrats.some(c => c.logement && c.logement.batiment_id === formData.value.batiment_id);
+    });
+});
+
+const modalFilteredContrats = computed(() => {
+    if (!formData.value.locataire_id || !formData.value.batiment_id) return [];
+    const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+    if (!selectedLoc || !selectedLoc.contrats) return [];
+    return selectedLoc.contrats.filter(c => c.logement && c.logement.batiment_id === formData.value.batiment_id);
+});
+
+// KPIs
+const totalEtats = computed(() => etats.value.length);
+
+const entrees = computed(() => {
+    return etats.value.filter(e => e.type_etat_des_lieux?.nom?.toLowerCase().includes('entrée')).length;
+});
+
+const sorties = computed(() => {
+    return etats.value.filter(e => e.type_etat_des_lieux?.nom?.toLowerCase().includes('sortie')).length;
+});
+
+const enAttente = computed(() => {
+    return etats.value.filter(e => e.statut === 'En attente').length;
+});
+
+// Main filtered inspections list
 const filteredEtats = computed(() => {
-    let result = scopedEtats.value;
+    let result = etats.value;
 
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
         result = result.filter(e => 
             e.reference.toLowerCase().includes(query) ||
-            e.logement.toLowerCase().includes(query) ||
-            e.locataire.toLowerCase().includes(query)
+            (e.locataire?.nom && e.locataire.nom.toLowerCase().includes(query)) ||
+            (e.logement?.reference && e.logement.reference.toLowerCase().includes(query))
         );
     }
 
+    if (buildingFilter.value !== 'All') {
+        result = result.filter(e => e.batiment_id === Number(buildingFilter.value));
+    }
+
     if (typeFilter.value !== 'All') {
-        result = result.filter(e => e.type === typeFilter.value);
+        result = result.filter(e => e.type_etat_des_lieux_id === Number(typeFilter.value));
     }
 
     if (statusFilter.value !== 'All') {
@@ -498,108 +663,250 @@ const filteredEtats = computed(() => {
     return result;
 });
 
-const totalEtats = computed(() => scopedEtats.value.length);
-const entrees = computed(() => scopedEtats.value.filter(e => e.type === 'Entrée').length);
-const sorties = computed(() => scopedEtats.value.filter(e => e.type === 'Sortie').length);
-const enAttente = computed(() => scopedEtats.value.filter(e => e.statut === 'En attente').length);
-
-const showModal = ref(false);
-const showDeleteModal = ref(false);
-const showSuccess = ref(false);
-const showError = ref(false);
-const editingEtat = ref(null);
-const successMessage = ref('');
-const errorMessage = ref('');
-const deleteTarget = ref(null);
-
-const formData = ref({
-    reference: '',
-    logement: '',
-    locataire: '',
-    type: 'Entrée',
-    date: '',
-    statut: 'Brouillon'
-});
-
-const openAddModal = () => {
-    editingEtat.value = null;
-    selectedContratNo.value = '';
-    formData.value = {
-        reference: `EDL-${new Date().getFullYear()}-${String(etats.value.length + 1).padStart(3, '0')}`,
-        logement: '',
-        locataire: '',
-        type: 'Entrée',
-        date: new Date().toISOString().split('T')[0],
-        statut: 'Brouillon'
-    };
-    showModal.value = true;
+// TinyMCE setup
+const initTinyMCE = () => {
+    nextTick(() => {
+        if (typeof tinymce !== 'undefined') {
+            tinymce.init({
+                selector: '#etat-editor',
+                height: '65vh',
+                menubar: false,
+                plugins: 'lists link image code table wordcount',
+                toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | code',
+                setup: (editor) => {
+                    editor.on('init', () => {
+                        editor.setContent(editorContent.value);
+                    });
+                    editor.on('change keyup', () => {
+                        editorContent.value = editor.getContent();
+                    });
+                }
+            });
+        }
+    });
 };
 
-const handleContratChange = () => {
-    const selected = contratsActifs.value.find(c => c.numero === selectedContratNo.value);
-    if (selected) {
-        formData.value.logement = selected.reference;
-        formData.value.locataire = selected.locataire;
+const openManualEditor = () => {
+    if (!formData.value.contrat_id) {
+        alert("Veuillez d'abord sélectionner le locataire et son contrat.");
+        return;
+    }
+
+    if (!editorContent.value) {
+        editorContent.value = buildInitialContentFromTemplate();
+    }
+    
+    showEditorModal.value = true;
+    nextTick(() => {
+        initTinyMCE();
+    });
+};
+
+const buildInitialContentFromTemplate = () => {
+    let tpl = canevasTemplate.value || '';
+    const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+    const tenantName = selectedLoc ? selectedLoc.nom : 'Non spécifié';
+    const selectedContrat = modalFilteredContrats.value.find(c => c.id === formData.value.contrat_id);
+    const contractNum = selectedContrat ? selectedContrat.numero : 'Non spécifié';
+    const unitRef = selectedContrat && selectedContrat.logement ? selectedContrat.logement.reference : 'Non spécifié';
+    const typeObj = typeEtatDesLieux.value.find(t => t.id === formData.value.type_etat_des_lieux_id);
+    const typeName = typeObj ? typeObj.nom : 'Non spécifié';
+
+    tpl = tpl.replace(/\[Locataire\]/g, tenantName);
+    tpl = tpl.replace(/\[Logement\]/g, unitRef);
+    tpl = tpl.replace(/\[Contrat\]/g, contractNum);
+    tpl = tpl.replace(/\[Type\]/g, typeName);
+    tpl = tpl.replace(/\[Date\]/g, formatDate(formData.value.date) || 'Non spécifiée');
+    return tpl.replace(/\n/g, '<br>');
+};
+
+const generateWithIA = async () => {
+    if (!formData.value.contrat_id) {
+        alert("Veuillez d'abord sélectionner le locataire et son contrat.");
+        return;
+    }
+
+    isGenerating.value = true;
+    try {
+        const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+        const tenantName = selectedLoc ? selectedLoc.nom : 'Non spécifié';
+        const selectedContrat = modalFilteredContrats.value.find(c => c.id === formData.value.contrat_id);
+        const unitRef = selectedContrat && selectedContrat.logement ? selectedContrat.logement.reference : 'Non spécifié';
+        const typeObj = typeEtatDesLieux.value.find(t => t.id === formData.value.type_etat_des_lieux_id);
+        const typeName = typeObj ? typeObj.nom : 'Non spécifié';
+
+        const payload = {
+            locataire: tenantName,
+            logement: unitRef,
+            type: typeName,
+            date: formData.value.date,
+            template: canevasTemplate.value,
+            instructions: formData.value.instructions,
+        };
+
+        const response = await axios.post('/api/ai/generate-etat-des-lieux', payload);
+        if (response.data && response.data.success) {
+            editorContent.value = response.data.etat;
+            showEditorModal.value = true;
+            nextTick(() => {
+                initTinyMCE();
+            });
+        } else {
+            alert("Une erreur est survenue lors de la génération IA.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Erreur de communication avec l'assistant IA.");
+    } finally {
+        isGenerating.value = false;
     }
 };
 
+const closeEditorModal = () => {
+    const editor = typeof tinymce !== 'undefined' ? tinymce.get('etat-editor') : null;
+    if (editor) {
+        tinymce.remove(editor);
+    }
+    showEditorModal.value = false;
+};
+
+const confirmRedaction = () => {
+    formData.value.content = editorContent.value;
+    closeEditorModal();
+};
+
+const viewEtatContent = (etat) => {
+    viewingEtatRef.value = etat;
+    showViewContentModal.value = true;
+};
+
+const closeViewContentModal = () => {
+    showViewContentModal.value = false;
+    viewingEtatRef.value = null;
+};
+
+const printEtat = (etat) => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>État des Lieux - ${etat.reference}</title>
+            <style>
+                body { font-family: 'Georgia', serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+                h1 { font-family: sans-serif; text-align: center; color: #0f172a; margin-bottom: 20px; font-weight: 800; }
+                .meta { margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; font-family: sans-serif; font-size: 14px; }
+                .meta table { width: 100%; border-collapse: collapse; }
+                .meta td { padding: 8px 0; }
+                .content { font-size: 15px; }
+                @media print {
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>PROCÈS-VERBAL D'ÉTAT DES LIEUX</h1>
+            <div class="meta">
+                <table>
+                    <tr>
+                        <td><strong>Référence :</strong> ${etat.reference}</td>
+                        <td><strong>Date d'inspection :</strong> ${formatDate(etat.date)}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Type :</strong> ${etat.type_etat_des_lieux?.nom || 'N/A'}</td>
+                        <td><strong>Statut :</strong> ${etat.statut}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Locataire :</strong> ${etat.locataire?.nom || 'N/A'}</td>
+                        <td><strong>Logement :</strong> ${etat.logement?.reference || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contrat :</strong> Bail N° ${etat.contrat?.numero || 'N/A'}</td>
+                        <td><strong>Bâtiment :</strong> ${etat.batiment?.nom || 'N/A'}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="content">
+                ${etat.content || '<em>Aucun contenu rédigé pour cet état des lieux.</em>'}
+            </div>
+            <script>
+                window.onload = function() {
+                    window.print();
+                };
+            <\/script>
+        <\/body>
+        <\/html>
+    `);
+    printWindow.document.close();
+};
+
+const openAddModal = () => {
+    formData.value = {
+        id: null,
+        reference: `EDL-${new Date().getFullYear()}-${String(etats.value.length + 1).padStart(3, '0')}`,
+        type_etat_des_lieux_id: '',
+        batiment_id: '',
+        locataire_id: '',
+        contrat_id: '',
+        logement_id: '',
+        date: new Date().toISOString().split('T')[0],
+        statut: 'Brouillon',
+        instructions: '',
+        content: ''
+    };
+    editorContent.value = '';
+    canevasTemplate.value = '';
+    showModal.value = true;
+};
+
 const editEtat = (etat) => {
-    editingEtat.value = etat;
-    formData.value = { ...etat };
-    // Find associated contract
-    const matchingContrat = contratsActifs.value.find(c => c.locataire === etat.locataire && c.reference === etat.logement);
-    selectedContratNo.value = matchingContrat ? matchingContrat.numero : '';
+    formData.value = {
+        id: etat.id,
+        reference: etat.reference,
+        type_etat_des_lieux_id: etat.type_etat_des_lieux_id,
+        batiment_id: etat.batiment_id || '',
+        locataire_id: etat.locataire_id,
+        contrat_id: etat.contrat_id,
+        logement_id: etat.logement_id,
+        date: etat.date ? new Date(etat.date).toISOString().split('T')[0] : '',
+        statut: etat.statut,
+        instructions: etat.instructions || '',
+        content: etat.content || ''
+    };
+    editorContent.value = etat.content || '';
+    const selectedType = typeEtatDesLieux.value.find(t => t.id === etat.type_etat_des_lieux_id);
+    canevasTemplate.value = selectedType ? (selectedType.template || '') : '';
     showModal.value = true;
 };
 
 const closeModal = () => {
     showModal.value = false;
-    editingEtat.value = null;
 };
 
-const saveEtat = () => {
-    if (!formData.value.reference || !formData.value.locataire || !formData.value.logement || !formData.value.date) {
+const saveEtat = async () => {
+    if (!formData.value.reference || !formData.value.type_etat_des_lieux_id || !formData.value.contrat_id || !formData.value.locataire_id || !formData.value.logement_id || !formData.value.date) {
         errorMessage.value = 'Veuillez remplir tous les champs obligatoires (*)';
         showError.value = true;
         return;
     }
 
-    if (editingEtat.value) {
-        const index = etats.value.findIndex(e => e.id === editingEtat.value.id);
-        if (index !== -1) {
-            etats.value[index] = { ...formData.value, id: editingEtat.value.id };
+    isSaving.value = true;
+    try {
+        if (formData.value.id) {
+            await axios.put(`/api/etat-des-lieux/${formData.value.id}`, formData.value);
+            successMessage.value = 'État des lieux modifié avec succès';
+        } else {
+            await axios.post('/api/etat-des-lieux', formData.value);
+            successMessage.value = 'État des lieux enregistré avec succès';
         }
-        successMessage.value = 'État des lieux modifié avec succès';
-    } else {
-        etats.value.unshift({
-            ...formData.value,
-            id: etats.value.length ? Math.max(...etats.value.map(e => e.id)) + 1 : 1
-        });
-        successMessage.value = 'État des lieux enregistré avec succès';
-    }
-
-    localStorage.setItem('immobilier_etats-des-lieux', JSON.stringify(etats.value));
-    closeModal();
-    showSuccess.value = true;
-};
-
-const deleteEtat = (etat) => {
-    deleteTarget.value = etat;
-    showDeleteModal.value = true;
-};
-
-const closeDeleteModal = () => {
-    showDeleteModal.value = false;
-    deleteTarget.value = null;
-};
-
-const confirmDelete = () => {
-    if (deleteTarget.value) {
-        etats.value = etats.value.filter(e => e.id !== deleteTarget.value.id);
-        localStorage.setItem('immobilier_etats-des-lieux', JSON.stringify(etats.value));
-        successMessage.value = 'État des lieux supprimé avec succès';
-        closeDeleteModal();
+        await fetchEtatsData();
+        closeModal();
         showSuccess.value = true;
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = "Erreur lors de l'enregistrement de l'état des lieux.";
+        showError.value = true;
+    } finally {
+        isSaving.value = false;
     }
 };
 
@@ -628,7 +935,7 @@ const getInitials = (name) => {
 };
 
 const getAvatarGradient = (name) => {
-    if (!name) return 'from-teal-500 to-cyan-650';
+    if (!name) return 'from-teal-500 to-cyan-655';
     const colors = [
         'from-teal-500 to-cyan-600',
         'from-emerald-500 to-teal-600',

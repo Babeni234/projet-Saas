@@ -1069,6 +1069,17 @@
                         ></textarea>
                         <span v-if="typeEtatDesLieuxErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeEtatDesLieuxErrors.description[0] }}</span>
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modèle de document (template par défaut)</label>
+                        <textarea
+                            v-model="typeEtatDesLieuxForm.template"
+                            rows="5"
+                            placeholder="Saisissez le modèle textuel d'état des lieux par défaut..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono text-xs"
+                        ></textarea>
+                        <span v-if="typeEtatDesLieuxErrors.template" class="text-red-500 text-xs mt-1 block">{{ typeEtatDesLieuxErrors.template[0] }}</span>
+                    </div>
                 </div>
 
                 <!-- Actions -->
@@ -1396,7 +1407,8 @@ const isTypeEtatDesLieuxSubmitting = ref(false);
 const typeEtatDesLieuxErrors = ref({});
 const typeEtatDesLieuxForm = ref({
     nom: '',
-    description: ''
+    description: '',
+    template: ''
 });
 
 // Currency state
@@ -2109,7 +2121,7 @@ const fetchTypeEtatDesLieux = async () => {
 const openCreateTypeEtatDesLieuxModal = () => {
     isEditingTypeEtatDesLieux.value = false;
     editingTypeEtatDesLieuxId.value = null;
-    typeEtatDesLieuxForm.value = { nom: '', description: '' };
+    typeEtatDesLieuxForm.value = { nom: '', description: '', template: '' };
     typeEtatDesLieuxErrors.value = {};
     showTypeEtatDesLieuxModal.value = true;
 };
@@ -2119,7 +2131,8 @@ const openEditTypeEtatDesLieuxModal = (type) => {
     editingTypeEtatDesLieuxId.value = type.id;
     typeEtatDesLieuxForm.value = {
         nom: type.nom,
-        description: type.description || ''
+        description: type.description || '',
+        template: type.template || ''
     };
     typeEtatDesLieuxErrors.value = {};
     showTypeEtatDesLieuxModal.value = true;

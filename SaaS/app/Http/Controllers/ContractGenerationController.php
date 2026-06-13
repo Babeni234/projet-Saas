@@ -367,6 +367,143 @@ class ContractGenerationController extends Controller
     }
 
     /**
+     * Generate an inspection document (État des lieux) using Gemini, with local fallback.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateEtatDesLieux(Request $request)
+    {
+        $request->validate([
+            'locataire' => 'required|string',
+            'logement' => 'required|string',
+            'type' => 'required|string',
+            'date' => 'required|string',
+            'template' => 'nullable|string',
+            'instructions' => 'nullable|string',
+        ]);
+
+        $locataire = $request->input('locataire');
+        $logement = $request->input('logement');
+        $type = $request->input('type');
+        $date = $request->input('date');
+        $template = $request->input('template');
+        $instructions = $request->input('instructions');
+
+        // Construct prompt for Gemini
+        $prompt = "Vous êtes un expert juridique spécialisé en droit immobilier et en rédaction d'états des lieux (procès-verbaux d'entrée et de sortie).\n";
+        $prompt .= "Rédigez un document d'état des lieux de type '{$type}' professionnel, complet et rigoureux en français en utilisant les informations suivantes :\n\n";
+        $prompt .= "- **Type d'état des lieux** : {$type}\n";
+        $prompt .= "- **Bailleur / Propriétaire** : Enterprise Property Corp\n";
+        $prompt .= "- **Locataire** : {$locataire}\n";
+        $prompt .= "- **Logement concerné** : {$logement}\n";
+        $prompt .= "- **Date de l'état des lieux** : {$date}\n\n";
+
+        if (!empty($template)) {
+            $prompt .= "Consigne TRÈS IMPORTANTE : Vous DEVEZ vous baser sur la structure et le style du modèle de canevas suivant pour rédiger l'état des lieux, tout en injectant les données ci-dessus :\n";
+            $prompt .= "\"\"\"\n{$template}\n\"\"\"\n\n";
+        } else {
+            $prompt .= "Comme aucun modèle spécifique n'est fourni, générez un procès-verbal d'état des lieux standard officiel contenant les sections appropriées pour ce type de document (Désignation des parties et du logement, Relevé des compteurs d'eau/électricité/gaz, Inventaire des clés, État détaillé pièce par pièce, Observations, Date et Signatures).\n\n";
+        }
+
+        if (!empty($instructions)) {
+            $prompt .= "Consigne supplémentaire de guidage de l'utilisateur (observations ou consignes spécifiques) :\n";
+            $prompt .= "\"\"\"\n{$instructions}\n\"\"\"\n\n";
+        }
+
+        $prompt .= "Format de retour : Rédigez le rapport au format HTML propre (uniquement les balises structurelles comme <h1>, <h2>, <p>, <ul>, <li>, <strong>, <table>, <tr>, <td>). Ne renvoyez aucune balise de document complet comme <html> ou <body>. Ne mettez aucun bloc de code markdown (comme ```html). Votre réponse doit débuter directement par le contenu HTML.";
+
+        $generateViaIA = true;
+        $apiError = null;
+        $generatedText = '';
+
+        try {
+            $model = config('ai.groq_model', 'llama-3.3-70b-versatile');
+            $response = Prism::text()
+                ->using(Provider::Groq, $model)
+                ->withPrompt("Message de l'administrateur : Générez l'état des lieux.\n\nRépondez en respectant les consignes système.")
+                ->withSystemPrompt($prompt)
+                ->asText();
+            $generatedText = $response->text;
+        } catch (\Exception $e) {
+            \Log::warning('Groq API call failed for Etat des lieux, falling back to local generation. Error: ' . $e->getMessage());
+            $apiError = $e->getMessage();
+            $generateViaIA = false;
+        }
+
+        if (!$generateViaIA) {
+            // Fallback local
+            $generatedText = $this->generateEtatDesLieuxLocalFallback(
+                $locataire,
+                $logement,
+                $type,
+                $date,
+                $template,
+                $instructions,
+                $apiError
+            );
+        }
+
+        $generatedText = preg_replace('/^```html\s*/i', '', $generatedText);
+        $generatedText = preg_replace('/```$/i', '', $generatedText);
+        $generatedText = trim($generatedText);
+
+        return response()->json([
+            'success' => true,
+            'etat' => $generatedText,
+            'fallback' => !$generateViaIA,
+        ]);
+    }
+
+    /**
+     * Local fallback inspection generator using templates.
+     */
+    private function generateEtatDesLieuxLocalFallback($locataire, $logement, $type, $date, $template, $instructions, $apiError)
+    {
+        $tpl = $template;
+        if (empty($tpl)) {
+            $tpl = "<h3>PROCES-VERBAL D'ETAT DES LIEUX ({Type})</h3>
+            <p><strong>Bailleur :</strong> Enterprise Property Corp<br>
+            <strong>Locataire :</strong> [Locataire]<br>
+            <strong>Logement :</strong> [Logement]<br>
+            <strong>Type :</strong> [Type]<br>
+            <strong>Date :</strong> [Date]</p>
+            <h4>ETAT DES PIECES (SYNTHESE)</h4>
+            <p>Toutes les pièces (Entrée, Séjour, Cuisine, Salle de bain, Chambres) sont déclarées en état d'usage général sauf mention contraire ci-dessous.</p>
+            <h4>CLEFS ET COMPTEURS</h4>
+            <p>Clés remises : Oui<br>
+            Index Eau / Électricité : Conformes aux relevés initiaux.</p>
+            <h4>OBSERVATIONS PARTICULIERES</h4>
+            <p>[Instructions]</p>
+            <p>Fait et signé le [Date].</p>";
+        }
+
+        if (!preg_match('/<[a-z][\s\S]*>/i', $tpl)) {
+            $tpl = nl2br(e($tpl));
+            $tpl = "<h3>ETAT DES LIEUX</h3>\n<p>" . $tpl . "</p>";
+        }
+
+        $dateF = $this->formatDateFrench($date);
+
+        $tpl = str_replace(['[Locataire]', '[locataire]'], $locataire, $tpl);
+        $tpl = str_replace(['[Logement]', '[logement]'], $logement, $tpl);
+        $tpl = str_replace(['[Type]', '[type]', '{Type}'], $type, $tpl);
+        $tpl = str_replace(['[Date]', '[date]'], $dateF, $tpl);
+
+        if (!empty($instructions)) {
+            $tpl .= "\n\n<hr>\n<h4>ANNEXE - CONDITIONS & OBSERVATIONS (IA Fallback)</h4>\n";
+            $tpl .= "<p>Conformément aux observations et instructions formulées :<br>";
+            $tpl .= "<em>" . nl2br(e($instructions)) . "</em></p>";
+        }
+
+        $banner = "<div style='background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; color: #92400e; margin-bottom: 20px; font-family: sans-serif; font-size: 13px;'>\n";
+        $banner .= "<strong>Note de simulation :</strong> Cet état des lieux a été généré via notre moteur de secours local (Limite d'API Groq de secours/Quota dépassé). Le canevas de référence a été appliqué avec succès.\n";
+        $banner .= "</div>\n\n";
+
+        return $banner . $tpl;
+    }
+
+    /**
      * Chat with the management assistant.
      */
     public function assistantChat(Request $request)
