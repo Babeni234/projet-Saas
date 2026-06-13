@@ -248,6 +248,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/engagements/{engagement}', [\App\Http\Controllers\EngagementController::class, 'destroy'])->name('engagements.destroy');
     Route::post('/api/engagements/{engagement}/confirm-honor', [\App\Http\Controllers\EngagementController::class, 'confirmHonor'])->name('engagements.confirm-honor');
 
+    // Renouvellements API routes
+    Route::get('/api/renouvellements', [\App\Http\Controllers\RenouvellementController::class, 'index'])->name('renouvellements.json');
+    Route::post('/api/renouvellements', [\App\Http\Controllers\RenouvellementController::class, 'store'])->name('renouvellements.store');
+    Route::put('/api/renouvellements/{renouvellement}', [\App\Http\Controllers\RenouvellementController::class, 'update'])->name('renouvellements.update');
+    Route::post('/api/renouvellements/{renouvellement}/approuver', [\App\Http\Controllers\RenouvellementController::class, 'approuver'])->name('renouvellements.approuver');
+    Route::post('/api/renouvellements/{renouvellement}/rejeter', [\App\Http\Controllers\RenouvellementController::class, 'rejeter'])->name('renouvellements.rejeter');
+    Route::post('/api/renouvellements/{renouvellement}/confirmer', [\App\Http\Controllers\RenouvellementController::class, 'confirmer'])->name('renouvellements.confirmer');
+    Route::delete('/api/renouvellements/{renouvellement}', [\App\Http\Controllers\RenouvellementController::class, 'destroy'])->name('renouvellements.destroy');
+
     // TypeEtatDesLieux API routes
     Route::get('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'index'])->name('type-etat-des-lieux.json');
     Route::post('/api/type-etat-des-lieux', [\App\Http\Controllers\TypeEtatDesLieuxController::class, 'store'])->name('type-etat-des-lieux.store');

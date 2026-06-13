@@ -346,6 +346,16 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Frais de contrat (€)</label>
+                                    <input 
+                                        v-model.number="formData.frais_de_contrat" 
+                                        type="number" 
+                                        class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                                    >
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -570,6 +580,7 @@ const formData = ref({
     type_bail: '',
     duree: '1 an',
     cycle_paiement: 'Mensuel',
+    frais_de_contrat: 0,
 });
 
 // Load resources from Database APIs
@@ -697,6 +708,7 @@ const onBuildingChange = () => {
     formData.value.logement_id = '';
     formData.value.loyer = 0;
     formData.value.caution = 0;
+    formData.value.frais_de_contrat = 0;
 
     // Clear tenant if it doesn't belong to the selected building's agency
     if (formData.value.batiment_id) {
@@ -718,6 +730,7 @@ const onLocataireChange = () => {
             formData.value.logement_id = '';
             formData.value.loyer = 0;
             formData.value.caution = 0;
+            formData.value.frais_de_contrat = 0;
         }
     }
 };

@@ -98,7 +98,7 @@
                     <span class="text-xs font-bold uppercase text-slate-400">Agence :</span>
                     <select v-model="agencyFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
                         <option value="All" style="color: #000000 !important; background-color: #ffffff !important;">Toutes les agences</option>
-                        <option v-for="a in agencies" :key="a.id" :value="a.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ a.nom }}</option>
+                        <option v-for="a in agencies" :key="a.id" :value="a.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ a.name || a.nom }}</option>
                     </select>
                 </div>
                 <!-- Building Filter -->
@@ -184,6 +184,16 @@
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
                                     <button 
+                                        v-if="etat.statut !== 'Validé'"
+                                        @click="validateEtat(etat)" 
+                                        class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                                        title="Valider l'état des lieux"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    <button 
                                         v-if="etat.content"
                                         @click="viewEtatContent(etat)" 
                                         class="p-2 text-slate-605 hover:bg-slate-100 rounded-xl transition-all"
@@ -214,7 +224,7 @@
                                     </button>
                                     <button 
                                         @click="deleteEtat(etat)" 
-                                        class="p-2 text-red-650 hover:bg-red-50 rounded-xl transition-all"
+                                        class="p-2 text-red-655 hover:bg-red-50 rounded-xl transition-all"
                                         title="Supprimer"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,90 +281,207 @@
                                 />
                             </div>
 
-                            <!-- Type -->
-                            <div class="group">
+                            <!-- Type Custom Select -->
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'État *</label>
-                                <select 
-                                    v-model="formData.type_etat_des_lieux_id" 
-                                    required
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                    style="color: #000000 !important; background-color: #ffffff !important;"
-                                >
-                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le type</option>
-                                    <option v-for="t in typeEtatDesLieux" :key="t.id" :value="t.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ t.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormTypeDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-850 shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    >
+                                        <span>{{ selectedTypeLabel || 'Sélectionner le type' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isFormTypeDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isFormTypeDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formTypeSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un type..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-teal-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="t in filteredFormTypes" 
+                                                :key="t.id" 
+                                                @click="selectFormType(t)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-teal-650 transition-colors"
+                                            >
+                                                {{ t.nom }}
+                                            </button>
+                                            <div v-if="filteredFormTypes.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun type trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- 3-level cascade selection -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Agency Select -->
-                            <div class="group">
+                            <!-- Agency Custom Select -->
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Agence *</label>
-                                <select 
-                                    v-model="formData.agency_id" 
-                                    required
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                    @change="onAgencyChange"
-                                    style="color: #000000 !important; background-color: #ffffff !important;"
-                                >
-                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner une agence</option>
-                                    <option v-for="a in agencies" :key="a.id" :value="a.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ a.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormAgencyDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-850 shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    >
+                                        <span>{{ selectedAgencyLabel || 'Sélectionner l\'agence' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isFormAgencyDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isFormAgencyDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formAgencySearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher une agence..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-teal-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="a in filteredFormAgencies" 
+                                                :key="a.id" 
+                                                @click="selectFormAgency(a)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-teal-650 transition-colors"
+                                            >
+                                                {{ a.name || a.nom }}
+                                            </button>
+                                            <div v-if="filteredFormAgencies.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucune agence trouvée
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Building Select -->
-                            <div class="group">
+                            <!-- Building Custom Select -->
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
-                                <select 
-                                    v-model="formData.batiment_id" 
-                                    required
-                                    :disabled="!formData.agency_id"
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
-                                    @change="onBatimentChange"
-                                    style="color: #000000 !important; background-color: #ffffff !important;"
-                                >
-                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner un bâtiment</option>
-                                    <option v-for="b in modalFilteredBatiments" :key="b.id" :value="b.id" style="color: #000000 !important; background-color: #ffffff !important;">{{ b.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormBuildingDropdown" 
+                                        :disabled="!formData.agency_id"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-850 shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 disabled:opacity-50"
+                                    >
+                                        <span>{{ selectedBuildingLabel || 'Sélectionner le bâtiment' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isFormBuildingDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isFormBuildingDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formBuildingSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un bâtiment..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-teal-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="b in filteredFormBuildings" 
+                                                :key="b.id" 
+                                                @click="selectFormBuilding(b)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-750 hover:text-teal-655 transition-colors"
+                                            >
+                                                {{ b.nom }}
+                                            </button>
+                                            <div v-if="filteredFormBuildings.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun bâtiment trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Tenant Select -->
-                            <div class="group">
+                            <!-- Tenant Custom Select -->
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire *</label>
-                                <select 
-                                    v-model="formData.locataire_id" 
-                                    required
-                                    :disabled="!formData.batiment_id"
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
-                                    @change="onLocataireChange"
-                                    style="color: #000000 !important; background-color: #ffffff !important;"
-                                >
-                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le locataire</option>
-                                    <option v-for="loc in modalFilteredLocataires" :key="loc.id" :value="loc.id" style="color: #000000 !important; background-color: #ffffff !important;">
-                                        {{ loc.nom }}
-                                    </option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormLocataireDropdown" 
+                                        :disabled="!formData.batiment_id"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-850 shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 disabled:opacity-50"
+                                    >
+                                        <span>{{ selectedLocataireLabel || 'Sélectionner le locataire' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isFormLocataireDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isFormLocataireDropdownOpen" class="absolute z-[98] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formLocataireSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher par nom..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-teal-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="loc in filteredFormLocataires" 
+                                                :key="loc.id" 
+                                                @click="selectFormLocataire(loc)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-teal-655 transition-colors"
+                                            >
+                                                {{ loc.nom }}
+                                            </button>
+                                            <div v-if="filteredFormLocataires.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun locataire éligible trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Conditional Contract Selector & Auto Logement -->
                         <div v-if="formData.locataire_id" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-scale-up">
-                            <!-- Contract Select -->
-                            <div class="group">
+                            <!-- Contract Custom Select -->
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrat Associé *</label>
-                                <select 
-                                    v-model="formData.contrat_id" 
-                                    required
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                    @change="onContratChange"
-                                    style="color: #000000 !important; background-color: #ffffff !important;"
-                                >
-                                    <option value="" disabled style="color: #000000 !important; background-color: #ffffff !important;">Sélectionner le contrat</option>
-                                    <option v-for="c in modalFilteredContrats" :key="c.id" :value="c.id" style="color: #000000 !important; background-color: #ffffff !important;">
-                                        Bail N° {{ c.numero }} ({{ c.statut }})
-                                    </option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormContratDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-855 shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    >
+                                        <span>{{ selectedContratLabel || 'Sélectionner le contrat' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isFormContratDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isFormContratDropdownOpen" class="absolute z-[98] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formContratSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher par numéro..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-teal-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="c in filteredFormContrats" 
+                                                :key="c.id" 
+                                                @click="selectFormContrat(c)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-teal-655 transition-colors"
+                                            >
+                                                Bail N° {{ c.numero }} ({{ c.statut }})
+                                            </button>
+                                            <div v-if="filteredFormContrats.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun contrat trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Logement (Auto Filled) -->
@@ -370,20 +497,11 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 gap-4">
                             <!-- Date -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date d'Inspection *</label>
                                 <input v-model="formData.date" type="date" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
-                            </div>
-                            <!-- Statut -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Statut *</label>
-                                <select v-model="formData.statut" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" style="color: #000000 !important; background-color: #ffffff !important;">
-                                    <option value="Brouillon" style="color: #000000 !important; background-color: #ffffff !important;">Brouillon</option>
-                                    <option value="En attente" style="color: #000000 !important; background-color: #ffffff !important;">En attente</option>
-                                    <option value="Validé" style="color: #000000 !important; background-color: #ffffff !important;">Validé</option>
-                                </select>
                             </div>
                         </div>
 
@@ -423,8 +541,16 @@
                             🤖 Générer avec l'IA
                         </button>
                     </div>
-                    <div class="flex justify-end mt-4">
+                    <div class="flex justify-end gap-3 mt-4">
                         <button @click="closeModal" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 text-xs font-bold transition-all">Fermer</button>
+                        <button 
+                            @click="saveEtat" 
+                            :disabled="isSaving"
+                            class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md"
+                        >
+                            <span v-if="isSaving" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            Enregistrer
+                        </button>
                     </div>
                 </div>
             </div>
@@ -516,6 +642,30 @@
             </div>
         </div>
 
+        <!-- Validate Confirmation Modal -->
+        <div v-if="showValidateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-red-100/50 relative overflow-hidden animate-scale-up">
+                <div class="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-emerald-400/10 to-teal-500/10 rounded-full blur-3xl"></div>
+                <div class="relative z-10 text-center">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mx-auto mb-5 shadow-lg shadow-emerald-500/30">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-2">Valider cet état des lieux ?</h3>
+                    <p class="text-slate-500 text-sm mb-6">Confirmez-vous que cet état des lieux est conforme et validé ?</p>
+
+                    <div class="flex gap-4">
+                        <button @click="closeValidateModal" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-655 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs">Annuler</button>
+                        <button @click="confirmValidation" :disabled="isValidating" class="flex-1 px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-650 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all hover:scale-[1.01] text-xs flex items-center justify-center gap-2">
+                            <span v-if="isValidating" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span>Confirmer</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Success Toast -->
         <div v-if="showSuccess" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div class="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-emerald-100/50 relative overflow-hidden animate-scale-up">
@@ -571,19 +721,36 @@ const showModal = ref(false);
 const showEditorModal = ref(false);
 const showViewContentModal = ref(false);
 const showDeleteModal = ref(false);
+const showValidateModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 const deleteTarget = ref(null);
+const validateTarget = ref(null);
 const isGenerating = ref(false);
 const isSaving = ref(false);
 const isDeleting = ref(false);
+const isValidating = ref(false);
 const isInitialLoading = ref(false);
 
 const viewingEtatRef = ref(null);
 const editorContent = ref('');
 const canevasTemplate = ref('');
+
+// Custom searchable dropdown open/close states
+const isFormTypeDropdownOpen = ref(false);
+const isFormAgencyDropdownOpen = ref(false);
+const isFormBuildingDropdownOpen = ref(false);
+const isFormLocataireDropdownOpen = ref(false);
+const isFormContratDropdownOpen = ref(false);
+
+// Search inputs for form dropdowns
+const formTypeSearchQuery = ref('');
+const formAgencySearchQuery = ref('');
+const formBuildingSearchQuery = ref('');
+const formLocataireSearchQuery = ref('');
+const formContratSearchQuery = ref('');
 
 const formData = ref({
     id: null,
@@ -595,7 +762,7 @@ const formData = ref({
     contrat_id: '',
     logement_id: '',
     date: '',
-    statut: 'Brouillon',
+    statut: 'En attente',
     instructions: '',
     content: ''
 });
@@ -878,9 +1045,10 @@ const closeEditorModal = () => {
     showEditorModal.value = false;
 };
 
-const confirmRedaction = () => {
+const confirmRedaction = async () => {
     formData.value.content = editorContent.value;
     closeEditorModal();
+    await saveEtat();
 };
 
 const viewEtatContent = (etat) => {
@@ -989,6 +1157,16 @@ const editEtat = (etat) => {
 
 const closeModal = () => {
     showModal.value = false;
+    isFormTypeDropdownOpen.value = false;
+    isFormAgencyDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+    formTypeSearchQuery.value = '';
+    formAgencySearchQuery.value = '';
+    formBuildingSearchQuery.value = '';
+    formLocataireSearchQuery.value = '';
+    formContratSearchQuery.value = '';
 };
 
 const saveEtat = async () => {
@@ -1089,6 +1267,174 @@ const getAvatarGradient = (name) => {
     const index = Math.abs(hash) % colors.length;
     return colors[index];
 };
+
+// Dropdown toggle methods
+const toggleFormTypeDropdown = () => {
+    isFormTypeDropdownOpen.value = !isFormTypeDropdownOpen.value;
+    isFormAgencyDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+};
+const toggleFormAgencyDropdown = () => {
+    isFormAgencyDropdownOpen.value = !isFormAgencyDropdownOpen.value;
+    isFormTypeDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+};
+const toggleFormBuildingDropdown = () => {
+    if (!formData.value.agency_id) return;
+    isFormBuildingDropdownOpen.value = !isFormBuildingDropdownOpen.value;
+    isFormTypeDropdownOpen.value = false;
+    isFormAgencyDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+};
+const toggleFormLocataireDropdown = () => {
+    if (!formData.value.batiment_id) return;
+    isFormLocataireDropdownOpen.value = !isFormLocataireDropdownOpen.value;
+    isFormTypeDropdownOpen.value = false;
+    isFormAgencyDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+};
+const toggleFormContratDropdown = () => {
+    if (!formData.value.locataire_id) return;
+    isFormContratDropdownOpen.value = !isFormContratDropdownOpen.value;
+    isFormTypeDropdownOpen.value = false;
+    isFormAgencyDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+};
+
+// Selection methods
+const selectFormType = (type) => {
+    formData.value.type_etat_des_lieux_id = type.id;
+    isFormTypeDropdownOpen.value = false;
+};
+const selectFormAgency = (agency) => {
+    formData.value.agency_id = agency.id;
+    onAgencyChange();
+    isFormAgencyDropdownOpen.value = false;
+};
+const selectFormBuilding = (building) => {
+    formData.value.batiment_id = building.id;
+    onBatimentChange();
+    isFormBuildingDropdownOpen.value = false;
+};
+const selectFormLocataire = (locataire) => {
+    formData.value.locataire_id = locataire.id;
+    onLocataireChange();
+    isFormLocataireDropdownOpen.value = false;
+};
+const selectFormContrat = (contrat) => {
+    formData.value.contrat_id = contrat.id;
+    onContratChange();
+    isFormContratDropdownOpen.value = false;
+};
+
+// Computed labels
+const selectedTypeLabel = computed(() => {
+    if (!formData.value.type_etat_des_lieux_id) return '';
+    const t = typeEtatDesLieux.value.find(type => type.id === formData.value.type_etat_des_lieux_id);
+    return t ? t.nom : '';
+});
+const selectedAgencyLabel = computed(() => {
+    if (!formData.value.agency_id) return '';
+    const a = agencies.value.find(agency => agency.id === formData.value.agency_id);
+    return a ? (a.name || a.nom) : '';
+});
+const selectedBuildingLabel = computed(() => {
+    if (!formData.value.batiment_id) return '';
+    const b = batiments.value.find(building => building.id === formData.value.batiment_id);
+    return b ? b.nom : '';
+});
+const selectedLocataireLabel = computed(() => {
+    if (!formData.value.locataire_id) return '';
+    const l = locataires.value.find(loc => loc.id === formData.value.locataire_id);
+    return l ? l.nom : '';
+});
+const selectedContratLabel = computed(() => {
+    if (!formData.value.contrat_id) return '';
+    const selectedLoc = locataires.value.find(l => l.id === formData.value.locataire_id);
+    if (!selectedLoc || !selectedLoc.contrats) return '';
+    const c = selectedLoc.contrats.find(contract => contract.id === formData.value.contrat_id);
+    return c ? `Bail N° ${c.numero} (${c.statut})` : '';
+});
+
+// Filtered dropdown lists (with search)
+const filteredFormTypes = computed(() => {
+    if (!formTypeSearchQuery.value) return typeEtatDesLieux.value;
+    const query = formTypeSearchQuery.value.toLowerCase();
+    return typeEtatDesLieux.value.filter(t => t.nom.toLowerCase().includes(query));
+});
+const filteredFormAgencies = computed(() => {
+    if (!formAgencySearchQuery.value) return agencies.value;
+    const query = formAgencySearchQuery.value.toLowerCase();
+    return agencies.value.filter(a => (a.name || a.nom || '').toLowerCase().includes(query));
+});
+const filteredFormBuildings = computed(() => {
+    const list = modalFilteredBatiments.value;
+    if (!formBuildingSearchQuery.value) return list;
+    const query = formBuildingSearchQuery.value.toLowerCase();
+    return list.filter(b => b.nom.toLowerCase().includes(query));
+});
+const filteredFormLocataires = computed(() => {
+    const list = modalFilteredLocataires.value;
+    if (!formLocataireSearchQuery.value) return list;
+    const query = formLocataireSearchQuery.value.toLowerCase();
+    return list.filter(l => l.nom.toLowerCase().includes(query));
+});
+const filteredFormContrats = computed(() => {
+    const list = modalFilteredContrats.value;
+    if (!formContratSearchQuery.value) return list;
+    const query = formContratSearchQuery.value.toLowerCase();
+    return list.filter(c => `Bail N° ${c.numero} (${c.statut})`.toLowerCase().includes(query));
+});
+
+// Click away listener close helper
+const closeAllFormDropdowns = () => {
+    isFormTypeDropdownOpen.value = false;
+    isFormAgencyDropdownOpen.value = false;
+    isFormBuildingDropdownOpen.value = false;
+    isFormLocataireDropdownOpen.value = false;
+    isFormContratDropdownOpen.value = false;
+};
+
+// Validation actions
+const validateEtat = (etat) => {
+    validateTarget.value = etat;
+    showValidateModal.value = true;
+};
+const closeValidateModal = () => {
+    showValidateModal.value = false;
+    validateTarget.value = null;
+};
+const confirmValidation = async () => {
+    if (!validateTarget.value) return;
+    isValidating.value = true;
+    try {
+        await axios.put(`/api/etat-des-lieux/${validateTarget.value.id}`, {
+            ...validateTarget.value,
+            statut: 'Validé'
+        });
+        successMessage.value = 'État des lieux validé avec succès';
+        await fetchEtatsData();
+        closeValidateModal();
+        showSuccess.value = true;
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = "Erreur lors de la validation de l'état des lieux.";
+        showError.value = true;
+    } finally {
+        isValidating.value = false;
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('click', closeAllFormDropdowns);
+});
 </script>
 
 <style scoped>

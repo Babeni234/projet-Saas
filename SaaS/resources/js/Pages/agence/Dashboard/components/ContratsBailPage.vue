@@ -366,34 +366,28 @@
             </div>
         </div>
 
-        <!-- TinyMCE editor modal -->
-        <div v-if="showEditorModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full p-6 flex flex-col h-[80vh] max-h-[680px] animate-scale-up">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" />
-                            </svg>
-                            Rédaction / Édition du Contrat de Bail
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-1">Locataire: <span class="font-bold text-slate-700">{{ formData.locataire }}</span> | Loyer: {{ formData.loyer }}€ | Logement: {{ formData.reference }}</p>
-                    </div>
-                    <button @click="closeEditorModal" class="text-slate-400 hover:text-slate-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <!-- TinyMCE editor modal (Fullscreen) -->
+        <div v-if="showEditorModal" class="fixed inset-0 bg-white z-50 flex flex-col p-6 animate-scale-up">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" />
                         </svg>
-                    </button>
+                        Rédaction / Édition du Contrat de Bail
+                    </h3>
+                    <p class="text-xs font-bold text-slate-400 mt-1">Locataire: <span class="font-extrabold text-slate-700">{{ formData.locataire }}</span> | Loyer: {{ formData.loyer }}€ | Logement: {{ formData.reference }}</p>
                 </div>
-                
-                <div class="flex-1 overflow-hidden my-4 border border-slate-200 rounded-2xl">
-                    <textarea id="contract-editor" class="w-full h-full"></textarea>
-                </div>
-                
-                <div class="flex gap-3 justify-end pt-2">
-                    <button @click="closeEditorModal" class="px-5 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition">Annuler</button>
-                    <button @click="confirmRedaction" class="px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-500/10 transition">Valider la rédaction</button>
-                </div>
+                <span class="text-xs font-bold text-emerald-650 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">Mode Plein Écran</span>
+            </div>
+            
+            <div class="flex-1 overflow-hidden my-4 border border-slate-200 rounded-2xl flex flex-col">
+                <textarea id="contract-editor" class="flex-1"></textarea>
+            </div>
+            
+            <div class="flex gap-4 justify-end pt-4 border-t border-slate-150">
+                <button @click="closeEditorModal" class="px-6 py-3.5 bg-slate-150 text-slate-655 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs">Fermer sans enregistrer</button>
+                <button @click="confirmRedaction" class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-650 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/35 transition-all text-xs">Valider la rédaction</button>
             </div>
         </div>
 
@@ -726,7 +720,7 @@ const initTinyMCE = () => {
         license_key: 'gpl',
         skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/ui/oxide',
         content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/content/default/content.css',
-        height: 380,
+        height: '65vh',
         menubar: false,
         branding: false,
         plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime table code help wordcount',

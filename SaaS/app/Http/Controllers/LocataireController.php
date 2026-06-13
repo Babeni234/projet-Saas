@@ -284,6 +284,7 @@ class LocataireController extends Controller
     {
         $activeAffectation = $l->affectations->where('statut', 'Actif')->first();
         $logementRef = $activeAffectation && $activeAffectation->logement ? $activeAffectation->logement->reference : null;
+        $batimentId = $activeAffectation && $activeAffectation->logement ? $activeAffectation->logement->batiment_id : null;
 
         return [
             'id'                 => $l->id,
@@ -293,6 +294,7 @@ class LocataireController extends Controller
             'telephone'          => $l->telephone,
             'agency_id'          => $l->agency_id,
             'agency_name'        => $l->agency?->name,
+            'batiment_id'        => $batimentId,
             'profil_url'         => $l->profil ? '/storage/' . $l->profil : null,
             'statut'             => ucfirst($l->statut), // Actif, Inactif, Suspendu, Affecté
             'logement'           => $logementRef ?? 'Aucun',

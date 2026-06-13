@@ -120,7 +120,7 @@ const routes = [
     {
         path: '/dashboard/immobilier/renouvellements',
         name: 'immobilier.renouvellements',
-        component: () => import('../Pages/entreprise/Dashboard/components/RenouvellementContratPage.vue'),
+        component: () => import('../Pages/entreprise/Dashboard/components/RenouvellementPage.vue'),
         meta: {
             title: 'Renouvellements de contrat',
             breadcrumbs: [
@@ -543,7 +543,7 @@ const routes = [
     {
         path: '/agence/dashboard/immobilier/renouvellements',
         name: 'agence.immobilier.renouvellements',
-        component: () => import('../Pages/agence/Dashboard/components/RenouvellementContratPage.vue'),
+        component: () => import('../Pages/agence/Dashboard/components/RenouvellementPage.vue'),
         meta: {
             title: 'Renouvellements de contrat',
             breadcrumbs: [

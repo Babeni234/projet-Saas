@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-class Affectation extends Model
+class Renouvellement extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'affectations';
+    protected $table = 'renouvellements';
 
     protected $fillable = [
         'uuid',
@@ -19,26 +19,20 @@ class Affectation extends Model
         'company_profile_id',
         'agency_id',
         'locataire_id',
-        'logement_id',
-        'type_contrat_id',
-        'loyer',
-        'caution',
-        'date_debut',
-        'date_fin',
-        'type_bail',
-        'duree',
+        'contrat_id',
+        'nouveau_loyer',
         'cycle_paiement',
-        'frais_de_contrat',
+        'duree',
+        'frais_contrat',
+        'motif_demande',
+        'motif_rejet',
         'statut',
         'deleted',
     ];
 
     protected $casts = [
-        'loyer' => 'decimal:2',
-        'caution' => 'decimal:2',
-        'frais_de_contrat' => 'decimal:2',
-        'date_debut' => 'date',
-        'date_fin' => 'date',
+        'nouveau_loyer' => 'decimal:2',
+        'frais_contrat' => 'decimal:2',
         'deleted' => 'boolean',
     ];
 
@@ -54,7 +48,7 @@ class Affectation extends Model
                 $count = static::withTrashed()
                                ->where('company_profile_id', $model->company_profile_id)
                                ->count();
-                $model->reference = 'AFF-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+                $model->reference = 'RNV-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
             }
         });
     }
@@ -74,13 +68,8 @@ class Affectation extends Model
         return $this->belongsTo(Locataire::class, 'locataire_id');
     }
 
-    public function logement(): BelongsTo
+    public function contrat(): BelongsTo
     {
-        return $this->belongsTo(Logement::class, 'logement_id');
-    }
-
-    public function typeContrat(): BelongsTo
-    {
-        return $this->belongsTo(TypeContrat::class, 'type_contrat_id');
+        return $this->belongsTo(Contrat::class, 'contrat_id');
     }
 }
