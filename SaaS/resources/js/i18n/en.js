@@ -6,6 +6,7 @@ export default {
     utilities: 'Water & Electricity',
     receipts: 'Receipts & Invoices',
     oldContracts: 'Old Contracts',
+    'old-contracts': 'Old Contracts',
     support: 'Support & Messaging',
     profile: 'Profile & Settings',
   },

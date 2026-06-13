@@ -2,9 +2,25 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#1a73e8">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="HABITATUM">
+        <meta name="mobile-web-app-capable" content="yes">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="/manifest.json">
+
+        <!-- Icons -->
+        <link rel="icon" type="image/svg+xml" href="/icons/icon-96.svg">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72.svg">
+        <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96.svg">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144.svg">
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.svg">
+        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.svg">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

@@ -1,0 +1,32 @@
+{
+  "name": "HABITATUM — Gestion Locative",
+  "short_name": "HABITATUM",
+  "description": "Plateforme de gestion locative et de suivi des loyers",
+  "start_url": "/dashboard-locataire",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#1a73e8",
+  "lang": "fr-FR",
+  "scope": "/",
+  "id": "/",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-72.svg", "type": "image/svg+xml", "sizes": "72x72" },
+    { "src": "/icons/icon-96.svg", "type": "image/svg+xml", "sizes": "96x96" },
+    { "src": "/icons/icon-144.svg", "type": "image/svg+xml", "sizes": "144x144" },
+    { "src": "/icons/icon-192.svg", "type": "image/svg+xml", "sizes": "192x192" },
+    { "src": "/icons/icon-512.svg", "type": "image/svg+xml", "sizes": "512x512" }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "short_name": "Dashboard",
+      "description": "Voir mon tableau de bord locatif",
+      "url": "/dashboard-locataire"
+    }
+  ]
+}

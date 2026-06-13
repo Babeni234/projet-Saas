@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('push_subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->text('endpoint');
             $table->string('auth')->nullable();
             $table->string('p256dh')->nullable();
