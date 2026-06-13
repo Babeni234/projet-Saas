@@ -95,39 +95,177 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                     <!-- Agency Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 relative">
                         <span class="text-xs font-bold uppercase text-slate-400">Agence :</span>
-                        <select v-model="agencyFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                            <option value="All">Toutes les agences</option>
-                            <option v-for="a in agencies" :key="a.id" :value="a.id">{{ a.nom }}</option>
-                        </select>
+                        <div class="relative">
+                            <button 
+                                type="button" 
+                                @click.stop="toggleAgencyFilterDropdown" 
+                                class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm flex justify-between items-center gap-2 min-w-[150px]"
+                            >
+                                <span>{{ selectedAgencyFilterLabel }}</span>
+                                <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-[10px]" :class="{'rotate-180': isAgencyFilterOpen}"></i>
+                            </button>
+                            <div v-if="isAgencyFilterOpen" class="absolute z-[99] left-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                <input 
+                                    v-model="agencyFilterSearchQuery" 
+                                    type="text" 
+                                    placeholder="Rechercher une agence..." 
+                                    class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                />
+                                <div class="space-y-1">
+                                    <button 
+                                        @click="selectAgencyFilter('All')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Toutes les agences
+                                    </button>
+                                    <button 
+                                        v-for="a in filteredAgenciesFilter" 
+                                        :key="a.id"
+                                        @click="selectAgencyFilter(a.id)" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        {{ a.name }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!-- Building Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 relative">
                         <span class="text-xs font-bold uppercase text-slate-400">Bâtiment :</span>
-                        <select v-model="buildingFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                            <option value="All">Tous les bâtiments</option>
-                            <option v-for="b in filterBuildings" :key="b.id" :value="b.id">{{ b.nom }}</option>
-                        </select>
+                        <div class="relative">
+                            <button 
+                                type="button" 
+                                @click.stop="toggleBuildingFilterDropdown" 
+                                class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm flex justify-between items-center gap-2 min-w-[150px]"
+                            >
+                                <span>{{ selectedBuildingFilterLabel }}</span>
+                                <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-[10px]" :class="{'rotate-180': isBuildingFilterOpen}"></i>
+                            </button>
+                            <div v-if="isBuildingFilterOpen" class="absolute z-[99] left-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                <input 
+                                    v-model="buildingFilterSearchQuery" 
+                                    type="text" 
+                                    placeholder="Rechercher un bâtiment..." 
+                                    class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                />
+                                <div class="space-y-1">
+                                    <button 
+                                        @click="selectBuildingFilter('All')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Tous les bâtiments
+                                    </button>
+                                    <button 
+                                        v-for="b in filteredBuildingsFilter" 
+                                        :key="b.id"
+                                        @click="selectBuildingFilter(b.id)" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        {{ b.nom }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!-- Type Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 relative">
                         <span class="text-xs font-bold uppercase text-slate-400">Type :</span>
-                        <select v-model="typeFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                            <option value="All">Tous les types</option>
-                            <option v-for="t in typeEngagements" :key="t.id" :value="t.id">{{ t.nom }}</option>
-                        </select>
+                        <div class="relative">
+                            <button 
+                                type="button" 
+                                @click.stop="toggleTypeFilterDropdown" 
+                                class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm flex justify-between items-center gap-2 min-w-[150px]"
+                            >
+                                <span>{{ selectedTypeFilterLabel }}</span>
+                                <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-[10px]" :class="{'rotate-180': isTypeFilterOpen}"></i>
+                            </button>
+                            <div v-if="isTypeFilterOpen" class="absolute z-[99] left-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                <input 
+                                    v-model="typeFilterSearchQuery" 
+                                    type="text" 
+                                    placeholder="Rechercher un type..." 
+                                    class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                />
+                                <div class="space-y-1">
+                                    <button 
+                                        @click="selectTypeFilter('All')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Tous les types
+                                    </button>
+                                    <button 
+                                        v-for="t in filteredTypesFilter" 
+                                        :key="t.id"
+                                        @click="selectTypeFilter(t.id)" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        {{ t.nom }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!-- Status Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 relative">
                         <span class="text-xs font-bold uppercase text-slate-400">Statut :</span>
-                        <select v-model="statusFilter" class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm">
-                            <option value="All">Tous les statuts</option>
-                            <option value="actif">Actif</option>
-                            <option value="en cours">En cours</option>
-                            <option value="expirer">Expiré</option>
-                            <option value="valider">Validé</option>
-                        </select>
+                        <div class="relative">
+                            <button 
+                                type="button" 
+                                @click.stop="toggleStatusFilterDropdown" 
+                                class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none shadow-sm flex justify-between items-center gap-2 min-w-[130px]"
+                            >
+                                <span>{{ selectedStatusFilterLabel }}</span>
+                                <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-[10px]" :class="{'rotate-180': isStatusFilterOpen}"></i>
+                            </button>
+                            <div v-if="isStatusFilterOpen" class="absolute z-[99] right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl p-2" @click.stop>
+                                <div class="space-y-1">
+                                    <button 
+                                        @click="selectStatusFilter('All')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Tous les statuts
+                                    </button>
+                                    <button 
+                                        @click="selectStatusFilter('actif')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Actif
+                                    </button>
+                                    <button 
+                                        @click="selectStatusFilter('en cours')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        En cours
+                                    </button>
+                                    <button 
+                                        @click="selectStatusFilter('expirer')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Expiré
+                                    </button>
+                                    <button 
+                                        @click="selectStatusFilter('valider')" 
+                                        type="button" 
+                                        class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                    >
+                                        Validé
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -147,6 +285,7 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Référence</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Partie Concernée</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">N° Contrat</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Durée</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Montant</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Statut</th>
@@ -164,11 +303,14 @@
                                     </div>
                                     <div class="flex flex-col">
                                         <div class="font-bold text-slate-800 text-sm">{{ eng.locataire?.nom || 'N/A' }}</div>
-                                        <div v-if="eng.agency" class="text-[10px] font-bold text-slate-450 uppercase tracking-wider">{{ eng.agency.nom }}</div>
+                                        <div v-if="eng.agency" class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">{{ eng.agency.name }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600 font-semibold">{{ formatDate(eng.date_debut) }} au {{ formatDate(eng.date_fin) }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-700 font-bold">
+                                {{ eng.contrat?.numero || eng.contrat?.reference || 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-650 font-semibold">{{ formatDate(eng.date_debut) }} au {{ formatDate(eng.date_fin) }}</td>
                             <td class="px-6 py-4 text-sm text-slate-800 font-extrabold">{{ formatCurrency(eng.montant) }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col gap-1.5">
@@ -280,65 +422,165 @@
                             <!-- Reference -->
                             <div class="group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Référence *</label>
-                                <input v-model="formData.reference" type="text" placeholder="Ex: ENG-2026-004" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm" />
+                                <input v-model="formData.reference" type="text" readonly class="w-full px-4 py-3 bg-slate-100 cursor-not-allowed select-none border border-slate-200 rounded-xl font-semibold text-slate-800 text-sm shadow-sm" />
                             </div>
-
                             <!-- Type -->
-                            <div class="group">
+                            <div class="group relative">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type d'engagement *</label>
-                                <select v-model="formData.type_engagement_id" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm">
-                                    <option value="" disabled>Sélectionner le type</option>
-                                    <option v-for="t in typeEngagements" :key="t.id" :value="t.id">{{ t.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleFormTypeDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-800 shadow-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                    >
+                                        <span>{{ selectedFormTypeLabel || 'Sélectionner le type' }}</span>
+                                        <i class="fa-solid fa-chevron-down text-slate-455 transition-transform text-xs" :class="{'rotate-180': isFormTypeDropdownOpen}"></i>
+                                    </button>
+                                    <div v-if="isFormTypeDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="formTypeSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un type..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="t in filteredFormTypes" 
+                                                :key="t.id" 
+                                                @click="selectFormType(t)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                            >
+                                                {{ t.nom }}
+                                            </button>
+                                            <div v-if="filteredFormTypes.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun type d'engagement configuré
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 3-level cascade selection -->
+                        <!-- 3-level cascade selection (Custom Searchable Dropdowns) -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- Agency Select -->
-                            <div class="group">
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Agence *</label>
-                                <select 
-                                    v-model="formData.agency_id" 
-                                    required
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm"
-                                    @change="onAgencyChange"
-                                >
-                                    <option value="" disabled>Sélectionner une agence</option>
-                                    <option v-for="a in agencies" :key="a.id" :value="a.id">{{ a.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleAgencyDropdown" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-800 shadow-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                    >
+                                        <span>{{ selectedAgencyLabel || 'Sélectionner l\'agence' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isAgencyDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isAgencyDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="agencySearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher une agence..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="agency in filteredAgenciesDropdown" 
+                                                :key="agency.id" 
+                                                @click="selectAgency(agency)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                            >
+                                                {{ agency.name }}
+                                            </button>
+                                            <div v-if="filteredAgenciesDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucune agence trouvée
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Building Select -->
-                            <div class="group">
+                            <div class="relative group">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Bâtiment *</label>
-                                <select 
-                                    v-model="formData.batiment_id" 
-                                    required
-                                    :disabled="!formData.agency_id"
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
-                                    @change="onBatimentChange"
-                                >
-                                    <option value="" disabled>Sélectionner un bâtiment</option>
-                                    <option v-for="b in modalFilteredBatiments" :key="b.id" :value="b.id">{{ b.nom }}</option>
-                                </select>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleBuildingDropdown" 
+                                        :disabled="!formData.agency_id"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-800 shadow-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 disabled:opacity-50"
+                                    >
+                                        <span>{{ selectedBuildingLabel || 'Sélectionner le bâtiment' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isBuildingDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isBuildingDropdownOpen" class="absolute z-[99] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="buildingSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher un bâtiment..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="building in filteredBuildingsDropdown" 
+                                                :key="building.id" 
+                                                @click="selectBuilding(building)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                            >
+                                                {{ building.nom }}
+                                            </button>
+                                            <div v-if="filteredBuildingsDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun bâtiment trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Contract / Tenant Select -->
-                            <div class="group">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Contrepartie (Locataire Actif) *</label>
-                                <select 
-                                    v-model="formData.contrat_id" 
-                                    required
-                                    :disabled="!formData.batiment_id"
-                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-semibold text-slate-800 text-sm shadow-sm disabled:opacity-50"
-                                    @change="onContratChange"
-                                >
-                                    <option value="" disabled>Sélectionner le locataire</option>
-                                    <option v-for="c in modalFilteredContrats" :key="c.id" :value="c.id">
-                                        {{ c.locataire }} (Bail {{ c.numero }} - {{ c.reference }})
-                                    </option>
-                                </select>
+                            <div class="relative group">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Locataire (ayant un contrat actif) *</label>
+                                <div class="relative">
+                                    <button 
+                                        type="button" 
+                                        @click.stop="toggleTenantDropdown" 
+                                        :disabled="!formData.batiment_id"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-sm font-semibold text-slate-800 shadow-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 disabled:opacity-50 force-black-text"
+                                    >
+                                        <span>{{ selectedTenantLabel || 'Sélectionner le locataire' }}</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{'rotate-180': isTenantDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="isTenantDropdownOpen" class="absolute z-[98] w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 max-h-60 overflow-y-auto" @click.stop>
+                                        <input 
+                                            v-model="tenantSearchQuery" 
+                                            type="text" 
+                                            placeholder="Rechercher par nom..." 
+                                            class="w-full px-3 py-2 text-xs font-semibold border border-slate-200 rounded-xl mb-2 focus:outline-none focus:border-purple-500"
+                                        />
+                                        <div class="space-y-1">
+                                            <button 
+                                                v-for="contrat in filteredTenantsDropdown" 
+                                                :key="contrat.id" 
+                                                @click="selectContrat(contrat)" 
+                                                type="button" 
+                                                class="w-full text-left px-3 py-2 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 hover:text-purple-650 transition-colors"
+                                            >
+                                                {{ contrat.locataire }} (Bail {{ contrat.numero || contrat.reference }})
+                                            </button>
+                                            <div v-if="filteredTenantsDropdown.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                                Aucun locataire éligible trouvé
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -406,34 +648,35 @@
             </div>
         </div>
 
-        <!-- Rich Text TinyMCE Editor Modal -->
-        <div v-if="showEditorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-extrabold text-slate-800">Éditeur d'Acte d'Engagement</h3>
-                    <span class="text-xs font-bold text-slate-400">TinyMCE Workspace</span>
+        <!-- Rich Text TinyMCE Editor Modal (Fullscreen) -->
+        <div v-if="showEditorModal" class="fixed inset-0 bg-white z-50 flex flex-col p-6 animate-scale-up">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-800">Éditeur d'Acte d'Engagement</h3>
+                    <p class="text-xs font-bold text-slate-400">Rédigez et peaufinez le contenu officiel de votre acte d'engagement</p>
                 </div>
-                
-                <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50">
-                    <textarea id="engagement-editor"></textarea>
-                </div>
+                <span class="text-xs font-bold text-purple-650 uppercase bg-purple-50 px-3 py-1 rounded-full border border-purple-100">Mode Plein Écran</span>
+            </div>
+            
+            <div class="flex-1 min-h-0 mb-4 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 flex flex-col">
+                <textarea id="engagement-editor" class="flex-1"></textarea>
+            </div>
 
-                <div class="flex justify-end gap-4">
-                    <button 
-                        @click="closeEditorModal" 
-                        class="px-6 py-3 bg-slate-100 text-slate-650 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
-                    >
-                        Fermer sans enregistrer
-                    </button>
-                    <button 
-                        @click="confirmRedaction" 
-                        :disabled="isSaving"
-                        class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-650 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/35 transition-all text-xs flex items-center gap-2"
-                    >
-                        <span v-if="isSaving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span>Valider & Enregistrer l'Acte</span>
-                    </button>
-                </div>
+            <div class="flex justify-end gap-4 border-t border-slate-150 pt-4">
+                <button 
+                    @click="closeEditorModal" 
+                    class="px-6 py-3.5 bg-slate-150 text-slate-650 font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
+                >
+                    Fermer sans enregistrer
+                </button>
+                <button 
+                    @click="confirmRedaction" 
+                    :disabled="isSaving"
+                    class="px-6 py-3.5 bg-gradient-to-r from-purple-500 to-pink-650 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/35 transition-all text-xs flex items-center gap-2"
+                >
+                    <span v-if="isSaving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Valider & Enregistrer l'Acte</span>
+                </button>
             </div>
         </div>
 
@@ -521,7 +764,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import axios from 'axios';
 
 const engagements = ref([]);
@@ -555,6 +798,29 @@ const isInitialLoading = ref(false);
 const viewingEngagementRef = ref(null);
 const editorContent = ref('');
 const canevasTemplate = ref('');
+
+// Search queries inside custom dropdowns
+const agencySearchQuery = ref('');
+const buildingSearchQuery = ref('');
+const tenantSearchQuery = ref('');
+const agencyFilterSearchQuery = ref('');
+const buildingFilterSearchQuery = ref('');
+const typeFilterSearchQuery = ref('');
+const formTypeSearchQuery = ref('');
+
+// Custom dropdown toggle states
+const isAgencyDropdownOpen = ref(false);
+const isBuildingDropdownOpen = ref(false);
+const isTenantDropdownOpen = ref(false);
+
+// Filter dropdown toggle states
+const isAgencyFilterOpen = ref(false);
+const isBuildingFilterOpen = ref(false);
+const isTypeFilterOpen = ref(false);
+const isStatusFilterOpen = ref(false);
+
+// Form dropdown toggle states
+const isFormTypeDropdownOpen = ref(false);
 
 const formData = ref({
     id: null,
@@ -590,8 +856,24 @@ const fetchEngagementsData = async () => {
     }
 };
 
+const closeAllDropdownsGlobal = () => {
+    isAgencyFilterOpen.value = false;
+    isBuildingFilterOpen.value = false;
+    isTypeFilterOpen.value = false;
+    isStatusFilterOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
 onMounted(() => {
     fetchEngagementsData();
+    window.addEventListener('click', closeAllDropdownsGlobal);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('click', closeAllDropdownsGlobal);
 });
 
 // 3-level cascade methods
@@ -617,7 +899,7 @@ const onContratChange = () => {
 
 // Watch Type Engagement to pre-fill template
 watch(() => formData.value.type_engagement_id, (newVal) => {
-    const selectedType = typeEngagements.value.find(t => t.id === newVal);
+    const selectedType = typeEngagements.value.find(t => t.id == newVal);
     if (selectedType) {
         canevasTemplate.value = selectedType.template || '';
     } else {
@@ -646,6 +928,220 @@ const modalFilteredContrats = computed(() => {
     if (!formData.value.batiment_id) return [];
     return contratsActifs.value.filter(c => c.batiment_id === formData.value.batiment_id);
 });
+
+// Dropdown computed filters based on search queries
+const filteredAgenciesDropdown = computed(() => {
+    const q = agencySearchQuery.value.toLowerCase();
+    return agencies.value.filter(a => (a.name || '').toLowerCase().includes(q));
+});
+
+const filteredBuildingsDropdown = computed(() => {
+    const q = buildingSearchQuery.value.toLowerCase();
+    return modalFilteredBatiments.value.filter(b => b.nom.toLowerCase().includes(q));
+});
+
+const filteredTenantsDropdown = computed(() => {
+    const q = tenantSearchQuery.value.toLowerCase();
+    return modalFilteredContrats.value.filter(c => c.locataire.toLowerCase().includes(q));
+});
+
+const filteredAgenciesFilter = computed(() => {
+    const q = agencyFilterSearchQuery.value.toLowerCase();
+    return agencies.value.filter(a => (a.name || '').toLowerCase().includes(q));
+});
+
+const filteredBuildingsFilter = computed(() => {
+    const q = buildingFilterSearchQuery.value.toLowerCase();
+    return filterBuildings.value.filter(b => b.nom.toLowerCase().includes(q));
+});
+
+const filteredTypesFilter = computed(() => {
+    const q = typeFilterSearchQuery.value.toLowerCase();
+    return typeEngagements.value.filter(t => t.nom.toLowerCase().includes(q));
+});
+
+const filteredFormTypes = computed(() => {
+    const q = formTypeSearchQuery.value.toLowerCase();
+    return typeEngagements.value.filter(t => t.nom.toLowerCase().includes(q));
+});
+
+// Selected labels for presentation
+const selectedAgencyLabel = computed(() => {
+    if (!formData.value.agency_id) return '';
+    const agency = agencies.value.find(a => a.id === formData.value.agency_id);
+    return agency ? agency.name : '';
+});
+
+const selectedBuildingLabel = computed(() => {
+    if (!formData.value.batiment_id) return '';
+    const building = batiments.value.find(b => b.id === formData.value.batiment_id);
+    return building ? building.nom : '';
+});
+
+const selectedTenantLabel = computed(() => {
+    if (!formData.value.contrat_id) return '';
+    const contrat = contratsActifs.value.find(c => c.id === formData.value.contrat_id);
+    return contrat ? contrat.locataire : '';
+});
+
+// Methods to close other dropdowns when one is opened
+const closeAllFilterDropdowns = (except) => {
+    if (except !== 'agency') isAgencyFilterOpen.value = false;
+    if (except !== 'building') isBuildingFilterOpen.value = false;
+    if (except !== 'type') isTypeFilterOpen.value = false;
+    if (except !== 'status') isStatusFilterOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
+};
+
+// Filter dropdown toggle methods
+const toggleAgencyFilterDropdown = () => {
+    isAgencyFilterOpen.value = !isAgencyFilterOpen.value;
+    closeAllFilterDropdowns('agency');
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
+const toggleBuildingFilterDropdown = () => {
+    isBuildingFilterOpen.value = !isBuildingFilterOpen.value;
+    closeAllFilterDropdowns('building');
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
+const toggleTypeFilterDropdown = () => {
+    isTypeFilterOpen.value = !isTypeFilterOpen.value;
+    closeAllFilterDropdowns('type');
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
+const toggleStatusFilterDropdown = () => {
+    isStatusFilterOpen.value = !isStatusFilterOpen.value;
+    closeAllFilterDropdowns('status');
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
+const toggleFormTypeDropdown = () => {
+    isFormTypeDropdownOpen.value = !isFormTypeDropdownOpen.value;
+    closeAllFilterDropdowns();
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+};
+
+// Dropdown toggle methods
+const toggleAgencyDropdown = () => {
+    isAgencyDropdownOpen.value = !isAgencyDropdownOpen.value;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
+    agencySearchQuery.value = '';
+    closeAllFilterDropdowns();
+};
+
+const toggleBuildingDropdown = () => {
+    if (!formData.value.agency_id) return;
+    isBuildingDropdownOpen.value = !isBuildingDropdownOpen.value;
+    isAgencyDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
+    buildingSearchQuery.value = '';
+    closeAllFilterDropdowns();
+};
+
+const toggleTenantDropdown = () => {
+    if (!formData.value.batiment_id) return;
+    isTenantDropdownOpen.value = !isTenantDropdownOpen.value;
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
+    tenantSearchQuery.value = '';
+    closeAllFilterDropdowns();
+};
+
+// Selection actions
+const selectAgencyFilter = (val) => {
+    agencyFilter.value = val;
+    isAgencyFilterOpen.value = false;
+};
+
+const selectBuildingFilter = (val) => {
+    buildingFilter.value = val;
+    isBuildingFilterOpen.value = false;
+};
+
+const selectTypeFilter = (val) => {
+    typeFilter.value = val;
+    isTypeFilterOpen.value = false;
+};
+
+const selectStatusFilter = (val) => {
+    statusFilter.value = val;
+    isStatusFilterOpen.value = false;
+};
+
+const selectFormType = (type) => {
+    formData.value.type_engagement_id = type.id;
+    isFormTypeDropdownOpen.value = false;
+};
+
+// Computed labels for filter buttons
+const selectedAgencyFilterLabel = computed(() => {
+    if (agencyFilter.value === 'All') return 'Toutes les agences';
+    const a = agencies.value.find(ag => ag.id === Number(agencyFilter.value));
+    return a ? a.name : 'Toutes les agences';
+});
+
+const selectedBuildingFilterLabel = computed(() => {
+    if (buildingFilter.value === 'All') return 'Tous les bâtiments';
+    const b = batiments.value.find(building => building.id === Number(buildingFilter.value));
+    return b ? b.nom : 'Tous les bâtiments';
+});
+
+const selectedTypeFilterLabel = computed(() => {
+    if (typeFilter.value === 'All') return 'Tous les types';
+    const t = typeEngagements.value.find(type => type.id === Number(typeFilter.value));
+    return t ? t.nom : 'Tous les types';
+});
+
+const selectedStatusFilterLabel = computed(() => {
+    if (statusFilter.value === 'All') return 'Tous les statuts';
+    if (statusFilter.value === 'actif') return 'Actif';
+    if (statusFilter.value === 'en cours') return 'En cours';
+    if (statusFilter.value === 'expirer') return 'Expiré';
+    if (statusFilter.value === 'valider') return 'Validé';
+    return statusFilter.value;
+});
+
+const selectedFormTypeLabel = computed(() => {
+    if (!formData.value.type_engagement_id) return '';
+    const t = typeEngagements.value.find(type => type.id === formData.value.type_engagement_id);
+    return t ? t.nom : '';
+});
+
+// Selection selection actions
+const selectAgency = (agency) => {
+    formData.value.agency_id = agency.id;
+    onAgencyChange();
+    isAgencyDropdownOpen.value = false;
+};
+
+const selectBuilding = (building) => {
+    formData.value.batiment_id = building.id;
+    onBatimentChange();
+    isBuildingDropdownOpen.value = false;
+};
+
+const selectContrat = (contrat) => {
+    formData.value.contrat_id = contrat.id;
+    onContratChange();
+    isTenantDropdownOpen.value = false;
+};
 
 // Table & KPI filtering
 const filteredEngagements = computed(() => {
@@ -730,6 +1226,10 @@ const editEngagement = (engagement) => {
 const closeModal = () => {
     showModal.value = false;
     editingEngagement.value = null;
+    isAgencyDropdownOpen.value = false;
+    isBuildingDropdownOpen.value = false;
+    isTenantDropdownOpen.value = false;
+    isFormTypeDropdownOpen.value = false;
 };
 
 // TinyMCE setup
@@ -738,7 +1238,7 @@ const initTinyMCE = () => {
         if (typeof tinymce !== 'undefined') {
             tinymce.init({
                 selector: '#engagement-editor',
-                height: 450,
+                height: '65vh',
                 menubar: false,
                 plugins: 'lists link image code table wordcount',
                 toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | code',
@@ -1008,5 +1508,19 @@ const getAvatarGradient = (name) => {
 
 .bg-slate-55 {
     background-color: #f8fafc;
+}
+
+select, select option {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+}
+</style>
+
+<style>
+/* Global override to prevent select option text from being rendered in white */
+select, select option, select.text-slate-700, select.text-slate-800, select.text-slate-850,
+.force-black-text, .force-black-text option, select.force-black-text, select.force-black-text option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
 }
 </style>

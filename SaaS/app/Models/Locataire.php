@@ -31,6 +31,16 @@ class Locataire extends Model
         'deleted' => 'boolean',
     ];
 
+    protected $appends = ['nom'];
+
+    /**
+     * Get the tenant's name from the associated user.
+     */
+    public function getNomAttribute(): string
+    {
+        return $this->user ? $this->user->name : 'N/A';
+    }
+
     protected static function boot(): void
     {
         parent::boot();

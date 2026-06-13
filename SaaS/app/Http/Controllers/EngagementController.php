@@ -37,7 +37,7 @@ class EngagementController extends Controller
             ]);
 
         // 2. Fetch engagements
-        $query = Engagement::with(['typeEngagement', 'locataire', 'contrat', 'batiment', 'agency'])
+        $query = Engagement::with(['typeEngagement', 'locataire.user', 'contrat', 'batiment', 'agency'])
             ->where('company_profile_id', $companyProfileId);
 
         // Agency scope
@@ -64,14 +64,14 @@ class EngagementController extends Controller
 
         $agencies = $agenciesQuery->get();
         $batiments = $batimentsQuery->get();
-        $contrats = $contratsQuery->with(['locataire'])->get()->map(function ($c) {
+        $contrats = $contratsQuery->with(['locataire.user', 'logement'])->get()->map(function ($c) {
             return [
                 'id' => $c->id,
                 'numero' => $c->numero,
                 'reference' => $c->reference,
                 'locataire' => $c->locataire ? $c->locataire->nom : 'N/A',
                 'locataire_id' => $c->locataire_id,
-                'batiment_id' => $c->batiment_id,
+                'batiment_id' => $c->logement ? $c->logement->batiment_id : null,
                 'loyer' => $c->loyer,
             ];
         });
