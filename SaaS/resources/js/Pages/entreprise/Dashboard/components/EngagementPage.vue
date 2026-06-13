@@ -23,7 +23,7 @@
         </div>
 
         <!-- Premium KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-purple-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-purple-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
@@ -42,7 +42,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-650 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                 </div>
@@ -74,6 +74,19 @@
                 </div>
                 <div class="text-3xl font-extrabold text-rose-600 mb-1 tracking-tight">{{ expires }}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Actes Expirés</div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
+                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-indigo-500/5 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-655 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="text-3xl font-extrabold text-indigo-600 mb-1 tracking-tight">{{ honores }}</div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Engagements Honorés</div>
             </div>
         </div>
 
@@ -341,7 +354,7 @@
                                 <div class="flex gap-2">
                                     <!-- Confirm Honor button -->
                                     <button 
-                                        v-if="eng.statut !== 'valider'"
+                                        v-if="eng.statut !== 'valider' && eng.statut_honneur !== 'honner'"
                                         @click="confirmHonor(eng)" 
                                         :disabled="confirmingId === eng.id"
                                         class="p-2 text-emerald-650 hover:bg-emerald-50 rounded-xl transition-all relative flex items-center justify-center disabled:opacity-50"
@@ -355,7 +368,7 @@
                                     <button 
                                         v-if="eng.content" 
                                         @click="viewEngagement(eng)" 
-                                        class="p-2 text-slate-650 hover:bg-slate-100 rounded-xl transition-all"
+                                        class="p-2 text-indigo-650 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-750 rounded-xl transition-all shadow-sm flex items-center justify-center"
                                         title="Voir l'acte"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -662,25 +675,48 @@
         </div>
 
         <!-- View Content Modal -->
-        <div v-if="showViewContentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 border border-slate-200 relative overflow-hidden animate-scale-up">
-                <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-                    <div>
-                        <span class="text-[10px] font-bold text-purple-600 uppercase">{{ viewingEngagementRef?.type_engagement?.nom }}</span>
-                        <h3 class="text-lg font-extrabold text-slate-850">Acte {{ viewingEngagementRef?.reference }}</h3>
+        <div v-if="showViewContentModal" class="fixed inset-0 bg-slate-955/80 backdrop-blur-lg z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl max-w-4xl w-full border border-slate-800 relative overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
+                <!-- Luxury gradient header -->
+                <div class="bg-gradient-to-r from-slate-950 via-purple-950 to-slate-950 p-6 border-b border-purple-500/20 relative">
+                    <div class="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-widest bg-purple-900/40 px-3 py-1 rounded-full border border-purple-500/30">
+                                {{ viewingEngagementRef?.type_engagement?.nom || 'Acte Officiel' }}
+                            </span>
+                            <h3 class="text-xl font-black text-white mt-2 tracking-tight">Acte {{ viewingEngagementRef?.reference }}</h3>
+                        </div>
+                        <button @click="closeViewContentModal" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all hover:rotate-90">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <button @click="closeViewContentModal" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all hover:rotate-90">
-                        <svg class="w-4 h-4 text-slate-550" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
 
-                <!-- Generated Document Viewer (Simulating a formal paper print) -->
-                <div class="bg-slate-50 border border-slate-200/60 rounded-2xl p-6 md:p-8 max-h-[50vh] overflow-y-auto scrollbar-thin shadow-inner font-serif text-slate-850 text-sm leading-relaxed whitespace-pre-line" v-html="viewingEngagementRef?.content"></div>
+                <!-- Simulation of official sheet of paper inside a slate background -->
+                <div class="flex-1 overflow-y-auto p-8 bg-slate-950 flex justify-center">
+                    <div class="bg-white text-slate-900 w-full max-w-3xl min-h-[50vh] p-10 md:p-14 shadow-2xl rounded-sm border border-slate-200 relative font-serif text-sm leading-relaxed whitespace-pre-line overflow-hidden" style="box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                        <!-- Watermark / subtle branding or double line margin if premium -->
+                        <div class="absolute left-6 top-0 bottom-0 w-[1px] bg-red-150/40"></div>
+                        <div class="absolute left-8 top-0 bottom-0 w-[1px] bg-red-150/20"></div>
+                        
+                        <div class="relative z-10 pl-6" v-html="viewingEngagementRef?.content"></div>
+                    </div>
+                </div>
 
-                <div class="flex justify-end gap-3 mt-6">
-                    <button @click="closeViewContentModal" class="px-6 py-2.5 bg-slate-150 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all">Fermer</button>
+                <div class="bg-slate-900 p-6 border-t border-slate-800 flex justify-between items-center">
+                    <button 
+                        @click="printEngagement"
+                        class="px-5 py-2.5 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-all flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Imprimer l'engagement
+                    </button>
+                    <button @click="closeViewContentModal" class="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-655 hover:from-purple-500 hover:to-pink-600 border border-purple-500/30 text-white font-bold rounded-xl text-xs transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-550/20">Fermer</button>
                 </div>
             </div>
         </div>
@@ -747,6 +783,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import axios from 'axios';
+
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
 const engagements = ref([]);
 const typeEngagements = ref([]);
@@ -1160,6 +1198,7 @@ const totalEngagements = computed(() => filteredEngagements.value.length);
 const actifs = computed(() => filteredEngagements.value.filter(e => e.statut === 'actif').length);
 const enCours = computed(() => filteredEngagements.value.filter(e => e.statut === 'en cours').length);
 const expires = computed(() => filteredEngagements.value.filter(e => e.statut === 'expirer').length);
+const honores = computed(() => filteredEngagements.value.filter(e => e.statut === 'valider' || e.statut_honneur === 'honner').length);
 
 const openAddModal = () => {
     editingEngagement.value = null;
@@ -1369,13 +1408,26 @@ const saveAndPersist = async () => {
 const confirmHonor = async (engagement) => {
     confirmingId.value = engagement.id;
     try {
-        await axios.post(`/api/engagements/${engagement.id}/confirm-honor`);
-        await fetchEngagementsData();
-        successMessage.value = "L'engagement a été validé et honoré avec succès !";
-        showSuccess.value = true;
+        const response = await fetch(`/api/engagements/${engagement.id}/confirm-honor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf()
+            }
+        });
+        if (response.ok) {
+            await fetchEngagementsData();
+            successMessage.value = "L'engagement a été validé et honoré avec succès !";
+            showSuccess.value = true;
+        } else {
+            const data = await response.json();
+            errorMessage.value = data.message || "Erreur lors de la confirmation de l'engagement.";
+            showError.value = true;
+        }
     } catch (err) {
         console.error(err);
-        errorMessage.value = err.response?.data?.message || "Erreur lors de la confirmation de l'engagement.";
+        errorMessage.value = "Erreur de connexion au serveur.";
         showError.value = true;
     } finally {
         confirmingId.value = null;
@@ -1390,6 +1442,21 @@ const viewEngagement = (eng) => {
 const closeViewContentModal = () => {
     showViewContentModal.value = false;
     viewingEngagementRef.value = null;
+};
+
+const printEngagement = () => {
+    const content = viewingEngagementRef.value?.content;
+    if (!content) return;
+    const printWindow = window.open('', '_blank');
+    const refStr = viewingEngagementRef.value?.reference || '';
+    printWindow.document.write(
+        '<html><head><title>Acte d\'engagement - ' + refStr + '</title>' +
+        '<style>body{font-family:"Georgia",serif;line-height:1.6;color:#1a1a1a;padding:40px;max-width:800px;margin:0 auto;}h1,h2,h3,h4{font-family:Arial,sans-serif;color:#000;}hr{border:0;border-top:1px solid #ccc;margin:20px 0;}@media print{body{padding:0;}}</style>' +
+        '</head><body>' + content +
+        '<sc' + 'ript>window.onload=function(){window.print();window.close();};</sc' + 'ript>' +
+        '</body></html>'
+    );
+    printWindow.document.close();
 };
 
 const deleteEngagement = (engagement) => {

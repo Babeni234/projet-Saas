@@ -286,6 +286,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/factures/{facture}/regler', [\App\Http\Controllers\FactureController::class, 'regler'])->name('factures.regler');
     Route::delete('/api/factures/{facture}', [\App\Http\Controllers\FactureController::class, 'destroy'])->name('factures.destroy');
 
+    // Depenses API routes
+    Route::get('/api/depenses', [\App\Http\Controllers\DepenseController::class, 'index'])->name('depenses.json');
+    Route::post('/api/depenses', [\App\Http\Controllers\DepenseController::class, 'store'])->name('depenses.store');
+    Route::put('/api/depenses/{depense}', [\App\Http\Controllers\DepenseController::class, 'update'])->name('depenses.update');
+    Route::post('/api/depenses/{depense}/status', [\App\Http\Controllers\DepenseController::class, 'updateStatus'])->name('depenses.status');
+    Route::delete('/api/depenses/{depense}', [\App\Http\Controllers\DepenseController::class, 'destroy'])->name('depenses.destroy');
+
+    // EntreeFonds API routes
+    Route::get('/api/entrees-fonds', [\App\Http\Controllers\EntreeFondsController::class, 'index'])->name('entrees-fonds.json');
+    Route::post('/api/entrees-fonds', [\App\Http\Controllers\EntreeFondsController::class, 'store'])->name('entrees-fonds.store');
+    Route::put('/api/entrees-fonds/{entree_fond}', [\App\Http\Controllers\EntreeFondsController::class, 'update'])->name('entrees-fonds.update');
+    Route::post('/api/entrees-fonds/{entree_fond}/status', [\App\Http\Controllers\EntreeFondsController::class, 'updateStatus'])->name('entrees-fonds.status');
+    Route::delete('/api/entrees-fonds/{entree_fond}', [\App\Http\Controllers\EntreeFondsController::class, 'destroy'])->name('entrees-fonds.destroy');
+
     // Contrats API routes
     Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');
     Route::post('/api/contrats', [\App\Http\Controllers\ContratController::class, 'store'])->name('contrats.store');

@@ -128,6 +128,7 @@
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Locataire</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Contrat Ref / Logement</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nouvelles Conditions</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Nouvelle Fin</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Date Demande</th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-slate-900">Statut</th>
                                 <th class="px-6 py-4 text-right text-sm font-semibold text-slate-900">Actions</th>
@@ -147,7 +148,10 @@
                                     <span class="block text-slate-900 font-bold">{{ formatCurrency(r.nouveau_loyer) }} / {{ r.cycle_paiement }}</span>
                                     <span class="text-xs text-slate-500">Durée : {{ r.duree }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-slate-600 text-sm">{{ formatDate(r.created_at) }}</td>
+                                <td class="px-6 py-4 text-slate-800 font-bold text-sm">
+                                    {{ computeNewEndDate(r) }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-655 text-sm">{{ formatDate(r.created_at) }}</td>
                                 <td class="px-6 py-4">
                                     <span :class="getStatusClass(r.statut)">
                                         {{ r.statut }}
@@ -169,19 +173,26 @@
                                             Confirmer
                                         </button>
 
-                                        <button @click="openViewModal(r)" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition" title="Voir les détails">
+                                        <!-- Voir le contrat for Completed status -->
+                                        <button v-if="r.statut === 'Complete' && r.contrat?.content" @click="viewContract(r)" class="p-2 text-teal-650 bg-teal-50 hover:bg-teal-100 rounded-lg transition flex items-center justify-center animate-pulse-subtle" title="Visualiser le contrat">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                            </svg>
+                                        </button>
+
+                                        <button @click="openViewModal(r)" class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition flex items-center justify-center" title="Voir les détails">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                         </button>
 
                                         <!-- Only allow delete if Rejected -->
-                                        <button v-if="r.statut === 'Rejeté'" @click="destroy(r.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition" title="Supprimer">
+                                        <button v-if="r.statut === 'Rejeté'" @click="destroy(r.id)" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition flex items-center justify-center" title="Supprimer">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="filteredRenouvellements.length === 0">
-                                <td colspan="6" class="text-center py-12 text-slate-400">Aucun renouvellement trouvé.</td>
+                                <td colspan="7" class="text-center py-12 text-slate-400">Aucun renouvellement trouvé.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -209,50 +220,174 @@
                 </div>
 
                 <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                    <!-- Agency Building-first Cascade -->
+                    <!-- Bypass duplicate control checkbox -->
+                    <div :class="allowMultipleRenewals ? 'bg-teal-50 border-teal-200' : 'bg-indigo-50/50 border-indigo-100'" class="p-4 rounded-2xl border flex items-center justify-between mb-4 transition-all duration-300">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-sm font-bold" :class="allowMultipleRenewals ? 'text-teal-900' : 'text-slate-800'">Autoriser plusieurs renouvellements simultanés</span>
+                            <span class="text-xs" :class="allowMultipleRenewals ? 'text-teal-700' : 'text-slate-500'">Permet d'outrepasser la restriction pour les locataires ayant déjà une demande active.</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="allowMultipleRenewals" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-650"></div>
+                        </label>
+                    </div>
+
+                    <!-- Agency Building-first Cascade (Custom Searchable) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Building (First in Agency) -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative custom-dropdown-container">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Sélectionner le Bâtiment *</label>
-                            <select 
-                                v-model="formData.batiment_id" 
-                                @change="onBatimentChange"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold"
-                                style="color: #000000; background-color: #f8fafc;"
+                            <button 
+                                type="button"
+                                @click="toggleDropdown('batiment')"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold flex justify-between items-center text-left"
+                                style="color: #000000;"
                             >
-                                <option value="">Choisir un bâtiment...</option>
-                                <option v-for="b in dbBatiments" :key="b.id" :value="b.id">{{ b.nom }}</option>
-                            </select>
+                                <span>{{ selectedBatimentLabel }}</span>
+                                <svg class="w-4 h-4 text-slate-555 transition-transform duration-200" :class="{ 'rotate-180': activeDropdown === 'batiment' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div 
+                                v-if="activeDropdown === 'batiment'"
+                                class="absolute z-30 left-5 right-5 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-scale-up"
+                            >
+                                <div class="p-3 border-b border-slate-100 bg-slate-50">
+                                    <div class="relative">
+                                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <input 
+                                            v-model="batimentSearchQuery"
+                                            type="text" 
+                                            placeholder="Rechercher un bâtiment..." 
+                                            class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
+                                            @click.stop
+                                        />
+                                    </div>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto py-1">
+                                    <button 
+                                        v-for="b in searchedBatiments" 
+                                        :key="b.id"
+                                        type="button"
+                                        @click="formData.batiment_id = b.id; onBatimentChange(); closeAllDropdowns();"
+                                        class="w-full px-4 py-2.5 text-left text-sm hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center justify-between"
+                                        :class="{ 'bg-emerald-50/70 text-emerald-650 font-bold': formData.batiment_id === b.id }"
+                                    >
+                                        <span>{{ b.nom }}</span>
+                                        <svg v-if="formData.batiment_id === b.id" class="w-4 h-4 text-emerald-650" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="searchedBatiments.length === 0" class="px-4 py-3 text-xs text-slate-400 text-center">Aucun bâtiment trouvé</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Tenant (Second in Agency) -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm" v-if="formData.batiment_id">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative custom-dropdown-container" v-if="formData.batiment_id">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Sélectionner le Locataire *</label>
-                            <select 
-                                v-model="formData.locataire_id" 
-                                @change="onLocataireChange"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold"
-                                style="color: #000000; background-color: #f8fafc;"
+                            <button 
+                                type="button"
+                                @click="toggleDropdown('locataire')"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold flex justify-between items-center text-left"
+                                style="color: #000000;"
                             >
-                                <option value="">Choisir un locataire...</option>
-                                <option v-for="loc in filteredLocataires" :key="loc.id" :value="loc.id">{{ loc.nom }}</option>
-                            </select>
+                                <span>{{ selectedLocataireLabel }}</span>
+                                <svg class="w-4 h-4 text-slate-555 transition-transform duration-200" :class="{ 'rotate-180': activeDropdown === 'locataire' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div 
+                                v-if="activeDropdown === 'locataire'"
+                                class="absolute z-30 left-5 right-5 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-scale-up"
+                            >
+                                <div class="p-3 border-b border-slate-100 bg-slate-50">
+                                    <div class="relative">
+                                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <input 
+                                            v-model="locataireSearchQuery"
+                                            type="text" 
+                                            placeholder="Rechercher par nom..." 
+                                            class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
+                                            @click.stop
+                                        />
+                                    </div>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto py-1">
+                                    <button 
+                                        v-for="loc in searchedLocataires" 
+                                        :key="loc.id"
+                                        type="button"
+                                        @click="formData.locataire_id = loc.id; onLocataireChange(); closeAllDropdowns();"
+                                        class="w-full px-4 py-2.5 text-left text-sm hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center justify-between"
+                                        :class="{ 'bg-emerald-50/70 text-emerald-650 font-bold': formData.locataire_id === loc.id }"
+                                    >
+                                        <span>{{ loc.nom }}</span>
+                                        <svg v-if="formData.locataire_id === loc.id" class="w-4 h-4 text-emerald-650" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="searchedLocataires.length === 0" class="px-4 py-3 text-xs text-slate-400 text-center">Aucun locataire éligible trouvé</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Contract -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm" v-if="formData.locataire_id">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative custom-dropdown-container" v-if="formData.locataire_id">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Sélectionner le Contrat à Renouveler *</label>
-                            <select 
-                                v-model="formData.contrat_id" 
-                                @change="onContratChange"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold"
-                                style="color: #000000; background-color: #f8fafc;"
+                            <button 
+                                type="button"
+                                @click="toggleDropdown('contrat')"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-bold flex justify-between items-center text-left"
+                                style="color: #000000;"
                             >
-                                <option value="">Choisir un contrat...</option>
-                                <option v-for="c in locataireContrats" :key="c.id" :value="c.id">
-                                    {{ c.numero || 'Contrat #' + c.id }} - Loyer: {{ formatCurrency(c.loyer) }} - Statut: {{ c.statut }}
-                                </option>
-                            </select>
+                                <span>{{ selectedContratLabel }}</span>
+                                <svg class="w-4 h-4 text-slate-555 transition-transform duration-200" :class="{ 'rotate-180': activeDropdown === 'contrat' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div 
+                                v-if="activeDropdown === 'contrat'"
+                                class="absolute z-30 left-5 right-5 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-scale-up"
+                            >
+                                <div class="p-3 border-b border-slate-100 bg-slate-50">
+                                    <div class="relative">
+                                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <input 
+                                            v-model="contratSearchQuery"
+                                            type="text" 
+                                            placeholder="Rechercher par référence..." 
+                                            class="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
+                                            @click.stop
+                                        />
+                                    </div>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto py-1">
+                                    <button 
+                                        v-for="c in searchedContrats" 
+                                        :key="c.id"
+                                        type="button"
+                                        @click="formData.contrat_id = c.id; onContratChange(); closeAllDropdowns();"
+                                        class="w-full px-4 py-2.5 text-left text-sm hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center justify-between"
+                                        :class="{ 'bg-emerald-50/70 text-emerald-650 font-bold': formData.contrat_id === c.id }"
+                                    >
+                                        <div class="flex flex-col">
+                                            <span>{{ c.numero || 'Contrat #' + c.id }}</span>
+                                            <span class="text-xs text-slate-500 font-medium">Loyer: {{ formatCurrency(c.loyer) }} - Statut: {{ c.statut }}</span>
+                                        </div>
+                                        <svg v-if="formData.contrat_id === c.id" class="w-4 h-4 text-emerald-650" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <div v-if="searchedContrats.length === 0" class="px-4 py-3 text-xs text-slate-400 text-center">Aucun contrat trouvé</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -354,8 +489,19 @@
                         <button @click="confirmApproval" class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 shadow shadow-emerald-500/25 transition">Approuver la demande</button>
                     </template>
                     <template v-else>
-                        <button @click="isRejectionMode = false" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Retour</button>
-                        <button @click="confirmRejection" :disabled="isGeneratingMotif || !adjustedRejectionMotif" class="px-6 py-2.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 shadow shadow-rose-500/25 transition disabled:opacity-50">Confirmer le rejet & notifier</button>
+                        <button @click="isRejectionMode = false" :disabled="isRejecting" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Retour</button>
+                        <button @click="confirmRejection" :disabled="isGeneratingMotif || !adjustedRejectionMotif || isRejecting" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow shadow-rose-500/25 transition disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 duration-300">
+                            <template v-if="isRejecting">
+                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span>Rejet en cours...</span>
+                            </template>
+                            <template v-else>
+                                <span>Confirmer le rejet & notifier</span>
+                            </template>
+                        </button>
                     </template>
                 </div>
             </div>
@@ -426,11 +572,193 @@
             </div>
         </div>
 
+        <!-- View Contract Modal -->
+        <div v-if="showViewContractModal" class="fixed inset-0 bg-slate-955/80 backdrop-blur-lg z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl max-w-4xl w-full border border-slate-800 relative overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
+                <!-- Luxury gradient header -->
+                <div class="bg-gradient-to-r from-slate-950 via-teal-950 to-slate-950 p-6 border-b border-teal-500/20 relative">
+                    <div class="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-extrabold text-teal-400 uppercase tracking-widest bg-teal-900/40 px-3 py-1 rounded-full border border-teal-500/30">
+                                Contrat Officiel Renouvelé
+                            </span>
+                            <h3 class="text-xl font-black text-white mt-2 tracking-tight">Bail Locataire #{{ viewingContractRef?.contrat?.numero || viewingContractRef?.contrat?.id }}</h3>
+                        </div>
+                        <button @click="showViewContractModal = false; viewingContractRef = null;" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all hover:rotate-90">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation of official sheet of paper inside a slate background -->
+                <div class="flex-1 overflow-y-auto p-8 bg-slate-950 flex justify-center">
+                    <div class="bg-white text-slate-900 w-full max-w-3xl min-h-[50vh] p-10 md:p-14 shadow-2xl rounded-sm border border-slate-200 relative font-serif text-sm leading-relaxed whitespace-pre-line overflow-hidden" style="box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                        <div class="absolute left-6 top-0 bottom-0 w-[1px] bg-red-150/40"></div>
+                        <div class="absolute left-8 top-0 bottom-0 w-[1px] bg-red-150/20"></div>
+                        
+                        <div class="relative z-10 pl-6" v-html="viewingContractRef?.contrat?.content"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 p-6 border-t border-slate-800 flex justify-between items-center">
+                    <button 
+                        @click="printContract"
+                        class="px-5 py-2.5 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-all flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Imprimer le contrat
+                    </button>
+                    <button @click="showViewContractModal = false; viewingContractRef = null;" class="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-650 hover:from-teal-500 hover:to-emerald-600 border border-teal-500/30 text-white font-bold rounded-xl text-xs transition-all transform hover:scale-[1.02] shadow-lg shadow-teal-550/20">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Popup (Pro version) -->
+        <div v-if="showViewDetailsModal" class="fixed inset-0 bg-slate-955/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-scale-up border border-slate-100">
+                
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-955 to-slate-900 p-6 border-b border-slate-800 text-white relative">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-teal-500/10 blur-xl pointer-events-none"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-teal-400 text-[10px] font-extrabold tracking-widest uppercase bg-teal-500/20 px-3 py-1 rounded-full border border-teal-500/30">Détails du Dossier</span>
+                            <h3 class="text-xl font-bold mt-2">Demande de Renouvellement</h3>
+                        </div>
+                        <button @click="showViewDetailsModal = false; selectedRenewal = null;" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all hover:rotate-90">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700">
+                    <!-- Locataire & Logement Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Locataire</h4>
+                            <p class="font-bold text-slate-900 text-base mb-1">{{ selectedRenewal?.locataire?.nom }}</p>
+                            <p class="text-xs text-slate-500 mb-1">{{ selectedRenewal?.locataire?.email || selectedRenewal?.locataire?.user?.email }}</p>
+                            <p class="text-xs text-slate-500">Tél : {{ selectedRenewal?.locataire?.telephone || 'Non renseigné' }}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Logement Actuel</h4>
+                            <p class="font-bold text-slate-900 text-base mb-1">Logement : {{ selectedRenewal?.contrat?.logement?.reference || 'N/A' }}</p>
+                            <p class="text-xs text-slate-500 mb-1">Contrat Référence : #{{ selectedRenewal?.contrat?.numero || selectedRenewal?.contrat?.id }}</p>
+                            <p class="text-xs text-slate-500">Loyer d'origine : {{ formatCurrency(selectedRenewal?.contrat?.loyer) }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Conditions Section -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Nouvelles Conditions de Renouvellement</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <span class="block text-xs text-slate-500">Nouveau Loyer</span>
+                                <span class="font-extrabold text-slate-900 text-base">{{ formatCurrency(selectedRenewal?.nouveau_loyer) }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-500">Cycle de paiement</span>
+                                <span class="font-bold text-slate-955">{{ selectedRenewal?.cycle_paiement }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-500">Nouvelle Durée</span>
+                                <span class="font-bold text-slate-955">{{ selectedRenewal?.duree }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-slate-500">Frais de contrat</span>
+                                <span class="font-bold text-slate-955">{{ formatCurrency(selectedRenewal?.frais_contrat) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status & Timestamps -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-150 flex flex-wrap justify-between items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-500">Statut :</span>
+                            <span :class="getStatusClass(selectedRenewal?.statut)">{{ selectedRenewal?.statut }}</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500">Date de demande :</span>
+                            <span class="font-semibold text-slate-700 ml-1">{{ formatDate(selectedRenewal?.created_at) }}</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500">Nouvelle Date de Fin :</span>
+                            <span class="font-bold text-teal-650 ml-1">{{ computeNewEndDate(selectedRenewal) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Motif demande -->
+                    <div v-if="selectedRenewal?.motif_demande" class="space-y-2">
+                        <h4 class="text-xs font-bold text-slate-455 uppercase tracking-wider">Description / Motif de la Demande</h4>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                            {{ selectedRenewal.motif_demande }}
+                        </div>
+                    </div>
+
+                    <!-- Motif Rejet if present -->
+                    <div v-if="selectedRenewal?.statut === 'Rejeté' && selectedRenewal?.motif_rejet" class="space-y-2">
+                        <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wider">Motif du Refus</h4>
+                        <div class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 text-rose-800 text-sm whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                            {{ selectedRenewal.motif_rejet }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-slate-50 p-6 border-t border-slate-150 flex justify-end">
+                    <button @click="showViewDetailsModal = false; selectedRenewal = null;" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">
+                        Fermer
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Success Toast -->
+        <div v-if="showSuccess" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-gradient-to-br from-white via-white to-emerald-50/20 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-emerald-100/50 relative overflow-hidden animate-scale-up">
+                <div class="relative z-10 text-center">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mx-auto mb-5 shadow-lg shadow-emerald-500/30">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-1">Succès !</h3>
+                    <p class="text-slate-500 text-sm mb-6">{{ successMessage }}</p>
+                    <button @click="showSuccess = false" class="w-full px-5 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-655 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Toast -->
+        <div v-if="showError" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-gradient-to-br from-white via-white to-red-50/20 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-red-100/50 relative overflow-hidden animate-scale-up">
+                <div class="relative z-10 text-center">
+                    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 mx-auto mb-5 shadow-lg shadow-red-500/30">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-800 mb-1">Erreur</h3>
+                    <p class="text-slate-500 text-sm mb-6">{{ errorMessage }}</p>
+                    <button @click="showError = false" class="w-full px-5 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-bold shadow-md shadow-red-500/20 hover:scale-[1.01] transition-all text-xs">Fermer</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -439,6 +767,34 @@ const renouvellements = ref([]);
 const dbLocataires = ref([]);
 const dbContrats = ref([]);
 const dbBatiments = ref([]);
+
+// Searchable custom dropdowns state
+const activeDropdown = ref(null);
+const batimentSearchQuery = ref('');
+const locataireSearchQuery = ref('');
+const contratSearchQuery = ref('');
+const showViewDetailsModal = ref(false);
+
+const toggleDropdown = (name) => {
+    if (activeDropdown.value === name) {
+        activeDropdown.value = null;
+    } else {
+        activeDropdown.value = name;
+        batimentSearchQuery.value = '';
+        locataireSearchQuery.value = '';
+        contratSearchQuery.value = '';
+    }
+};
+
+const closeAllDropdowns = () => {
+    activeDropdown.value = null;
+};
+
+const handleGlobalClick = (e) => {
+    if (!e.target.closest('.custom-dropdown-container')) {
+        closeAllDropdowns();
+    }
+};
 
 const searchQuery = ref('');
 const filterStatus = ref('');
@@ -464,11 +820,26 @@ const selectedRenewal = ref(null);
 const isRejectionMode = ref(false);
 const isGeneratingMotif = ref(false);
 const adjustedRejectionMotif = ref('');
+const isRejecting = ref(false);
 
 const showConfirmModal = ref(false);
 const isEditingContract = ref(false);
 const customContractContent = ref('');
 const showOccupiedWarning = ref(false);
+
+// Duplicate control, Success & Error popups, View contract
+const allowMultipleRenewals = ref(false);
+const showSuccess = ref(false);
+const successMessage = ref('');
+const showError = ref(false);
+const errorMessage = ref('');
+const showViewContractModal = ref(false);
+const viewingContractRef = ref(null);
+
+const viewContract = (r) => {
+    viewingContractRef.value = r;
+    showViewContractModal.value = true;
+};
 
 // Fetch Init
 const fetchData = async () => {
@@ -489,7 +860,14 @@ const fetchData = async () => {
     }
 };
 
-onMounted(fetchData);
+onMounted(async () => {
+    await fetchData();
+    window.addEventListener('click', handleGlobalClick);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('click', handleGlobalClick);
+});
 
 // Computeds
 const totalRenouvellements = computed(() => renouvellements.value.length);
@@ -515,12 +893,64 @@ const filteredRenouvellements = computed(() => {
 
 const filteredLocataires = computed(() => {
     if (!formData.value.batiment_id) return [];
-    return dbLocataires.value.filter(loc => loc.batiment_id === Number(formData.value.batiment_id));
+    const targetBatId = Number(formData.value.batiment_id);
+    const locIdsFromContracts = dbContrats.value
+        .filter(c => Number(c.batiment_id) === targetBatId)
+        .map(c => Number(c.locataire_id));
+        
+    return dbLocataires.value.filter(loc => 
+        Number(loc.batiment_id) === targetBatId || 
+        locIdsFromContracts.includes(Number(loc.id))
+    );
 });
 
 const locataireContrats = computed(() => {
     if (!formData.value.locataire_id) return [];
-    return dbContrats.value.filter(c => c.locataire_id === Number(formData.value.locataire_id));
+    return dbContrats.value.filter(c => 
+        Number(c.locataire_id) === Number(formData.value.locataire_id) &&
+        (!formData.value.batiment_id || Number(c.batiment_id) === Number(formData.value.batiment_id))
+    );
+});
+
+// Computed labels for selected items
+const selectedBatimentLabel = computed(() => {
+    const b = dbBatiments.value.find(x => x.id === Number(formData.value.batiment_id));
+    return b ? b.nom : 'Choisir un bâtiment...';
+});
+
+const selectedLocataireLabel = computed(() => {
+    const l = dbLocataires.value.find(x => x.id === Number(formData.value.locataire_id));
+    return l ? l.nom : 'Choisir un locataire...';
+});
+
+const selectedContratLabel = computed(() => {
+    const c = dbContrats.value.find(x => x.id === Number(formData.value.contrat_id));
+    return c ? `${c.numero || 'Contrat #' + c.id} - Loyer: ${formatCurrency(c.loyer)} - Statut: ${c.statut}` : 'Choisir un contrat...';
+});
+
+// Searchable filtered lists
+const searchedBatiments = computed(() => {
+    const q = batimentSearchQuery.value.toLowerCase().trim();
+    if (!q) return dbBatiments.value;
+    return dbBatiments.value.filter(b => (b.nom || '').toLowerCase().includes(q));
+});
+
+const searchedLocataires = computed(() => {
+    const q = locataireSearchQuery.value.toLowerCase().trim();
+    const list = filteredLocataires.value;
+    if (!q) return list;
+    return list.filter(loc => (loc.nom || '').toLowerCase().includes(q) || (loc.email || '').toLowerCase().includes(q));
+});
+
+const searchedContrats = computed(() => {
+    const q = contratSearchQuery.value.toLowerCase().trim();
+    const list = locataireContrats.value;
+    if (!q) return list;
+    return list.filter(c => 
+        (c.numero || '').toLowerCase().includes(q) || 
+        String(c.id).includes(q) || 
+        (c.reference || '').toLowerCase().includes(q)
+    );
 });
 
 // Actions
@@ -533,6 +963,22 @@ const onBatimentChange = () => {
 const onLocataireChange = () => {
     formData.value.contrat_id = '';
     resetFinancials();
+
+    if (formData.value.locataire_id) {
+        const loc = dbLocataires.value.find(l => l.id === Number(formData.value.locataire_id));
+        const statusStr = (loc?.statut || '').toUpperCase();
+        if (loc && statusStr === 'ACTIF') {
+            const hasActiveRenewal = renouvellements.value.some(r => 
+                r.locataire_id === Number(formData.value.locataire_id) && 
+                (r.statut === 'En attente' || r.statut === 'A venir' || r.statut === 'En cours')
+            );
+            if (hasActiveRenewal && !allowMultipleRenewals.value) {
+                errorMessage.value = "Ce locataire a déjà une demande de renouvellement en cours ou en attente. Vous ne pouvez pas créer un autre renouvellement simultané sauf si vous cochez l'option de contournement.";
+                showError.value = true;
+                formData.value.locataire_id = '';
+            }
+        }
+    }
 };
 
 const onContratChange = () => {
@@ -589,6 +1035,23 @@ const toggleFullScreen = () => {
 };
 
 const saveDemande = async () => {
+    // Validation des doublons finale au clic sur Soumettre/Enregistrer
+    if (formData.value.locataire_id) {
+        const loc = dbLocataires.value.find(l => l.id === Number(formData.value.locataire_id));
+        const statusStr = (loc?.statut || '').toUpperCase();
+        if (loc && statusStr === 'ACTIF') {
+            const hasActiveRenewal = renouvellements.value.some(r => 
+                r.locataire_id === Number(formData.value.locataire_id) && 
+                (r.statut === 'En attente' || r.statut === 'A venir' || r.statut === 'En cours')
+            );
+            if (hasActiveRenewal && !allowMultipleRenewals.value) {
+                errorMessage.value = "Ce locataire a déjà une demande de renouvellement en cours ou en attente. Vous ne pouvez pas créer un autre renouvellement simultané sauf si vous cochez l'option de contournement.";
+                showError.value = true;
+                return;
+            }
+        }
+    }
+
     saving.value = true;
     try {
         const res = await fetch('/api/renouvellements', {
@@ -598,17 +1061,26 @@ const saveDemande = async () => {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrf()
             },
-            body: JSON.stringify(formData.value)
+            body: JSON.stringify({
+                ...formData.value,
+                allow_multiple: allowMultipleRenewals.value
+            })
         });
 
         if (res.ok) {
             await fetchData();
             closeModal();
+            successMessage.value = "La demande de renouvellement a été enregistrée avec succès !";
+            showSuccess.value = true;
         } else {
-            alert("Erreur lors de l'enregistrement");
+            const data = await res.json();
+            errorMessage.value = data.message || "Erreur lors de l'enregistrement";
+            showError.value = true;
         }
     } catch(e) {
         console.error(e);
+        errorMessage.value = "Erreur de connexion au serveur.";
+        showError.value = true;
     } finally {
         saving.value = false;
     }
@@ -619,6 +1091,7 @@ const openDecisionModal = (r) => {
     selectedRenewal.value = r;
     isRejectionMode.value = false;
     adjustedRejectionMotif.value = '';
+    isRejecting.value = false;
     showDecisionModal.value = true;
 };
 
@@ -660,13 +1133,21 @@ const confirmApproval = async () => {
         if(res.ok) {
             await fetchData();
             showDecisionModal.value = false;
+            successMessage.value = "La demande de renouvellement a été approuvée avec succès !";
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = "Erreur lors de l'approbation.";
+            showError.value = true;
         }
     } catch(e) {
         console.error(e);
+        errorMessage.value = "Erreur de connexion au serveur.";
+        showError.value = true;
     }
 };
 
 const confirmRejection = async () => {
+    isRejecting.value = true;
     try {
         const res = await fetch(`/api/renouvellements/${selectedRenewal.value.id}/rejeter`, {
             method: 'POST',
@@ -680,9 +1161,18 @@ const confirmRejection = async () => {
         if(res.ok) {
             await fetchData();
             showDecisionModal.value = false;
+            successMessage.value = "La demande de renouvellement a été rejetée avec succès !";
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = "Erreur lors du rejet.";
+            showError.value = true;
         }
     } catch(e) {
         console.error(e);
+        errorMessage.value = "Erreur de connexion au serveur.";
+        showError.value = true;
+    } finally {
+        isRejecting.value = false;
     }
 };
 
@@ -713,17 +1203,57 @@ const confirmCompletion = async () => {
         if(res.ok) {
             await fetchData();
             showConfirmModal.value = false;
+            successMessage.value = "Le renouvellement de bail a été finalisé avec succès !";
+            showSuccess.value = true;
         } else {
-            alert("Erreur lors de la confirmation");
+            errorMessage.value = "Erreur lors de la confirmation.";
+            showError.value = true;
         }
     } catch(e) {
         console.error(e);
+        errorMessage.value = "Erreur de connexion au serveur.";
+        showError.value = true;
     }
 };
 
 const openViewModal = (r) => {
     selectedRenewal.value = r;
-    alert(`Détails de la demande :\nLocataire: ${r.locataire?.nom}\nStatut: ${r.statut}\nLoyer proposé: ${formatCurrency(r.nouveau_loyer)}\n${r.statut === 'Rejeté' ? 'Motif rejet: ' + r.motif_rejet : ''}`);
+    showViewDetailsModal.value = true;
+};
+
+const computeNewEndDate = (r) => {
+    if (!r || !r.contrat?.fin) return 'N/A';
+    try {
+        const originalFin = new Date(r.contrat.fin);
+        const dureeStr = r.duree || '1 an';
+        let yearsToAdd = 0;
+        if (dureeStr.includes('an')) {
+            yearsToAdd = parseInt(dureeStr) || 1;
+        } else if (dureeStr.includes('ans')) {
+            yearsToAdd = parseInt(dureeStr) || 2;
+        } else {
+            yearsToAdd = 1;
+        }
+        originalFin.setFullYear(originalFin.getFullYear() + yearsToAdd);
+        return originalFin.toLocaleDateString('fr-FR');
+    } catch (e) {
+        return 'N/A';
+    }
+};
+
+const printContract = () => {
+    const content = viewingContractRef.value?.contrat?.content;
+    if (!content) return;
+    const printWindow = window.open('', '_blank');
+    const titleStr = viewingContractRef.value?.contrat?.numero || viewingContractRef.value?.contrat?.id || '';
+    printWindow.document.write(
+        '<html><head><title>Contrat de bail - # ' + titleStr + '</title>' +
+        '<style>body{font-family:"Georgia",serif;line-height:1.6;color:#1a1a1a;padding:40px;max-width:800px;margin:0 auto;}h1,h2,h3,h4{font-family:Arial,sans-serif;color:#000;}hr{border:0;border-top:1px solid #ccc;margin:20px 0;}@media print{body{padding:0;}}</style>' +
+        '</head><body>' + content + 
+        '<sc' + 'ript>window.onload=function(){window.print();window.close();};</sc' + 'ript>' +
+        '</body></html>'
+    );
+    printWindow.document.close();
 };
 
 const destroy = async (id) => {
@@ -733,8 +1263,18 @@ const destroy = async (id) => {
             method: 'DELETE',
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() }
         });
-        if(res.ok) await fetchData();
-    } catch(e) {}
+        if(res.ok) {
+            await fetchData();
+            successMessage.value = "Le renouvellement a été supprimé avec succès.";
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = "Erreur lors de la suppression.";
+            showError.value = true;
+        }
+    } catch(e) {
+        errorMessage.value = "Erreur de connexion au serveur.";
+        showError.value = true;
+    }
 };
 
 // Utils

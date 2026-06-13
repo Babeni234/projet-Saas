@@ -46,6 +46,21 @@ class RenouvellementController extends Controller
             'agency_id' => 'nullable|exists:agencies,id',
         ]);
 
+        $allowMultiple = filter_var($request->input('allow_multiple'), FILTER_VALIDATE_BOOLEAN);
+        if (!$allowMultiple) {
+            $locataire = \App\Models\Locataire::find($validated['locataire_id']);
+            if ($locataire && strtoupper($locataire->statut) === 'ACTIF') {
+                $hasActive = Renouvellement::where('locataire_id', $locataire->id)
+                    ->whereIn('statut', ['En attente', 'A venir', 'En cours'])
+                    ->exists();
+                if ($hasActive) {
+                    return response()->json([
+                        'message' => "Ce locataire a déjà une demande de renouvellement en cours ou en attente. Vous ne pouvez pas créer un autre renouvellement simultané sauf si vous cochez l'option de contournement."
+                    ], 422);
+                }
+            }
+        }
+
         $validated['company_profile_id'] = $user->company_profile_id;
         if ($user->employee && $user->employee->agency_id !== null) {
             $validated['agency_id'] = $user->employee->agency_id;
@@ -92,15 +107,25 @@ class RenouvellementController extends Controller
 
     public function approuver(Request $request, Renouvellement $renouvellement)
     {
-        $renouvellement->update(['statut' => 'A venir']);
+        DB::beginTransaction();
+        try {
+            $renouvellement->update(['statut' => 'A venir']);
 
-        $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
-        $this->sendMailSafe($tenantEmail, new RenouvellementApproved($renouvellement));
+            $this->applyRenewalUpdates($renouvellement);
 
-        return response()->json([
-            'message' => 'Renouvellement approuvé. Le locataire a été notifié.',
-            'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
-        ]);
+            DB::commit();
+
+            $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
+            $this->sendMailSafe($tenantEmail, new RenouvellementApproved($renouvellement));
+
+            return response()->json([
+                'message' => 'Renouvellement approuvé. Le locataire a été notifié et les informations ont été mises à jour.',
+                'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Erreur lors de l\'approbation.', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function rejeter(Request $request, Renouvellement $renouvellement)
@@ -137,52 +162,12 @@ class RenouvellementController extends Controller
         try {
             $renouvellement->update(['statut' => 'Complete']);
 
+            $this->applyRenewalUpdates($renouvellement);
+
             $contrat = $renouvellement->contrat;
-            
-            // Calculer la nouvelle date de fin basée sur la durée
-            $newEndDate = $contrat->fin ? \Carbon\Carbon::parse($contrat->fin) : \Carbon\Carbon::now();
-            $monthsToAdd = (int) filter_var($renouvellement->duree, FILTER_SANITIZE_NUMBER_INT);
-            if ($monthsToAdd > 0) {
-                $newEndDate = $newEndDate->addMonths($monthsToAdd);
-            }
-
-            // Mettre à jour le Contrat existant
-            $contrat->update([
-                'content' => $validated['content'],
-                'fin' => $newEndDate,
-                'loyer' => $renouvellement->nouveau_loyer,
-            ]);
-
-            // Mettre à jour l'Affectation active
-            $affectation = Affectation::where('locataire_id', $renouvellement->locataire_id)
-                ->where('logement_id', $contrat->logement_id)
-                ->where('statut', 'Actif')
-                ->first();
-
-            if ($affectation) {
-                $affectation->update([
-                    'loyer' => $renouvellement->nouveau_loyer,
-                    'cycle_paiement' => $renouvellement->cycle_paiement,
-                    'duree' => $renouvellement->duree,
-                    'frais_de_contrat' => $renouvellement->frais_contrat,
-                    'date_fin' => $newEndDate
-                ]);
-            }
-
-            // Mettre à jour le loyer du logement
-            $logement = Logement::find($contrat->logement_id);
-            if ($logement) {
-                $logement->update(['loyer' => $renouvellement->nouveau_loyer]);
-            }
-
-            // Insérer dans frais_contrats
-            if ($renouvellement->frais_contrat > 0) {
-                FraisContrat::create([
-                    'company_profile_id' => $renouvellement->company_profile_id,
-                    'agency_id' => $renouvellement->agency_id,
-                    'renouvellement_id' => $renouvellement->id,
-                    'montant' => $renouvellement->frais_contrat,
-                    'date_paiement' => now()
+            if ($contrat) {
+                $contrat->update([
+                    'content' => $validated['content'],
                 ]);
             }
 
@@ -199,6 +184,72 @@ class RenouvellementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Erreur lors de la confirmation.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Applique les mises à jour de loyer, cycle, durée et frais de contrat sur les tables concernées.
+     */
+    private function applyRenewalUpdates(Renouvellement $renouvellement)
+    {
+        $contrat = $renouvellement->contrat;
+        if (!$contrat) {
+            return;
+        }
+
+        // Calculer la nouvelle date de fin basée sur la durée
+        $newEndDate = $contrat->fin ? \Carbon\Carbon::parse($contrat->fin) : \Carbon\Carbon::now();
+        $duree = strtolower($renouvellement->duree);
+        $value = (int) filter_var($duree, FILTER_SANITIZE_NUMBER_INT);
+        if ($value <= 0) {
+            $value = 1;
+        }
+
+        if (str_contains($duree, 'an') || str_contains($duree, 'ans')) {
+            $newEndDate = $newEndDate->addYears($value);
+        } else {
+            $newEndDate = $newEndDate->addMonths($value);
+        }
+
+        // Mettre à jour le Contrat existant
+        $contrat->update([
+            'fin' => $newEndDate,
+            'loyer' => $renouvellement->nouveau_loyer,
+        ]);
+
+        // Mettre à jour l'Affectation active
+        $affectation = Affectation::where('locataire_id', $renouvellement->locataire_id)
+            ->where('logement_id', $contrat->logement_id)
+            ->where('statut', 'Actif')
+            ->first();
+
+        if ($affectation) {
+            $affectation->update([
+                'loyer' => $renouvellement->nouveau_loyer,
+                'cycle_paiement' => $renouvellement->cycle_paiement,
+                'duree' => $renouvellement->duree,
+                'frais_de_contrat' => $renouvellement->frais_contrat,
+                'date_fin' => $newEndDate
+            ]);
+        }
+
+        // Mettre à jour le loyer du logement
+        $logement = Logement::find($contrat->logement_id);
+        if ($logement) {
+            $logement->update(['loyer' => $renouvellement->nouveau_loyer]);
+        }
+
+        // Enregistrer ou mettre à jour dans frais_contrats
+        if ($renouvellement->frais_contrat > 0) {
+            FraisContrat::updateOrCreate(
+                ['renouvellement_id' => $renouvellement->id],
+                [
+                    'company_profile_id' => $renouvellement->company_profile_id,
+                    'agency_id' => $renouvellement->agency_id,
+                    'montant' => $renouvellement->frais_contrat,
+                    'date_paiement' => now()
+                ]
+            );
         }
     }
 

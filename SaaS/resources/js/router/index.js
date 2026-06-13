@@ -389,15 +389,28 @@ const routes = [
         },
     },
     {
-        path: '/dashboard/comptabilite/facture-creation',
-        name: 'accounting.facture-creation',
-        component: () => import('../Pages/entreprise/Dashboard/components/FactureCreationPage.vue'),
+        path: '/dashboard/comptabilite/depenses',
+        name: 'accounting.depenses',
+        component: () => import('../Pages/entreprise/Dashboard/components/DepensesPage.vue'),
         meta: {
-            title: 'Création de facture',
+            title: 'Dépenses',
             breadcrumbs: [
                 { label: 'Accueil', to: { name: 'dashboard.master' } },
                 { label: 'Comptabilité', to: { name: 'dashboard.accounting' } },
-                { label: 'Création de facture', to: { name: 'accounting.facture-creation' } },
+                { label: 'Dépenses', to: { name: 'accounting.depenses' } },
+            ],
+        },
+    },
+    {
+        path: '/dashboard/comptabilite/entrees-fonds',
+        name: 'accounting.entrees-fonds',
+        component: () => import('../Pages/entreprise/Dashboard/components/EntreesFondsPage.vue'),
+        meta: {
+            title: 'Autres entrées de fonds',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Comptabilité', to: { name: 'dashboard.accounting' } },
+                { label: 'Autres entrées de fonds', to: { name: 'accounting.entrees-fonds' } },
             ],
         },
     },
@@ -638,15 +651,28 @@ const routes = [
         },
     },
     {
-        path: '/agence/dashboard/comptabilite/facture-creation',
-        name: 'agence.accounting.facture-creation',
-        component: () => import('../Pages/agence/Dashboard/components/FactureCreationPage.vue'),
+        path: '/agence/dashboard/comptabilite/depenses',
+        name: 'agence.accounting.depenses',
+        component: () => import('../Pages/agence/Dashboard/components/DepensesPage.vue'),
         meta: {
-            title: 'Création de facture',
+            title: 'Dépenses',
             breadcrumbs: [
                 { label: 'Accueil', to: { name: 'agence.master' } },
                 { label: 'Comptabilité', to: { name: 'agence.accounting' } },
-                { label: 'Création de facture', to: { name: 'agence.accounting.facture-creation' } },
+                { label: 'Dépenses', to: { name: 'agence.accounting.depenses' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/comptabilite/entrees-fonds',
+        name: 'agence.accounting.entrees-fonds',
+        component: () => import('../Pages/agence/Dashboard/components/EntreesFondsPage.vue'),
+        meta: {
+            title: 'Autres entrées de fonds',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Comptabilité', to: { name: 'agence.accounting' } },
+                { label: 'Autres entrées de fonds', to: { name: 'agence.accounting.entrees-fonds' } },
             ],
         },
     },
