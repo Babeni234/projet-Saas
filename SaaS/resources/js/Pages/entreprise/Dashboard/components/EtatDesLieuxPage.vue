@@ -37,30 +37,18 @@
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total États</div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-emerald-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
-                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-emerald-500/5 group-hover:scale-150 transition-transform duration-500"></div>
+            <!-- Dynamic type cards -->
+            <div v-for="(kpi, idx) in typeKpis" :key="kpi.id" class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-teal-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
+                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-teal-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <div :class="['w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg', getKpiColor(idx).from, getKpiColor(idx).to, getKpiColor(idx).shadow]">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
                     </div>
                 </div>
-                <div class="text-3xl font-extrabold text-emerald-600 mb-1 tracking-tight">{{ entrees }}</div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">États d'Entrée</div>
-            </div>
-
-            <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-amber-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
-                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-amber-500/5 group-hover:scale-150 transition-transform duration-500"></div>
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-amber-600 mb-1 tracking-tight">{{ sorties }}</div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">États de Sortie</div>
+                <div :class="['text-3xl font-extrabold mb-1 tracking-tight', getKpiColor(idx).text]">{{ kpi.count }}</div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ kpi.nom }}</div>
             </div>
 
             <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-violet-200/30 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
@@ -882,21 +870,32 @@ const totalEtats = computed(() => {
     return list.length;
 });
 
-const entrees = computed(() => {
-    let list = etats.value;
-    if (agencyFilter.value !== 'All') {
-        list = list.filter(e => e.agency_id === Number(agencyFilter.value));
-    }
-    return list.filter(e => e.type_etat_des_lieux?.nom?.toLowerCase().includes('entrée')).length;
+const typeKpis = computed(() => {
+    return typeEtatDesLieux.value.map(type => {
+        let list = etats.value;
+        if (agencyFilter.value !== 'All') {
+            list = list.filter(e => e.agency_id === Number(agencyFilter.value));
+        }
+        const count = list.filter(e => e.type_etat_des_lieux_id === type.id).length;
+        return {
+            id: type.id,
+            nom: type.nom,
+            count: count
+        };
+    });
 });
 
-const sorties = computed(() => {
-    let list = etats.value;
-    if (agencyFilter.value !== 'All') {
-        list = list.filter(e => e.agency_id === Number(agencyFilter.value));
-    }
-    return list.filter(e => e.type_etat_des_lieux?.nom?.toLowerCase().includes('sortie')).length;
-});
+const kpiColors = [
+    { from: 'from-emerald-500', to: 'to-teal-600', text: 'text-emerald-600', bg: 'bg-emerald-500/5', shadow: 'shadow-emerald-500/30' },
+    { from: 'from-amber-500', to: 'to-orange-600', text: 'text-amber-600', bg: 'bg-amber-500/5', shadow: 'shadow-amber-500/30' },
+    { from: 'from-blue-500', to: 'to-indigo-650', text: 'text-blue-600', bg: 'bg-blue-500/5', shadow: 'shadow-blue-500/30' },
+    { from: 'from-violet-500', to: 'to-purple-650', text: 'text-violet-600', bg: 'bg-violet-500/5', shadow: 'shadow-violet-500/30' },
+    { from: 'from-rose-500', to: 'to-red-600', text: 'text-rose-600', bg: 'bg-rose-500/5', shadow: 'shadow-rose-500/30' },
+];
+
+const getKpiColor = (index) => {
+    return kpiColors[index % kpiColors.length];
+};
 
 const enAttente = computed(() => {
     let list = etats.value;
@@ -1125,7 +1124,7 @@ const openAddModal = () => {
         contrat_id: '',
         logement_id: '',
         date: new Date().toISOString().split('T')[0],
-        statut: 'Brouillon',
+        statut: 'En attente',
         instructions: '',
         content: ''
     };

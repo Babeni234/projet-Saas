@@ -230,6 +230,13 @@ class AgencyController extends Controller
             }
         }
 
+        if (!empty($validated['manager_email'])) {
+            $managerUser = User::where('email', $validated['manager_email'])->first();
+            if ($managerUser && $managerUser->employee) {
+                $managerUser->employee->update(['agency_id' => $agency->id]);
+            }
+        }
+
         if ($request->wantsJson() || $request->headers->get('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
@@ -313,6 +320,8 @@ class AgencyController extends Controller
 
         $oldChefId = $agency->chef_id;
         $newChefId = $request->input('chef_id');
+        $oldManagerEmail = $agency->manager_email;
+        $newManagerEmail = $request->input('manager_email');
 
         $agency->update($validated);
 
@@ -330,6 +339,21 @@ class AgencyController extends Controller
                 $newUser = User::find($newChefId);
                 if ($newUser && $newUser->employee) {
                     $newUser->employee->update(['agency_id' => $agency->id]);
+                }
+            }
+        }
+
+        if ($oldManagerEmail != $newManagerEmail) {
+            if ($oldManagerEmail) {
+                $oldManagerUser = User::where('email', $oldManagerEmail)->first();
+                if ($oldManagerUser && $oldManagerUser->employee && $oldManagerUser->employee->agency_id === $agency->id) {
+                    $oldManagerUser->employee->update(['agency_id' => null]);
+                }
+            }
+            if ($newManagerEmail) {
+                $newManagerUser = User::where('email', $newManagerEmail)->first();
+                if ($newManagerUser && $newManagerUser->employee) {
+                    $newManagerUser->employee->update(['agency_id' => $agency->id]);
                 }
             }
         }

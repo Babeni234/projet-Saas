@@ -43,10 +43,16 @@ class SendRenewalReminder extends Command
                 ->first();
 
             if ($affectation) {
-                // TODO: Envoyer l'email
-                // Mail::to($renouvellement->locataire->email)->send(new \App\Mail\RenewalReminder($renouvellement));
-                Log::info("Rappel de renouvellement envoyé au locataire: {$renouvellement->locataire->email}");
-                $count++;
+                try {
+                    $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
+                    if ($tenantEmail) {
+                        \Illuminate\Support\Facades\Mail::to($tenantEmail)->send(new \App\Mail\RenewalReminder($renouvellement));
+                        Log::info("Rappel de renouvellement envoyé au locataire: {$tenantEmail}");
+                        $count++;
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Erreur lors de l'envoi de rappel de renouvellement : " . $e->getMessage());
+                }
             }
         }
 

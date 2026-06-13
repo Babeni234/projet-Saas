@@ -682,4 +682,52 @@ class ContractGenerationController extends Controller
         $res .= "<p>Je suis votre assistant de gestion immobilière. Posez-moi des questions sur vos locataires, vos loyers, les impayés ou demandez-moi de vous diriger vers une page spécifique !</p>";
         return $res;
     }
+
+    /**
+     * Generate a polite rejection motif using Groq.
+     */
+    public function generateRejectionMotif(Request $request)
+    {
+        $request->validate([
+            'locataire_name' => 'required|string',
+            'reference_logement' => 'required|string',
+            'nouveau_loyer' => 'required|numeric',
+            'motif_demande' => 'nullable|string',
+        ]);
+        
+        $locataireName = $request->input('locataire_name');
+        $referenceLogement = $request->input('reference_logement');
+        $nouveauLoyer = $request->input('nouveau_loyer');
+        $motifDemande = $request->input('motif_demande') ?: 'Non spécifié';
+
+        $prompt = "Vous êtes un gestionnaire immobilier professionnel.\n";
+        $prompt .= "Rédigez un motif de rejet professionnel, courtois et argumenté pour refuser une demande de renouvellement de bail formulée par le locataire {$locataireName} pour le logement {$referenceLogement}.\n";
+        $prompt .= "Informations de la demande :\n";
+        $prompt .= "- Nouveau loyer proposé par le locataire : {$nouveauLoyer} €\n";
+        $prompt .= "- Motif/Instructions du locataire : {$motifDemande}\n\n";
+        $prompt .= "Générez un motif de rejet solide et poli en français (environ 2-4 phrases). Le motif doit expliquer gentiment pourquoi nous ne pouvons pas accepter cette demande de renouvellement sous ces conditions (par exemple, parce que le nouveau loyer proposé est trop bas par rapport au marché, ou pour des raisons opérationnelles de rénovation/récupération du logement). Votre réponse doit être prête à être envoyée au locataire. Ne renvoyez aucune introduction ni conclusion, commencez directement par le motif de refus.";
+
+        $generatedText = '';
+        $generateViaIA = true;
+        try {
+            $model = config('ai.groq_model', 'llama-3.3-70b-versatile');
+            $response = Prism::text()
+                ->using(Provider::Groq, $model)
+                ->withPrompt($prompt)
+                ->asText();
+            $generatedText = $response->text;
+        } catch (\Exception $e) {
+            \Log::warning('Groq API call failed for Rejection Motif, falling back. Error: ' . $e->getMessage());
+            $generateViaIA = false;
+        }
+
+        if (!$generateViaIA) {
+            $generatedText = "Nous regrettons de vous informer que votre demande de renouvellement pour le logement {$referenceLogement} n'a pas pu être acceptée. Le loyer proposé de {$nouveauLoyer} € ne correspond pas aux conditions actuelles du marché ou aux critères de gestion de notre entreprise.";
+        }
+
+        return response()->json([
+            'success' => true,
+            'motif' => trim($generatedText),
+        ]);
+    }
 }

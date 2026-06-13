@@ -54,6 +54,7 @@ class AffectationController extends Controller
             'type_bail'       => 'nullable|string|max:100',
             'duree'           => 'required|string|max:100',
             'cycle_paiement'  => 'required|string|max:100',
+            'frais_de_contrat' => 'nullable|numeric|min:0',
         ]);
 
         $locataire = Locataire::where('id', $request->input('locataire_id'))
@@ -103,6 +104,7 @@ class AffectationController extends Controller
                 'type_bail'          => $typeBail,
                 'duree'              => $request->input('duree'),
                 'cycle_paiement'     => $request->input('cycle_paiement'),
+                'frais_de_contrat'   => $request->input('frais_de_contrat', 0),
                 'statut'             => 'Actif',
             ]);
 
@@ -204,6 +206,7 @@ class AffectationController extends Controller
             'duree'            => $a->duree,
             'typeBail'         => $a->typeContrat?->nom ?? $a->type_bail,
             'cyclePaiement'    => $a->cycle_paiement,
+            'frais_de_contrat' => (float)$a->frais_de_contrat,
             'statut'           => $a->statut, // Actif, Terminé
             'created_at'       => $a->created_at?->toDateString(),
         ];

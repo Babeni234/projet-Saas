@@ -167,7 +167,8 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-bold text-slate-900 block">{{ formatCurrency(aff.loyer) }}</span>
-                                <span class="text-xs text-slate-500">Caution : {{ formatCurrency(aff.caution) }}</span>
+                                <span class="text-xs text-slate-500 block">Caution : {{ formatCurrency(aff.caution) }}</span>
+                                <span v-if="aff.frais_de_contrat" class="text-xs text-teal-600 block">Frais : {{ formatCurrency(aff.frais_de_contrat) }}</span>
                             </td>
                             <td class="px-6 py-4">
                                 <span :class="[

@@ -59,8 +59,12 @@ class RenouvellementController extends Controller
 
         $renouvellement = Renouvellement::create($validated);
 
-        // TODO: Send emails to agency and company
-        // Mail::to(...)->send(new RenouvellementCreated($renouvellement));
+        // Envoyer les emails de création
+        $companyEmail = $renouvellement->company && $renouvellement->company->user ? $renouvellement->company->user->email : null;
+        $agencyEmail = $renouvellement->agency ? $renouvellement->agency->email : null;
+        
+        $this->sendMailSafe($companyEmail, new RenouvellementCreated($renouvellement));
+        $this->sendMailSafe($agencyEmail, new RenouvellementCreated($renouvellement));
 
         return response()->json([
             'message' => 'Demande de renouvellement créée avec succès',
@@ -90,8 +94,8 @@ class RenouvellementController extends Controller
     {
         $renouvellement->update(['statut' => 'A venir']);
 
-        // TODO: Send email to locataire
-        // Mail::to($renouvellement->locataire->email)->send(new RenouvellementApproved($renouvellement));
+        $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
+        $this->sendMailSafe($tenantEmail, new RenouvellementApproved($renouvellement));
 
         return response()->json([
             'message' => 'Renouvellement approuvé. Le locataire a été notifié.',
@@ -110,8 +114,8 @@ class RenouvellementController extends Controller
             'motif_rejet' => $validated['motif_rejet']
         ]);
 
-        // TODO: Send email to locataire
-        // Mail::to($renouvellement->locataire->email)->send(new RenouvellementRejected($renouvellement));
+        $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
+        $this->sendMailSafe($tenantEmail, new RenouvellementRejected($renouvellement));
 
         return response()->json([
             'message' => 'Renouvellement rejeté. Le locataire a été notifié.',
@@ -125,25 +129,37 @@ class RenouvellementController extends Controller
             return response()->json(['message' => 'Ce renouvellement est déjà complété.'], 400);
         }
 
+        $validated = $request->validate([
+            'content' => 'required|string',
+        ]);
+
         DB::beginTransaction();
         try {
-            // Update the status
             $renouvellement->update(['statut' => 'Complete']);
 
             $contrat = $renouvellement->contrat;
+            
+            // Calculer la nouvelle date de fin basée sur la durée
+            $newEndDate = $contrat->fin ? \Carbon\Carbon::parse($contrat->fin) : \Carbon\Carbon::now();
+            $monthsToAdd = (int) filter_var($renouvellement->duree, FILTER_SANITIZE_NUMBER_INT);
+            if ($monthsToAdd > 0) {
+                $newEndDate = $newEndDate->addMonths($monthsToAdd);
+            }
+
+            // Mettre à jour le Contrat existant
+            $contrat->update([
+                'content' => $validated['content'],
+                'fin' => $newEndDate,
+                'loyer' => $renouvellement->nouveau_loyer,
+            ]);
+
+            // Mettre à jour l'Affectation active
             $affectation = Affectation::where('locataire_id', $renouvellement->locataire_id)
                 ->where('logement_id', $contrat->logement_id)
                 ->where('statut', 'Actif')
                 ->first();
 
             if ($affectation) {
-                // Determine new end date based on duration
-                $newEndDate = $affectation->date_fin ? \Carbon\Carbon::parse($affectation->date_fin) : \Carbon\Carbon::now();
-                $monthsToAdd = (int) filter_var($renouvellement->duree, FILTER_SANITIZE_NUMBER_INT);
-                if ($monthsToAdd > 0) {
-                    $newEndDate = $newEndDate->addMonths($monthsToAdd);
-                }
-
                 $affectation->update([
                     'loyer' => $renouvellement->nouveau_loyer,
                     'cycle_paiement' => $renouvellement->cycle_paiement,
@@ -153,13 +169,13 @@ class RenouvellementController extends Controller
                 ]);
             }
 
-            // Update logement rent
+            // Mettre à jour le loyer du logement
             $logement = Logement::find($contrat->logement_id);
             if ($logement) {
                 $logement->update(['loyer' => $renouvellement->nouveau_loyer]);
             }
 
-            // Insert frais_contrat if any
+            // Insérer dans frais_contrats
             if ($renouvellement->frais_contrat > 0) {
                 FraisContrat::create([
                     'company_profile_id' => $renouvellement->company_profile_id,
@@ -172,8 +188,9 @@ class RenouvellementController extends Controller
 
             DB::commit();
 
-            // TODO: Send email to company
-            // Mail::to($renouvellement->company->email)->send(new RenouvellementConfirmed($renouvellement));
+            // Notifier la compagnie
+            $companyEmail = $renouvellement->company && $renouvellement->company->user ? $renouvellement->company->user->email : null;
+            $this->sendMailSafe($companyEmail, new RenouvellementConfirmed($renouvellement));
 
             return response()->json([
                 'message' => 'Renouvellement confirmé avec succès. Les informations ont été mises à jour.',
@@ -193,11 +210,24 @@ class RenouvellementController extends Controller
 
         $user = auth()->user();
         if ($user->employee && $user->employee->agency_id !== null) {
-            // TODO: Send email to company alerting deletion
-            // Mail::to($renouvellement->company->email)->send(new RenouvellementDeleted($renouvellement));
+            $companyEmail = $renouvellement->company && $renouvellement->company->user ? $renouvellement->company->user->email : null;
+            $this->sendMailSafe($companyEmail, new RenouvellementDeleted($renouvellement));
         }
 
         $renouvellement->delete();
         return response()->json(['message' => 'Renouvellement supprimé.']);
+    }
+
+    /**
+     * Envoie un email de manière sécurisée en capturant les exceptions.
+     */
+    private function sendMailSafe($to, $mailable)
+    {
+        if (empty($to)) return;
+        try {
+            Mail::to($to)->send($mailable);
+        } catch (\Exception $e) {
+            \Log::error("Erreur d'envoi d'email à {$to} : " . $e->getMessage());
+        }
     }
 }

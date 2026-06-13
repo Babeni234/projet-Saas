@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/ai/generate-contract', [\App\Http\Controllers\ContractGenerationController::class, 'generate'])->name('ai.generate-contract');
     Route::post('/api/ai/generate-engagement', [\App\Http\Controllers\ContractGenerationController::class, 'generateEngagement'])->name('ai.generate-engagement');
     Route::post('/api/ai/generate-etat-des-lieux', [\App\Http\Controllers\ContractGenerationController::class, 'generateEtatDesLieux'])->name('ai.generate-etat-des-lieux');
+    Route::post('/api/ai/generate-rejection-motif', [\App\Http\Controllers\ContractGenerationController::class, 'generateRejectionMotif'])->name('ai.generate-rejection-motif');
     Route::post('/api/ai/assistant', [\App\Http\Controllers\ContractGenerationController::class, 'assistantChat'])->name('ai.assistant');
 
     // Agencies routes
