@@ -229,6 +229,7 @@ export const countryOptions = [
     { code: 'MA', en: 'Morocco', fr: 'Maroc' },
     { code: 'SN', en: 'Senegal', fr: 'Sénégal' },
     { code: 'CI', en: 'Côte d\'Ivoire', fr: 'Côte d\'Ivoire' },
+    { code: 'CM', en: 'Cameroon', fr: 'Cameroun' },
     { code: 'ES', en: 'Spain', fr: 'Espagne' },
     { code: 'IT', en: 'Italy', fr: 'Italie' },
     { code: 'PT', en: 'Portugal', fr: 'Portugal' },

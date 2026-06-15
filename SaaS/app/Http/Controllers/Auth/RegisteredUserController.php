@@ -280,6 +280,18 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        $user->update(['is_connected' => true]);
+
+        \App\Helpers\EventLogger::log(
+            "Connexion de l'utilisateur",
+            "L'utilisateur {$user->name} s'est connecté au système",
+            'Connexion',
+            'Utilisateur',
+            null,
+            $user->company_profile_id,
+            $user->id
+        );
+
         // Redirect to selection
         return redirect(route('subscription'));
     }

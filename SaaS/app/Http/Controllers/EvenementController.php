@@ -71,14 +71,32 @@ class EvenementController extends Controller
             });
         }
 
-        $users = $query->get()->map(function ($u) {
+        $sessionDriver = config('session.driver');
+        $activeUserIds = null;
+        if ($sessionDriver === 'database') {
+            try {
+                $activeUserIds = \Illuminate\Support\Facades\DB::table('sessions')
+                    ->whereNotNull('user_id')
+                    ->where('last_activity', '>=', now()->subMinutes(15)->getTimestamp())
+                    ->pluck('user_id')
+                    ->all();
+            } catch (\Exception $e) {
+                // Fallback
+            }
+        }
+
+        $users = $query->get()->map(function ($u) use ($activeUserIds) {
+            $isConnected = (bool) $u->is_connected;
+            if (is_array($activeUserIds)) {
+                $isConnected = $isConnected && in_array($u->id, $activeUserIds);
+            }
             return [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
                 'role' => $u->role ? $u->role->name : 'N/A',
                 'agency_name' => $u->employee && $u->employee->agency ? $u->employee->agency->name : 'Siège général',
-                'is_connected' => (bool) $u->is_connected,
+                'is_connected' => $isConnected,
                 'last_login_at' => $u->last_login_at ? $u->last_login_at->toDateTimeString() : 'Jamais',
             ];
         });

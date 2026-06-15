@@ -28,6 +28,10 @@ class CheckForceLogout
             return redirect()->route('login')->withErrors(['email' => 'Votre session a été fermée par un administrateur.']);
         }
 
+        if ($user && !$user->is_connected) {
+            $user->update(['is_connected' => true]);
+        }
+
         return $next($request);
     }
 }
