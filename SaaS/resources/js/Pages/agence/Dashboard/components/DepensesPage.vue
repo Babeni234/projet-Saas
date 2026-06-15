@@ -77,7 +77,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Titre</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Catégorie</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type / Catégorie</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Montant</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Référence</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
@@ -88,7 +88,14 @@
                         <tr v-for="depense in filteredDepenses" :key="depense.id" class="hover:bg-slate-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ formatDate(depense.date_depense) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ depense.titre }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ depense.categorie || '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                <span v-if="depense.type_depense" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100">
+                                    {{ depense.type_depense.nom }}
+                                </span>
+                                <span v-else class="text-slate-400 italic">
+                                    {{ depense.categorie || '-' }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-900">{{ formatCurrency(depense.montant) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ depense.reference || '-' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -123,63 +130,117 @@
             <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeModal"></div>
                 <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg font-bold leading-6 text-slate-900 mb-6">
-                                    {{ isEditing ? 'Modifier la dépense' : 'Nouvelle dépense' }}
-                                </h3>
-                                <div class="space-y-4">
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Titre de la dépense <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.titre" type="text" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Montant <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.montant" type="number" step="0.01" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Date <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.date_depense" type="date" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
-                                            <input v-model="form.categorie" type="text" placeholder="ex: Maintenance" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Statut</label>
-                                            <select v-model="form.statut" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500">
-                                                <option value="En attente">En attente</option>
-                                                <option value="Payé">Payé</option>
-                                                <option value="Annulé">Annulé</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Référence (N° Facture / Reçu)</label>
-                                            <input v-model="form.reference" type="text" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500" />
-                                        </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Description (Optionnel)</label>
-                                            <textarea v-model="form.description" rows="3" class="w-full rounded-lg border-slate-300 focus:border-violet-500 focus:ring-violet-500"></textarea>
-                                        </div>
-                                    </div>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="bg-gradient-to-r from-violet-500 to-indigo-600 px-6 py-4 flex items-center justify-between text-white">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6">{{ isEditing ? 'Modifier la dépense' : 'Nouvelle dépense' }}</h3>
+                            <p class="text-xs text-violet-100 mt-1">Saisissez les détails de la sortie de fonds ci-dessous</p>
+                        </div>
+                        <button @click="closeModal" class="text-white/80 hover:text-white transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white px-6 pt-6 pb-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-5">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Titre de la dépense <span class="text-rose-500">*</span></label>
+                                <div class="relative rounded-2xl shadow-sm">
+                                    <input 
+                                        v-model="form.titre" 
+                                        type="text" 
+                                        placeholder="Ex: Achat fournitures de bureau"
+                                        class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium" 
+                                        required 
+                                    />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Montant (XAF) <span class="text-rose-500">*</span></label>
+                                <input 
+                                    v-model="form.montant" 
+                                    type="number" 
+                                    step="0.01" 
+                                    placeholder="0.00"
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium" 
+                                    required 
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date <span class="text-rose-500">*</span></label>
+                                <input 
+                                    v-model="form.date_depense" 
+                                    type="date" 
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium" 
+                                    required 
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Type de dépense <span class="text-rose-500">*</span></label>
+                                <select 
+                                    v-model="form.type_depense_id" 
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium cursor-pointer"
+                                    required
+                                >
+                                    <option :value="null">Sélectionner un type</option>
+                                    <option v-for="t in typeDepenses" :key="t.id" :value="t.id">
+                                        {{ t.nom }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Statut</label>
+                                <select 
+                                    v-model="form.statut" 
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium cursor-pointer"
+                                >
+                                    <option value="En attente">En attente</option>
+                                    <option value="Payé">Payé</option>
+                                    <option value="Annulé">Annulé</option>
+                                </select>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Référence (N° Facture / Reçu)</label>
+                                <input 
+                                    v-model="form.reference" 
+                                    type="text" 
+                                    placeholder="Ex: FAC-2026-0042"
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium" 
+                                />
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description (Optionnel)</label>
+                                <textarea 
+                                    v-model="form.description" 
+                                    rows="3" 
+                                    placeholder="Ajoutez des détails supplémentaires..."
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium"
+                                ></textarea>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-slate-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6">
+
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100">
                         <button
                             @click="saveDepense"
                             :disabled="isLoading"
-                            class="inline-flex w-full justify-center rounded-xl border border-transparent bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm transition-all disabled:opacity-50"
+                            class="px-6 py-3.5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-violet-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            {{ isLoading ? 'Enregistrement...' : (isEditing ? 'Mettre à jour' : 'Enregistrer') }}
+                            <span v-if="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            <span>{{ isEditing ? 'Mettre à jour' : 'Enregistrer' }}</span>
                         </button>
                         <button
                             @click="closeModal"
-                            class="mt-3 inline-flex w-full justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-base font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all"
+                            class="px-6 py-3.5 bg-white border-2 border-slate-305 text-slate-707 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
                         >
                             Annuler
                         </button>
@@ -195,6 +256,7 @@ import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
 const depenses = ref([]);
+const typeDepenses = ref([]);
 const isModalOpen = ref(false);
 const isEditing = ref(false);
 const isLoading = ref(false);
@@ -206,6 +268,7 @@ const form = ref({
     description: '',
     montant: 0,
     date_depense: new Date().toISOString().split('T')[0],
+    type_depense_id: null,
     categorie: '',
     reference: '',
     statut: 'En attente',
@@ -220,7 +283,19 @@ const fetchDepenses = async () => {
     }
 };
 
-onMounted(fetchDepenses);
+const fetchTypeDepenses = async () => {
+    try {
+        const response = await axios.get('/api/type-depenses');
+        typeDepenses.value = response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des types de dépenses:', error);
+    }
+};
+
+onMounted(() => {
+    fetchDepenses();
+    fetchTypeDepenses();
+});
 
 const kpis = computed(() => {
     const today = new Date();
@@ -254,6 +329,7 @@ const filteredDepenses = computed(() => {
     return depenses.value.filter(d => 
         (d.titre && d.titre.toLowerCase().includes(query)) ||
         (d.reference && d.reference.toLowerCase().includes(query)) ||
+        (d.type_depense?.nom && d.type_depense.nom.toLowerCase().includes(query)) ||
         (d.categorie && d.categorie.toLowerCase().includes(query))
     );
 });
@@ -261,7 +337,17 @@ const filteredDepenses = computed(() => {
 const openModal = (depense = null) => {
     if (depense) {
         isEditing.value = true;
-        form.value = { ...depense };
+        form.value = { 
+            id: depense.id,
+            titre: depense.titre,
+            description: depense.description || '',
+            montant: depense.montant,
+            date_depense: depense.date_depense ? depense.date_depense.split('T')[0] : new Date().toISOString().split('T')[0],
+            type_depense_id: depense.type_depense_id || null,
+            categorie: depense.categorie || '',
+            reference: depense.reference || '',
+            statut: depense.statut || 'En attente'
+        };
     } else {
         isEditing.value = false;
         form.value = {
@@ -270,6 +356,7 @@ const openModal = (depense = null) => {
             description: '',
             montant: 0,
             date_depense: new Date().toISOString().split('T')[0],
+            type_depense_id: null,
             categorie: '',
             reference: '',
             statut: 'En attente',
@@ -283,8 +370,8 @@ const closeModal = () => {
 };
 
 const saveDepense = async () => {
-    if (!form.value.titre || !form.value.montant || !form.value.date_depense) {
-        alert("Veuillez remplir les champs obligatoires (*)");
+    if (!form.value.titre || !form.value.montant || !form.value.date_depense || !form.value.type_depense_id) {
+        alert("Veuillez remplir tous les champs obligatoires (*)");
         return;
     }
 

@@ -285,6 +285,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/type-factures/{typeFacture}', [\App\Http\Controllers\TypeFactureController::class, 'update'])->name('type-factures.update');
     Route::delete('/api/type-factures/{typeFacture}', [\App\Http\Controllers\TypeFactureController::class, 'destroy'])->name('type-factures.destroy');
 
+    // TypeDepenses API routes
+    Route::get('/api/type-depenses', [\App\Http\Controllers\TypeDepenseController::class, 'index'])->name('type-depenses.json');
+    Route::post('/api/type-depenses', [\App\Http\Controllers\TypeDepenseController::class, 'store'])->name('type-depenses.store');
+    Route::put('/api/type-depenses/{typeDepense}', [\App\Http\Controllers\TypeDepenseController::class, 'update'])->name('type-depenses.update');
+    Route::delete('/api/type-depenses/{typeDepense}', [\App\Http\Controllers\TypeDepenseController::class, 'destroy'])->name('type-depenses.destroy');
+
     // Factures API routes
     Route::get('/api/factures', [\App\Http\Controllers\FactureController::class, 'index'])->name('factures.json');
     Route::post('/api/factures', [\App\Http\Controllers\FactureController::class, 'store'])->name('factures.store');

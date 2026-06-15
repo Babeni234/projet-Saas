@@ -123,63 +123,113 @@
             <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeModal"></div>
                 <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg font-bold leading-6 text-slate-900 mb-6">
-                                    {{ isEditing ? 'Modifier l\'entrée de fonds' : 'Nouvelle entrée de fonds' }}
-                                </h3>
-                                <div class="space-y-4">
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Titre de l'entrée <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.titre" type="text" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Montant <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.montant" type="number" step="0.01" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Date <span class="text-rose-500">*</span></label>
-                                            <input v-model="form.date_entree" type="date" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" required />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
-                                            <input v-model="form.categorie" type="text" placeholder="ex: Subvention" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Statut</label>
-                                            <select v-model="form.statut" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                                                <option value="En attente">En attente</option>
-                                                <option value="Encaissé">Encaissé</option>
-                                                <option value="Annulé">Annulé</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Référence (N° Chèque / Virement)</label>
-                                            <input v-model="form.reference" type="text" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" />
-                                        </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-sm font-medium text-slate-700 mb-1">Description (Optionnel)</label>
-                                            <textarea v-model="form.description" rows="3" class="w-full rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"></textarea>
-                                        </div>
-                                    </div>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 flex items-center justify-between text-white">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6">{{ isEditing ? 'Modifier l\'entrée de fonds' : 'Nouvelle entrée de fonds' }}</h3>
+                            <p class="text-xs text-emerald-100 mt-1">Saisissez les détails de l'encaissement ci-dessous</p>
+                        </div>
+                        <button @click="closeModal" class="text-white/80 hover:text-white transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white px-6 pt-6 pb-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-5">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Titre de l'entrée <span class="text-rose-500">*</span></label>
+                                <div class="relative rounded-2xl shadow-sm">
+                                    <input 
+                                        v-model="form.titre" 
+                                        type="text" 
+                                        placeholder="Ex: Subvention annuelle ou apport"
+                                        class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" 
+                                        required 
+                                    />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Montant (XAF) <span class="text-rose-500">*</span></label>
+                                <input 
+                                    v-model="form.montant" 
+                                    type="number" 
+                                    step="0.01" 
+                                    placeholder="0.00"
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" 
+                                    required 
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date <span class="text-rose-500">*</span></label>
+                                <input 
+                                    v-model="form.date_entree" 
+                                    type="date" 
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" 
+                                    required 
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Catégorie</label>
+                                <input 
+                                    v-model="form.categorie" 
+                                    type="text" 
+                                    placeholder="Ex: Apport, Subvention"
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" 
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Statut</label>
+                                <select 
+                                    v-model="form.statut" 
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-705 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium cursor-pointer"
+                                >
+                                    <option value="En attente">En attente</option>
+                                    <option value="Encaissé">Encaissé</option>
+                                    <option value="Annulé">Annulé</option>
+                                </select>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Référence (N° Chèque / Virement)</label>
+                                <input 
+                                    v-model="form.reference" 
+                                    type="text" 
+                                    placeholder="Ex: CHQ-5001"
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" 
+                                />
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description (Optionnel)</label>
+                                <textarea 
+                                    v-model="form.description" 
+                                    rows="3" 
+                                    placeholder="Ajoutez des détails supplémentaires..."
+                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+                                ></textarea>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-slate-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6">
+
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100">
                         <button
                             @click="saveEntree"
                             :disabled="isLoading"
-                            class="inline-flex w-full justify-center rounded-xl border border-transparent bg-emerald-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm transition-all disabled:opacity-50"
+                            class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            {{ isLoading ? 'Enregistrement...' : (isEditing ? 'Mettre à jour' : 'Enregistrer') }}
+                            <span v-if="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            <span>{{ isEditing ? 'Mettre à jour' : 'Enregistrer' }}</span>
                         </button>
                         <button
                             @click="closeModal"
-                            class="mt-3 inline-flex w-full justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-base font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all"
+                            class="px-6 py-3.5 bg-white border-2 border-slate-350 text-slate-705 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
                         >
                             Annuler
                         </button>
@@ -260,7 +310,16 @@ const filteredEntrees = computed(() => {
 const openModal = (entree = null) => {
     if (entree) {
         isEditing.value = true;
-        form.value = { ...entree };
+        form.value = { 
+            id: entree.id,
+            titre: entree.titre,
+            description: entree.description || '',
+            montant: entree.montant,
+            date_entree: entree.date_entree ? entree.date_entree.split('T')[0] : new Date().toISOString().split('T')[0],
+            categorie: entree.categorie || '',
+            reference: entree.reference || '',
+            statut: entree.statut || 'En attente'
+        };
     } else {
         isEditing.value = false;
         form.value = {

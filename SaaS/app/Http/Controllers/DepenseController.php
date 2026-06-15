@@ -15,7 +15,8 @@ class DepenseController extends Controller
             return response()->json(['error' => 'Non autorisé'], 403);
         }
 
-        $query = Depense::where('company_profile_id', $user->company_profile_id)
+        $query = Depense::with('typeDepense')
+            ->where('company_profile_id', $user->company_profile_id)
             ->where('deleted', false)
             ->orderBy('date_depense', 'desc');
 
@@ -38,6 +39,7 @@ class DepenseController extends Controller
             'description' => 'nullable|string',
             'montant' => 'required|numeric|min:0',
             'date_depense' => 'required|date',
+            'type_depense_id' => 'nullable|integer|exists:type_depenses,id',
             'categorie' => 'nullable|string|max:100',
             'reference' => 'nullable|string|max:100',
             'statut' => 'required|string|in:Payé,En attente,Annulé',
@@ -52,7 +54,7 @@ class DepenseController extends Controller
 
         $depense->save();
 
-        return response()->json($depense, 201);
+        return response()->json($depense->load('typeDepense'), 201);
     }
 
     public function update(Request $request, Depense $depense)
@@ -67,6 +69,7 @@ class DepenseController extends Controller
             'description' => 'nullable|string',
             'montant' => 'required|numeric|min:0',
             'date_depense' => 'required|date',
+            'type_depense_id' => 'nullable|integer|exists:type_depenses,id',
             'categorie' => 'nullable|string|max:100',
             'reference' => 'nullable|string|max:100',
             'statut' => 'required|string|in:Payé,En attente,Annulé',
@@ -74,7 +77,7 @@ class DepenseController extends Controller
 
         $depense->update($validated);
 
-        return response()->json($depense);
+        return response()->json($depense->load('typeDepense'));
     }
 
     public function updateStatus(Request $request, Depense $depense)

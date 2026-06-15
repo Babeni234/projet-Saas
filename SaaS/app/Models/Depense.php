@@ -15,6 +15,7 @@ class Depense extends Model
         'uuid',
         'company_profile_id',
         'agency_id',
+        'type_depense_id',
         'titre',
         'description',
         'montant',
@@ -50,5 +51,10 @@ class Depense extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class, 'agency_id');
+    }
+
+    public function typeDepense(): BelongsTo
+    {
+        return $this->belongsTo(TypeDepense::class, 'type_depense_id');
     }
 }

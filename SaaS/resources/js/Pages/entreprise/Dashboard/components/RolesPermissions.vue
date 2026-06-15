@@ -571,6 +571,62 @@
             </div>
         </div>
 
+        <!-- Types de Dépenses Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types de Dépenses</h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Définissez les différents types de dépenses (ex: Maintenance, Impôts, Rénovation, Salaires) configurables pour votre entreprise et vos agences.</p>
+                </div>
+                <button
+                    @click="openCreateTypeDepenseModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type de Dépense
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeDepenses"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeDepenseModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeDepense(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeDepenses.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type de dépense configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Règles de gestion loyer / pénalités Section -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
@@ -1159,6 +1215,62 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit TypeDepense Modal -->
+        <ModalPremium
+            :show="showTypeDepenseModal"
+            :title="isEditingTypeDepense ? 'Modifier le Type de Dépense' : 'Ajouter un Type de Dépense'"
+            :subtitle="isEditingTypeDepense ? 'Modifiez les détails de ce type de dépense' : 'Créez un nouveau type de dépense pour votre entreprise'"
+            size="md"
+            type="default"
+            @close="showTypeDepenseModal = false"
+        >
+            <form @submit.prevent="submitTypeDepenseForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type de Dépense <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeDepenseForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Maintenance, Impôts, Rénovation, Salaires..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        />
+                        <span v-if="typeDepenseErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeDepenseErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeDepenseForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type de dépense..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                        ></textarea>
+                        <span v-if="typeDepenseErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeDepenseErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeDepenseModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-707 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeDepenseSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeDepenseSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeDepense ? 'Mettre à Jour' : 'Créer le Type' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Add/Edit RegleLoyer Modal -->
         <ModalPremium
             :show="showRegleLoyerModal"
@@ -1303,6 +1415,18 @@ const editingTypeFactureId = ref(null);
 const isTypeFactureSubmitting = ref(false);
 const typeFactureErrors = ref({});
 const typeFactureForm = ref({
+    nom: '',
+    description: ''
+});
+
+// TypeDepenses state
+const typeDepenses = ref([]);
+const showTypeDepenseModal = ref(false);
+const isEditingTypeDepense = ref(false);
+const editingTypeDepenseId = ref(null);
+const isTypeDepenseSubmitting = ref(false);
+const typeDepenseErrors = ref({});
+const typeDepenseForm = ref({
     nom: '',
     description: ''
 });
@@ -1476,6 +1600,7 @@ onMounted(() => {
     fetchTypeEtatDesLieux();
     fetchCurrency();
     fetchTypeFactures();
+    fetchTypeDepenses();
     fetchRegleLoyers();
 });
 
@@ -2302,6 +2427,106 @@ const deleteTypeFacture = async (type) => {
     } catch (error) {
         console.error(error);
         showNotification('error', 'Erreur', 'Impossible de supprimer le type de facture.');
+    }
+};
+
+// TypeDepense CRUD methods
+const fetchTypeDepenses = async () => {
+    try {
+        const response = await fetch('/api/type-depenses', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            typeDepenses.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération type depenses:", error);
+    }
+};
+
+const openCreateTypeDepenseModal = () => {
+    isEditingTypeDepense.value = false;
+    editingTypeDepenseId.value = null;
+    typeDepenseForm.value = { nom: '', description: '' };
+    typeDepenseErrors.value = {};
+    showTypeDepenseModal.value = true;
+};
+
+const openEditTypeDepenseModal = (type) => {
+    isEditingTypeDepense.value = true;
+    editingTypeDepenseId.value = type.id;
+    typeDepenseForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeDepenseErrors.value = {};
+    showTypeDepenseModal.value = true;
+};
+
+const submitTypeDepenseForm = async () => {
+    isTypeDepenseSubmitting.value = true;
+    typeDepenseErrors.value = {};
+    try {
+        const url = isEditingTypeDepense.value
+            ? `/api/type-depenses/${editingTypeDepenseId.value}`
+            : '/api/type-depenses';
+        const method = isEditingTypeDepense.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeDepenseForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeDepense.value ? 'Le type de dépense a été mis à jour.' : 'Le type de dépense a été créé.'
+            );
+            showTypeDepenseModal.value = false;
+            fetchTypeDepenses();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeDepenseErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeDepenseSubmitting.value = false;
+    }
+};
+
+const deleteTypeDepense = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type de dépense "${type.nom}" ?`)) return;
+    try {
+        const response = await fetch(`/api/type-depenses/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type de dépense a été supprimé.');
+            fetchTypeDepenses();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type de dépense.');
     }
 };
 
