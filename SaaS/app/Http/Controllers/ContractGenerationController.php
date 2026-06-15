@@ -37,7 +37,7 @@ class ContractGenerationController extends Controller
 
         $user = Auth::user();
         $companyProfileId = $user ? $user->company_profile_id : null;
-        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Enterprise Property Corp';
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
 
         $locataireId = $request->input('locataire_id');
         $locataire = $request->input('locataire');
@@ -165,9 +165,11 @@ class ContractGenerationController extends Controller
     private function generateLocalFallback($locataire, $loyer, $caution, $debut, $fin, $reference, $batiment, $duree, $typeBail, $template, $instructions, $apiError)
     {
         $tpl = $template;
+        $user = Auth::user();
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
         if (empty($tpl)) {
             $tpl = "<h3>CONTRAT DE BAIL</h3>
-            <p><strong>Bailleur :</strong> Enterprise Property Corp<br>
+            <p><strong>Bailleur :</strong> {$companyName}<br>
             <strong>Preneur :</strong> [Locataire]<br>
             <strong>Bien Loué :</strong> Logement [Logement] situé dans le bâtiment [Bâtiment]<br>
             <strong>Type de Bail :</strong> [TypeBail]<br>
@@ -252,11 +254,14 @@ class ContractGenerationController extends Controller
         $template = $request->input('template');
         $instructions = $request->input('instructions');
 
+        $user = Auth::user();
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
+
         // Construct prompt for Gemini
         $prompt = "Vous êtes un expert juridique spécialisé en droit immobilier et en rédaction d'actes d'engagement et de conventions.\n";
         $prompt .= "Rédigez un document d'engagement de type '{$type}' professionnel, complet et juridiquement structuré en français en utilisant les informations suivantes :\n\n";
         $prompt .= "- **Type d'acte** : {$type}\n";
-        $prompt .= "- **Bailleur / Émetteur** : Enterprise Property Corp\n";
+        $prompt .= "- **Bailleur / Émetteur** : {$companyName}\n";
         $prompt .= "- **Contrepartie (Partie concernée)** : {$partie}\n";
         $prompt .= "- **Date de début de l'engagement** : {$dateDebut}\n";
         $prompt .= "- **Date de fin de l'engagement** : {$dateFin}\n";
@@ -324,9 +329,11 @@ class ContractGenerationController extends Controller
     private function generateEngagementLocalFallback($partie, $montant, $type, $dateDebut, $dateFin, $template, $instructions, $apiError)
     {
         $tpl = $template;
+        $user = Auth::user();
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
         if (empty($tpl)) {
             $tpl = "<h3>ACTE D'ENGAGEMENT ({Type})</h3>
-            <p><strong>Émetteur :</strong> Enterprise Property Corp<br>
+            <p><strong>Émetteur :</strong> {$companyName}<br>
             <strong>Partie Concernée :</strong> [Partie]<br>
             <strong>Type d'Engagement :</strong> [Type]<br>
             <strong>Durée :</strong> à compter du [Date Début] jusqu'au [Date Fin]</p>
@@ -390,11 +397,14 @@ class ContractGenerationController extends Controller
         $template = $request->input('template');
         $instructions = $request->input('instructions');
 
+        $user = Auth::user();
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
+
         // Construct prompt for Gemini
         $prompt = "Vous êtes un expert juridique spécialisé en droit immobilier et en rédaction d'états des lieux (procès-verbaux d'entrée et de sortie).\n";
         $prompt .= "Rédigez un document d'état des lieux de type '{$type}' professionnel, complet et rigoureux en français en utilisant les informations suivantes :\n\n";
         $prompt .= "- **Type d'état des lieux** : {$type}\n";
-        $prompt .= "- **Bailleur / Propriétaire** : Enterprise Property Corp\n";
+        $prompt .= "- **Bailleur / Propriétaire** : {$companyName}\n";
         $prompt .= "- **Locataire** : {$locataire}\n";
         $prompt .= "- **Logement concerné** : {$logement}\n";
         $prompt .= "- **Date de l'état des lieux** : {$date}\n\n";
@@ -461,9 +471,11 @@ class ContractGenerationController extends Controller
     private function generateEtatDesLieuxLocalFallback($locataire, $logement, $type, $date, $template, $instructions, $apiError)
     {
         $tpl = $template;
+        $user = Auth::user();
+        $companyName = ($user && $user->company) ? $user->company->legal_name : 'Votre Entreprise';
         if (empty($tpl)) {
             $tpl = "<h3>PROCES-VERBAL D'ETAT DES LIEUX ({Type})</h3>
-            <p><strong>Bailleur :</strong> Enterprise Property Corp<br>
+            <p><strong>Bailleur :</strong> {$companyName}<br>
             <strong>Locataire :</strong> [Locataire]<br>
             <strong>Logement :</strong> [Logement]<br>
             <strong>Type :</strong> [Type]<br>
@@ -524,7 +536,7 @@ class ContractGenerationController extends Controller
         $employee = $user ? $user->employee : null;
         $agencyId = ($employee && $employee->agency_id) ? $employee->agency_id : null;
         $agency = $agencyId ? \App\Models\Agency::find($agencyId) : null;
-        $companyName = $company ? $company->legal_name : 'Enterprise Property Corp';
+        $companyName = $company ? $company->legal_name : 'Votre Entreprise';
 
         // Security check on user query to prevent cross-company info gathering
         if ($this->isSecurityThreat($message, $companyProfileId, $user)) {
@@ -538,7 +550,7 @@ class ContractGenerationController extends Controller
         // Build the context description
         $contextStr = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        $systemPrompt = "Vous êtes un assistant IA de gestion immobilière intelligent et professionnel pour la plateforme Enterprise Property Corp.\n";
+        $systemPrompt = "Vous êtes un assistant IA de gestion immobilière intelligent et professionnel pour notre plateforme SaaS de gestion immobilière.\n";
         $systemPrompt .= "Vous agissez au sein de l'organisation active suivante :\n";
         $systemPrompt .= "- Nom de l'organisation : " . ($agency ? "Agence : " . $agency->name : "Siège / Compagnie : " . $companyName) . "\n";
         $systemPrompt .= "- ID de la compagnie active : {$companyProfileId}\n";

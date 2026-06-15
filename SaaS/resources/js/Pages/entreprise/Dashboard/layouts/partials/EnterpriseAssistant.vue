@@ -158,7 +158,7 @@ const toggleMode = () => {
 };
 
 const messages = ref([
-    { role: 'assistant', content: '<p>Bonjour <strong>Administrateur</strong> ! Je suis votre assistant de gestion intelligent Enterprise Property Corp.</p><p>Je peux vous aider à analyser la base de données (locataires, factures, loyers impayés) et vous rediriger vers les modules appropriés de l\'application. Que voulez-vous savoir ?</p>' }
+    { role: 'assistant', content: '<p>Bonjour <strong>Administrateur</strong> ! Je suis votre assistant de gestion intelligent de la plateforme.</p><p>Je peux vous aider à analyser la base de données (locataires, factures, loyers impayés) et vous rediriger vers les modules appropriés de l\'application. Que voulez-vous savoir ?</p>' }
 ]);
 
 const suggestions = [
