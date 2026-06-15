@@ -47,4 +47,74 @@ class EvenementController extends Controller
 
         return response()->json($evenements);
     }
+
+    /**
+     * Get users and their connection status for the connected company or agency.
+     */
+    public function usersConnectionStatus(Request $request)
+    {
+        $user = Auth::user();
+        $companyProfileId = $user->company_profile_id;
+
+        if (!$companyProfileId) {
+            return response()->json([]);
+        }
+
+        $query = \App\Models\User::where('company_profile_id', $companyProfileId)
+            ->with(['role', 'employee.agency']);
+
+        // Check if user is restricted to an agency
+        $isAgent = $user->employee && $user->employee->agency_id !== null;
+        if ($isAgent) {
+            $query->whereHas('employee', function ($q) use ($user) {
+                $q->where('agency_id', $user->employee->agency_id);
+            });
+        }
+
+        $users = $query->get()->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->role ? $u->role->name : 'N/A',
+                'agency_name' => $u->employee && $u->employee->agency ? $u->employee->agency->name : 'Siège général',
+                'is_connected' => (bool) $u->is_connected,
+                'last_login_at' => $u->last_login_at ? $u->last_login_at->toDateTimeString() : 'Jamais',
+            ];
+        });
+
+        return response()->json($users);
+    }
+
+    /**
+     * Force log out a user.
+     */
+    public function forceLogoutUser(Request $request, \App\Models\User $user)
+    {
+        $currentUser = Auth::user();
+        
+        // Authorize company profile matching
+        if ($user->company_profile_id !== $currentUser->company_profile_id) {
+            abort(403, 'Accès non autorisé.');
+        }
+
+        // Set flags to trigger forced logout on their next request
+        $user->update([
+            'must_logout' => true,
+            'is_connected' => false,
+        ]);
+
+        // Log forced logout action immediately
+        \App\Helpers\EventLogger::log(
+            "Déconnexion forcée",
+            "L'utilisateur {$user->name} a été déconnecté de force par {$currentUser->name}",
+            'Déconnexion',
+            'Utilisateur',
+            $user->employee ? $user->employee->agency_id : null,
+            $user->company_profile_id,
+            $user->id
+        );
+
+        return response()->json(['message' => "L'utilisateur a été déconnecté de force."]);
+    }
 }

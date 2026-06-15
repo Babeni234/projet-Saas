@@ -108,6 +108,20 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        if ($user) {
+            $user->update(['is_connected' => true]);
+            
+            \App\Helpers\EventLogger::log(
+                "Connexion de l'utilisateur",
+                "L'utilisateur {$user->name} s'est connecté au système",
+                'Connexion',
+                'Utilisateur',
+                $user->employee ? $user->employee->agency_id : null,
+                $user->company_profile_id,
+                $user->id
+            );
+        }
+
         if ($user && $user->employee && $user->employee->agency_id !== null) {
             return redirect()->route('agence.dashboard');
         }
@@ -160,6 +174,21 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->update(['is_connected' => false]);
+            
+            \App\Helpers\EventLogger::log(
+                "Déconnexion de l'utilisateur",
+                "L'utilisateur {$user->name} s'est déconnecté du système",
+                'Déconnexion',
+                'Utilisateur',
+                $user->employee ? $user->employee->agency_id : null,
+                $user->company_profile_id,
+                $user->id
+            );
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

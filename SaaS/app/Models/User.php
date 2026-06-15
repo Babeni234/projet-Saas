@@ -31,6 +31,8 @@ class User extends Authenticatable
         'status',
         'last_login_at',
         'company_profile_id',
+        'is_connected',
+        'must_logout',
     ];
 
     /**

@@ -210,6 +210,8 @@ Route::middleware('auth')->group(function () {
 
     // Evenements API routes
     Route::get('/api/evenements', [\App\Http\Controllers\EvenementController::class, 'index'])->name('evenements.json');
+    Route::get('/api/users/connection-status', [\App\Http\Controllers\EvenementController::class, 'usersConnectionStatus'])->name('users.connection-status');
+    Route::post('/api/users/{user}/force-logout', [\App\Http\Controllers\EvenementController::class, 'forceLogoutUser'])->name('users.force-logout');
 
     // Batiments API routes
     Route::get('/api/batiments', [BatimentController::class, 'index'])->name('batiments.json');
