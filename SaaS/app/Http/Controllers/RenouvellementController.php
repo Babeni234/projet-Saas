@@ -21,7 +21,7 @@ class RenouvellementController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Renouvellement::with(['locataire', 'contrat', 'agency', 'company'])->orderBy('created_at', 'desc');
+        $query = Renouvellement::with(['locataire', 'contrat.logement.categorie', 'agency', 'company'])->orderBy('created_at', 'desc');
 
         if ($user->employee && $user->employee->agency_id !== null) {
             $query->where('agency_id', $user->employee->agency_id);
@@ -83,7 +83,7 @@ class RenouvellementController extends Controller
 
         return response()->json([
             'message' => 'Demande de renouvellement créée avec succès',
-            'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+            'renouvellement' => $renouvellement->load(['locataire', 'contrat.logement.categorie', 'agency'])
         ], 201);
     }
 
@@ -101,7 +101,7 @@ class RenouvellementController extends Controller
 
         return response()->json([
             'message' => 'Renouvellement mis à jour avec succès',
-            'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+            'renouvellement' => $renouvellement->load(['locataire', 'contrat.logement.categorie', 'agency'])
         ]);
     }
 
@@ -115,12 +115,13 @@ class RenouvellementController extends Controller
 
             DB::commit();
 
-            $tenantEmail = $renouvellement->locataire && $renouvellement->locataire->user ? $renouvellement->locataire->user->email : null;
+            $renouvellement->loadMissing(['locataire.user', 'contrat.logement', 'agency', 'company']);
+            $tenantEmail = $renouvellement->locataire?->user?->email;
             $this->sendMailSafe($tenantEmail, new RenouvellementApproved($renouvellement));
 
             return response()->json([
                 'message' => 'Renouvellement approuvé. Le locataire a été notifié et les informations ont été mises à jour.',
-                'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+                'renouvellement' => $renouvellement->load(['locataire', 'contrat.logement.categorie', 'agency'])
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -144,7 +145,7 @@ class RenouvellementController extends Controller
 
         return response()->json([
             'message' => 'Renouvellement rejeté. Le locataire a été notifié.',
-            'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+            'renouvellement' => $renouvellement->load(['locataire', 'contrat.logement.categorie', 'agency'])
         ]);
     }
 
@@ -179,7 +180,7 @@ class RenouvellementController extends Controller
 
             return response()->json([
                 'message' => 'Renouvellement confirmé avec succès. Les informations ont été mises à jour.',
-                'renouvellement' => $renouvellement->load(['locataire', 'contrat', 'agency'])
+                'renouvellement' => $renouvellement->load(['locataire', 'contrat.logement.categorie', 'agency'])
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

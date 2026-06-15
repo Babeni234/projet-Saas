@@ -142,7 +142,8 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="block text-slate-900 font-semibold">Contrat #{{ r.contrat?.numero || r.contrat?.id }}</span>
-                                    <span class="text-xs text-slate-500">Logement: {{ r.contrat?.logement?.reference || 'N/A' }}</span>
+                                    <span class="text-xs text-slate-500 font-semibold">Logement : {{ r.contrat?.logement?.reference || 'N/A' }}</span>
+                                    <span class="text-[10px] bg-slate-100 text-slate-650 px-2 py-0.5 rounded-md mt-1 inline-block font-bold">Catégorie : {{ r.contrat?.logement?.categorie?.nom || 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="block text-slate-900 font-bold">{{ formatCurrency(r.nouveau_loyer) }} / {{ r.cycle_paiement }}</span>
@@ -484,9 +485,20 @@
                 </div>
                 <div class="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                     <template v-if="!isRejectionMode">
-                        <button @click="showDecisionModal = false" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Annuler</button>
-                        <button @click="toggleRejectionMode" class="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-bold transition">Rejeter la demande</button>
-                        <button @click="confirmApproval" class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 shadow shadow-emerald-500/25 transition">Approuver la demande</button>
+                        <button @click="showDecisionModal = false" :disabled="isApproving" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Annuler</button>
+                        <button @click="toggleRejectionMode" :disabled="isApproving" class="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-bold transition">Rejeter la demande</button>
+                        <button @click="confirmApproval" :disabled="isApproving || isRejecting" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow shadow-emerald-500/25 transition flex items-center justify-center gap-2 active:scale-95 duration-300">
+                            <template v-if="isApproving">
+                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span>Approbation...</span>
+                            </template>
+                            <template v-else>
+                                <span>Approuver la demande</span>
+                            </template>
+                        </button>
                     </template>
                     <template v-else>
                         <button @click="isRejectionMode = false" :disabled="isRejecting" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Retour</button>
@@ -512,7 +524,7 @@
             <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-scale-up border border-slate-100">
                 <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
                     <h3 class="text-xl font-bold text-slate-900">Confirmer et finaliser le renouvellement</h3>
-                    <button @click="showConfirmModal = false" class="text-slate-400 hover:text-slate-650">
+                    <button @click="closeConfirmModal" :disabled="isCompleting" class="text-slate-400 hover:text-slate-650">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
@@ -530,28 +542,35 @@
                             <button 
                                 v-if="!isEditingContract" 
                                 @click="loadOldContract" 
-                                class="px-4 py-2 bg-teal-50 text-teal-650 border border-teal-200 rounded-lg text-xs font-bold hover:bg-teal-100/50 transition flex items-center gap-1"
+                                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                Rédiger le contrat
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                Charger l'ancien contrat
                             </button>
                         </div>
-
-                        <!-- Editable Rich Text Style text area -->
-                        <div v-if="isEditingContract" class="flex flex-col border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                            <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 text-xs font-semibold text-slate-550">
-                                Éditeur de contrat de bail (Format HTML accepté)
-                            </div>
+                        <div v-if="isEditingContract" class="border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-50">
                             <textarea 
+                                id="contract-renewal-editor"
                                 v-model="customContractContent" 
-                                class="w-full p-4 focus:outline-none min-h-[300px] font-mono text-sm leading-relaxed"
+                                class="w-full p-4 focus:outline-none min-h-[300px] text-sm leading-relaxed"
                             ></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                    <button @click="showConfirmModal = false" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Annuler</button>
-                    <button @click="confirmCompletion" :disabled="!customContractContent" class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 shadow shadow-emerald-500/25 transition disabled:opacity-50">Valider et finaliser</button>
+                    <button @click="closeConfirmModal" :disabled="isCompleting" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-white transition">Annuler</button>
+                    <button @click="confirmCompletion" :disabled="!customContractContent || isCompleting" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow shadow-emerald-500/25 transition disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 duration-300">
+                        <template v-if="isCompleting">
+                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <span>Validation...</span>
+                        </template>
+                        <template v-else>
+                            <span>Valider et finaliser</span>
+                        </template>
+                    </button>
                 </div>
             </div>
         </div>
@@ -758,7 +777,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import tinymce from 'tinymce';
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
@@ -821,6 +841,8 @@ const isRejectionMode = ref(false);
 const isGeneratingMotif = ref(false);
 const adjustedRejectionMotif = ref('');
 const isRejecting = ref(false);
+const isApproving = ref(false);
+const isCompleting = ref(false);
 
 const showConfirmModal = ref(false);
 const isEditingContract = ref(false);
@@ -1125,6 +1147,7 @@ const toggleRejectionMode = async () => {
 };
 
 const confirmApproval = async () => {
+    isApproving.value = true;
     try {
         const res = await fetch(`/api/renouvellements/${selectedRenewal.value.id}/approuver`, {
             method: 'POST',
@@ -1143,6 +1166,8 @@ const confirmApproval = async () => {
         console.error(e);
         errorMessage.value = "Erreur de connexion au serveur.";
         showError.value = true;
+    } finally {
+        isApproving.value = false;
     }
 };
 
@@ -1181,15 +1206,59 @@ const openConfirmModal = (r) => {
     selectedRenewal.value = r;
     isEditingContract.value = false;
     customContractContent.value = '';
+    isCompleting.value = false;
     showConfirmModal.value = true;
+};
+
+const closeConfirmModal = () => {
+    showConfirmModal.value = false;
+    isEditingContract.value = false;
+    customContractContent.value = '';
+    const editor = tinymce.get('contract-renewal-editor');
+    if (editor) {
+        tinymce.remove(editor);
+    }
+};
+
+const initTinyMCE = () => {
+    if (!tinymce) {
+        alert("TinyMCE n'est pas chargé. Veuillez vérifier votre connexion.");
+        return;
+    }
+    const editor = tinymce.get('contract-renewal-editor');
+    if (editor) {
+        tinymce.remove(editor);
+    }
+    tinymce.init({
+        selector: '#contract-renewal-editor',
+        skin_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/ui/oxide',
+        content_css: 'https://cdn.jsdelivr.net/npm/tinymce@7.2.0/skins/content/default/content.css',
+        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+        toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | fullscreen help',
+        setup: (editor) => {
+            editor.on('change', () => {
+                customContractContent.value = editor.getContent();
+            });
+        }
+    });
 };
 
 const loadOldContract = () => {
     customContractContent.value = selectedRenewal.value?.contrat?.content || `<h3>CONTRAT DE BAIL</h3><p>Modèle standard à éditer...</p>`;
     isEditingContract.value = true;
+    nextTick(() => {
+        initTinyMCE();
+    });
 };
 
 const confirmCompletion = async () => {
+    if (isEditingContract.value) {
+        const editor = tinymce.get('contract-renewal-editor');
+        if (editor) {
+            customContractContent.value = editor.getContent();
+        }
+    }
+    isCompleting.value = true;
     try {
         const res = await fetch(`/api/renouvellements/${selectedRenewal.value.id}/confirmer`, {
             method: 'POST',
@@ -1202,7 +1271,7 @@ const confirmCompletion = async () => {
         });
         if(res.ok) {
             await fetchData();
-            showConfirmModal.value = false;
+            closeConfirmModal();
             successMessage.value = "Le renouvellement de bail a été finalisé avec succès !";
             showSuccess.value = true;
         } else {
@@ -1213,6 +1282,8 @@ const confirmCompletion = async () => {
         console.error(e);
         errorMessage.value = "Erreur de connexion au serveur.";
         showError.value = true;
+    } finally {
+        isCompleting.value = false;
     }
 };
 
