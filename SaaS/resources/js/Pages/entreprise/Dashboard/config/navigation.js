@@ -75,6 +75,7 @@ export const navigation = [
                 accent: 'violet',
                 children: [
                     { name: 'dashboard.accounting', label: 'Vue d\'ensemble' },
+                    { name: 'accounting.finance-global', label: 'Finance globale' },
                     { name: 'accounting.depenses', label: 'Dépenses' },
                     { name: 'accounting.entrees-fonds', label: 'Autres entrées de fonds' },
                 ],
@@ -118,6 +119,7 @@ export const routeTitles = {
     'hotel.personnel': 'Personnel',
     'hotel.equipements': 'Équipements',
     'dashboard.accounting': 'Comptabilité & facturation',
+    'accounting.finance-global': 'Finance globale',
     'accounting.depenses': 'Dépenses',
     'accounting.entrees-fonds': 'Autres entrées de fonds',
     'dashboard.maintenance': 'Maintenance / SAV',

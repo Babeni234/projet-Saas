@@ -17,6 +17,32 @@
             </button>
         </div>
 
+        <!-- Professional Contextual Banner -->
+        <div class="mb-8 overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-600 p-6 text-white shadow-sm relative">
+            <div class="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div class="space-y-1">
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-violet-100 backdrop-blur-md">
+                        <span class="h-1.5 w-1.5 rounded-full bg-violet-200"></span>
+                        Optimisation Financière (Agence)
+                    </span>
+                    <h2 class="text-xl font-bold">Suivi Rigoureux des Sorties de Caisse</h2>
+                    <p class="text-sm text-violet-100/90 max-w-2xl">
+                        Enregistrez chaque dépense avec précision. Un suivi rigoureux de vos charges d'exploitation et des types de dépenses permet de maximiser la rentabilité de votre agence et de réduire les coûts superflus.
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="hidden lg:flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-md">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative background blur elements -->
+            <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-400/20 blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-indigo-400/20 blur-3xl pointer-events-none"></div>
+        </div>
+
         <!-- KPIs -->
         <div class="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

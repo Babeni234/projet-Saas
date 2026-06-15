@@ -415,6 +415,19 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/comptabilite/finance-global',
+        name: 'accounting.finance-global',
+        component: () => import('../Pages/entreprise/Dashboard/components/FinanceGlobalPage.vue'),
+        meta: {
+            title: 'Finance globale',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Comptabilité', to: { name: 'dashboard.accounting' } },
+                { label: 'Finance globale', to: { name: 'accounting.finance-global' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/maintenance',
         name: 'dashboard.maintenance',
         component: () => import('../Pages/entreprise/Dashboard/components/MaintenanceDashboard.vue'),

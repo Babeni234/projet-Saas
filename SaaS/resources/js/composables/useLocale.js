@@ -51,6 +51,7 @@ const dict = {
         // Navigation — modules
         'Comptabilite':               'Accounting',
         'Comptabilite & facturation': 'Accounting & Billing',
+        'Finance globale':            'Global Finance',
         'Creer une facture':          'Create Invoice',
         'Creation de facture':        'Create Invoice',
         'Maintenance':                'Maintenance',
