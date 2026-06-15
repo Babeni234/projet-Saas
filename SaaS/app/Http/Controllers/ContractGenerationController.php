@@ -511,23 +511,78 @@ class ContractGenerationController extends Controller
         $request->validate([
             'message' => 'required|string',
             'context' => 'nullable|array',
+            'mode' => 'nullable|string',
         ]);
 
         $message = $request->input('message');
         $context = $request->input('context');
+        $mode = $request->input('mode') ?: 'chat';
+
+        $user = Auth::user();
+        $companyProfileId = $user ? $user->company_profile_id : null;
+        $company = $user ? $user->company : null;
+        $employee = $user ? $user->employee : null;
+        $agencyId = ($employee && $employee->agency_id) ? $employee->agency_id : null;
+        $agency = $agencyId ? \App\Models\Agency::find($agencyId) : null;
+        $companyName = $company ? $company->legal_name : 'Enterprise Property Corp';
+
+        // Security check on user query to prevent cross-company info gathering
+        if ($this->isSecurityThreat($message, $companyProfileId, $user)) {
+            $this->sendSecurityAlertEmail($user, $company, $message);
+            return response()->json([
+                'success' => true,
+                'response' => "<p class='text-rose-600 font-bold'>⚠️ Accès refusé : Vous n'êtes pas autorisé à demander des informations en dehors de votre organisation.</p>"
+            ]);
+        }
 
         // Build the context description
         $contextStr = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
         $systemPrompt = "Vous êtes un assistant IA de gestion immobilière intelligent et professionnel pour la plateforme Enterprise Property Corp.\n";
+        $systemPrompt .= "Vous agissez au sein de l'organisation active suivante :\n";
+        $systemPrompt .= "- Nom de l'organisation : " . ($agency ? "Agence : " . $agency->name : "Siège / Compagnie : " . $companyName) . "\n";
+        $systemPrompt .= "- ID de la compagnie active : {$companyProfileId}\n";
+        if ($agency) {
+            $systemPrompt .= "- ID de l'agence active : {$agencyId}\n";
+        }
+        $systemPrompt .= "\n";
+
+        $systemPrompt .= "CONSIGNE DE SÉCURITÉ CRUCIALE :\n";
+        $systemPrompt .= "Vous n'avez accès qu'aux données de cette organisation active. Si l'utilisateur tente d'obtenir des informations sur une autre compagnie, une autre agence non affiliée, ou un utilisateur externe à son organisation (ex: 'donne moi les infos de la compagnie X', 'qui sont les admins du système global', etc.), vous DEVEZ obligatoirement et immédiatement répondre par la phrase exacte : '[SECURITY_VIOLATION] Tentative d\'accès non autorisé.' et rien d'autre.\n\n";
+
         $systemPrompt .= "Votre tâche est de répondre aux questions de l'administrateur concernant les données de la plateforme et de l'aider dans sa gestion.\n\n";
         $systemPrompt .= "Voici les données du système actuel extraites de l'application :\n";
         $systemPrompt .= "\"\"\"\n{$contextStr}\n\"\"\"\n\n";
+        
+        $systemPrompt .= "Consignes opérationnelles (Mode de fonctionnement) :\n";
+        if ($mode === 'chat') {
+            $systemPrompt .= "Vous êtes actuellement en MODE DISCUSSION (CHAT). Répondez aux questions, donnez des conseils et de l'aide théorique. Ne proposez aucun changement de base de données ni d'action [ACTION: ...]. Si l'utilisateur vous demande de créer, modifier ou supprimer un élément, rappelez-lui poliment de basculer en 'Mode Agent' via le bouton prévu à cet effet en haut de la fenêtre.\n\n";
+        } else {
+            $systemPrompt .= "Vous êtes actuellement en MODE AGENT. Vous êtes pleinement habilité à effectuer des modifications directes dans la base de données. Si l'utilisateur vous demande de créer, ajouter, modifier, ou supprimer un locataire, bâtiment, logement, ou contrat de bail, vous devez impérativement générer la balise d'action correspondante à la fin de votre réponse : [ACTION: ACTION_TYPE: {JSON_DATA}].\n";
+            $systemPrompt .= "Les actions valides sont :\n";
+            $systemPrompt .= "   - Ajouter un locataire :\n";
+            $systemPrompt .= "     [ACTION: ADD_LOCATAIRE: {\"nom\": \"Nom Complet\", \"email\": \"email@example.com\", \"telephone\": \"06...\", \"logement\": \"RefLogement ou Aucun\", \"garantie\": LoyerDeGarantie, \"statut\": \"Actif\"}]\n";
+            $systemPrompt .= "   - Supprimer un locataire :\n";
+            $systemPrompt .= "     [ACTION: DELETE_LOCATAIRE: {\"nom\": \"Nom Complet\"}]\n";
+            $systemPrompt .= "   - Ajouter un logement :\n";
+            $systemPrompt .= "     [ACTION: ADD_LOGEMENT: {\"reference\": \"RéfUnique\", \"batiment\": \"NomBatiment\", \"categorie\": \"Appartement|Bureau|Studio|Duplex\", \"etage\": NumeroEtage, \"surface\": SurfaceM2, \"loyer\": MontantLoyer, \"statut\": \"Libre\"}]\n";
+            $systemPrompt .= "   - Supprimer un logement :\n";
+            $systemPrompt .= "     [ACTION: DELETE_LOGEMENT: {\"reference\": \"RéfUnique\"}]\n";
+            $systemPrompt .= "   - Ajouter un bâtiment :\n";
+            $systemPrompt .= "     [ACTION: ADD_BATIMENT: {\"nom\": \"Nom Immeuble\", \"ville\": \"Ville\"}]\n";
+            $systemPrompt .= "   - Supprimer un bâtiment :\n";
+            $systemPrompt .= "     [ACTION: DELETE_BATIMENT: {\"nom\": \"Nom Immeuble\"}]\n";
+            $systemPrompt .= "   - Ajouter un contrat de bail :\n";
+            $systemPrompt .= "     [ACTION: ADD_CONTRAT: {\"locataire\": \"Nom Locataire\", \"reference\": \"RéfLogement\", \"loyer\": Loyer, \"caution\": Caution, \"debut\": \"YYYY-MM-DD\", \"fin\": \"YYYY-MM-DD\", \"statut\": \"Actif\"}]\n";
+            $systemPrompt .= "   - Supprimer un contrat :\n";
+            $systemPrompt .= "     [ACTION: DELETE_CONTRAT: {\"numero\": \"CTR-...\"}]\n\n";
+            $systemPrompt .= "Renvoyez TOUJOURS la balise d'action au format EXACT décrit ci-dessus, collée à la fin de votre texte.\n\n";
+        }
+
         $systemPrompt .= "Consignes importantes :\n";
         $systemPrompt .= "1. Répondez de manière professionnelle, précise et en français.\n";
-        $systemPrompt .= "2. Si l'administrateur vous pose des questions spécifiques (ex: 'Qui n'a pas payé ?', 'Quel est le loyer moyen ?', 'Combien de baux sont actifs ?', etc.), analysez les données JSON fournies pour donner des chiffres réels et des noms exacts issus du contexte.\n";
-        $systemPrompt .= "   - Note sur les impayés : regardez dans 'factures' (le statut 'Impayé' ou 'En attente') ou 'paiements'. Par exemple, si une facture a 'statut: Impayé' ou 'statut: En attente', indiquez le locataire concerné, le montant et la date.\n";
-        $systemPrompt .= "3. Si l'utilisateur exprime l'intention d'aller sur une page ou demande une redirection (ex: 'va sur la facturation', 'affiche les locataires', 'je veux voir les contrats', etc.), vous devez ajouter à la toute fin de votre réponse textuelle la balise spéciale [NAVIGATE: /path/to/page] pour déclencher la redirection automatique côté client.\n";
+        $systemPrompt .= "2. Si l'administrateur vous pose des questions spécifiques (ex: 'Qui n'a pas payé ?', 'Quel est le loyer moyen ?', etc.), analysez le JSON pour donner des chiffres réels et des noms exacts issus du contexte.\n";
+        $systemPrompt .= "3. Si l'utilisateur exprime l'intention d'aller sur une page ou demande une redirection, vous devez ajouter à la toute fin de votre réponse textuelle la balise spéciale [NAVIGATE: /path/to/page] pour déclencher la redirection automatique côté client.\n";
         $systemPrompt .= "Voici les routes valides :\n";
         $systemPrompt .= "   - Tableau de bord principal : /dashboard/master\n";
         $systemPrompt .= "   - Gestion des Bâtiments : /dashboard/immobilier/batiments\n";
@@ -541,28 +596,6 @@ class ContractGenerationController extends Controller
         $systemPrompt .= "   - Actes d'Engagement : /dashboard/immobilier/engagements\n";
         $systemPrompt .= "   - États des lieux : /dashboard/immobilier/etats-des-lieux\n";
         $systemPrompt .= "   - Historique d'activité : /dashboard/immobilier/historique\n\n";
-        $systemPrompt .= "Exemple de redirection : 'Je vous dirige vers la liste des locataires. [NAVIGATE: /dashboard/immobilier/locataires]'\n\n";
-        $systemPrompt .= "4. ACTIONS D'AGENT : Si l'utilisateur vous demande d'effectuer une action système (ajouter ou supprimer un élément : locataire, logement, bâtiment, contrat), vous devez générer à la fin de votre réponse la balise d'action spéciale [ACTION: ACTION_TYPE: {JSON_DATA}] qui sera exécutée en direct sur la base de données client.\n";
-        $systemPrompt .= "Les actions valides sont :\n";
-        $systemPrompt .= "   - Ajouter un locataire :\n";
-        $systemPrompt .= "     [ACTION: ADD_LOCATAIRE: {\"nom\": \"Nom Complet\", \"email\": \"email@example.com\", \"telephone\": \"06...\", \"logement\": \"RefLogement ou Aucun\", \"garantie\": LoyerDeGarantie, \"statut\": \"Actif\"}]\n";
-        $systemPrompt .= "   - Supprimer un locataire :\n";
-        $systemPrompt .= "     [ACTION: DELETE_LOCATAIRE: {\"nom\": \"Nom Complet\"}]\n";
-        $systemPrompt .= "   - Ajouter un logement (local) :\n";
-        $systemPrompt .= "     [ACTION: ADD_LOGEMENT: {\"reference\": \"RéfUnique\", \"batiment\": \"NomBatiment\", \"categorie\": \"Appartement|Burreau|Studio|Duplex\", \"sousCategorie\": \"T1|T2|T3|T4\", \"etage\": NumeroEtage, \"surface\": SurfaceM2, \"loyer\": MontantLoyer, \"statut\": \"Libre\"}]\n";
-        $systemPrompt .= "   - Supprimer un logement :\n";
-        $systemPrompt .= "     [ACTION: DELETE_LOGEMENT: {\"reference\": \"RéfUnique\"}]\n";
-        $systemPrompt .= "   - Ajouter un bâtiment :\n";
-        $systemPrompt .= "     [ACTION: ADD_BATIMENT: {\"nom\": \"Nom Immeuble\", \"ville\": \"Ville\"}]\n";
-        $systemPrompt .= "   - Supprimer un bâtiment :\n";
-        $systemPrompt .= "     [ACTION: DELETE_BATIMENT: {\"nom\": \"Nom Immeuble\"}]\n";
-        $systemPrompt .= "   - Ajouter un contrat de bail :\n";
-        $systemPrompt .= "     [ACTION: ADD_CONTRAT: {\"numero\": \"CTR-...\", \"locataire\": \"Nom Locataire\", \"loyer\": Loyer, \"caution\": Caution, \"debut\": \"YYYY-MM-DD\", \"fin\": \"YYYY-MM-DD\", \"statut\": \"Actif\", \"reference\": \"RéfLogement\", \"batiment\": \"NomBatiment\", \"duree\": \"1 an\", \"typeBail\": \"Habitation\", \"content\": \"Contenu HTML...\"}]\n";
-        $systemPrompt .= "   - Supprimer un contrat :\n";
-        $systemPrompt .= "     [ACTION: DELETE_CONTRAT: {\"numero\": \"CTR-...\"}]\n\n";
-        $systemPrompt .= "Important: Renvoyez TOUJOURS la balise d'action au format EXACT décrit ci-dessus, collée à la fin de votre texte. L'action et la redirection peuvent être cumulées si nécessaire.\n";
-        $systemPrompt .= "5. Si la donnée demandée n'existe pas dans le contexte, expliquez-le poliment. Ne faites pas de fausses affirmations (hallucinations).\n";
-        $systemPrompt .= "6. Essayez de formater votre réponse de manière claire (listes à puces, gras pour les chiffres) pour qu'elle soit agréable à lire.\n";
 
         $generatedText = '';
         $generateViaIA = true;
@@ -585,10 +618,274 @@ class ContractGenerationController extends Controller
             $generatedText = $this->assistantLocalFallback($message, $context);
         }
 
+        // Post-generation security validation check on LLM response
+        if (str_contains($generatedText, '[SECURITY_VIOLATION]')) {
+            $this->sendSecurityAlertEmail($user, $company, $message);
+            return response()->json([
+                'success' => true,
+                'response' => "<p class='text-rose-600 font-bold'>⚠️ Accès refusé : Vous n'êtes pas autorisé à demander des informations en dehors de votre organisation.</p>"
+            ]);
+        }
+
+        // Parse and execute database actions if in Agent mode
+        if ($mode === 'agent' && preg_match('/\[ACTION:\s*([A-Z_]+):\s*({[\s\S]*?})\]/i', $generatedText, $actionMatch)) {
+            $actionType = strtoupper($actionMatch[1]);
+            $actionData = json_decode($actionMatch[2], true);
+            
+            if ($actionData) {
+                try {
+                    $executionResult = $this->executeDatabaseAction($actionType, $actionData, $companyProfileId, $agencyId);
+                    // Remove action tag from final text and append execution note
+                    $generatedText = preg_replace('/\[ACTION:[\s\S]*?\]/i', '', $generatedText);
+                    $generatedText .= "\n\n⚡ **[Action Exécutée sur la BD]** : " . $executionResult;
+                } catch (Exception $actionEx) {
+                    $generatedText = preg_replace('/\[ACTION:[\s\S]*?\]/i', '', $generatedText);
+                    $generatedText .= "\n\n❌ **[Échec de l'action]** : " . $actionEx->getMessage();
+                }
+            }
+        }
+
         return response()->json([
             'success' => true,
             'response' => $generatedText,
         ]);
+    }
+
+    /**
+     * Helper to detect security threat or cross-company queries
+     */
+    private function isSecurityThreat($message, $companyProfileId, $user)
+    {
+        $messageLower = strtolower($message);
+        
+        $forbiddenKeywords = [
+            'autre entreprise', 'autres entreprises', 'other company', 'other companies',
+            'tous les utilisateurs', 'toutes les entreprises', 'toutes les compagnies',
+            'company_profiles', 'users table', 'admin data', 'database passwords',
+            'immosaas237', 'immosaas'
+        ];
+        
+        foreach ($forbiddenKeywords as $keyword) {
+            if (str_contains($messageLower, $keyword)) {
+                return true;
+            }
+        }
+        
+        preg_match_all('/\bcompany_profile_id\b|\bcompany\b/i', $message, $matches);
+        if (count($matches[0]) > 0 && preg_match('/\b[0-9]+\b/', $message, $numMatch)) {
+            $id = intval($numMatch[0]);
+            if ($id !== intval($companyProfileId)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Send email notification to immosaas237@gmail.com on unauthorized action
+     */
+    private function sendSecurityAlertEmail($user, $company, $message)
+    {
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Alerte de sécurité : Tentative d'accès non autorisé détectée dans l'assistant IA.\n\n" .
+                "Détails de la session :\n" .
+                "- Utilisateur : " . ($user ? $user->name . " (" . $user->email . ")" : 'Non identifié') . "\n" .
+                "- Entreprise : " . ($company ? $company->legal_name . " (ID: " . $company->id . ")" : 'N/A') . "\n" .
+                "- Horodatage : " . date('Y-m-d H:i:s') . "\n\n" .
+                "Message de l'utilisateur ayant déclenché l'alerte :\n" .
+                "\"\"\"\n{$message}\n\"\"\"",
+                function ($mail) {
+                    $mail->to('immosaas237@gmail.com')
+                         ->subject('Alerte de Sécurité IA - ImmoSaaS');
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error("Failed to send security alert email: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Execute SQL database changes directly on Eloquent models in backend Agent mode
+     */
+    private function executeDatabaseAction($type, $data, $companyProfileId, $agencyId)
+    {
+        switch ($type) {
+            case 'ADD_LOCATAIRE':
+                if (empty($data['nom'])) {
+                    throw new Exception("Le nom du locataire est obligatoire.");
+                }
+                
+                $userRecord = new \App\Models\User();
+                $userRecord->name = $data['nom'];
+                $userRecord->email = $data['email'] ?? (strtolower(str_replace(' ', '', $data['nom'])) . '@example.com');
+                if (\App\Models\User::where('email', $userRecord->email)->exists()) {
+                    $userRecord->email = 'loc_' . time() . '_' . $userRecord->email;
+                }
+                $userRecord->password = \Illuminate\Support\Facades\Hash::make('password123');
+                $userRecord->account_type = 'client';
+                $userRecord->company_profile_id = $companyProfileId;
+                $userRecord->save();
+
+                $locataire = new \App\Models\Locataire();
+                $locataire->user_id = $userRecord->id;
+                $locataire->company_profile_id = $companyProfileId;
+                $locataire->agency_id = $agencyId;
+                $locataire->telephone = $data['telephone'] ?? '';
+                $locataire->statut = $data['statut'] ?? 'Actif';
+                $locataire->save();
+
+                return "Le locataire '" . $data['nom'] . "' a été créé avec succès (ID: " . $locataire->id . ").";
+
+            case 'DELETE_LOCATAIRE':
+                if (empty($data['nom'])) {
+                    throw new Exception("Le nom du locataire est requis.");
+                }
+                $query = \App\Models\Locataire::where('company_profile_id', $companyProfileId);
+                if ($agencyId) {
+                    $query->where('agency_id', $agencyId);
+                }
+                $loc = $query->whereHas('user', function($q) use ($data) {
+                    $q->where('name', 'like', '%' . $data['nom'] . '%');
+                })->first();
+
+                if (!$loc) {
+                    throw new Exception("Locataire '" . $data['nom'] . "' introuvable.");
+                }
+                $nom = $loc->user ? $loc->user->name : $data['nom'];
+                $u = $loc->user;
+                $loc->delete();
+                if ($u) {
+                    $u->delete();
+                }
+                return "Le locataire '" . $nom . "' et son compte utilisateur associé ont été supprimés.";
+
+            case 'ADD_BATIMENT':
+                if (empty($data['nom'])) {
+                    throw new Exception("Le nom du bâtiment est obligatoire.");
+                }
+                $bat = new \App\Models\Batiment();
+                $bat->company_profile_id = $companyProfileId;
+                $bat->agency_id = $agencyId;
+                $bat->nom = $data['nom'];
+                $bat->ville = $data['ville'] ?? '';
+                $bat->save();
+                return "Le bâtiment '" . $data['nom'] . "' a été créé avec succès.";
+
+            case 'DELETE_BATIMENT':
+                if (empty($data['nom'])) {
+                    throw new Exception("Le nom du bâtiment est requis.");
+                }
+                $query = \App\Models\Batiment::where('company_profile_id', $companyProfileId);
+                if ($agencyId) {
+                    $query->where('agency_id', $agencyId);
+                }
+                $bat = $query->where('nom', 'like', '%' . $data['nom'] . '%')->first();
+                if (!$bat) {
+                    throw new Exception("Bâtiment '" . $data['nom'] . "' introuvable.");
+                }
+                $nom = $bat->nom;
+                $bat->delete();
+                return "Le bâtiment '" . $nom . "' a été supprimé.";
+
+            case 'ADD_LOGEMENT':
+                if (empty($data['reference'])) {
+                    throw new Exception("La référence du logement est obligatoire.");
+                }
+                $bat = null;
+                if (!empty($data['batiment'])) {
+                    $bat = \App\Models\Batiment::where('company_profile_id', $companyProfileId)
+                        ->where('nom', 'like', '%' . $data['batiment'] . '%')
+                        ->first();
+                }
+                $cat = null;
+                if (!empty($data['categorie'])) {
+                    $cat = \App\Models\Categorie::where('nom', 'like', '%' . $data['categorie'] . '%')->first();
+                }
+                if (!$cat) {
+                    $cat = \App\Models\Categorie::first();
+                }
+
+                $log = new \App\Models\Logement();
+                $log->company_profile_id = $companyProfileId;
+                $log->agency_id = $agencyId;
+                $log->batiment_id = $bat ? $bat->id : null;
+                $log->categorie_id = $cat ? $cat->id : null;
+                $log->reference = $data['reference'];
+                $log->etage = $data['etage'] ?? 1;
+                $log->surface = $data['surface'] ?? 50;
+                $log->loyer = $data['loyer'] ?? 0;
+                $log->statut = $data['statut'] ?? 'Libre';
+                $log->save();
+                return "Le logement '" . $data['reference'] . "' a été créé avec succès.";
+
+            case 'DELETE_LOGEMENT':
+                if (empty($data['reference'])) {
+                    throw new Exception("La référence du logement est requise.");
+                }
+                $query = \App\Models\Logement::where('company_profile_id', $companyProfileId);
+                if ($agencyId) {
+                    $query->where('agency_id', $agencyId);
+                }
+                $log = $query->where('reference', 'like', '%' . $data['reference'] . '%')->first();
+                if (!$log) {
+                    throw new Exception("Logement '" . $data['reference'] . "' introuvable.");
+                }
+                $ref = $log->reference;
+                $log->delete();
+                return "Le logement '" . $ref . "' a été supprimé.";
+
+            case 'ADD_CONTRAT':
+                $loc = null;
+                if (!empty($data['locataire'])) {
+                    $loc = \App\Models\Locataire::where('company_profile_id', $companyProfileId)
+                        ->whereHas('user', function($q) use ($data) {
+                            $q->where('name', 'like', '%' . $data['locataire'] . '%');
+                        })->first();
+                }
+                $log = null;
+                if (!empty($data['reference'])) {
+                    $log = \App\Models\Logement::where('company_profile_id', $companyProfileId)
+                        ->where('reference', 'like', '%' . $data['reference'] . '%')
+                        ->first();
+                }
+                $tc = \App\Models\TypeContrat::where('company_profile_id', $companyProfileId)->first();
+
+                $contrat = new \App\Models\Contrat();
+                $contrat->company_profile_id = $companyProfileId;
+                $contrat->agency_id = $agencyId;
+                $contrat->locataire_id = $loc ? $loc->id : null;
+                $contrat->logement_id = $log ? $log->id : null;
+                $contrat->type_contrat_id = $tc ? $tc->id : null;
+                $contrat->loyer = $data['loyer'] ?? ($log ? $log->loyer : 0);
+                $contrat->caution = $data['caution'] ?? (($log ? $log->loyer : 0) * 2);
+                $contrat->debut = $data['debut'] ?? date('Y-m-d');
+                $contrat->fin = $data['fin'] ?? date('Y-m-d', strtotime('+1 year'));
+                $contrat->content = $data['content'] ?? '<h3>Contrat de bail</h3>';
+                $contrat->statut = $data['statut'] ?? 'Actif';
+                $contrat->save();
+                return "Le contrat de bail '" . $contrat->numero . "' a été créé.";
+
+            case 'DELETE_CONTRAT':
+                if (empty($data['numero'])) {
+                    throw new Exception("Le numéro de contrat est requis.");
+                }
+                $query = \App\Models\Contrat::where('company_profile_id', $companyProfileId);
+                if ($agencyId) {
+                    $query->where('agency_id', $agencyId);
+                }
+                $contrat = $query->where('numero', 'like', '%' . $data['numero'] . '%')->first();
+                if (!$contrat) {
+                    throw new Exception("Contrat '" . $data['numero'] . "' introuvable.");
+                }
+                $num = $contrat->numero;
+                $contrat->delete();
+                return "Le contrat '" . $num . "' a été supprimé.";
+
+            default:
+                throw new Exception("Action non prise en charge : " . $type);
+        }
     }
 
     /**

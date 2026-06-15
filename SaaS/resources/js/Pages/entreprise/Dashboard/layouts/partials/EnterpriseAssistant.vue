@@ -32,6 +32,23 @@
                 </button>
             </div>
 
+            <!-- Mode Switcher (Chat vs Agent Mode) -->
+            <div class="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center justify-between text-xs font-bold text-slate-700">
+                <span class="flex items-center gap-1.5">
+                    <span 
+                        class="h-2 w-2 rounded-full" 
+                        :class="currentMode === 'agent' ? 'bg-indigo-500 animate-pulse' : 'bg-slate-400'"
+                    ></span>
+                    Mode Actuel : <span :class="currentMode === 'agent' ? 'text-indigo-600' : 'text-slate-600'">{{ currentMode === 'agent' ? '🛠️ Agent BD' : '💬 Chat Simple' }}</span>
+                </span>
+                <button 
+                    @click="toggleMode"
+                    class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:text-indigo-600 transition-colors shadow-sm"
+                >
+                    Basculer en {{ currentMode === 'agent' ? 'Chat' : 'Agent' }}
+                </button>
+            </div>
+
             <!-- Messages Log -->
             <div 
                 ref="messageBox"
@@ -134,6 +151,11 @@ const isOpen = ref(false);
 const loading = ref(false);
 const inputMessage = ref('');
 const messageBox = ref(null);
+const currentMode = ref('chat');
+
+const toggleMode = () => {
+    currentMode.value = currentMode.value === 'chat' ? 'agent' : 'chat';
+};
 
 const messages = ref([
     { role: 'assistant', content: '<p>Bonjour <strong>Administrateur</strong> ! Je suis votre assistant de gestion intelligent Enterprise Property Corp.</p><p>Je peux vous aider à analyser la base de données (locataires, factures, loyers impayés) et vous rediriger vers les modules appropriés de l\'application. Que voulez-vous savoir ?</p>' }
@@ -192,7 +214,8 @@ const sendMessage = async () => {
     try {
         const response = await axios.post(route('ai.assistant'), {
             message: text,
-            context: context
+            context: context,
+            mode: currentMode.value
         });
 
         if (response.data && response.data.success) {
