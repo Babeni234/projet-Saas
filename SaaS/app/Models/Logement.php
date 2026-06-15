@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Logement extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, \App\Traits\LogsActivity;
 
     protected $table = 'logements';
 

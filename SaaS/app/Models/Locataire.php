@@ -10,7 +10,12 @@ use Illuminate\Support\Str;
 
 class Locataire extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, \App\Traits\LogsActivity;
+
+    public function getNomCompletAttribute(): string
+    {
+        return $this->nom;
+    }
 
     protected $table = 'locataires';
 

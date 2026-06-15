@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Engagement extends Model
 {
+    use \App\Traits\LogsActivity;
     protected $table = 'engagements';
 
     protected $fillable = [

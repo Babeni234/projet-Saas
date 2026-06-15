@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Batiment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'uuid',

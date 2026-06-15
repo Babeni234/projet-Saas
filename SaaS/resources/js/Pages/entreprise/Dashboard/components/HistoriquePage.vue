@@ -4,7 +4,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-slate-900">Historique Immobilier</h1>
-                <p class="text-slate-600 mt-1">Journal des activités et opérations</p>
+                <p class="text-slate-600 mt-1">Journal des activités et opérations de l'entreprise</p>
             </div>
             <button
                 @click="exportHistory"
@@ -117,44 +117,56 @@
 
         <!-- Timeline Section -->
         <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 border border-slate-100">
-            <div class="space-y-6">
-                <div v-for="evenement in filteredHistorique" :key="evenement.id" class="flex gap-4">
+            <div v-if="loading" class="flex flex-col items-center justify-center py-12 text-slate-500">
+                <svg class="w-8 h-8 animate-spin text-slate-600 mb-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span>Chargement de l'historique...</span>
+            </div>
+
+            <div v-else-if="filteredHistorique.length === 0" class="text-center py-12 text-slate-500">
+                Aucun événement enregistré pour le moment.
+            </div>
+
+            <div v-else class="space-y-6">
+                <div v-for="(evenement, index) in filteredHistorique" :key="evenement.id" class="flex gap-4">
                     <div class="flex flex-col items-center">
                         <div :class="{
-                            'w-10 h-10 rounded-full flex items-center justify-center': true,
-                            'bg-emerald-100': evenement.type === 'Création',
-                            'bg-amber-100': evenement.type === 'Modification',
-                            'bg-red-100': evenement.type === 'Suppression',
-                            'bg-blue-100': evenement.type === 'Renouvellement',
-                            'bg-purple-100': evenement.type === 'État des lieux'
+                            'w-10 h-10 rounded-full flex items-center justify-center shadow-sm': true,
+                            'bg-emerald-100 text-emerald-700': evenement.type === 'Création',
+                            'bg-amber-100 text-amber-700': evenement.type === 'Modification',
+                            'bg-red-100 text-red-700': evenement.type === 'Suppression',
+                            'bg-blue-100 text-blue-700': evenement.type === 'Renouvellement',
+                            'bg-purple-100 text-purple-700': evenement.type === 'État des lieux'
                         }">
-                            <svg v-if="evenement.type === 'Création'" class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg v-if="evenement.type === 'Création'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
-                            <svg v-else-if="evenement.type === 'Modification'" class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg v-else-if="evenement.type === 'Modification'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
-                            <svg v-else-if="evenement.type === 'Suppression'" class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg v-else-if="evenement.type === 'Suppression'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
-                            <svg v-else-if="evenement.type === 'Renouvellement'" class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg v-else-if="evenement.type === 'Renouvellement'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
                             </svg>
-                            <svg v-else class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <div v-if="evenement.id !== historique.length" class="w-0.5 flex-1 bg-slate-200 mt-2"></div>
+                        <div v-if="index !== filteredHistorique.length - 1" class="w-0.5 flex-1 bg-slate-200 mt-2"></div>
                     </div>
                     <div class="flex-1 pb-6">
                         <div class="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors">
-                            <div class="flex items-start justify-between">
-                                <div>
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                <div class="flex-1">
                                     <h3 class="font-semibold text-slate-900">{{ evenement.titre }}</h3>
                                     <p class="text-sm text-slate-600 mt-1">{{ evenement.description }}</p>
-                                    <div class="flex items-center gap-3 mt-2">
+                                    <div class="flex flex-wrap items-center gap-3 mt-2">
                                         <span :class="{
-                                            'px-2 py-1 rounded-full text-xs font-medium': true,
+                                            'px-2 py-1 rounded-full text-xs font-semibold': true,
                                             'bg-emerald-100 text-emerald-700': evenement.type === 'Création',
                                             'bg-amber-100 text-amber-700': evenement.type === 'Modification',
                                             'bg-red-100 text-red-700': evenement.type === 'Suppression',
@@ -166,14 +178,25 @@
                                         <span class="px-2 py-1 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
                                             {{ evenement.categorie }}
                                         </span>
+                                        <!-- Agency or Siège Badge -->
+                                        <span :class="{
+                                            'px-2 py-1 rounded-full text-xs font-semibold border': true,
+                                            'bg-indigo-50 text-indigo-700 border-indigo-150': evenement.agency_id !== null,
+                                            'bg-slate-100 text-slate-600 border-slate-200': evenement.agency_id === null
+                                        }">
+                                            {{ evenement.agency_name }}
+                                        </span>
                                         <span class="text-xs text-slate-500">{{ evenement.date }}</span>
                                         <span class="text-xs text-slate-500">{{ evenement.heure }}</span>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm font-medium text-slate-700">{{ evenement.utilisateur }}</span>
-                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs font-semibold">
-                                        {{ evenement.utilisateur.charAt(0) }}
+                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                    <div class="text-right">
+                                        <span class="text-sm font-semibold text-slate-700 block">{{ evenement.utilisateur }}</span>
+                                        <span class="text-xs text-slate-500 block font-medium">{{ evenement.role }}</span>
+                                    </div>
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                        {{ evenement.utilisateur ? evenement.utilisateur.charAt(0).toUpperCase() : 'S' }}
                                     </div>
                                 </div>
                             </div>
@@ -186,20 +209,31 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
-const historique = ref([
-    { id: 1, titre: 'Nouveau contrat créé', description: 'Contrat CT-2024-001 créé pour Jean Dupont', type: 'Création', categorie: 'Contrat', date: '2024-01-15', heure: '09:30', utilisateur: 'Admin' },
-    { id: 2, titre: 'Modification du logement', description: 'Appartement 101 mis à jour', type: 'Modification', categorie: 'Logement', date: '2024-01-15', heure: '10:15', utilisateur: 'Admin' },
-    { id: 3, titre: 'Nouveau locataire ajouté', description: 'Marie Martin enregistrée comme locataire', type: 'Création', categorie: 'Locataire', date: '2024-01-16', heure: '14:20', utilisateur: 'Admin' },
-    { id: 4, titre: 'État des lieux entrée', description: 'EDL-2024-001 effectué pour Appartement 102', type: 'État des lieux', categorie: 'Logement', date: '2024-01-17', heure: '11:00', utilisateur: 'Admin' },
-    { id: 5, titre: 'Renouvellement de contrat', description: 'Contrat CT-2023-015 renouvelé pour Pierre Bernard', type: 'Renouvellement', categorie: 'Contrat', date: '2024-01-18', heure: '16:45', utilisateur: 'Admin' },
-    { id: 6, titre: 'Suppression de bâtiment', description: 'Bâtiment BAT-003 supprimé du système', type: 'Suppression', categorie: 'Bâtiment', date: '2024-01-19', heure: '08:30', utilisateur: 'Admin' },
-    { id: 7, titre: 'Nouvel engagement signé', description: 'Convention ENG-2024-004 signée avec Sophie Richard', type: 'Création', categorie: 'Engagement', date: '2024-01-20', heure: '13:00', utilisateur: 'Admin' },
-    { id: 8, titre: 'Modification du loyer', description: 'Loyer du contrat CT-2024-002 modifié', type: 'Modification', categorie: 'Contrat', date: '2024-01-21', heure: '15:30', utilisateur: 'Admin' },
-    { id: 9, titre: 'État des lieux sortie', description: 'EDL-2024-003 effectué pour Appartement 101', type: 'État des lieux', categorie: 'Logement', date: '2024-01-22', heure: '10:00', utilisateur: 'Admin' },
-    { id: 10, titre: 'Nouveau bâtiment ajouté', description: 'Bâtiment BAT-004 créé dans le système', type: 'Création', categorie: 'Bâtiment', date: '2024-01-23', heure: '09:15', utilisateur: 'Admin' },
-]);
+const historique = ref([]);
+const loading = ref(false);
+
+const fetchHistorique = async () => {
+    loading.value = true;
+    try {
+        const res = await fetch('/api/evenements', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        historique.value = await res.json();
+    } catch (err) {
+        console.error('fetchHistorique:', err);
+        historique.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchHistorique();
+});
 
 const searchQuery = ref('');
 const filterType = ref('');
@@ -214,7 +248,9 @@ const filteredHistorique = computed(() => {
         filtered = filtered.filter(e => 
             e.titre.toLowerCase().includes(query) ||
             e.description.toLowerCase().includes(query) ||
-            e.utilisateur.toLowerCase().includes(query)
+            e.utilisateur.toLowerCase().includes(query) ||
+            (e.role && e.role.toLowerCase().includes(query)) ||
+            (e.agency_name && e.agency_name.toLowerCase().includes(query))
         );
     }
     
@@ -239,6 +275,7 @@ const ceMois = computed(() => {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     return historique.value.filter(e => {
+        if (!e.date) return false;
         const eventDate = new Date(e.date);
         return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
     }).length;
@@ -247,7 +284,32 @@ const creations = computed(() => historique.value.filter(e => e.type === 'Créat
 const modifications = computed(() => historique.value.filter(e => e.type === 'Modification').length);
 
 const exportHistory = () => {
-    alert('Export de l\'historique en cours...');
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "ID,Titre,Description,Type,Categorie,Date,Heure,Utilisateur,Role,Agence\n";
+    
+    historique.value.forEach(e => {
+        const row = [
+            e.id,
+            `"${e.titre.replace(/"/g, '""')}"`,
+            `"${e.description.replace(/"/g, '""')}"`,
+            e.type,
+            e.categorie,
+            e.date,
+            e.heure,
+            e.utilisateur,
+            e.role,
+            e.agency_name
+        ].join(",");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `historique_immobilier_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
 </script>
 

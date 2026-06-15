@@ -208,6 +208,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'update'])->name('illustrations.update');
     Route::delete('/api/illustrations/{illustration}', [\App\Http\Controllers\IllustrationController::class, 'destroy'])->name('illustrations.destroy');
 
+    // Evenements API routes
+    Route::get('/api/evenements', [\App\Http\Controllers\EvenementController::class, 'index'])->name('evenements.json');
+
     // Batiments API routes
     Route::get('/api/batiments', [BatimentController::class, 'index'])->name('batiments.json');
     Route::post('/api/batiments', [BatimentController::class, 'store'])->name('batiments.store');

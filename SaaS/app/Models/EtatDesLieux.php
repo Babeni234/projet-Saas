@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 class EtatDesLieux extends Model
 {
+    use \App\Traits\LogsActivity;
     protected $table = 'etat_des_lieux';
 
     protected $fillable = [
