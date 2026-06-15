@@ -944,8 +944,8 @@ const modalFilteredBatiments = computed(() => {
 });
 
 const modalFilteredContrats = computed(() => {
-    if (!formData.value.batiment_id) return [];
-    return contratsActifs.value.filter(c => c.batiment_id === formData.value.batiment_id);
+    if (!formData.value.batiment_id || !Array.isArray(contratsActifs.value)) return [];
+    return contratsActifs.value.filter(c => Number(c.batiment_id) === Number(formData.value.batiment_id));
 });
 
 // Dropdown computed filters based on search queries

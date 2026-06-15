@@ -16,22 +16,9 @@
                     class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                     <option value="">Sélectionner une ville</option>
-                    <option value="Paris">Paris</option>
-                    <option value="New York">New York</option>
-                    <option value="Tokyo">Tokyo</option>
-                    <option value="London">Londres</option>
-                    <option value="Dubai">Dubaï</option>
-                    <option value="Singapore">Singapour</option>
-                    <option value="Sydney">Sydney</option>
-                    <option value="Los Angeles">Los Angeles</option>
-                    <option value="Berlin">Berlin</option>
-                    <option value="Shanghai">Shanghai</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="São Paulo">São Paulo</option>
-                    <option value="Moscow">Moscou</option>
-                    <option value="Toronto">Toronto</option>
-                    <option value="Hong Kong">Hong Kong</option>
-                    <option value="Douala">Douala</option>
+                    <option v-for="city in citiesList" :key="city" :value="city">
+                        {{ city }}
+                    </option>
                 </select>
                 <button 
                     @click="toggleSettings" 
@@ -223,6 +210,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import axios from 'axios';
 
 const globeContainer = ref(null);
 const loading = ref(true);
@@ -238,52 +226,62 @@ const settings = ref({
     nightMode: false
 });
 
-// City coordinates for centering
-const cityCoordinates = {
-    'Paris': { lat: 48.8566, lng: 2.3522 },
-    'New York': { lat: 40.7128, lng: -74.0060 },
-    'Tokyo': { lat: 35.6762, lng: 139.6503 },
-    'London': { lat: 51.5074, lng: -0.1278 },
-    'Dubai': { lat: 25.2048, lng: 55.2708 },
-    'Singapore': { lat: 1.3521, lng: 103.8198 },
-    'Sydney': { lat: -33.8688, lng: 151.2093 },
-    'Los Angeles': { lat: 34.0522, lng: -118.2437 },
-    'Berlin': { lat: 52.5200, lng: 13.4050 },
-    'Shanghai': { lat: 31.2304, lng: 121.4737 },
-    'Mumbai': { lat: 19.0760, lng: 72.8777 },
-    'São Paulo': { lat: -23.5505, lng: -46.6333 },
-    'Moscow': { lat: 55.7558, lng: 37.6173 },
-    'Toronto': { lat: 43.6532, lng: -79.3832 },
-    'Hong Kong': { lat: 22.3193, lng: 114.1694 },
-    'Douala': { lat: 4.0483, lng: 9.7043 }
-};
+const buildings = ref([]);
+const citiesList = ref([]);
+const cityCoordinates = ref({});
 
-const totalLocations = ref(156);
-const onlineLocations = ref(142);
-const recentActivity = ref(28);
-const countries = ref(23);
+const totalLocations = ref(0);
+const onlineLocations = ref(0);
+const recentActivity = ref(0);
+const countries = ref(0);
 
-let globeInstance = null;
-let mapInstance = null;
-let satelliteInstance = null;
+let globeInstance = null; // Mapbox Globe Map instance
+let mapInstance = null; // Leaflet Flat Map instance
+let satelliteInstance = null; // Mapbox Satellite Map instance
 let mapMarkers = [];
 let mapPolylines = [];
+let rotationInterval = null; // requestAnimationFrame token
+
+// Curated architectural photos for buildings/hotels
+const getBuildingPhoto = (id, type) => {
+    const buildingPhotos = [
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1479839672679-a784b2ec9353?auto=format&fit=crop&w=400&q=80'
+    ];
+    const hotelPhotos = [
+        'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=400&q=80'
+    ];
+    if (type === 'hotel') {
+        return hotelPhotos[id % hotelPhotos.length];
+    }
+    return buildingPhotos[id % buildingPhotos.length];
+};
 
 const cleanupGlobe = () => {
+    stopGlobeAutoRotation();
     if (globeInstance) {
         try {
-            // Stop autoRotate
-            const controls = globeInstance.controls();
-            if (controls) {
-                controls.autoRotate = false;
+            if (globeInstance._docClickCleanup) {
+                globeInstance._docClickCleanup();
             }
-            // Clear HTML elements data & other datasets to cleanly detach them from Three.js scene
-            globeInstance.htmlElementsData([]);
-            globeInstance.pointsData([]);
-            globeInstance.arcsData([]);
-            
-            // Destroy the globe.gl instance
-            globeInstance();
+            if (typeof globeInstance.htmlElementsData === 'function') {
+                globeInstance.htmlElementsData([]);
+            }
+            if (typeof globeInstance.pointsData === 'function') {
+                globeInstance.pointsData([]);
+            }
+            if (typeof globeInstance.arcsData === 'function') {
+                globeInstance.arcsData([]);
+            }
+            if (typeof globeInstance === 'function') {
+                globeInstance();
+            }
         } catch (error) {
             console.error('Error during globe cleanup:', error);
         }
@@ -298,18 +296,20 @@ const toggleSettings = () => {
 const centerOnLocation = () => {
     if (!selectedLocation.value) return;
     
-    const coords = cityCoordinates[selectedLocation.value];
-    if (!coords) return;
+    const coords = cityCoordinates.value[selectedLocation.value];
+    if (!coords || (coords.lat === 0 && coords.lng === 0)) return;
     
     if (settings.value.displayMode === 'map' && mapInstance) {
         mapInstance.setView([coords.lat, coords.lng], 12);
     } else if (settings.value.displayMode === 'globe' && globeInstance) {
-        globeInstance.pointOfView({ lat: coords.lat, lng: coords.lng, altitude: 1.5 });
+        if (typeof globeInstance.pointOfView === 'function') {
+            globeInstance.pointOfView({ lat: coords.lat, lng: coords.lng, altitude: 1.2 }, 1500);
+        }
     } else if (settings.value.displayMode === 'satellite' && satelliteInstance) {
         if (satelliteInstance instanceof mapboxgl.Map) {
             satelliteInstance.flyTo({
                 center: [coords.lng, coords.lat],
-                zoom: 18, // Increased zoom to see buildings in detail
+                zoom: 18,
                 pitch: 45,
                 bearing: 0,
                 speed: 1.2
@@ -320,17 +320,57 @@ const centerOnLocation = () => {
     }
 };
 
-const refreshLocations = () => {
-    loading.value = true;
-    // Simulate refresh
-    setTimeout(() => {
-        totalLocations.value = Math.floor(Math.random() * 50) + 150;
-        onlineLocations.value = Math.floor(Math.random() * 30) + 130;
-        recentActivity.value = Math.floor(Math.random() * 20) + 20;
-        countries.value = Math.floor(Math.random() * 10) + 20;
-        loading.value = false;
+const updateDataFromBuildings = () => {
+    // 1. Update KPIs
+    totalLocations.value = buildings.value.length;
+    onlineLocations.value = buildings.value.filter(b => b.statut === 'Actif').length;
+    
+    // Recent activity: buildings created within the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    recentActivity.value = buildings.value.filter(b => {
+        if (!b.created_at) return false;
+        const createdAt = new Date(b.created_at);
+        return createdAt >= thirtyDaysAgo;
+    }).length;
+    
+    // Countries covered
+    const uniqueCountries = new Set(
+        buildings.value
+            .map(b => b.pays)
+            .filter(p => p && p.trim() !== '')
+    );
+    countries.value = uniqueCountries.size;
+
+    // 2. City select dropdown options & coordinates
+    const citiesMap = {};
+    buildings.value.forEach(b => {
+        if (b.ville && b.ville.trim() !== '') {
+            const cityName = b.ville.trim();
+            const lat = parseFloat(b.latitude);
+            const lng = parseFloat(b.longitude);
+            
+            if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                if (!citiesMap[cityName] || (citiesMap[cityName].lat === 0 && citiesMap[cityName].lng === 0)) {
+                    citiesMap[cityName] = { lat, lng };
+                }
+            } else if (!citiesMap[cityName]) {
+                citiesMap[cityName] = { lat: 0, lng: 0 };
+            }
+        }
+    });
+    
+    cityCoordinates.value = citiesMap;
+    citiesList.value = Object.keys(citiesMap).sort();
+};
+
+const fetchBuildings = async () => {
+    try {
+        const response = await axios.get('/api/batiments');
+        buildings.value = response.data;
+        updateDataFromBuildings();
         
-        // Update data based on current mode
+        // Update data based on current active display mode
         if (settings.value.displayMode === 'globe' && globeInstance) {
             updateGlobeData();
         } else if (settings.value.displayMode === 'map' && mapInstance) {
@@ -338,62 +378,555 @@ const refreshLocations = () => {
         } else if (settings.value.displayMode === 'satellite' && satelliteInstance) {
             updateSatelliteMapData();
         }
-    }, 1000);
+    } catch (error) {
+        console.error('Error fetching buildings:', error);
+    }
 };
 
-// Sample location data
+const refreshLocations = () => {
+    loading.value = true;
+    fetchBuildings().finally(() => {
+        loading.value = false;
+    });
+};
+
 const generateLocationData = () => {
     const locations = [];
-    const cities = [
-        { name: 'Paris', lat: 48.8566, lng: 2.3522, type: 'hotel' },
-        { name: 'New York', lat: 40.7128, lng: -74.0060, type: 'building' },
-        { name: 'Tokyo', lat: 35.6762, lng: 139.6503, type: 'hotel' },
-        { name: 'London', lat: 51.5074, lng: -0.1278, type: 'building' },
-        { name: 'Dubai', lat: 25.2048, lng: 55.2708, type: 'hotel' },
-        { name: 'Singapore', lat: 1.3521, lng: 103.8198, type: 'building' },
-        { name: 'Sydney', lat: -33.8688, lng: 151.2093, type: 'hotel' },
-        { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, type: 'building' },
-        { name: 'Berlin', lat: 52.5200, lng: 13.4050, type: 'hotel' },
-        { name: 'Shanghai', lat: 31.2304, lng: 121.4737, type: 'building' },
-        { name: 'Mumbai', lat: 19.0760, lng: 72.8777, type: 'hotel' },
-        { name: 'São Paulo', lat: -23.5505, lng: -46.6333, type: 'building' },
-        { name: 'Moscow', lat: 55.7558, lng: 37.6173, type: 'hotel' },
-        { name: 'Toronto', lat: 43.6532, lng: -79.3832, type: 'building' },
-        { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, type: 'hotel' },
-        { name: 'Douala - Hotel 1', lat: 4.0483, lng: 9.7043, type: 'hotel' },
-        { name: 'Douala - Hotel 2', lat: 4.0583, lng: 9.7143, type: 'hotel' },
-        { name: 'Douala - Hotel 3', lat: 4.0383, lng: 9.6943, type: 'hotel' }
-    ];
-
-    for (let i = 0; i < Math.min(totalLocations.value, 50); i++) {
-        const city = cities[i % cities.length];
-        const offset = (Math.random() - 0.5) * 0.5;
-        locations.push({
-            lat: city.lat + offset,
-            lng: city.lng + offset,
-            size: Math.random() * 2 + 0.5,
-            color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
-            name: city.name,
-            type: city.type
-        });
-    }
-
+    buildings.value.forEach(b => {
+        const lat = parseFloat(b.latitude);
+        const lng = parseFloat(b.longitude);
+        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+            const type = b.type_batiment?.toLowerCase().includes('hotel') ? 'hotel' : 'building';
+            locations.push({
+                id: b.id,
+                lat: lat,
+                lng: lng,
+                size: 1.5,
+                color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
+                name: b.nom,
+                type: type,
+                statut: b.statut,
+                ville: b.ville,
+                pays: b.pays,
+                agency_name: b.agency_name,
+                etages: b.etages,
+                appartements: b.appartements
+            });
+        }
+    });
     return locations;
+};
+
+// Snapchat-like Mapbox pin markers and popups helper
+const updateMapboxMarkers = (instance, locations) => {
+    mapMarkers.forEach(marker => marker.remove());
+    mapMarkers = [];
+    
+    if (!settings.value.showPoints) return;
+    
+    locations.forEach(location => {
+        const markerElement = document.createElement('div');
+        markerElement.className = 'custom-building-pin';
+        markerElement.style.cursor = 'pointer';
+        
+        const svgIcon = location.type === 'hotel' 
+            ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M3 21h18"></path>
+                 <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                 <path d="M9 9h6"></path>
+                 <path d="M9 13h6"></path>
+                 <path d="M9 17h6"></path>
+               </svg>`
+            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                 <line x1="9" y1="22" x2="9" y2="16"></line>
+                 <line x1="15" y1="22" x2="15" y2="16"></line>
+                 <line x1="9" y1="16" x2="15" y2="16"></line>
+                 <path d="M8 6h.01"></path>
+                 <path d="M16 6h.01"></path>
+                 <path d="M8 10h.01"></path>
+                 <path d="M16 10h.01"></path>
+               </svg>`;
+               
+        const photoUrl = getBuildingPhoto(location.id, location.type);
+        
+        markerElement.innerHTML = `
+            <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+                transform: scale(0.9);
+                transition: transform 0.2s ease;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(0.9)'">
+                <div style="
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 12px 12px 0 12px;
+                    transform: rotate(45deg);
+                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#ff9f43' : '#4834d4'}, ${location.type === 'hotel' ? '#ee5253' : '#686de0'});
+                    border: 2.5px solid white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;">
+                        ${svgIcon}
+                    </div>
+                </div>
+                <div style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: rgba(0,0,0,0.4);
+                    margin-top: 2px;
+                    filter: blur(1px);
+                "></div>
+            </div>
+        `;
+        
+        const popupHtml = `
+            <div style="
+                width: 250px;
+                background: #ffffff;
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                color: #1e293b;
+            ">
+                <div style="
+                    width: 100%;
+                    height: 110px;
+                    background-image: url('${photoUrl}');
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                ">
+                    <span style="
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        background: ${location.statut === 'Actif' ? '#ecfdf5' : '#fffbeb'};
+                        color: ${location.statut === 'Actif' ? '#065f46' : '#92400e'};
+                        font-size: 9px;
+                        font-weight: 700;
+                        padding: 3px 7px;
+                        border-radius: 9999px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        text-transform: uppercase;
+                    ">
+                        ${location.statut || 'Actif'}
+                    </span>
+                </div>
+                <div style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="
+                        margin: 0;
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: #0f172a;
+                        line-height: 1.2;
+                    ">${location.name}</h4>
+                    <p style="
+                        margin: 0;
+                        font-size: 11px;
+                        color: #64748b;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                    ">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        ${location.ville || ''}, ${location.pays || ''}
+                    </p>
+                    <div style="
+                        margin-top: 4px;
+                        border-top: 1.5px solid #f1f5f9;
+                        padding-top: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+                    ">
+                        <div style="font-size: 11px; color: #64748b;">
+                            <span style="font-weight: 600; color: #475569;">Géré par :</span> 
+                            <span style="color: #4f46e5; font-weight: 700;">${location.agency_name || 'Siège général'}</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; font-size: 10px; color: #64748b; margin-top: 1px;">
+                            <div><span style="font-weight: 600; color: #475569;">Étages :</span> ${location.etages || 0}</div>
+                            <div><span style="font-weight: 600; color: #475569;">Apparts :</span> ${location.appartements || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+            .setHTML(popupHtml);
+            
+        const marker = new mapboxgl.Marker(markerElement)
+            .setLngLat([location.lng, location.lat])
+            .setPopup(popup)
+            .addTo(instance);
+            
+        mapMarkers.push(marker);
+    });
+};
+
+// Leaflet pin markers and popups helper
+const updateLeafletMarkers = (instance, locations) => {
+    mapMarkers.forEach(marker => instance.removeLayer(marker));
+    mapPolylines.forEach(polyline => instance.removeLayer(polyline));
+    mapMarkers = [];
+    mapPolylines = [];
+    
+    if (!settings.value.showPoints) return;
+    
+    locations.forEach(location => {
+        const svgIcon = location.type === 'hotel' 
+            ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M3 21h18"></path>
+                 <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                 <path d="M9 9h6"></path>
+                 <path d="M9 13h6"></path>
+                 <path d="M9 17h6"></path>
+               </svg>`
+            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                 <line x1="9" y1="22" x2="9" y2="16"></line>
+                 <line x1="15" y1="22" x2="15" y2="16"></line>
+                 <line x1="9" y1="16" x2="15" y2="16"></line>
+                 <path d="M8 6h.01"></path>
+                 <path d="M16 6h.01"></path>
+                 <path d="M8 10h.01"></path>
+                 <path d="M16 10h.01"></path>
+               </svg>`;
+               
+        const photoUrl = getBuildingPhoto(location.id, location.type);
+        
+        const pinHtml = `
+            <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+            ">
+                <div style="
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 12px 12px 0 12px;
+                    transform: rotate(45deg);
+                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#ff9f43' : '#4834d4'}, ${location.type === 'hotel' ? '#ee5253' : '#686de0'});
+                    border: 2.5px solid white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;">
+                        ${svgIcon}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const customIcon = L.divIcon({
+            html: pinHtml,
+            className: 'custom-building-pin',
+            iconSize: [44, 44],
+            iconAnchor: [22, 44],
+            popupAnchor: [0, -44]
+        });
+        
+        const popupHtml = `
+            <div style="
+                width: 250px;
+                background: #ffffff;
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                color: #1e293b;
+            ">
+                <div style="
+                    width: 100%;
+                    height: 110px;
+                    background-image: url('${photoUrl}');
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                ">
+                    <span style="
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        background: ${location.statut === 'Actif' ? '#ecfdf5' : '#fffbeb'};
+                        color: ${location.statut === 'Actif' ? '#065f46' : '#92400e'};
+                        font-size: 9px;
+                        font-weight: 700;
+                        padding: 3px 7px;
+                        border-radius: 9999px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        text-transform: uppercase;
+                    ">
+                        ${location.statut || 'Actif'}
+                    </span>
+                </div>
+                <div style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="
+                        margin: 0;
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: #0f172a;
+                        line-height: 1.2;
+                    ">${location.name}</h4>
+                    <p style="
+                        margin: 0;
+                        font-size: 11px;
+                        color: #64748b;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                    ">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        ${location.ville || ''}, ${location.pays || ''}
+                    </p>
+                    <div style="
+                        margin-top: 4px;
+                        border-top: 1.5px solid #f1f5f9;
+                        padding-top: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+                    ">
+                        <div style="font-size: 11px; color: #64748b;">
+                            <span style="font-weight: 600; color: #475569;">Géré par :</span> 
+                            <span style="color: #4f46e5; font-weight: 700;">${location.agency_name || 'Siège général'}</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; font-size: 10px; color: #64748b; margin-top: 1px;">
+                            <div><span style="font-weight: 600; color: #475569;">Étages :</span> ${location.etages || 0}</div>
+                            <div><span style="font-weight: 600; color: #475569;">Apparts :</span> ${location.appartements || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const marker = L.marker([location.lat, location.lng], { icon: customIcon })
+            .bindPopup(popupHtml, { maxWidth: 280, minWidth: 250, className: 'snap-popup' })
+            .addTo(instance);
+            
+        mapMarkers.push(marker);
+    });
+};
+
+let activePopupEl = null;
+
+const setupGlobeElementAccessor = () => {
+    if (!globeInstance) return;
+
+    // Document click to close active popup
+    const handleDocClick = () => {
+        if (activePopupEl) {
+            activePopupEl.style.display = 'none';
+            activePopupEl = null;
+        }
+    };
+    document.addEventListener('click', handleDocClick);
+    
+    globeInstance._docClickCleanup = () => {
+        document.removeEventListener('click', handleDocClick);
+    };
+
+    globeInstance.htmlElement(loc => {
+        const el = document.createElement('div');
+        el.style.position = 'relative';
+        el.style.pointerEvents = 'auto';
+
+        const svgIcon = loc.type === 'hotel' 
+            ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M3 21h18"></path>
+                 <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                 <path d="M9 9h6"></path>
+                 <path d="M9 13h6"></path>
+                 <path d="M9 17h6"></path>
+               </svg>`
+            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                 <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                 <line x1="9" y1="22" x2="9" y2="16"></line>
+                 <line x1="15" y1="22" x2="15" y2="16"></line>
+                 <line x1="9" y1="16" x2="15" y2="16"></line>
+                 <path d="M8 6h.01"></path>
+                 <path d="M16 6h.01"></path>
+                 <path d="M8 10h.01"></path>
+                 <path d="M16 10h.01"></path>
+               </svg>`;
+
+        const photoUrl = getBuildingPhoto(loc.id, loc.type);
+
+        // Pin element
+        const pinEl = document.createElement('div');
+        pinEl.style.cursor = 'pointer';
+        pinEl.innerHTML = `
+            <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+                transform: scale(0.9);
+                transition: transform 0.2s ease;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(0.9)'">
+                <div style="
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 12px 12px 0 12px;
+                    transform: rotate(45deg);
+                    background: linear-gradient(135deg, ${loc.type === 'hotel' ? '#ff9f43' : '#4834d4'}, ${loc.type === 'hotel' ? '#ee5253' : '#686de0'});
+                    border: 2.5px solid white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div style="transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;">
+                        ${svgIcon}
+                    </div>
+                </div>
+                <div style="
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: rgba(0,0,0,0.4);
+                    margin-top: 2px;
+                    filter: blur(1px);
+                "></div>
+            </div>
+        `;
+        el.appendChild(pinEl);
+
+        // Popup Card element
+        const popupEl = document.createElement('div');
+        popupEl.style.position = 'absolute';
+        popupEl.style.bottom = '55px';
+        popupEl.style.left = '50%';
+        popupEl.style.transform = 'translateX(-50%)';
+        popupEl.style.display = 'none';
+        popupEl.style.zIndex = '9999';
+        popupEl.style.pointerEvents = 'auto';
+
+        popupEl.innerHTML = `
+            <div style="
+                width: 250px;
+                background: #ffffff;
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                color: #1e293b;
+            ">
+                <div style="
+                    width: 100%;
+                    height: 110px;
+                    background-image: url('${photoUrl}');
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                ">
+                    <span style="
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        background: ${loc.statut === 'Actif' ? '#ecfdf5' : '#fffbeb'};
+                        color: ${loc.statut === 'Actif' ? '#065f46' : '#92400e'};
+                        font-size: 9px;
+                        font-weight: 700;
+                        padding: 3px 7px;
+                        border-radius: 9999px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        text-transform: uppercase;
+                    ">
+                        ${loc.statut || 'Actif'}
+                    </span>
+                </div>
+                <div style="padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+                    <h4 style="
+                        margin: 0;
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: #0f172a;
+                        line-height: 1.2;
+                    ">${loc.name}</h4>
+                    <p style="
+                        margin: 0;
+                        font-size: 11px;
+                        color: #64748b;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                    ">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        ${loc.ville || ''}, ${loc.pays || ''}
+                    </p>
+                    <div style="
+                        margin-top: 4px;
+                        border-top: 1.5px solid #f1f5f9;
+                        padding-top: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+                    ">
+                        <div style="font-size: 11px; color: #64748b;">
+                            <span style="font-weight: 600; color: #475569;">Géré par :</span> 
+                            <span style="color: #4f46e5; font-weight: 700;">${loc.agency_name || 'Siège général'}</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; font-size: 10px; color: #64748b; margin-top: 1px;">
+                            <div><span style="font-weight: 600; color: #475569;">Étages :</span> ${loc.etages || 0}</div>
+                            <div><span style="font-weight: 600; color: #475569;">Apparts :</span> ${loc.appartements || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        el.appendChild(popupEl);
+
+        pinEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isShowing = popupEl.style.display === 'block';
+
+            if (activePopupEl && activePopupEl !== popupEl) {
+                activePopupEl.style.display = 'none';
+            }
+
+            if (isShowing) {
+                popupEl.style.display = 'none';
+                activePopupEl = null;
+            } else {
+                popupEl.style.display = 'block';
+                activePopupEl = popupEl;
+            }
+        });
+
+        popupEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        return el;
+    });
 };
 
 const updateGlobeData = () => {
     if (!globeInstance) return;
-    
     const locations = generateLocationData();
-    
+
     if (settings.value.showPoints) {
-        globeInstance
-            .pointsData(locations)
-            .pointAltitude(0.02)
-            .pointRadius('size')
-            .pointColor('color');
+        globeInstance.htmlElementsData(locations);
     } else {
-        globeInstance.pointsData([]);
+        globeInstance.htmlElementsData([]);
     }
 
     if (settings.value.showLines) {
@@ -410,81 +943,125 @@ const updateGlobeData = () => {
         globeInstance
             .arcsData(arcs)
             .arcColor('color')
-            .arcAltitude(0.1)
-            .arcStroke(0.5);
+            .arcAltitude(0.15)
+            .arcStroke(0.6);
     } else {
         globeInstance.arcsData([]);
     }
+};
 
-    // Add HTML labels with images for hotels and buildings
-    const htmlElements = locations.map(loc => ({
-        lat: loc.lat,
-        lng: loc.lng,
-        html: `
-            <div style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                pointer-events: none;
-                z-index: 1000;
-            ">
-                <div style="
-                    background: ${settings.value.nightMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-                    padding: 12px 16px;
-                    border-radius: 12px;
-                    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-                    margin-bottom: 12px;
-                    text-align: center;
-                    min-width: 120px;
-                ">
-                    <div style="
-                        width: 48px;
-                        height: 48px;
-                        border-radius: 50%;
-                        background: linear-gradient(135deg, ${loc.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${loc.type === 'hotel' ? '#d97706' : '#2563eb'});
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 8px;
-                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                    ">
-                        <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
-                            ${loc.type === 'hotel' 
-                                ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
-                                : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
-                            }
-                        </svg>
-                    </div>
-                    <div style="
-                        font-size: 14px;
-                        font-weight: 700;
-                        color: ${settings.value.nightMode ? '#e2e8f0' : '#1e293b'};
-                        white-space: nowrap;
-                        margin-bottom: 4px;
-                    ">
-                        ${loc.name}
-                    </div>
-                    <div style="
-                        font-size: 11px;
-                        color: ${settings.value.nightMode ? '#94a3b8' : '#64748b'};
-                        font-weight: 500;
-                    ">
-                        ${loc.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
-                    </div>
-                </div>
-                <div style="
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #3b82f6;
-                    border: 3px solid white;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-                "></div>
-            </div>
-        `
-    }));
+const updateMapData = () => {
+    if (!mapInstance) return;
+    const locations = generateLocationData();
+    updateLeafletMarkers(mapInstance, locations);
+};
 
-    globeInstance.htmlElementsData(htmlElements);
+const updateSatelliteMapData = () => {
+    if (!satelliteInstance) return;
+    const locations = generateLocationData();
+    if (satelliteInstance instanceof mapboxgl.Map) {
+        updateMapboxMarkers(satelliteInstance, locations);
+    } else {
+        updateLeafletMarkers(satelliteInstance, locations);
+    }
+};
+
+const startGlobeAutoRotation = () => {
+    stopGlobeAutoRotation();
+    if (!globeInstance || !settings.value.autoRotate) return;
+
+    const rotationSpeed = settings.value.rotationSpeed || 1;
+    const secondsPerRevolution = 120 / rotationSpeed;
+    const degreesPerSecond = 360 / secondsPerRevolution;
+
+    let lastTime = performance.now();
+    
+    const rotate = (time) => {
+        if (!globeInstance || !settings.value.autoRotate) return;
+        
+        const zoom = typeof globeInstance.getZoom === 'function' ? globeInstance.getZoom() : 1.8;
+        if (zoom < 5) {
+            const delta = (time - lastTime) / 1000;
+            const center = globeInstance.getCenter();
+            center.lng = (center.lng + degreesPerSecond * delta) % 360;
+            globeInstance.setCenter(center);
+        }
+        
+        lastTime = time;
+        rotationInterval = requestAnimationFrame(rotate);
+    };
+    
+    rotationInterval = requestAnimationFrame(rotate);
+};
+
+const stopGlobeAutoRotation = () => {
+    if (rotationInterval) {
+        cancelAnimationFrame(rotationInterval);
+        rotationInterval = null;
+    }
+};
+
+const initGlobe = () => {
+    if (!globeContainer.value) {
+        console.error('Globe container not found');
+        loading.value = false;
+        return;
+    }
+
+    const container = globeContainer.value;
+    const width = container.clientWidth || container.offsetWidth || 800;
+    const height = container.clientHeight || container.offsetHeight || 600;
+
+    console.log('Initializing Globe.gl with dimensions:', width, height);
+
+    try {
+        // Clear existing map/globe instances
+        if (mapInstance) {
+            mapInstance.remove();
+            mapInstance = null;
+        }
+        if (satelliteInstance) {
+            satelliteInstance.remove();
+            satelliteInstance = null;
+        }
+        cleanupGlobe();
+
+        // Clear container DOM
+        container.innerHTML = '';
+
+        // Initialize Globe.gl using the imported Globe
+        globeInstance = Globe()(container)
+            .width(width)
+            .height(height)
+            .globeImageUrl(settings.value.nightMode 
+                ? 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg'
+                : 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg'
+            )
+            .bumpImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png')
+            .backgroundImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/night-sky.png')
+            .backgroundColor(settings.value.nightMode ? '#020617' : '#ffffff')
+            .pointOfView({ lat: 20, lng: 0, altitude: 2.8 });
+
+        // Configure OrbitControls directly for autoRotate
+        const controls = globeInstance.controls();
+        if (controls) {
+            controls.autoRotate = settings.value.autoRotate;
+            controls.autoRotateSpeed = settings.value.rotationSpeed || 1;
+            controls.minDistance = 1.2;
+            controls.maxDistance = 10;
+        }
+
+        // Set up the HTML elements accessor configuration
+        setupGlobeElementAccessor();
+
+        // Load data
+        updateGlobeData();
+        loading.value = false;
+
+    } catch (error) {
+        console.error('Error initializing Globe.gl:', error);
+        initMap();
+    }
 };
 
 // Initialize satellite map with 3D buildings using Mapbox GL JS
@@ -515,22 +1092,24 @@ const initSatelliteMap = () => {
         // Clear container DOM
         container.innerHTML = '';
 
+        // Configure Mapbox Access Token
+        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'YOUR_MAPBOX_ACCESS_TOKEN';
+
         // Initialize Mapbox GL JS map with satellite imagery and 3D buildings
         satelliteInstance = new mapboxgl.Map({
             container: container,
             style: 'mapbox://styles/mapbox/satellite-v9',
             center: [0, 20],
             zoom: 2,
-            pitch: 45, // Tilt the map for 3D effect
+            pitch: 45,
             bearing: 0,
             antialias: true,
             minZoom: 0,
-            maxZoom: 22 // Increased zoom level to see buildings in detail
+            maxZoom: 22
         });
 
         // Add 3D buildings layer with white style like Snapchat
         satelliteInstance.on('load', () => {
-            // Add 3D buildings layer
             satelliteInstance.addLayer({
                 'id': '3d-buildings',
                 'source': 'composite',
@@ -539,7 +1118,7 @@ const initSatelliteMap = () => {
                 'type': 'fill-extrusion',
                 'minzoom': 15,
                 'paint': {
-                    'fill-extrusion-color': '#ffffff', // White buildings like Snapchat
+                    'fill-extrusion-color': '#ffffff',
                     'fill-extrusion-height': ['get', 'height'],
                     'fill-extrusion-base': ['get', 'min_height'],
                     'fill-extrusion-opacity': 0.9
@@ -553,14 +1132,12 @@ const initSatelliteMap = () => {
 
         satelliteInstance.on('error', (error) => {
             console.error('Mapbox error:', error);
-            // Fallback to Leaflet if Mapbox fails
             console.log('Falling back to Leaflet satellite map');
             initSatelliteMapFallback();
         });
 
     } catch (error) {
         console.error('Error initializing satellite map:', error);
-        // Fallback to Leaflet if Mapbox fails
         initSatelliteMapFallback();
     }
 };
@@ -572,7 +1149,7 @@ const initSatelliteMapFallback = () => {
             center: [20, 0],
             zoom: 3,
             minZoom: 0,
-            maxZoom: 22, // Increased zoom level to see buildings in detail
+            maxZoom: 22,
             zoomControl: true
         });
 
@@ -589,184 +1166,6 @@ const initSatelliteMapFallback = () => {
     }
 };
 
-// Update satellite map data
-const updateSatelliteMapData = () => {
-    if (!satelliteInstance) return;
-    
-    // Clear existing markers
-    if (satelliteInstance instanceof mapboxgl.Map) {
-        // Mapbox GL JS markers
-        mapMarkers.forEach(marker => marker.remove());
-    } else {
-        // Leaflet markers (fallback)
-        mapMarkers.forEach(marker => satelliteInstance.removeLayer(marker));
-        mapPolylines.forEach(polyline => satelliteInstance.removeLayer(polyline));
-    }
-    mapMarkers = [];
-    mapPolylines = [];
-
-    const locations = generateLocationData();
-    
-    if (settings.value.showPoints) {
-        locations.forEach(location => {
-            // Create custom marker element
-            const markerElement = document.createElement('div');
-            markerElement.style.width = '48px';
-            markerElement.style.height = '48px';
-            markerElement.innerHTML = `
-                <div style="
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${location.type === 'hotel' ? '#d97706' : '#2563eb'});
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-                    border: 3px solid white;
-                ">
-                    <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
-                        ${location.type === 'hotel' 
-                            ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
-                            : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
-                        }
-                    </svg>
-                </div>
-            `;
-
-            if (satelliteInstance instanceof mapboxgl.Map) {
-                // Mapbox GL JS marker
-                const marker = new mapboxgl.Marker(markerElement)
-                    .setLngLat([location.lng, location.lat])
-                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
-                        <div style="
-                            text-align: center;
-                            padding: 8px;
-                            min-width: 150px;
-                            background: rgba(255, 255, 255, 0.95);
-                            border-radius: 8px;
-                        ">
-                            <div style="
-                                font-size: 14px;
-                                font-weight: 700;
-                                color: #1e293b;
-                                margin-bottom: 4px;
-                            ">
-                                ${location.name}
-                            </div>
-                            <div style="
-                                font-size: 12px;
-                                color: #64748b;
-                            ">
-                                ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
-                            </div>
-                        </div>
-                    `))
-                    .addTo(satelliteInstance);
-                mapMarkers.push(marker);
-            } else {
-                // Leaflet marker (fallback)
-                const customIcon = L.divIcon({
-                    html: markerElement.innerHTML,
-                    className: 'custom-marker',
-                    iconSize: [48, 48],
-                    iconAnchor: [24, 48],
-                    popupAnchor: [0, -48]
-                });
-
-                const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-                    .bindPopup(`
-                        <div style="
-                            text-align: center;
-                            padding: 8px;
-                            min-width: 150px;
-                            background: rgba(255, 255, 255, 0.95);
-                            border-radius: 8px;
-                        ">
-                            <div style="
-                                font-size: 14px;
-                                font-weight: 700;
-                                color: #1e293b;
-                                margin-bottom: 4px;
-                            ">
-                                ${location.name}
-                            </div>
-                            <div style="
-                                font-size: 12px;
-                                color: #64748b;
-                            ">
-                                ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
-                            </div>
-                        </div>
-                    `)
-                    .addTo(satelliteInstance);
-                mapMarkers.push(marker);
-            }
-        });
-    }
-
-    if (settings.value.showLines && satelliteInstance instanceof mapboxgl.Map) {
-        // Mapbox GL JS lines
-        const coordinates = locations.map(loc => [loc.lng, loc.lat]);
-        
-        if (satelliteInstance.getSource('lines')) {
-            satelliteInstance.getSource('lines').setData({
-                'type': 'FeatureCollection',
-                'features': [{
-                    'type': 'Feature',
-                    'properties': {},
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': coordinates
-                    }
-                }]
-            });
-        } else {
-            satelliteInstance.addSource('lines', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'FeatureCollection',
-                    'features': [{
-                        'type': 'Feature',
-                        'properties': {},
-                        'geometry': {
-                            'type': 'LineString',
-                            'coordinates': coordinates
-                        }
-                    }]
-                }
-            });
-
-            satelliteInstance.addLayer({
-                'id': 'lines',
-                'type': 'line',
-                'source': 'lines',
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': '#f59e0b',
-                    'line-width': 3,
-                    'line-opacity': 0.8
-                }
-            });
-        }
-    } else if (settings.value.showLines && !(satelliteInstance instanceof mapboxgl.Map)) {
-        // Leaflet lines (fallback)
-        for (let i = 0; i < locations.length - 1; i++) {
-            const polyline = L.polyline([
-                [locations[i].lat, locations[i].lng],
-                [locations[i + 1].lat, locations[i + 1].lng]
-            ], {
-                color: '#f59e0b',
-                weight: 3,
-                opacity: 0.8
-            }).addTo(satelliteInstance);
-            mapPolylines.push(polyline);
-        }
-    }
-};
 const initMap = () => {
     if (!globeContainer.value) {
         console.error('Map container not found');
@@ -780,7 +1179,6 @@ const initMap = () => {
     console.log('Initializing flat map with dimensions:', width, height);
 
     try {
-        // Clear existing globe if any
         cleanupGlobe();
         if (satelliteInstance) {
             satelliteInstance.remove();
@@ -814,159 +1212,6 @@ const initMap = () => {
         loading.value = false;
     } catch (error) {
         console.error('Error initializing map:', error);
-        loading.value = false;
-    }
-};
-
-// Update flat map data
-const updateMapData = () => {
-    if (!mapInstance) return;
-    
-    // Clear existing markers and polylines
-    mapMarkers.forEach(marker => mapInstance.removeLayer(marker));
-    mapPolylines.forEach(polyline => mapInstance.removeLayer(polyline));
-    mapMarkers = [];
-    mapPolylines = [];
-
-    const locations = generateLocationData();
-    
-    if (settings.value.showPoints) {
-        locations.forEach(location => {
-            // Create custom icon based on type
-            const iconHtml = `
-                <div style="
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, ${location.type === 'hotel' ? '#f59e0b' : '#3b82f6'}, ${location.type === 'hotel' ? '#d97706' : '#2563eb'});
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-                ">
-                    <svg width="24" height="24" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
-                        ${location.type === 'hotel' 
-                            ? '<path d="M3 4h1v1H3V4zm2 0h1v1H5V4zm2 0h1v1H7V4zm2 0h1v1H9V4zm2 0h1v1h-1V4zm2 0h1v1h-1V4zM2 6h12v7H2V6zm1 1v5h10V7H3z" fill="currentColor"/>'
-                            : '<path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm2 2h6v6H5V5z" fill="currentColor"/>'
-                        }
-                    </svg>
-                </div>
-            `;
-
-            const customIcon = L.divIcon({
-                html: iconHtml,
-                className: 'custom-marker',
-                iconSize: [48, 48],
-                iconAnchor: [24, 48],
-                popupAnchor: [0, -48]
-            });
-
-            const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-                .bindPopup(`
-                    <div style="
-                        text-align: center;
-                        padding: 8px;
-                        min-width: 150px;
-                    ">
-                        <div style="
-                            font-size: 14px;
-                            font-weight: 700;
-                            color: #1e293b;
-                            margin-bottom: 4px;
-                        ">
-                            ${location.name}
-                        </div>
-                        <div style="
-                            font-size: 12px;
-                            color: #64748b;
-                        ">
-                            ${location.type === 'hotel' ? '🏨 Hôtel' : '🏢 Bâtiment'}
-                        </div>
-                    </div>
-                `)
-                .addTo(mapInstance);
-            
-            mapMarkers.push(marker);
-        });
-    }
-
-    if (settings.value.showLines) {
-        for (let i = 0; i < locations.length - 1; i++) {
-            const polyline = L.polyline([
-                [locations[i].lat, locations[i].lng],
-                [locations[i + 1].lat, locations[i + 1].lng]
-            ], {
-                color: settings.value.nightMode ? '#60a5fa' : '#3b82f6',
-                weight: 2,
-                opacity: 0.6
-            }).addTo(mapInstance);
-            mapPolylines.push(polyline);
-        }
-    }
-};
-
-const initGlobe = () => {
-    if (!globeContainer.value) {
-        console.error('Globe container not found');
-        loading.value = false;
-        return;
-    }
-
-    const container = globeContainer.value;
-    const width = container.clientWidth || container.offsetWidth || 800;
-    const height = container.clientHeight || container.offsetHeight || 600;
-
-    console.log('Initializing globe with dimensions:', width, height);
-    console.log('Container element:', container);
-
-    try {
-        // Clear existing map if any
-        if (mapInstance) {
-            mapInstance.remove();
-            mapInstance = null;
-        }
-        if (satelliteInstance) {
-            satelliteInstance.remove();
-            satelliteInstance = null;
-        }
-        cleanupGlobe();
-
-        // Clear container DOM
-        container.innerHTML = '';
-
-        // Correct globe.gl API with full configuration and fallback Github URLs
-        globeInstance = Globe()(container)
-            .width(width)
-            .height(height)
-            .globeImageUrl(settings.value.nightMode 
-                ? 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg'
-                : 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-blue-marble.jpg'
-            )
-            .bumpImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png')
-            .backgroundImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/night-sky.png')
-            .backgroundColor(settings.value.nightMode ? '#020617' : '#ffffff')
-            .pointOfView({ lat: 20, lng: 0, altitude: 3 });
-
-        // Configure OrbitControls directly
-        const controls = globeInstance.controls();
-        if (controls) {
-            controls.autoRotate = settings.value.autoRotate;
-            controls.autoRotateSpeed = settings.value.rotationSpeed;
-            controls.minDistance = 1.2;
-            controls.maxDistance = 10;
-        }
-
-        console.log('Globe instance created with full config:', globeInstance);
-        
-        // Update data after globe is ready
-        setTimeout(() => {
-            updateGlobeData();
-            loading.value = false;
-            console.log('Globe fully initialized');
-        }, 1000);
-    } catch (error) {
-        console.error('Error initializing globe:', error);
-        console.error('Error details:', error.message, error.stack);
         loading.value = false;
     }
 };
@@ -1019,20 +1264,26 @@ watch(() => settings.value.nightMode, () => {
 });
 
 watch(() => settings.value.autoRotate, (newVal) => {
-    if (globeInstance) {
+    if (settings.value.displayMode === 'globe' && globeInstance && typeof globeInstance.controls === 'function') {
         const controls = globeInstance.controls();
         if (controls) {
             controls.autoRotate = newVal;
         }
+    } else if (newVal) {
+        startGlobeAutoRotation();
+    } else {
+        stopGlobeAutoRotation();
     }
 });
 
 watch(() => settings.value.rotationSpeed, (newVal) => {
-    if (globeInstance) {
+    if (settings.value.displayMode === 'globe' && globeInstance && typeof globeInstance.controls === 'function') {
         const controls = globeInstance.controls();
         if (controls) {
             controls.autoRotateSpeed = newVal;
         }
+    } else if (settings.value.autoRotate) {
+        startGlobeAutoRotation();
     }
 });
 
@@ -1061,13 +1312,16 @@ const handleResize = () => {
         const container = globeContainer.value;
         const width = container.clientWidth || container.offsetWidth || 800;
         const height = container.clientHeight || container.offsetHeight || 600;
-        globeInstance.width(width).height(height);
+        if (typeof globeInstance.width === 'function') {
+            globeInstance.width(width).height(height);
+        }
     }
 };
 
 onMounted(() => {
     window.addEventListener('resize', handleResize);
-    // Initialize based on current display mode
+    fetchBuildings();
+    
     setTimeout(() => {
         if (settings.value.displayMode === 'globe') {
             initGlobe();
@@ -1081,7 +1335,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
-    // Clean up all instances
+    stopGlobeAutoRotation();
     cleanupGlobe();
     if (mapInstance) {
         mapInstance.remove();

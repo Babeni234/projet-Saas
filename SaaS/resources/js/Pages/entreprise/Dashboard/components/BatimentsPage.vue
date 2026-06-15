@@ -717,6 +717,7 @@ const agencies = computed(() => {
 });
 
 const getAgencyName = (agencyId) => {
+    if (!agencies.value || !Array.isArray(agencies.value)) return 'Siège';
     const agency = agencies.value.find(a => Number(a.id) === Number(agencyId));
     return agency ? agency.name : 'Siège';
 };
