@@ -3413,6 +3413,14 @@ const formattedCardNumber = computed(() => {
 // ════════════════════════════════════════════════════════════
 // 🤖 AI Assistant action handler
 function handleAiAction(actionId) {
+  // Theme toggle
+  if (actionId === 'toggle_theme') {
+    toggleTheme()
+    showToast('success', 'Thème basculé ✅')
+    return
+  }
+
+  // Tab navigation map
   const tabMap = {
     navigate_overview: 'overview',
     navigate_contract: 'contract',
@@ -3432,11 +3440,16 @@ function handleAiAction(actionId) {
   if (tab && tab !== activeTab.value) {
     switchTab(tab)
   }
+
+  // Post-switch actions
   if (actionId === 'navigate_recharge') {
     nextTick(() => openRechargeModal())
   }
-  if (actionId === 'navigate_payment' && tab === 'rent') {
-    nextTick(() => { setTimeout(() => openPaymentConfirm(), 300) })
+  if (actionId === 'navigate_payment') {
+    nextTick(() => { setTimeout(() => openPaymentConfirm(), 400) })
+  }
+  if (actionId === 'pay_selected_rent') {
+    nextTick(() => { setTimeout(() => openPaymentConfirm(), 400) })
   }
   showToast('success', 'Action exécutée ✅')
 }

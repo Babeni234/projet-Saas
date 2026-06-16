@@ -42,7 +42,11 @@ class AiAgentService
             return $this->buildResponse($conversation, $followUp['frontend_actions'] ?? []);
         }
 
-        return $this->buildResponse($conversation, $response['frontend_actions'] ?? []);
+        $type = $response['type'] ?? 'text';
+        $autoExecute = $response['auto_execute'] ?? false;
+        $actions = $response['frontend_actions'] ?? [];
+
+        return $this->buildResponse($conversation, $actions, $type, $autoExecute);
     }
 
     private function callLlm(AgentConversation $conversation): array
@@ -167,25 +171,71 @@ class AiAgentService
             $text = $lastMsg['content'] ?? 'Informations récupérées.';
 
             return [
-                'type' => 'text',
+                'type' => $result['type'] ?? 'text',
                 'text' => $text,
                 'frontend_actions' => $result['frontend_actions'] ?? [],
+                'auto_execute' => $result['auto_execute'] ?? false,
             ];
         }
 
         $text = $result['text'] ?? 'Je n\'ai pas compris. Pouvez-vous reformuler ?';
         $this->addMessage($conversation, 'assistant', $text);
 
+        $responseType = $result['type'] ?? 'text';
+        if ($responseType === 'function_call') $responseType = 'text';
+
         return [
-            'type' => 'text',
+            'type' => $responseType,
             'text' => $text,
             'frontend_actions' => $result['frontend_actions'] ?? [],
+            'auto_execute' => $result['auto_execute'] ?? false,
         ];
     }
 
     private function smartMatch(string $input): array
     {
         $n = mb_strtolower(trim($input));
+
+        // ══ ACTIONS EXPLICITES ══
+
+        // Action: Payer le loyer
+        if (preg_match('/^(paye|paie|règle|regle|effectue.*paiement|fais.*paiement|je veux payer|j aimerais payer)\b/iu', $n) ||
+            preg_match('/\b(paye.*loyer|paie.*loyer|payer.*loyer|régler.*loyer|regler.*loyer|loyer.*maintenant|effectuer.*paiement)\b/u', $n)) {
+            return [
+                'type' => 'action',
+                'text' => "Je lance le paiement de votre loyer…",
+                'frontend_actions' => [['action' => 'navigate_payment', 'label' => 'Payer le loyer']],
+                'auto_execute' => true,
+            ];
+        }
+
+        // Action: Mode sombre / clair
+        if (preg_match('/\b(mode sombre|mode clair|thème sombre|theme sombre|thème clair|theme clair|dark mode|light mode|passe.*sombre|passe.*clair|bascule.*sombre|bascule.*clair|active.*sombre|active.*clair|obscurcir|éclairer|eclairer)\b/iu', $n)) {
+            $toDark = preg_match('/\b(sombre|dark|obscur)\b/iu', $n);
+            return [
+                'type' => 'action',
+                'text' => $toDark ? 'Basculement en mode sombre…' : 'Basculement en mode clair…',
+                'frontend_actions' => [['action' => 'toggle_theme', 'label' => 'Basculer le thème']],
+                'auto_execute' => true,
+            ];
+        }
+
+        // Action: Recharger le wallet
+        if (preg_match('/\b(recharge.*wallet|recharge.*portefeuille|recharge.*solde|recharger.*mon|ajouter.*argent|créditer.*wallet|crediter.*wallet|je veux recharger|approvisionner)\b/iu', $n)) {
+            return [
+                'type' => 'action',
+                'text' => "J'ouvre la recharge de votre portefeuille…",
+                'frontend_actions' => [['action' => 'navigate_recharge', 'label' => 'Recharger le wallet']],
+                'auto_execute' => true,
+            ];
+        }
+
+        // Action: Navigation explicite
+        if (preg_match('/\b(va.*dans|va.*sur|affiche.*page|montre.*section|ouvre.*section|navigue.*vers|redirect.*vers|emmène.*moi)\b/iu', $n)) {
+            return $this->handleNavigateRequestAction($n);
+        }
+
+        // ══ REQUETES INFORMATIVES (text + buttons) ══
 
         // Overview / résumé
         if (preg_match('/\b(résumé|resume|aperçu|apercu|vue d ensemble|overview|synthèse|synthese|récap|recap|situation|dashboard)\b/u', $n)) {
@@ -248,9 +298,9 @@ class AiAgentService
             ]);
         }
 
-        // Navigation
+        // Navigation (style "montre-moi")
         if (preg_match('/\b(va à|va dans|affiche|montre|montre-moi|montre moi|ouvre|naviguer|section|page|accueil|emmène|va sur)\b/u', $n)) {
-            return $this->handleNavigateRequest($n);
+            return $this->handleNavigateRequestAction($n);
         }
 
         // Aide
@@ -265,10 +315,12 @@ class AiAgentService
         // Commandes explicites
         if (preg_match('/\b(exécute|execute|fais|fait|effectue|lance|applique|paie|paye)\b/u', $n)) {
             if (preg_match('/\b(paye?|paiement|règle|regle)\b/u', $n)) {
-                $r = $this->registry->execute('get_rent_status');
-                return $this->toolResultToResponse('get_rent_status', $r, [
-                    ['action' => 'navigate_payment', 'label' => 'Payer maintenant'],
-                ]);
+                return [
+                    'type' => 'action',
+                    'text' => 'Je lance le paiement…',
+                    'frontend_actions' => [['action' => 'navigate_payment', 'label' => 'Payer le loyer']],
+                    'auto_execute' => true,
+                ];
             }
         }
 
@@ -279,7 +331,7 @@ class AiAgentService
         ];
     }
 
-    private function handleNavigateRequest(string $n): array
+    private function handleNavigateRequestAction(string $n): array
     {
         $map = [
             'overview' => ['accueil', 'tableau de bord', 'overview', 'résumé', 'resume', 'aperçu', 'apercu', 'dashboard'],
@@ -294,11 +346,12 @@ class AiAgentService
         foreach ($map as $tab => $keys) {
             if (preg_match('/\b(' . implode('|', $keys) . ')\b/u', $n)) {
                 return [
-                    'type' => 'text',
-                    'text' => "Je vous redirige vers la section demandée.",
+                    'type' => 'action',
+                    'text' => "Je vous redirige vers la section « {$tab} »…",
                     'frontend_actions' => [
                         ['action' => 'navigate_' . $tab, 'label' => $tab],
                     ],
+                    'auto_execute' => true,
                 ];
             }
         }
@@ -549,16 +602,17 @@ PROMPT;
         $conv->update(['messages' => $messages]);
     }
 
-    private function buildResponse(AgentConversation $conv, array $frontendActions = []): array
+    private function buildResponse(AgentConversation $conv, array $frontendActions = [], string $type = 'text', bool $autoExecute = false): array
     {
         $history = $conv->messages;
         $lastMsg = count($history) > 0 ? $history[count($history) - 1] : ['content' => ''];
 
         return [
             'conversation_id' => $conv->id,
-            'type' => 'text',
+            'type' => $type,
             'text' => $lastMsg['content'] ?? '',
             'frontend_actions' => $frontendActions,
+            'auto_execute' => $autoExecute,
         ];
     }
 }

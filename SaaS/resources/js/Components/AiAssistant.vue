@@ -191,7 +191,15 @@ async function sendMessage() {
       addMessage('assistant', data.text)
     }
 
-    if (data.frontend_actions && data.frontend_actions.length > 0) {
+    if (data.auto_execute && data.frontend_actions && data.frontend_actions.length > 0) {
+      // Auto-exécute la première action immédiatement
+      const firstAction = data.frontend_actions[0]
+      const actionLabel = firstAction.label || firstAction.action
+      addMessage('assistant', `⚡ Exécution : ${actionLabel}...`)
+      nextTick(() => {
+        executeAction(firstAction.action)
+      })
+    } else if (data.frontend_actions && data.frontend_actions.length > 0) {
       nextTick(() => {
         addActionCards(data.frontend_actions)
       })
