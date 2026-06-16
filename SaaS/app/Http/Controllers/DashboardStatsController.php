@@ -40,7 +40,6 @@ class DashboardStatsController extends Controller
         } else {
             // Enterprise mode: count total agencies
             $countAgenciesOrEmployees = Agency::where('company_profile_id', $companyId)
-                ->where('deleted', false)
                 ->count();
         }
 
