@@ -81,11 +81,9 @@ class DepenseController extends Controller
             return response()->json(['error' => 'Non autorisé'], 403);
         }
 
-        // Agency constraints
-        if ($user->employee && $user->employee->agency_id !== null) {
-            if ($depense->statut === 'Payé' || $depense->statut === 'Annulé') {
-                return response()->json(['error' => 'Impossible de modifier une dépense déjà traitée.'], 403);
-            }
+        // General constraints: cannot update a processed expense
+        if ($depense->statut === 'Payé' || $depense->statut === 'Annulé') {
+            return response()->json(['error' => 'Impossible de modifier une dépense déjà traitée.'], 403);
         }
 
         $validated = $request->validate([
@@ -179,13 +177,20 @@ class DepenseController extends Controller
                 ->where('source_id', $depense->id)
                 ->delete();
 
-            // Send rejection mail if transitioning to Annulé and was requested by agency
-            if ($newStatus === 'Annulé' && $depense->agency_id) {
+            // Send rejection mail if transitioning to Annulé
+            if ($newStatus === 'Annulé') {
                 $depense->load(['company.user', 'agency']);
-                $agencyEmail = $depense->agency?->email;
-                if ($agencyEmail) {
-                    $msg = $rejectionMessage ?: "Votre demande de dépense a été refusée par la direction.";
-                    $this->sendMailSafe($agencyEmail, new DepenseRejectedMail($depense, $msg));
+                $msg = $rejectionMessage ?: "La demande de dépense a été refusée.";
+                if ($depense->agency_id) {
+                    $agencyEmail = $depense->agency?->email;
+                    if ($agencyEmail) {
+                        $this->sendMailSafe($agencyEmail, new DepenseRejectedMail($depense, $msg));
+                    }
+                } else {
+                    $companyEmail = $depense->company && $depense->company->user ? $depense->company->user->email : null;
+                    if ($companyEmail) {
+                        $this->sendMailSafe($companyEmail, new DepenseRejectedMail($depense, $msg));
+                    }
                 }
             }
         }

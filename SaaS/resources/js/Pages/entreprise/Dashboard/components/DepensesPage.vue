@@ -147,6 +147,16 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button 
+                                    @click="openDetailsModal(depense)" 
+                                    class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.95] mr-2 shadow-sm"
+                                >
+                                    <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Détails
+                                </button>
+                                <button 
                                     v-if="depense.statut === 'En attente'" 
                                     @click="openConfirmModal(depense)" 
                                     class="inline-flex items-center gap-1 rounded-lg border border-emerald-150 bg-emerald-55 px-2.5 py-1 text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 hover:text-emerald-900 active:scale-[0.95] mr-2 shadow-sm"
@@ -157,6 +167,7 @@
                                     Valider
                                 </button>
                                 <button 
+                                    v-if="depense.statut === 'En attente'"
                                     @click="openModal(depense)" 
                                     class="inline-flex items-center gap-1 rounded-lg border border-indigo-150 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 hover:text-indigo-900 active:scale-[0.95] mr-2 shadow-sm"
                                 >
@@ -166,6 +177,7 @@
                                     Modifier
                                 </button>
                                 <button 
+                                    v-if="depense.statut === 'En attente'"
                                     @click="confirmDeleteDepense(depense.id)" 
                                     class="inline-flex items-center gap-1 rounded-lg border border-rose-150 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 transition-all hover:bg-rose-100 hover:text-rose-900 active:scale-[0.95] shadow-sm"
                                 >
@@ -375,7 +387,7 @@
                             <textarea 
                                 v-model="rejectionMessage" 
                                 rows="3" 
-                                placeholder="Saisissez le motif de refus pour notifier l'agence sollicitante..."
+                                placeholder="Saisissez le motif de refus pour notify l'agence sollicitante..."
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all font-medium"
                             ></textarea>
                         </div>
@@ -387,14 +399,15 @@
                             :disabled="isSubmittingValidation"
                             class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-650 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-200/50 hover:shadow-lg hover:shadow-emerald-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            <span v-if="isSubmittingValidation" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            <span v-if="isConfirming" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                             <span>Confirmer la dépense</span>
                         </button>
                         <button
                             @click="rejectExpense"
                             :disabled="isSubmittingValidation"
-                            class="px-5 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-200 hover:shadow-lg hover:shadow-rose-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            class="px-5 py-3 bg-gradient-to-r from-rose-500 to-red-650 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-200 hover:shadow-lg hover:shadow-rose-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
+                            <span v-if="isRejecting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                             <span>Refuser la dépense</span>
                         </button>
                         <button
@@ -402,6 +415,89 @@
                             class="px-5 py-3 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                             Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Details Modal -->
+        <div v-if="isDetailsModalOpen" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeDetailsModal"></div>
+                <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="bg-gradient-to-r from-violet-500 to-indigo-655 px-6 py-4 flex items-center justify-between text-white">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6">Détails de la dépense</h3>
+                            <p class="text-xs text-violet-100 mt-1">Examen complet de la fiche de dépense</p>
+                        </div>
+                        <button @click="closeDetailsModal" class="text-white/80 hover:text-white transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white px-6 pt-6 pb-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Référence</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDetails?.reference || '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Date</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ formatDate(selectedDetails?.date_depense) }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Titre</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDetails?.titre }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Montant</span>
+                                <p class="text-sm font-bold text-slate-900 text-rose-600">{{ formatCurrency(selectedDetails?.montant) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Type / Catégorie</span>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ selectedDetails?.type_depense?.nom || selectedDetails?.categorie || '-' }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Statut</span>
+                                <div class="mt-0.5">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                        :class="{
+                                            'bg-emerald-100 text-emerald-800': selectedDetails?.statut === 'Payé',
+                                            'bg-amber-100 text-amber-800': selectedDetails?.statut === 'En attente',
+                                            'bg-rose-100 text-rose-800': selectedDetails?.statut === 'Annulé'
+                                        }"
+                                    >
+                                        {{ selectedDetails?.statut }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Créé par</span>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ selectedDetails?.agency ? selectedDetails.agency.name : 'Siège Social' }}
+                                </p>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Description</span>
+                                <p class="text-sm text-slate-600 italic mt-0.5">{{ selectedDetails?.description || 'Aucune description' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-100">
+                        <button
+                            @click="closeDetailsModal"
+                            class="px-5 py-2.5 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Fermer
                         </button>
                     </div>
                 </div>
@@ -465,6 +561,12 @@ const isConfirmModalOpen = ref(false);
 const selectedDepense = ref(null);
 const rejectionMessage = ref('');
 const isSubmittingValidation = ref(false);
+const isConfirming = ref(false);
+const isRejecting = ref(false);
+
+// New details modal properties
+const isDetailsModalOpen = ref(false);
+const selectedDetails = ref(null);
 
 // New delete modal properties
 const isDeleteModalOpen = ref(false);
@@ -617,6 +719,7 @@ const closeConfirmModal = () => {
 
 const confirmExpense = async () => {
     if (!selectedDepense.value) return;
+    isConfirming.value = true;
     isSubmittingValidation.value = true;
     try {
         await axios.post(`/api/depenses/${selectedDepense.value.id}/status`, {
@@ -628,6 +731,7 @@ const confirmExpense = async () => {
         console.error('Erreur lors de la confirmation:', error);
         alert('Une erreur est survenue lors de la confirmation.');
     } finally {
+        isConfirming.value = false;
         isSubmittingValidation.value = false;
     }
 };
@@ -638,6 +742,7 @@ const rejectExpense = async () => {
         alert("Veuillez saisir un message pour expliquer le refus.");
         return;
     }
+    isRejecting.value = true;
     isSubmittingValidation.value = true;
     try {
         await axios.post(`/api/depenses/${selectedDepense.value.id}/status`, {
@@ -650,8 +755,20 @@ const rejectExpense = async () => {
         console.error('Erreur lors du refus:', error);
         alert('Une erreur est survenue lors du refus.');
     } finally {
+        isRejecting.value = false;
         isSubmittingValidation.value = false;
     }
+};
+
+// Details modal triggers
+const openDetailsModal = (depense) => {
+    selectedDetails.value = depense;
+    isDetailsModalOpen.value = true;
+};
+
+const closeDetailsModal = () => {
+    isDetailsModalOpen.value = false;
+    selectedDetails.value = null;
 };
 
 // Custom deletion flow triggers

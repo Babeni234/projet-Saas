@@ -70,6 +70,11 @@ class EntreeFondsController extends Controller
             return response()->json(['error' => 'Non autorisé'], 403);
         }
 
+        // Cannot update a processed or canceled fund entry
+        if ($entree_fond->statut === 'Encaissé' || $entree_fond->statut === 'Annulé') {
+            return response()->json(['error' => 'Impossible de modifier une entrée de fonds déjà traitée.'], 403);
+        }
+
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -137,6 +142,11 @@ class EntreeFondsController extends Controller
         $user = Auth::user();
         if (!$user || $entree_fond->company_profile_id !== $user->company_profile_id) {
             return response()->json(['error' => 'Non autorisé'], 403);
+        }
+
+        // Cannot delete a processed or canceled fund entry
+        if ($entree_fond->statut === 'Encaissé' || $entree_fond->statut === 'Annulé') {
+            return response()->json(['error' => 'Impossible de supprimer une entrée de fonds déjà traitée.'], 403);
         }
 
         $entree_fond->update(['deleted' => true]);

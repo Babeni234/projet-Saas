@@ -131,6 +131,17 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button 
+                                    @click="openDetailsModal(entree)" 
+                                    class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.95] mr-2 shadow-sm"
+                                >
+                                    <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Détails
+                                </button>
+                                <button 
+                                    v-if="entree.statut === 'En attente'"
                                     @click="openModal(entree)" 
                                     class="inline-flex items-center gap-1 rounded-lg border border-indigo-150 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 hover:text-indigo-900 active:scale-[0.95] mr-2 shadow-sm"
                                 >
@@ -140,6 +151,7 @@
                                     Modifier
                                 </button>
                                 <button 
+                                    v-if="entree.statut === 'En attente'"
                                     @click="confirmDeleteEntree(entree.id)" 
                                     class="inline-flex items-center gap-1 rounded-lg border border-rose-150 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 transition-all hover:bg-rose-100 hover:text-rose-900 active:scale-[0.95] shadow-sm"
                                 >
@@ -148,6 +160,7 @@
                                     </svg>
                                     Supprimer
                                 </button>
+                                <span v-else class="text-xs text-slate-400 italic">Dossier Traité</span>
                             </td>
                         </tr>
                         <tr v-if="filteredEntrees.length === 0">
@@ -319,6 +332,81 @@
                 </div>
             </div>
         </div>
+
+        <!-- Custom Details Modal -->
+        <div v-if="isDetailsModalOpen" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeDetailsModal"></div>
+                <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-650 px-6 py-4 flex items-center justify-between text-white">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6">Détails de l'entrée de fonds</h3>
+                            <p class="text-xs text-emerald-100 mt-1">Examen complet de la fiche d'entrée</p>
+                        </div>
+                        <button @click="closeDetailsModal" class="text-white/80 hover:text-white transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white px-6 pt-6 pb-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Référence</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDetails?.reference || '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Date</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ formatDate(selectedDetails?.date_entree) }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Titre</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDetails?.titre }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Montant</span>
+                                <p class="text-sm font-bold text-slate-900 text-emerald-600">{{ formatCurrency(selectedDetails?.montant) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Catégorie</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDetails?.categorie || '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Statut</span>
+                                <div class="mt-0.5">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                        :class="{
+                                            'bg-emerald-100 text-emerald-800': selectedDetails?.statut === 'Encaissé',
+                                            'bg-amber-100 text-amber-800': selectedDetails?.statut === 'En attente',
+                                            'bg-rose-100 text-rose-800': selectedDetails?.statut === 'Annulé'
+                                        }"
+                                    >
+                                        {{ selectedDetails?.statut }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Description</span>
+                                <p class="text-sm text-slate-600 italic mt-0.5">{{ selectedDetails?.description || 'Aucune description' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-100">
+                        <button
+                            @click="closeDetailsModal"
+                            class="px-5 py-2.5 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -335,6 +423,10 @@ const searchQuery = ref('');
 // New delete modal properties
 const isDeleteModalOpen = ref(false);
 const entreeIdToDelete = ref(null);
+
+// New details modal properties
+const isDetailsModalOpen = ref(false);
+const selectedDetails = ref(null);
 
 const form = ref({
     id: null,
@@ -483,6 +575,16 @@ const formatCurrency = (value) => {
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     return new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(dateStr));
+};
+
+const openDetailsModal = (entree) => {
+    selectedDetails.value = entree;
+    isDetailsModalOpen.value = true;
+};
+
+const closeDetailsModal = () => {
+    isDetailsModalOpen.value = false;
+    selectedDetails.value = null;
 };
 </script>
 
