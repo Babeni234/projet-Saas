@@ -1946,6 +1946,16 @@
         :wallet-balance="walletBalance"
         :current-tab="activeTab"
         :penalty-info="penaltyInfo"
+        :latest-water-conso="latestWaterConso"
+        :latest-water-unit="latestWaterUnit"
+        :latest-water-cost="latestWaterCost"
+        :latest-water-period="latestWaterPeriod"
+        :water-status="waterStatusLabel"
+        :latest-elec-conso="latestElecConso"
+        :latest-elec-unit="latestElecUnit"
+        :latest-elec-cost="latestElecCost"
+        :latest-elec-period="latestElecPeriod"
+        :elec-status="elecStatusLabel"
         @action="handleAiAction"/>
 
       <!-- Bottom nav -- mobile-only -->

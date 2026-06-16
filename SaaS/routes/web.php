@@ -27,6 +27,15 @@ Route::middleware('auth')->group(function () {
     // Push subscriptions
     Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store']);
     Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy']);
+
+    // AI Agent routes (under /api prefix for session-based auth)
+    Route::prefix('api')->group(function () {
+        Route::post('/agent/message', [\App\Http\Controllers\Api\AiAgentController::class, 'message']);
+        Route::get('/agent/history', [\App\Http\Controllers\Api\AiAgentController::class, 'history']);
+        Route::delete('/agent/clear', [\App\Http\Controllers\Api\AiAgentController::class, 'clear']);
+        Route::get('/agent/notifications', [\App\Http\Controllers\Api\AiAgentController::class, 'notifications']);
+        Route::get('/agent/state', [\App\Http\Controllers\Api\AiAgentController::class, 'state']);
+    });
 });
 
 // Route simple pour afficher le dashboard du locataire

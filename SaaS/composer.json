@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "minishlink/web-push": "*",
+        "openai-php/laravel": "*",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

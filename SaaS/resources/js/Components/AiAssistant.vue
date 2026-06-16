@@ -1,6 +1,5 @@
 <template>
   <div class="ai-assistant">
-    <!-- FAB -->
     <button class="ai-fab" :class="{ 'ai-fab-open': isOpen }" @click="toggleOpen">
       <svg v-if="!isOpen" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2a10 10 0 0110 10c0 2.5-1 4.8-2.6 6.4L21 22l-4.6-1.6A10 10 0 1112 2z"/>
@@ -11,7 +10,6 @@
       </svg>
     </button>
 
-    <!-- Chat panel -->
     <Transition name="ai-slide">
       <div v-if="isOpen" class="ai-panel glass-card">
         <div class="ai-header">
@@ -22,13 +20,18 @@
               </svg>
             </div>
             <div>
-              <div class="ai-name">Assistance HABITATUM</div>
-              <div class="ai-status">En ligne</div>
+              <div class="ai-name">Agent HABITATUM</div>
+              <div class="ai-status" :class="agentStatusClass">● {{ agentStatusText }}</div>
             </div>
           </div>
-          <button class="ai-minimize" @click="toggleOpen" title="Réduire">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
+          <div class="ai-header-actions">
+            <button class="ai-header-btn" @click="clearConversation" title="Nouvelle conversation">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </button>
+            <button class="ai-minimize" @click="toggleOpen" title="Réduire">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="ai-messages" ref="messagesRef">
@@ -37,23 +40,28 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0110 10c0 2.5-1 4.8-2.6 6.4L21 22l-4.6-1.6A10 10 0 1112 2z"/></svg>
             </div>
             <div class="ai-msg-bubble" :class="msg.role === 'assistant' ? 'ai-bubble-assistant' : 'ai-bubble-user'">
-              <div v-if="msg.type === 'action'" class="ai-action-msg">
-                <div class="ai-action-card" @click="executeAction(msg.action)">
-                  <div class="ai-action-icon" v-html="msg.actionIcon || ''"></div>
+              <div v-if="msg.type === 'action' && msg.actions" class="ai-action-group">
+                <div v-for="(act, ai) in msg.actions" :key="ai" class="ai-action-card" @click="executeAction(act.action)">
+                  <div class="ai-action-icon" v-html="act.iconSvg || ''"></div>
                   <div>
-                    <div class="ai-action-label">{{ msg.actionLabel }}</div>
+                    <div class="ai-action-label">{{ act.label || act.action }}</div>
                     <div class="ai-action-desc">Cliquez pour exécuter</div>
                   </div>
                   <svg class="ai-action-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
               </div>
-              <div v-else-if="msg.type === 'table'" class="ai-table-msg">
-                <div v-for="(row, ri) in msg.rows" :key="ri" class="ai-table-row">
+              <div v-else-if="msg.type === 'table' && msg.rows" class="ai-table-msg">
+                <div v-for="(row, ri2) in msg.rows" :key="ri2" class="ai-table-row">
                   <span class="ai-table-label">{{ row.label }}</span>
                   <span class="ai-table-value" :style="{color: row.color || 'inherit'}">{{ row.value }}</span>
                 </div>
               </div>
-              <div v-else-if="msg.type === 'html'" v-html="msg.html"></div>
+              <div v-else-if="msg.type === 'notification'" class="ai-notif-banner" :class="'ai-notif-' + msg.severity">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                </svg>
+                <span>{{ msg.text }}</span>
+              </div>
               <div v-else class="ai-text-msg">{{ msg.text }}</div>
               <div class="ai-msg-time">{{ msg.time }}</div>
             </div>
@@ -68,15 +76,15 @@
           </div>
         </div>
 
-        <!-- Suggested pills -->
         <div v-if="suggestions.length > 0" class="ai-suggestions">
           <button v-for="(s, si) in suggestions" :key="si" class="ai-pill" @click="sendUserMessage(s)">{{ s }}</button>
         </div>
 
         <div class="ai-input-area">
-          <input ref="inputRef" v-model="userInput" type="text" class="ai-input" placeholder="Posez votre question…"
-            @keydown.enter.prevent="sendMessage" maxlength="500"/>
-          <button class="ai-send-btn" :disabled="!userInput.trim()" @click="sendMessage">
+          <input ref="inputRef" v-model="userInput" type="text" class="ai-input"
+            placeholder="Posez votre question à l'agent…"
+            @keydown.enter.prevent="sendMessage" maxlength="1000"/>
+          <button class="ai-send-btn" :disabled="!userInput.trim() || isTyping" @click="sendMessage">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -86,7 +94,8 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   user: { type: Object, default: () => ({}) },
@@ -95,6 +104,16 @@ const props = defineProps({
   walletBalance: { type: Number, default: 0 },
   currentTab: { type: String, default: 'overview' },
   penaltyInfo: { type: Object, default: () => ({}) },
+  latestWaterConso: { type: [String, Number], default: '' },
+  latestWaterUnit: { type: String, default: '' },
+  latestWaterCost: { type: [String, Number], default: 0 },
+  latestWaterPeriod: { type: String, default: '' },
+  waterStatus: { type: String, default: '' },
+  latestElecConso: { type: [String, Number], default: '' },
+  latestElecUnit: { type: String, default: '' },
+  latestElecCost: { type: [String, Number], default: 0 },
+  latestElecPeriod: { type: String, default: '' },
+  elecStatus: { type: String, default: '' },
 })
 
 const emit = defineEmits(['navigate', 'action'])
@@ -106,402 +125,90 @@ const isTyping = ref(false)
 const suggestions = ref([])
 const messagesRef = ref(null)
 const inputRef = ref(null)
+const conversationId = ref(null)
+const agentStatus = ref('online')
 let firstOpen = true
-const lastIntent = ref('')
-const conversationContext = ref({ step: 'idle', lastTopic: '' })
+let notificationPoll = null
 
-const knowledgeBase = {
-  system: "HABITATUM est une plateforme de gestion locative premium. Vous gerez votre logement, vos loyers, vos factures et vos communications avec le gestionnaire depuis ce tableau de bord.",
-  tabs: "Votre espace dispose de plusieurs sections : Vue d'ensemble, Contrat, Loyer, Support, Profil, Factures Eau/Electricite, Quittances, Anciens Contrats.",
-  payment: "Le loyer est du avant le 10 de chaque mois. Paiement via le portefeuille HABITATUM (MTN Mobile Money, Orange Money, carte bancaire ou PayPal). Penalite progressive en cas de retard.",
-  contract: "Votre bail est d'une duree determinee. Consultez les details dans la section Contrat.",
-  support: "Ouvrez un ticket dans la section Support pour signaler un probleme. Le gestionnaire repond dans l'interface.",
-  penalties: "Barème des penalites : a partir du 11 : 5%, a partir du 16 : 10%, a partir du 21 : 15%. Le taux s'applique a tous les mois impayes.",
-  wallet: "Le portefeuille HABITATUM permet de payer loyers et factures. Rechargez via MTN MoMo, Orange Money, carte bancaire ou PayPal.",
-}
+const agentStatusClass = computed(() => ({
+  'ai-status-online': agentStatus.value === 'online',
+  'ai-status-thinking': agentStatus.value === 'thinking',
+  'ai-status-error': agentStatus.value === 'error',
+}))
 
-const userName = computed(() => props.user?.first_name || props.user?.name || '')
-
-function getContext() {
-  const now = new Date()
-  const day = now.getDate()
-  const month = now.toLocaleString('fr-FR', { month: 'long' })
-  const year = now.getFullYear()
-  const pending = props.invoices.filter(i => i.status === 'pending' && i.type === 'RENT')
-  const paid = props.invoices.filter(i => i.status === 'paid' && i.type === 'RENT')
-  const lastPaid = paid.length > 0 ? paid[paid.length - 1] : null
-  return { now, day, month, year, pending, paid, lastPaid, info: props.penaltyInfo }
-}
-
-function matchAny(input, keywords) {
-  return keywords.some(k => input.includes(k))
-}
-
-function matchAll(input, phrases) {
-  return phrases.some(p => p.split(' ').every(w => input.includes(w)))
-}
-
-function processIntent(input) {
-  const n = input.toLowerCase().trim()
-  const ctx = getContext()
-
-  if (matchAny(n, ['bonjour', 'salut', 'bonsoir', 'hello', 'hi', 'coucou', 'aide', 'help', 'bonsoir', 's il vous plait', 'besoin'])) {
-    return handleGreeting(ctx)
+const agentStatusText = computed(() => {
+  switch (agentStatus.value) {
+    case 'online': return 'Agent actif'
+    case 'thinking': return 'Réflexion en cours…'
+    case 'error': return 'Erreur de connexion'
+    default: return 'En ligne'
   }
-  if (matchAny(n, ['oui', 'yes', 'ok', 'd accord', 'vas-y', 'vas y', 'continue', 'bien', 'd accord'])) {
-    return handleAffirmative()
-  }
-  if (matchAny(n, ['non', 'no', 'pas', 'rien', 'arrete', 'stop'])) {
-    return { text: 'D accord. Je reste a votre disposition si besoin.', suggestions: defaultSuggestions() }
-  }
-  if (matchAny(n, ['merci', 'thanks', 'thank', 'merci beaucoup'])) {
-    return { text: `Avec plaisir ${userName.value || ''}. N hesitez pas a me solliciter.`, suggestions: defaultSuggestions() }
-  }
+})
 
-  // Paiement
-  if (matchAny(n, ['payer', 'paiement', 'paye', 'regler', 'reglement', 'montant du', 'combien je dois', 'impayer', 'impaye', 'je dois'])) {
-    return handlePaymentIntent(n, ctx)
-  }
-
-  // Penalites
-  if (matchAny(n, ['penalite', 'penalite', 'amende', 'majoration', 'retard', 'sursis', 'bareme', 'taux'])) {
-    return handlePenaltyIntent(ctx)
-  }
-
-  // Factures / Quittances
-  if (matchAny(n, ['facture', 'factures', 'quittance', 'quittances', 'recu', 'recus', 'reçu', 'reçus'])) {
-    return handleInvoiceIntent(n, ctx)
-  }
-
-  // Contrat
-  if (matchAny(n, ['contrat', 'bail', 'propriete', 'logement', 'appartement', 'location', 'bien'])) {
-    return handleContractIntent(ctx)
-  }
-
-  // Portefeuille
-  if (matchAny(n, ['portefeuille', 'solde', 'wallet', 'recharge', 'recharger', 'argent', 'compte', 'balance', 'monnaie'])) {
-    return handleWalletIntent(ctx)
-  }
-
-  // Support
-  if (matchAny(n, ['support', 'ticket', 'probleme', 'panne', 'signal', 'urgence', 'urgent', 'contacter', 'gestionnaire', 'proprietaire', 'reparateur'])) {
-    return handleSupportIntent(n)
-  }
-
-  // Navigation (va a, affiche, montre, ouvre)
-  if (matchAny(n, ['va a', 'va dans', 'affiche', 'montre', 'montre-moi', 'montre moi', 'ouvre', 'naviguer', 'section', 'page', 'accueil', 'tableau de bord', 'emmene'])) {
-    return handleNavigateIntent(n)
-  }
-
-  // Profil
-  if (matchAny(n, ['profil', 'mot de passe', 'identite', 'personnel', 'information', 'mon nom', 'mon email'])) {
-    return handleProfileIntent(ctx)
-  }
-
-  // Notifications
-  if (matchAny(n, ['notification', 'notifications', 'alerte', 'alerter', 'notifier', 'rappel', 'prevenir', 'prevenez'])) {
-    return handleNotificationIntent()
-  }
-
-  // Utilités
-  if (matchAny(n, ['eau', 'electricite', 'elec', 'consommation', 'compteur', 'index', 'facture eau', 'facture electricite'])) {
-    return handleUtilityIntent(n, ctx)
-  }
-
-  // Système
-  if (matchAny(n, ['qui es', 'c est quoi', 'habitatum', 'systeme', 'plateforme', 'logiciel', 'que fait'])) {
-    return { text: knowledgeBase.system + ' ' + knowledgeBase.tabs, suggestions: defaultSuggestions() }
-  }
-
-  // Commander une action
-  if (matchAny(n, ['execute', 'fais', 'fais-le', 'fait', 'effectue', 'lance', 'applique'])) {
-    return handleCommandIntent(n, ctx)
-  }
-
-  return handleUnknown()
-}
-
-function handleGreeting(ctx) {
-  const h = new Date().getHours()
-  const period = h < 12 ? 'matin' : h < 18 ? 'apres-midi' : 'soiree'
-  const name = userName.value
-  const unpaidMonths = ctx.info.isOverdue ? ctx.info.unpaidCount : 0
-
-  let extra = ''
-  if (ctx.info.isOverdue) {
-    extra = ` Attention : ${unpaidMonths} mois impaye(s) avec penalite de ${ctx.info.currentLabel}.`
-  }
-
+function buildDashboardData() {
   return {
-    text: `Bon${period === 'soiree' ? 'soir' : 'jour'} ${name || ''}.${extra} Comment puis-je vous assister ?`,
-    suggestions: [
-      'Payer mon loyer',
-      'Situation des penalites',
-      'Mon contrat',
-      'Solde du portefeuille',
-    ]
+    auth: props.user,
+    invoices: props.invoices,
+    contract: props.contract,
+    walletBalance: props.walletBalance,
+    currentTab: props.currentTab,
+    penaltyInfo: props.penaltyInfo,
+    latestWaterConso: props.latestWaterConso,
+    latestWaterUnit: props.latestWaterUnit,
+    latestWaterCost: props.latestWaterCost,
+    latestWaterPeriod: props.latestWaterPeriod,
+    waterStatus: props.waterStatus,
+    latestElecConso: props.latestElecConso,
+    latestElecUnit: props.latestElecUnit,
+    latestElecCost: props.latestElecCost,
+    latestElecPeriod: props.latestElecPeriod,
+    elecStatus: props.elecStatus,
   }
 }
 
-function handlePaymentIntent(n, ctx) {
-  // Si la demande inclut un ordre de paiement direct pour un montant specifique
-  if (matchAny(n, ['paye maintenant', 'effectue le paiement', 'fais le paiement', 'paie', 'regle maintenant'])) {
-    return handleDirectPayment(ctx)
-  }
-
-  if (matchAny(n, ['historique', 'dernier', 'deja', 'effectue', 'deja paye'])) {
-    if (ctx.lastPaid) {
-      return {
-        text: `Votre dernier paiement : **${ctx.lastPaid.period}** - ${ctx.lastPaid.amount.toLocaleString()} XAF.`,
-        suggestions: ['Payer le mois en cours', 'Voir toutes les factures'],
-      }
-    }
-    return { text: 'Aucun historique de paiement trouve.', suggestions: defaultSuggestions() }
-  }
-
-  if (ctx.pending.length === 0) {
-    if (ctx.info.isOverdue) {
-      const dueText = `${ctx.info.unpaidCount} mois impayes. Penalite ${ctx.info.currentLabel} (${ctx.info.totalPenalties.toLocaleString()} XAF). Total du : ${ctx.info.totalDue.toLocaleString()} XAF.`
-      return {
-        text: dueText,
-        actions: [{ id: 'pay-rent', label: `Payer ${ctx.info.totalDue.toLocaleString()} XAF`, iconSvg: 'card', action: 'navigate_payment' }],
-        suggestions: ['Effectuer le paiement', 'Voir le detail des penalites'],
-      }
-    }
-    return { text: 'Tous les loyers sont a jour.', suggestions: ['Voir mon contrat', 'Recharger le portefeuille'] }
-  }
-
-  const next = ctx.pending[0]
-  const penText = ctx.info.isOverdue
-    ? ` Penalite ${ctx.info.currentLabel} applicable.`
-    : ` Montant : ${next.amount.toLocaleString()} XAF. A payer avant le **10 ${ctx.month} ${ctx.year}** (pas de penalite pour l'instant).`
-
-  return {
-    text: `Loyer **${next.period}** en attente.${penText}`,
-    actions: [{ id: 'pay-rent', label: 'Payer maintenant', iconSvg: 'card', action: 'navigate_payment' }],
-    suggestions: ['Effectuer le paiement', 'Voir toutes les factures', 'Detail des penalites'],
-  }
-}
-
-function handleDirectPayment(ctx) {
-  if (!ctx.info.isOverdue && ctx.pending.length === 0) {
-    return { text: 'Aucun impaye. Tous les loyers sont a jour.', suggestions: defaultSuggestions() }
-  }
-  return {
-    text: `Je vous redirige vers la page de paiement. Le montant total du est de **${ctx.info.totalDue > 0 ? ctx.info.totalDue.toLocaleString() : ctx.pending[0]?.amount.toLocaleString() || '?'} XAF**. Veuillez confirmer votre code de securite.`,
-    actions: [{ id: 'pay-rent', label: 'Proceder au paiement securise', iconSvg: 'card', action: 'navigate_payment' }],
-  }
-}
-
-function handlePenaltyIntent(ctx) {
-  const info = ctx.info
-  if (info.isOverdue) {
-    const rows = info.details.map(d => ({
-      label: d.period,
-      value: `${d.rent.toLocaleString()} XAF + ${d.rateLabel} = ${d.penalty.toLocaleString()} XAF`,
-      color: '#DC2626'
-    }))
-    rows.push(
-      { label: 'Total penalites', value: `${info.totalPenalties.toLocaleString()} XAF`, color: '#DC2626' },
-      { label: 'Total general du', value: `${info.totalDue.toLocaleString()} XAF`, color: '#6366F1' },
-    )
-    return {
-      text: `Detail des penalites (taux actuel : **${info.currentLabel}**) :`,
-      type: 'table',
-      rows,
-      suggestions: ['Payer maintenant', 'Voir le bareme'],
-    }
-  }
-  return {
-    text: 'Aucune penalite en cours. Le bareme : 5% a partir du 11, 10% a partir du 16, 15% a partir du 21 de chaque mois.',
-    suggestions: defaultSuggestions(),
-  }
-}
-
-function handleInvoiceIntent(n, ctx) {
-  const utilities = props.invoices.filter(i => i.type === 'WATER' || i.type === 'ELECTRIC')
-  const pending = props.invoices.filter(i => i.status === 'pending')
-
-  if (matchAny(n, ['eau', 'electricite', 'elec', 'conso'])) {
-    return {
-      text: `Services : ${utilities.length} facture(s). ${utilities.filter(i => i.status === 'pending').length} en attente.`,
-      actions: [{ id: 'view-utilities', label: 'Voir les factures', iconSvg: 'chart', action: 'navigate_utilities' }],
-      suggestions: ['Payer facture eau', 'Payer facture electricite'],
-    }
-  }
-
-  const totalUnpaid = pending.reduce((s, i) => s + i.amount, 0)
-  return {
-    text: `${props.invoices.length} facture(s) au total. ${pending.length} en attente (${totalUnpaid.toLocaleString()} XAF).`,
-    actions: pending.length > 0
-      ? [{ id: 'view-invoices', label: 'Voir les factures en attente', iconSvg: 'doc', action: 'navigate_invoices' }]
-      : [],
-    suggestions: ['Payer un loyer', 'Voir les quittances'],
-  }
-}
-
-function handleContractIntent(ctx) {
-  const c = props.contract
-  if (!c || !c.property) {
-    return { text: 'Aucun contrat actif trouve.', suggestions: defaultSuggestions() }
-  }
-  return {
-    text: `**${c.property.name}** - Bail ${c.type || 'en cours'}.`,
-    type: 'table',
-    rows: [
-      { label: 'Loyer mensuel', value: `${c.rent?.toLocaleString() || '--'} XAF` },
-      { label: 'Depot de garantie', value: `${c.deposit?.toLocaleString() || '--'} XAF` },
-      { label: 'Charges', value: `${c.charges?.toLocaleString() || '--'} XAF` },
-      { label: 'Debut', value: c.start_date || '--' },
-      { label: 'Fin', value: c.end_date || '--' },
-      { label: 'Propriete', value: c.property.name || '--' },
-    ],
-    actions: [{ id: 'view-contract', label: 'Voir le contrat complet', iconSvg: 'contract', action: 'navigate_contract' }],
-    suggestions: ['Payer mon loyer', 'Voir mes documents', 'Contacter le gestionnaire'],
-  }
-}
-
-function handleWalletIntent(ctx) {
-  return {
-    text: `Solde actuel : **${props.walletBalance?.toLocaleString() || 0} XAF**`,
-    actions: [{ id: 'recharge', label: 'Recharger le portefeuille', iconSvg: 'card', action: 'navigate_recharge' }],
-    suggestions: ['Payer un loyer', 'Voir mes transactions'],
-  }
-}
-
-function handleSupportIntent(n) {
-  if (matchAny(n, ['urgent', 'urgence', 'vite', 'rapide', 'tres urgent'])) {
-    return {
-      text: 'Pour une urgence technique, veuillez ouvrir un ticket immediatement. Un gestionnaire vous repondra dans les plus brefs delais.',
-      actions: [{ id: 'new-ticket', label: 'Ouvrir un ticket urgent', iconSvg: 'alert', action: 'navigate_support' }],
-      suggestions: ['Ouvrir un ticket', 'Contacter le gestionnaire'],
-    }
-  }
-  return {
-    text: 'La section Support permet d ouvrir des tickets et de communiquer avec le gestionnaire. Que voulez-vous faire ?',
-    actions: [{ id: 'open-support', label: 'Aller au support', iconSvg: 'chat', action: 'navigate_support' }],
-    suggestions: ['Ouvrir un ticket', 'Voir mes tickets', 'Contacter le proprietaire'],
-  }
-}
-
-function handleNavigateIntent(n) {
-  const tabMap = [
-    { keys: ['accueil', 'tableau de bord', 'overview', 'resume', 'apercu', 'dashboard'], tab: 'overview', label: "Vue d'ensemble" },
-    { keys: ['contrat', 'bail', 'propriete'], tab: 'contract', label: 'Contrat' },
-    { keys: ['loyer', 'paiement', 'payer', 'finances'], tab: 'rent', label: 'Loyers' },
-    { keys: ['support', 'ticket', 'message', 'messagerie', 'assistance', 'chat', 'contact'], tab: 'support', label: 'Support' },
-    { keys: ['profil', 'parametre', 'compte', 'settings'], tab: 'profile', label: 'Profil' },
-    { keys: ['facture', 'eau', 'electricite', 'utilite', 'utilities'], tab: 'utilities', label: 'Factures' },
-    { keys: ['quittance', 'recu', 'recus', 'quittances', 'recep'], tab: 'receipts', label: 'Quittances' },
-    { keys: ['ancien', 'historique', 'archive', 'anciens'], tab: 'old-contracts', label: 'Anciens contrats' },
-  ]
-  for (const entry of tabMap) {
-    if (entry.keys.some(k => n.includes(k))) {
-      return {
-        text: `Navigation vers **${entry.label}**.`,
-        actions: [{ id: `nav-${entry.tab}`, label: `Aller a ${entry.label}`, iconSvg: 'arrow', action: `navigate_${entry.tab}` }],
-      }
-    }
-  }
-  return {
-    text: 'Sections disponibles : Vue d ensemble, Contrat, Loyer, Support, Profil, Factures, Quittances, Anciens contrats.',
-    suggestions: ["Aller a l'accueil", 'Voir mon contrat', 'Payer mon loyer'],
-  }
-}
-
-function handleProfileIntent(ctx) {
-  return {
-    text: `Profil : **${userName.value || '--'}** - ${props.user?.email || '--'}. Modifiable dans les parametres.`,
-    actions: [{ id: 'view-profile', label: 'Modifier mon profil', iconSvg: 'user', action: 'navigate_profile' }],
-    suggestions: ['Changer mot de passe', 'Voir notifications', 'Voir mon contrat'],
-  }
-}
-
-function handleNotificationIntent() {
-  return {
-    text: 'Configurez vos notifications dans Profil > Preferences de notifications. Options : email, push navigateur, SMS.',
-    actions: [{ id: 'view-notif', label: 'Configurer les notifications', iconSvg: 'bell', action: 'navigate_notifications' }],
-    suggestions: defaultSuggestions(),
-  }
-}
-
-function handleUtilityIntent(n, ctx) {
-  const utils = props.invoices.filter(i => i.type === 'WATER' || i.type === 'ELECTRIC')
-  const water = utils.filter(i => i.type === 'WATER')
-  const elec = utils.filter(i => i.type === 'ELECTRIC')
-  return {
-    text: `Factures de services : ${water.length} eau, ${elec.length} electricite. ${utils.filter(i => i.status === 'pending').length} en attente.`,
-    actions: [{ id: 'view-utils', label: 'Voir les factures', iconSvg: 'chart', action: 'navigate_utilities' }],
-    suggestions: ['Payer facture eau', 'Payer facture electricite'],
-  }
-}
-
-function handleCommandIntent(n, ctx) {
-  if (matchAny(n, ['paie', 'paye', 'paiement', 'regle', 'reglement'])) {
-    return handleDirectPayment(ctx)
-  }
-  if (matchAny(n, ['navig', 'va', 'ouvre', 'montre', 'affiche'])) {
-    return handleNavigateIntent(n)
-  }
-  if (matchAny(n, ['notifi', 'alerte', 'previens', 'rappelle'])) {
-    return handleNotificationIntent()
-  }
-  return {
-    text: 'Commande non reconnue. Que souhaitez-vous que j execute ?',
-    suggestions: ['Payer mon loyer', 'Aller au support', 'Voir mes factures'],
-  }
-}
-
-function handleAffirmative() {
-  if (lastIntent.value) return processIntent(lastIntent.value)
-  return { text: 'Que souhaitez-vous faire ?', suggestions: defaultSuggestions() }
-}
-
-function handleUnknown() {
-  return {
-    text: "Je n ai pas bien compris votre demande. Voici ce que je peux faire :",
-    suggestions: [
-      'Payer mon loyer',
-      'Situation des penalites',
-      'Mon contrat',
-      'Solde du portefeuille',
-      'Contacter le support',
-    ]
-  }
-}
-
-function defaultSuggestions() {
-  return ['Payer mon loyer', 'Mes factures', 'Mon contrat', 'Aide']
-}
-
-// ── Actions ──
-function executeAction(actionId) {
-  emit('action', actionId)
-  isOpen.value = false
-}
-
-// ── Send / Receive ──
-function sendMessage() {
+async function sendMessage() {
   const text = userInput.value.trim()
   if (!text || isTyping.value) return
   userInput.value = ''
   suggestions.value = []
   addMessage('user', text)
-  lastIntent.value = text
   isTyping.value = true
+  agentStatus.value = 'thinking'
   scrollDown()
 
-  const response = processIntent(text)
+  try {
+    const { data } = await axios.post('/api/agent/message', {
+      message: text,
+      conversation_id: conversationId.value,
+      dashboard_data: buildDashboardData(),
+    })
 
-  setTimeout(() => {
+    conversationId.value = data.conversation_id
     isTyping.value = false
-    if (response.text) addMessage('assistant', response.text, response.type || 'text', response.rows || null, response.actions || null, response.html || null)
-    if (response.actions && response.actions.length > 0) {
-      setTimeout(() => addActionCards(response.actions), 100)
+    agentStatus.value = 'online'
+
+    if (data.text) {
+      addMessage('assistant', data.text)
     }
-    if (response.suggestions) suggestions.value = response.suggestions
+
+    if (data.frontend_actions && data.frontend_actions.length > 0) {
+      nextTick(() => {
+        addActionCards(data.frontend_actions)
+      })
+    }
+
+    const detected = detectSuggestions(data.text || '', data.frontend_actions || [])
+    suggestions.value = detected
     scrollDown()
-  }, 500 + Math.random() * 400)
+  } catch (err) {
+    console.error('AI Agent error:', err)
+    isTyping.value = false
+    agentStatus.value = 'error'
+    const errorMsg = err.response?.data?.message || 'Erreur de communication avec l\'agent. Veuillez réessayer.'
+    addMessage('assistant', '⚠️ ' + errorMsg)
+    suggestions.value = ['Réessayer', 'Payer mon loyer', 'Mon contrat']
+    scrollDown()
+  }
 }
 
 function sendUserMessage(text) {
@@ -509,28 +216,78 @@ function sendUserMessage(text) {
   sendMessage()
 }
 
-function addMessage(role, text, type = 'text', rows = null, actions = null, html = null) {
+function addMessage(role, text, type = 'text', extra = null) {
   const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  if (type === 'action' && actions) {
-    for (const a of actions) {
-      messages.value.push({ role, type: 'action', action: a.action, actionLabel: a.label, actionIcon: a.iconSvg || '', time })
-    }
-    return
+  const msg = { role, type, text: '', time }
+
+  if (type === 'action' && extra && extra.length > 0) {
+    msg.type = 'action'
+    msg.actions = extra
+  } else if (type === 'table' && extra) {
+    msg.type = 'table'
+    msg.rows = extra
+  } else {
+    msg.text = text
   }
-  if (type === 'table' && rows) {
-    messages.value.push({ role, type: 'table', text: '', rows, time })
-    if (text) messages.value.push({ role, type: 'text', text, time })
-    return
-  }
-  messages.value.push({ role, type: 'text', text, time })
+
+  messages.value.push(msg)
 }
 
 function addActionCards(actions) {
   const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  for (const a of actions) {
-    messages.value.push({ role: 'assistant', type: 'action', action: a.action, actionLabel: a.label, actionIcon: a.iconSvg || '', time })
-  }
+  messages.value.push({
+    role: 'assistant',
+    type: 'action',
+    actions: actions.map(a => ({
+      action: a.action,
+      label: a.label || a.action,
+      iconSvg: a.iconSvg || getDefaultIcon(a.action),
+    })),
+    text: '',
+    time,
+  })
   scrollDown()
+}
+
+function getDefaultIcon(action) {
+  if (action.includes('payment') || action.includes('pay')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
+  if (action.includes('recharge')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'
+  if (action.includes('contract')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+  if (action.includes('profile')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+  if (action.includes('support')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+  if (action.includes('utility') || action.includes('water') || action.includes('elec')) return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+}
+
+function executeAction(actionId) {
+  emit('action', actionId)
+  isOpen.value = false
+}
+
+function clearConversation() {
+  messages.value = []
+  conversationId.value = null
+  suggestions.value = []
+  axios.delete('/api/agent/clear').catch(() => {})
+  addMessage('assistant', '🧹 Conversation réinitialisée. Je suis à votre écoute !')
+  suggestions.value = ['Payer mon loyer', 'Mon contrat', 'Solde du portefeuille']
+}
+
+function detectSuggestions(text, actions) {
+  if (!text) return ['Payer mon loyer', 'Mon contrat', 'Solde du portefeuille']
+
+  const s = []
+  if (/solde|wallet|portefeuille|recharge/i.test(text)) s.push('Recharger le portefeuille')
+  if (/loyer|payer|paiement|impayé|impaye|pénalité|penalite/i.test(text)) s.push('Payer maintenant')
+  if (/contrat|bail/i.test(text)) s.push('Voir mon contrat')
+  if (/facture|eau|électricité|electricite/i.test(text)) s.push('Voir mes factures')
+  if (/profil|profile/i.test(text)) s.push('Voir mon profil')
+
+  if (s.length === 0) {
+    s.push('Payer mon loyer', 'Mon contrat', 'Solde du portefeuille')
+  }
+
+  return s.slice(0, 3)
 }
 
 function toggleOpen() {
@@ -544,37 +301,82 @@ function toggleOpen() {
           isTyping.value = true
           setTimeout(() => {
             isTyping.value = false
-            const greeting = handleGreeting(getContext())
-            addMessage('assistant', greeting.text)
-            if (greeting.suggestions) suggestions.value = greeting.suggestions
+            addMessage('assistant', buildGreeting())
+            suggestions.value = ['Situation des loyers', 'Mon contrat', 'Solde du portefeuille', 'Aide']
             scrollDown()
-          }, 800)
+          }, 600)
         }, 300)
       }
     })
   }
 }
 
+function buildGreeting() {
+  const h = new Date().getHours()
+  const period = h < 12 ? 'matin' : h < 18 ? 'après-midi' : 'soirée'
+  const prefix = period === 'soirée' ? 'Bon' : 'Bon'
+  const greeting = period === 'soirée' ? 'soir' : 'jour'
+  const name = props.user?.first_name || props.user?.name || ''
+  const overdue = props.penaltyInfo?.isOverdue
+
+  let extra = ''
+  if (overdue) {
+    extra = `\n\n⚠️ **${props.penaltyInfo.unpaidCount} mois impayés** avec pénalité ${props.penaltyInfo.currentLabel}. Total dû : **${(props.penaltyInfo.totalDue || 0).toLocaleString()} XAF**.`
+  }
+
+  return `${prefix}${greeting} ${name} ! Je suis votre **agent intelligent HABITATUM**. Je peux consulter vos informations et effectuer des actions pour vous en temps réel.${extra}\n\nQue souhaitez-vous ?`
+}
+
 function scrollDown() {
   nextTick(() => { if (messagesRef.value) messagesRef.value.scrollTop = messagesRef.value.scrollHeight })
 }
 
-watch(isOpen, (val) => { if (val) document.body.style.overflow = 'hidden'; else document.body.style.overflow = '' })
+function startNotificationPolling() {
+  notificationPoll = setInterval(async () => {
+    try {
+      const { data } = await axios.get('/api/agent/state')
+      if (data.changes && data.changes.length > 0) {
+        for (const change of data.changes) {
+          if (!messages.value.find(m => m.text?.includes(change.message))) {
+            const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            messages.value.push({
+              role: 'assistant',
+              type: 'notification',
+              severity: 'warning',
+              text: '🔔 ' + change.message,
+              action: change.action,
+              time,
+            })
+          }
+        }
+      }
+    } catch (e) {}
+  }, 30000)
+}
+
+watch(isOpen, (val) => {
+  if (val) document.body.style.overflow = 'hidden'
+  else document.body.style.overflow = ''
+})
 
 onMounted(() => {
+  startNotificationPolling()
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
     const info = props.penaltyInfo
-    if (info.isOverdue) {
+    if (info?.isOverdue) {
       setTimeout(() => {
-        addMessage('assistant', `**Rappel :** ${info.unpaidCount} mois impayes. Penalite ${info.currentLabel} appliquee. Total du : ${info.totalDue.toLocaleString()} XAF.`)
+        addMessage('assistant', `🔔 **Rappel :** ${info.unpaidCount} mois impayés. Pénalité ${info.currentLabel} appliquée. Total dû : ${(info.totalDue || 0).toLocaleString()} XAF.`)
       }, 1500)
     }
   }
 })
+
+onUnmounted(() => {
+  if (notificationPoll) clearInterval(notificationPoll)
+})
 </script>
 
 <style scoped>
-/* ── Floating FAB ── */
 .ai-fab {
   position: fixed; bottom: 28px; right: 28px;
   width: 56px; height: 56px; border-radius: 50%;
@@ -588,10 +390,9 @@ onMounted(() => {
 .ai-fab-open { transform: rotate(90deg); background: linear-gradient(135deg, #DC2626, #B91C1C); }
 .ai-fab-open:hover { transform: rotate(90deg) scale(1.08); }
 
-/* ── Panel ── */
 .ai-panel {
   position: fixed; bottom: 96px; right: 28px;
-  width: 400px; height: 580px; max-height: calc(100vh - 140px);
+  width: 420px; height: 600px; max-height: calc(100vh - 140px);
   border-radius: 20px; background: var(--bg-card, #fff);
   box-shadow: 0 32px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05);
   display: flex; flex-direction: column; z-index: 9998;
@@ -599,20 +400,30 @@ onMounted(() => {
 }
 .dark-theme .ai-panel { background: #1E293B; box-shadow: 0 32px 80px rgba(0,0,0,0.5); }
 
-/* ── Header ── */
 .ai-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--border-input, #E2E8F0);
+  padding: 14px 18px; border-bottom: 1px solid var(--border-input, #E2E8F0);
   flex-shrink: 0;
 }
 .ai-header-left { display: flex; align-items: center; gap: 10px; }
+.ai-header-actions { display: flex; align-items: center; gap: 4px; }
+.ai-header-btn {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-muted, #94A3B8); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.ai-header-btn:hover { background: var(--gray-100, #F1F5F9); }
 .ai-avatar {
   width: 36px; height: 36px; border-radius: 50%;
   background: linear-gradient(135deg, #6366F1, #4F46E5);
   display: flex; align-items: center; justify-content: center; color: white;
 }
 .ai-name { font-size: 14px; font-weight: 700; color: var(--text-title, #0F172A); }
-.ai-status { font-size: 11px; color: #059669; font-weight: 500; }
+.ai-status { font-size: 11px; font-weight: 600; }
+.ai-status-online { color: #059669; }
+.ai-status-thinking { color: #D97706; }
+.ai-status-error { color: #DC2626; }
 .ai-minimize {
   width: 32px; height: 32px; border-radius: 50%; border: none;
   background: transparent; color: var(--text-muted, #94A3B8); cursor: pointer;
@@ -621,9 +432,8 @@ onMounted(() => {
 }
 .ai-minimize:hover { background: var(--gray-100, #F1F5F9); }
 
-/* ── Messages ── */
 .ai-messages {
-  flex: 1; overflow-y: auto; padding: 16px 16px 8px;
+  flex: 1; overflow-y: auto; padding: 14px 14px 6px;
   display: flex; flex-direction: column; gap: 10px;
   scroll-behavior: smooth;
 }
@@ -659,7 +469,6 @@ onMounted(() => {
 .ai-msg-time { font-size: 10px; color: var(--text-muted, #94A3B8); margin-top: 4px; text-align: right; }
 .ai-bubble-user .ai-msg-time { color: rgba(255,255,255,0.6); }
 
-/* ── Typing ── */
 .ai-typing { display: flex; gap: 4px; padding: 4px 0; }
 .ai-typing span {
   width: 7px; height: 7px; border-radius: 50%; background: #6366F1;
@@ -673,8 +482,7 @@ onMounted(() => {
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* ── Action cards ── */
-.ai-action-msg { padding: 0; }
+.ai-action-group { display: flex; flex-direction: column; gap: 6px; }
 .ai-action-card {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
   background: var(--bg-card, #fff); border-radius: 12px;
@@ -684,20 +492,30 @@ onMounted(() => {
 }
 .ai-action-card:hover { transform: translateX(3px); border-color: #6366F1; box-shadow: 0 4px 16px rgba(99,102,241,0.12); }
 .dark-theme .ai-action-card { background: #1E293B; border-color: #334155; }
-.ai-action-icon { font-size: 20px; width: 32px; text-align: center; }
+.ai-action-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+.ai-action-icon svg { width: 20px; height: 20px; }
 .ai-action-label { font-size: 13px; font-weight: 700; color: var(--text-title, #0F172A); }
 .ai-action-desc { font-size: 11px; color: var(--text-muted, #94A3B8); }
-.ai-action-arrow { flex-shrink: 0; color: #6366F1; }
+.ai-action-arrow { flex-shrink: 0; color: #6366F1; margin-left: auto; }
 
-/* ── Table rows ── */
 .ai-table-msg { display: flex; flex-direction: column; gap: 4px; }
 .ai-table-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
 .ai-table-label { font-size: 12px; color: var(--text-muted, #64748B); }
 .ai-table-value { font-size: 13px; font-weight: 700; }
 
-/* ── Suggestions ── */
+.ai-notif-banner {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-radius: 10px; font-size: 12px; font-weight: 600;
+}
+.ai-notif-warning { background: #FEF3C7; color: #92400E; }
+.ai-notif-error { background: #FEE2E2; color: #991B1B; }
+.ai-notif-info { background: #DBEAFE; color: #1E40AF; }
+.dark-theme .ai-notif-warning { background: rgba(217,119,6,0.2); color: #FBBF24; }
+.dark-theme .ai-notif-error { background: rgba(220,38,38,0.2); color: #F87171; }
+.dark-theme .ai-notif-info { background: rgba(37,99,235,0.2); color: #60A5FA; }
+
 .ai-suggestions {
-  display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 16px 4px; flex-shrink: 0;
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 14px 2px; flex-shrink: 0;
 }
 .ai-pill {
   padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-input, #E2E8F0);
@@ -709,10 +527,9 @@ onMounted(() => {
 .dark-theme .ai-pill { background: #1E293B; border-color: #334155; }
 .dark-theme .ai-pill:hover { background: rgba(99,102,241,0.1); border-color: #6366F1; }
 
-/* ── Input ── */
 .ai-input-area {
   display: flex; align-items: center; gap: 8px;
-  padding: 12px 16px 16px; border-top: 1px solid var(--border-input, #E2E8F0);
+  padding: 10px 14px 14px; border-top: 1px solid var(--border-input, #E2E8F0);
   flex-shrink: 0;
 }
 .ai-input {
@@ -731,7 +548,6 @@ onMounted(() => {
 .ai-send-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
 .ai-send-btn:disabled { opacity: 0.4; cursor: default; }
 
-/* ── Transition ── */
 .ai-slide-enter-active { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 .ai-slide-leave-active { transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1); }
 .ai-slide-enter-from { opacity: 0; transform: translateY(20px) scale(0.95); }
@@ -742,7 +558,6 @@ onMounted(() => {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Responsive ── */
 @media (max-width: 480px) {
   .ai-panel { right: 12px; left: 12px; width: auto; height: calc(100vh - 140px); }
   .ai-fab { right: 16px; bottom: 16px; width: 50px; height: 50px; }
