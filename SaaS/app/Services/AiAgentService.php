@@ -51,7 +51,7 @@ class AiAgentService
 
     private function callLlm(AgentConversation $conversation): array
     {
-        $apiKey = config('openai.api_key') ?: env('OPENAI_API_KEY');
+        $apiKey = config('openai.api_key');
 
         if ($apiKey) {
             return $this->callOpenAi($conversation);
@@ -63,6 +63,10 @@ class AiAgentService
     private function callOpenAi(AgentConversation $conversation): array
     {
         try {
+            $apiKey = config('openai.api_key');
+            $baseUrl = config('openai.base_url');
+            $model = config('openai.model');
+
             $systemPrompt = $this->buildSystemPrompt();
             $tools = $this->registry->toOpenAiFunctions();
 
@@ -90,9 +94,12 @@ class AiAgentService
                 }
             }
 
-            $client = \OpenAI::client($apiKey);
+            $client = \OpenAI::factory()
+                ->withApiKey($apiKey)
+                ->withBaseUri($baseUrl)
+                ->make();
             $response = $client->chat()->create([
-                'model' => 'gpt-4o-mini',
+                'model' => $model,
                 'messages' => $messages,
                 'tools' => $tools,
                 'tool_choice' => 'auto',
