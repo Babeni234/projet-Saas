@@ -41,6 +41,17 @@ class EntreeFonds extends Model
             if (empty($model->uuid)) {
                 $model->uuid = (string) Str::uuid();
             }
+            if (empty($model->reference)) {
+                $company = CompanyProfile::find($model->company_profile_id);
+                $companyName = $company?->legal_name ?? 'COMP';
+                $firstLetter = Str::upper(Str::substr(preg_replace('/[^A-Za-z0-9]/', '', $companyName), 0, 1));
+                if (empty($firstLetter)) {
+                    $firstLetter = 'E';
+                }
+                $dateStr = now()->format('Ymd');
+                $random = mt_rand(1000, 9999);
+                $model->reference = "EF-{$firstLetter}-{$dateStr}-{$random}";
+            }
         });
     }
 

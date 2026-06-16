@@ -39,7 +39,6 @@ class EntreeFondsController extends Controller
             'montant' => 'required|numeric|min:0',
             'date_entree' => 'required|date',
             'categorie' => 'nullable|string|max:100',
-            'reference' => 'nullable|string|max:100',
             'statut' => 'required|string|in:Encaissé,En attente,Annulé',
         ]);
 
@@ -77,7 +76,6 @@ class EntreeFondsController extends Controller
             'montant' => 'required|numeric|min:0',
             'date_entree' => 'required|date',
             'categorie' => 'nullable|string|max:100',
-            'reference' => 'nullable|string|max:100',
             'statut' => 'required|string|in:Encaissé,En attente,Annulé',
         ]);
 

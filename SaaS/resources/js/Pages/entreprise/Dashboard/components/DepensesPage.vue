@@ -8,7 +8,7 @@
             </div>
             <button
                 @click="openModal()"
-                class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-violet-700 hover:shadow-md focus:ring-2 focus:ring-violet-600/50"
+                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 via-violet-700 to-indigo-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-200/50 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-300/60 active:scale-[0.98] focus:ring-2 focus:ring-violet-500/50"
             >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -106,6 +106,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type / Catégorie</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Montant</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Référence</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Créé par</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -124,6 +125,14 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-900">{{ formatCurrency(depense.montant) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ depense.reference || '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                <span v-if="depense.agency" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                    {{ depense.agency.name }}
+                                </span>
+                                <span v-else class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-100">
+                                    Siège Social
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span
                                     class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold"
@@ -137,12 +146,38 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button @click="openModal(depense)" class="text-indigo-600 hover:text-indigo-900 mr-4">Modifier</button>
-                                <button @click="deleteDepense(depense.id)" class="text-rose-600 hover:text-rose-900">Supprimer</button>
+                                <button 
+                                    v-if="depense.statut === 'En attente'" 
+                                    @click="openConfirmModal(depense)" 
+                                    class="inline-flex items-center gap-1 rounded-lg border border-emerald-150 bg-emerald-55 px-2.5 py-1 text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 hover:text-emerald-900 active:scale-[0.95] mr-2 shadow-sm"
+                                >
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Valider
+                                </button>
+                                <button 
+                                    @click="openModal(depense)" 
+                                    class="inline-flex items-center gap-1 rounded-lg border border-indigo-150 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 hover:text-indigo-900 active:scale-[0.95] mr-2 shadow-sm"
+                                >
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Modifier
+                                </button>
+                                <button 
+                                    @click="confirmDeleteDepense(depense.id)" 
+                                    class="inline-flex items-center gap-1 rounded-lg border border-rose-150 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 transition-all hover:bg-rose-100 hover:text-rose-900 active:scale-[0.95] shadow-sm"
+                                >
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Supprimer
+                                </button>
                             </td>
                         </tr>
                         <tr v-if="filteredDepenses.length === 0">
-                            <td colspan="7" class="px-6 py-12 text-center text-sm text-slate-500">
+                            <td colspan="8" class="px-6 py-12 text-center text-sm text-slate-500">
                                 Aucune dépense trouvée.
                             </td>
                         </tr>
@@ -151,7 +186,7 @@
             </div>
         </div>
 
-        <!-- Modal -->
+        <!-- Create / Edit Modal -->
         <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeModal"></div>
@@ -161,7 +196,7 @@
                     <div class="bg-gradient-to-r from-violet-500 to-indigo-600 px-6 py-4 flex items-center justify-between text-white">
                         <div>
                             <h3 class="text-lg font-bold leading-6">{{ isEditing ? 'Modifier la dépense' : 'Nouvelle dépense' }}</h3>
-                            <p class="text-xs text-violet-100 mt-1">Saisissez les détails de la sortie de fonds ci-dessous</p>
+                            <p class="text-xs text-violet-100 mt-1">Saisissez les détails de la dépense ci-dessous</p>
                         </div>
                         <button @click="closeModal" class="text-white/80 hover:text-white transition-colors">
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,12 +269,13 @@
                             </div>
 
                             <div class="col-span-2">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Référence (N° Facture / Reçu)</label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Référence (Générée automatiquement)</label>
                                 <input 
                                     v-model="form.reference" 
                                     type="text" 
-                                    placeholder="Ex: FAC-2026-0042"
-                                    class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all font-medium" 
+                                    placeholder="Générée automatiquement"
+                                    disabled
+                                    class="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-2xl text-slate-500 font-medium cursor-not-allowed select-none focus:outline-none" 
                                 />
                             </div>
 
@@ -259,14 +295,150 @@
                         <button
                             @click="saveDepense"
                             :disabled="isLoading"
-                            class="px-6 py-3.5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-600 text-white rounded-2xl text-sm font-bold hover:shadow-lg hover:shadow-violet-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50"
+                            class="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-650 text-white rounded-xl text-sm font-bold shadow-md shadow-violet-200/50 hover:shadow-lg hover:shadow-violet-300/60 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <span v-if="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                             <span>{{ isEditing ? 'Mettre à jour' : 'Enregistrer' }}</span>
                         </button>
                         <button
                             @click="closeModal"
-                            class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                            class="px-6 py-3 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Validation Confirmation Modal -->
+        <div v-if="isConfirmModalOpen" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeConfirmModal"></div>
+                <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="bg-gradient-to-r from-emerald-500 to-indigo-600 px-6 py-4 flex items-center justify-between text-white">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6">Validation de la dépense</h3>
+                            <p class="text-xs text-emerald-100 mt-1">Examinez les détails avant de confirmer ou de refuser la demande</p>
+                        </div>
+                        <button @click="closeConfirmModal" class="text-white/80 hover:text-white transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white px-6 pt-6 pb-6 space-y-6">
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Référence</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDepense?.reference || '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Date</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ formatDate(selectedDepense?.date_depense) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Titre</span>
+                                <p class="text-sm font-semibold text-slate-800">{{ selectedDepense?.titre }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Montant</span>
+                                <p class="text-sm font-bold text-slate-900 text-emerald-600">{{ formatCurrency(selectedDepense?.montant) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Type / Catégorie</span>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ selectedDepense?.type_depense?.nom || selectedDepense?.categorie || '-' }}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase">Demandé par</span>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ selectedDepense?.agency ? selectedDepense.agency.name : 'Siège Social' }}
+                                </p>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Description</span>
+                                <p class="text-sm text-slate-600 italic mt-0.5">{{ selectedDepense?.description || 'Aucune description' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Refusal Textarea -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Message d'accompagnement en cas de refus <span class="text-rose-500">(Obligatoire si vous refusez)</span>
+                            </label>
+                            <textarea 
+                                v-model="rejectionMessage" 
+                                rows="3" 
+                                placeholder="Saisissez le motif de refus pour notifier l'agence sollicitante..."
+                                class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all font-medium"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100">
+                        <button
+                            @click="confirmExpense"
+                            :disabled="isSubmittingValidation"
+                            class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-650 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-200/50 hover:shadow-lg hover:shadow-emerald-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span v-if="isSubmittingValidation" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            <span>Confirmer la dépense</span>
+                        </button>
+                        <button
+                            @click="rejectExpense"
+                            :disabled="isSubmittingValidation"
+                            class="px-5 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-200 hover:shadow-lg hover:shadow-rose-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <span>Refuser la dépense</span>
+                        </button>
+                        <button
+                            @click="closeConfirmModal"
+                            class="px-5 py-3 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Deletion Confirmation Modal -->
+        <div v-if="isDeleteModalOpen" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="closeDeleteModal"></div>
+                <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+                <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:align-middle animate-scale-up border border-slate-100">
+                    
+                    <div class="p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 flex-shrink-0">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900">Supprimer la dépense</h3>
+                                <p class="text-sm text-slate-500 mt-1">Êtes-vous sûr de vouloir supprimer cette dépense ? Cette action est irréversible et supprimera le mouvement de trésorerie associé.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100">
+                        <button
+                            @click="submitDeleteDepense"
+                            class="px-5 py-2.5 bg-rose-650 text-white rounded-xl text-sm font-bold hover:bg-rose-700 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        >
+                            <span>Supprimer définitivement</span>
+                        </button>
+                        <button
+                            @click="closeDeleteModal"
+                            class="px-5 py-2.5 bg-white border border-slate-300 text-slate-707 rounded-xl text-sm font-bold hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                             Annuler
                         </button>
@@ -287,6 +459,16 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const isLoading = ref(false);
 const searchQuery = ref('');
+
+// New confirmation/rejection properties
+const isConfirmModalOpen = ref(false);
+const selectedDepense = ref(null);
+const rejectionMessage = ref('');
+const isSubmittingValidation = ref(false);
+
+// New delete modal properties
+const isDeleteModalOpen = ref(false);
+const depenseIdToDelete = ref(null);
 
 const form = ref({
     id: null,
@@ -334,15 +516,17 @@ const kpis = computed(() => {
 
     depenses.value.forEach(d => {
         const amt = parseFloat(d.montant);
-        total += amt;
+        // We only sum paid (Payé) expenses in total and monthly KPIs
+        if (d.statut === 'Payé') {
+            total += amt;
+            const dateD = new Date(d.date_depense);
+            if (dateD.getMonth() === currentMonth && dateD.getFullYear() === currentYear) {
+                month += amt;
+            }
+        }
         
         if (d.statut === 'En attente') {
             pending += amt;
-        }
-
-        const dateD = new Date(d.date_depense);
-        if (dateD.getMonth() === currentMonth && dateD.getFullYear() === currentYear) {
-            month += amt;
         }
     });
 
@@ -418,15 +602,81 @@ const saveDepense = async () => {
     }
 };
 
-const deleteDepense = async (id) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) {
-        try {
-            await axios.delete(`/api/depenses/${id}`);
-            await fetchDepenses();
-        } catch (error) {
-            console.error('Erreur lors de la suppression:', error);
-            alert('Une erreur est survenue.');
-        }
+// Custom validation flow triggers
+const openConfirmModal = (depense) => {
+    selectedDepense.value = depense;
+    rejectionMessage.value = '';
+    isConfirmModalOpen.value = true;
+};
+
+const closeConfirmModal = () => {
+    isConfirmModalOpen.value = false;
+    selectedDepense.value = null;
+    rejectionMessage.value = '';
+};
+
+const confirmExpense = async () => {
+    if (!selectedDepense.value) return;
+    isSubmittingValidation.value = true;
+    try {
+        await axios.post(`/api/depenses/${selectedDepense.value.id}/status`, {
+            statut: 'Payé'
+        });
+        await fetchDepenses();
+        closeConfirmModal();
+    } catch (error) {
+        console.error('Erreur lors de la confirmation:', error);
+        alert('Une erreur est survenue lors de la confirmation.');
+    } finally {
+        isSubmittingValidation.value = false;
+    }
+};
+
+const rejectExpense = async () => {
+    if (!selectedDepense.value) return;
+    if (!rejectionMessage.value.trim()) {
+        alert("Veuillez saisir un message pour expliquer le refus.");
+        return;
+    }
+    isSubmittingValidation.value = true;
+    try {
+        await axios.post(`/api/depenses/${selectedDepense.value.id}/status`, {
+            statut: 'Annulé',
+            message: rejectionMessage.value
+        });
+        await fetchDepenses();
+        closeConfirmModal();
+    } catch (error) {
+        console.error('Erreur lors du refus:', error);
+        alert('Une erreur est survenue lors du refus.');
+    } finally {
+        isSubmittingValidation.value = false;
+    }
+};
+
+// Custom deletion flow triggers
+const confirmDeleteDepense = (id) => {
+    depenseIdToDelete.value = id;
+    isDeleteModalOpen.value = true;
+};
+
+const closeDeleteModal = () => {
+    isDeleteModalOpen.value = false;
+    depenseIdToDelete.value = null;
+};
+
+const submitDeleteDepense = async () => {
+    if (!depenseIdToDelete.value) return;
+    isLoading.value = true;
+    try {
+        await axios.delete(`/api/depenses/${depenseIdToDelete.value}`);
+        await fetchDepenses();
+        closeDeleteModal();
+    } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Une erreur est survenue.');
+    } finally {
+        isLoading.value = false;
     }
 };
 
