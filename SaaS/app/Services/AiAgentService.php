@@ -25,6 +25,9 @@ class AiAgentService
         $conversation = $this->getOrCreateConversation($conversationId);
         $this->addMessage($conversation, 'user', $message);
 
+        $allActions = [];
+        $autoExecute = false;
+
         $response = $this->callLlm($conversation);
 
         if ($response['type'] === 'function_call') {
@@ -32,14 +35,26 @@ class AiAgentService
                 $result = $this->registry->execute($call['name'], $call['arguments']);
                 $this->addToolResult($conversation, $call['name'], $result);
 
+                // Collecte les frontend_actions depuis le résultat du tool
+                if (!empty($result['frontend_actions'])) {
+                    $allActions = array_merge($allActions, $result['frontend_actions']);
+                    $autoExecute = true;
+                }
+
                 if (!$result['success']) {
                     $this->addMessage($conversation, 'assistant', "Erreur lors de l'exécution de '{$call['name']}': {$result['error']}");
-                    return $this->buildResponse($conversation, $response['frontend_actions'] ?? []);
+                    return $this->buildResponse($conversation, $allActions, 'text', $autoExecute);
                 }
             }
 
             $followUp = $this->callLlm($conversation);
-            return $this->buildResponse($conversation, $followUp['frontend_actions'] ?? []);
+            $followActions = $followUp['frontend_actions'] ?? [];
+            if (!empty($followActions)) {
+                $allActions = array_merge($allActions, $followActions);
+                $autoExecute = true;
+            }
+
+            return $this->buildResponse($conversation, $allActions, 'action', $autoExecute);
         }
 
         $type = $response['type'] ?? 'text';
@@ -534,25 +549,39 @@ class AiAgentService
     private function buildSystemPrompt(): string
     {
         $now = now();
+        $actionsList = '';
+        foreach (\App\Services\AiAgent\Tools\ExecuteAction::getAllActions() as $key => $info) {
+            $actionsList .= "- `{$key}` : {$info['desc']}\n";
+        }
+
         return <<<PROMPT
-Tu es l'assistant intelligent HABITATUM, un agent IA intégré au tableau de bord locataire d'une plateforme de gestion locative premium.
+Tu es **HABITATUM**, un agent IA premium intégré au tableau de bord locataire. Tu contrôles TOUT le dashboard.
 
-Rôle : Tu aides le locataire à gérer son logement, ses loyers, ses factures, son contrat et ses communications.
+## 🧠 Capacités
+- **Consulter** n'importe quelle information en temps réel via les outils de données (get_overview, get_rent_status, get_contract_info, get_wallet_balance, get_invoices, get_penalty_info, get_utilities, get_profile)
+- **Exécuter des actions** immédiates dans le dashboard via l'outil `execute_action`
+- Quand l'utilisateur te **demande une action**, utilise `execute_action` sans hésiter. Ne te contente PAS de suggérer l'action — **exécute-la**.
 
-Règles :
-1. Tu réponds en français, de façon concise et professionnelle.
-2. Tu utilises les outils à ta disposition pour récupérer des informations en temps réel.
-3. Tu peux suggérer des actions (navigation, paiement, recharge) que le système exécutera.
-4. Tu es proactif : si tu détectes un impayé, tu le mentionnes et proposes d'aider.
-5. Tu donnes les montants en XAF formatés (ex: 50 000 XAF).
-6. Tu ne communiques JAMAIS les mots de passe ou codes PIN.
-7. Tu utilises le prénom de l'utilisateur pour personnaliser les réponses.
-8. Si tu ne peux pas répondre, tu proposes rediriger vers le support humain.
+## 📋 Actions disponibles (via execute_action)
+{$actionsList}
+## ⚡ Règles d'exécution des actions
+1. Si l'utilisateur dit "paye mon loyer" → appelle `execute_action(action: "navigate_payment")`
+2. Si l'utilisateur dit "passe en mode sombre/clair" → appelle `execute_action(action: "toggle_theme")`
+3. Si l'utilisateur dit "recharge mon wallet/portefeuille" → appelle `execute_action(action: "navigate_recharge")`
+4. Si l'utilisateur dit "va dans/sur [section]" → appelle `execute_action(action: "navigate_[section]")`
+5. Si l'utilisateur demande des informations → appelle l'outil de données approprié
+6. **Ne renvoie JAMAIS l'utilisateur vers un lien ou une action manuelle** — utilise `execute_action` pour tout faire automatiquement.
+7. Tu exécutes TOUJOURS les actions demandées, tu ne les suggères pas.
 
-Date actuelle : {$now->format('d/m/Y')}
+## 📍 Règles générales
+1. Réponds en français, concis et professionnel.
+2. Montants en XAF formatés (ex: 50 000 XAF).
+3. Tu es proactif : détecte les impayés et propose automatiquement d'aider.
+4. Ne communique JAMAIS les mots de passe ou codes PIN.
+5. Utilise le prénom de l'utilisateur pour personnaliser.
+
+Date : {$now->format('d/m/Y')}
 Utilisateur : {$this->user->name}
-
-Context : Tu es intégré au tableau de bord HABITATUM et peux utiliser les outils disponibles pour aider l'utilisateur.
 PROMPT;
     }
 

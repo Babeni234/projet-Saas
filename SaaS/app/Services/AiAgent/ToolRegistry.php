@@ -12,6 +12,7 @@ use App\Services\AiAgent\Tools\GetInvoices;
 use App\Services\AiAgent\Tools\GetPenaltyInfo;
 use App\Services\AiAgent\Tools\GetUtilities;
 use App\Services\AiAgent\Tools\GetProfile;
+use App\Services\AiAgent\Tools\ExecuteAction;
 
 class ToolRegistry
 {
@@ -33,6 +34,7 @@ class ToolRegistry
             GetPenaltyInfo::class,
             GetUtilities::class,
             GetProfile::class,
+            ExecuteAction::class,
         ];
 
         foreach ($classes as $class) {

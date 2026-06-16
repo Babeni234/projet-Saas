@@ -3413,10 +3413,56 @@ const formattedCardNumber = computed(() => {
 // ════════════════════════════════════════════════════════════
 // 🤖 AI Assistant action handler
 function handleAiAction(actionId) {
-  // Theme toggle
+  // Theme toggle (no tab change needed)
   if (actionId === 'toggle_theme') {
     toggleTheme()
     showToast('success', 'Thème basculé ✅')
+    return
+  }
+
+  // Recharge (needs modal, no tab switch needed if already visible)
+  if (actionId === 'navigate_recharge' || actionId === 'open_recharge') {
+    if (activeTab.value !== 'overview') switchTab('overview')
+    nextTick(() => openRechargeModal())
+    showToast('success', 'Recharge ouverte ✅')
+    return
+  }
+
+  // Payment (switch to loyer tab + open modal)
+  if (actionId === 'navigate_payment' || actionId === 'pay_selected_rent') {
+    if (activeTab.value !== 'loyer') switchTab('loyer')
+    nextTick(() => { setTimeout(() => openPaymentConfirm(), 500) })
+    showToast('success', 'Paiement en cours ✅')
+    return
+  }
+
+  // Transfer form
+  if (actionId === 'open_transfer') {
+    if (activeTab.value !== 'overview') switchTab('overview')
+    nextTick(() => { showTransferForm.value = true })
+    showToast('success', 'Transfert ouvert ✅')
+    return
+  }
+
+  // New support ticket
+  if (actionId === 'open_new_ticket') {
+    if (activeTab.value !== 'support') switchTab('support')
+    nextTick(() => { openNewTicket() })
+    showToast('success', 'Nouveau ticket ✅')
+    return
+  }
+
+  // Receipts preview
+  if (actionId === 'open_receipts') {
+    nextTick(() => { showReceiptsPreview.value = true })
+    showToast('success', 'Reçus affichés ✅')
+    return
+  }
+
+  // Contract fee payment
+  if (actionId === 'open_contract_fee') {
+    if (activeTab.value !== 'contract') switchTab('contract')
+    showToast('success', 'Frais de contrat ✅')
     return
   }
 
@@ -3441,16 +3487,6 @@ function handleAiAction(actionId) {
     switchTab(tab)
   }
 
-  // Post-switch actions
-  if (actionId === 'navigate_recharge') {
-    nextTick(() => openRechargeModal())
-  }
-  if (actionId === 'navigate_payment') {
-    nextTick(() => { setTimeout(() => openPaymentConfirm(), 400) })
-  }
-  if (actionId === 'pay_selected_rent') {
-    nextTick(() => { setTimeout(() => openPaymentConfirm(), 400) })
-  }
   showToast('success', 'Action exécutée ✅')
 }
 
