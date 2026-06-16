@@ -10,10 +10,12 @@
                 <!-- Date Filter -->
                 <select 
                     v-model="selectedYear" 
+                    @change="fetchStats"
                     class="rounded-xl border-slate-200 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 cursor-pointer"
                 >
-                    <option value="2026">Exercice 2026</option>
-                    <option value="2025">Exercice 2025</option>
+                    <option v-for="yr in yearsList" :key="yr" :value="yr.toString()">
+                        Exercice {{ yr }}
+                    </option>
                 </select>
                 <!-- Export button -->
                 <button
@@ -191,153 +193,203 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import axios from 'axios';
 import { Chart } from 'chart.js/auto';
 
-const selectedYear = ref('2026');
+// Get current year and generate list of 100 years back
+const currentYearValue = new Date().getFullYear();
+const yearsList = Array.from({ length: 101 }, (_, i) => currentYearValue - i);
+const selectedYear = ref(currentYearValue.toString());
 
-// Mock data configuration for initialization
+const loading = ref(true);
+
 const kpis = ref({
-    revenue: 56985000,
-    expenses: 24320000,
-    netCash: 32665000,
-    profitMargin: 57.3,
+    revenue: 0,
+    expenses: 0,
+    netCash: 0,
+    profitMargin: 0.0,
 });
 
-const tableData = ref([
-    { nom: 'Siège Général (Gouvernance)', type: 'Siège', loyers: 0, divers: 14500000, depenses: 8400000, solde: 6100000 },
-    { nom: 'Agence Yaoundé (Centre)', type: 'Agence', loyers: 22400000, divers: 2100000, depenses: 7200000, solde: 17300000 },
-    { nom: 'Agence Douala (Littoral)', type: 'Agence', loyers: 16800000, divers: 1185000, depenses: 8720000, solde: 9265000 },
-]);
+const tableData = ref([]);
 
 let evolutionChartInstance = null;
 let structureChartInstance = null;
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF' }).format(value);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(value);
 };
 
 const exportFinancialReport = () => {
     alert("Le rapport consolidé de l'exercice " + selectedYear.value + " a été généré et sera téléchargé sous peu.");
 };
 
-onMounted(() => {
-    // 1. Chart - Financial Evolution (Line/Area)
+const renderEvolutionChart = (inflows, outflows) => {
+    if (evolutionChartInstance) {
+        evolutionChartInstance.destroy();
+    }
+
     const evolutionCtx = document.getElementById('financeEvolutionChart');
-    if (evolutionCtx) {
-        const gradIn = evolutionCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-        gradIn.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
-        gradIn.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+    if (!evolutionCtx) return;
 
-        const gradOut = evolutionCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-        gradOut.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
-        gradOut.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+    const gradIn = evolutionCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradIn.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+    gradIn.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
 
-        evolutionChartInstance = new Chart(evolutionCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
-                datasets: [
-                    {
-                        label: 'Recettes',
-                        data: [6200000, 7500000, 9100000, 8900000, 11400000, 13885000],
-                        borderColor: '#10b981',
-                        backgroundColor: gradIn,
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                    },
-                    {
-                        label: 'Dépenses',
-                        data: [3100000, 4200000, 3900000, 4100000, 4800000, 4220000],
-                        borderColor: '#f43f5e',
-                        backgroundColor: gradOut,
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                    tooltip: {
-                        cornerRadius: 12,
-                        padding: 12,
-                        backgroundColor: '#1e293b',
-                    }
+    const gradOut = evolutionCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradOut.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
+    gradOut.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+
+    evolutionChartInstance = new Chart(evolutionCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+            datasets: [
+                {
+                    label: 'Recettes',
+                    data: inflows,
+                    borderColor: '#10b981',
+                    backgroundColor: gradIn,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
                 },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: {
-                            callback: function(val) {
-                                return (val / 1000000) + 'M XAF';
-                            }
-                        },
-                        grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                {
+                    label: 'Dépenses',
+                    data: outflows,
+                    borderColor: '#f43f5e',
+                    backgroundColor: gradOut,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    cornerRadius: 12,
+                    padding: 12,
+                    backgroundColor: '#1e293b',
+                    callbacks: {
+                        label: function(context) {
+                            return ' ' + context.dataset.label + ' : ' + formatCurrency(context.parsed.y);
+                        }
                     }
                 }
-            }
-        });
-    }
-
-    // 2. Chart - Structure/Pie Chart
-    const structureCtx = document.getElementById('financeStructureChart');
-    if (structureCtx) {
-        structureChartInstance = new Chart(structureCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Loyers Locatifs', 'Subventions', 'Apports Associés', 'Services Hôtellerie', 'Autres Entrées'],
-                datasets: [{
-                    data: [39200000, 8500000, 6000000, 0, 3285000],
-                    backgroundColor: [
-                        '#6366f1', // Indigo
-                        '#10b981', // Emerald
-                        '#f59e0b', // Amber
-                        '#3b82f6', // Blue
-                        '#64748b'  // Slate
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 15,
-                            font: { size: 12 }
+            scales: {
+                x: {
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: {
+                        callback: function(val) {
+                            if (val >= 1000000) {
+                                return (val / 1000000) + 'M XAF';
+                            } else if (val >= 1000) {
+                                return (val / 1000) + 'k XAF';
+                            }
+                            return val + ' XAF';
                         }
                     },
-                    tooltip: {
-                        cornerRadius: 12,
-                        padding: 12,
-                        backgroundColor: '#1e293b',
-                        callbacks: {
-                            label: function(context) {
-                                const val = context.raw;
-                                return context.label + ': ' + formatCurrency(val);
-                            }
-                        }
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                }
+            }
+        }
+    });
+};
+
+const renderStructureChart = (structureData) => {
+    if (structureChartInstance) {
+        structureChartInstance.destroy();
+    }
+
+    const structureCtx = document.getElementById('financeStructureChart');
+    if (!structureCtx) return;
+
+    structureChartInstance = new Chart(structureCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Paiements Loyers', 'Factures', 'Entrées de fonds', 'Frais de contrat', 'Autres'],
+            datasets: [{
+                data: [
+                    structureData.loyers,
+                    structureData.factures,
+                    structureData.entrees_fonds,
+                    structureData.frais_contrats,
+                    structureData.autres
+                ],
+                backgroundColor: [
+                    '#6366f1', // Indigo
+                    '#3b82f6', // Blue
+                    '#10b981', // Emerald
+                    '#f59e0b', // Amber
+                    '#64748b'  // Slate
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15,
+                        font: { size: 12 }
                     }
                 },
-                cutout: '70%',
-            }
+                tooltip: {
+                    cornerRadius: 12,
+                    padding: 12,
+                    backgroundColor: '#1e293b',
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.raw;
+                            return context.label + ': ' + formatCurrency(val);
+                        }
+                    }
+                }
+            },
+            cutout: '70%',
+        }
+    });
+};
+
+const fetchStats = async () => {
+    loading.value = true;
+    try {
+        const response = await axios.get('/api/finance/stats', {
+            params: { year: selectedYear.value }
         });
+        const data = response.data;
+
+        kpis.value = data.kpis;
+        tableData.value = data.entities;
+
+        await nextTick();
+        renderEvolutionChart(data.chart_monthly.inflows, data.chart_monthly.outflows);
+        renderStructureChart(data.chart_structure);
+    } catch (error) {
+        console.error("Erreur lors du chargement des données financières:", error);
+    } finally {
+        loading.value = false;
     }
+};
+
+onMounted(() => {
+    fetchStats();
 });
 
 onUnmounted(() => {

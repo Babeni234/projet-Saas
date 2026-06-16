@@ -313,6 +313,7 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard Statistics API route
     Route::get('/api/dashboard/stats', [\App\Http\Controllers\DashboardStatsController::class, 'getStats'])->name('dashboard.stats');
+    Route::get('/api/finance/stats', [\App\Http\Controllers\FinanceStatsController::class, 'getStats'])->name('finance.stats');
 
     // Contrats API routes
     Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');

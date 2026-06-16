@@ -115,6 +115,17 @@ class DashboardStatsTest extends TestCase
             'motif' => 'Loyer Juin 2026',
         ]);
 
+        // General non-rental revenue: 4000 (Subvention/loan)
+        Tresorerie::create([
+            'company_profile_id' => $this->company->id,
+            'agency_id' => $this->agency1->id,
+            'montant' => 4000.00,
+            'date_transaction' => now(),
+            'source_type' => 'App\Models\EntreeFonds',
+            'source_id' => 1,
+            'motif' => 'Subvention',
+        ]);
+
         // 4. Create unpaid and paid Invoices
         $locataire = Locataire::create([
             'company_profile_id' => $this->company->id,
@@ -158,14 +169,20 @@ class DashboardStatsTest extends TestCase
 
         $response->assertOk();
         
-        // We expect total revenue to be 3000 + 2000 = 5000
-        $this->assertEquals(5000.00, $response->json('kpis.total_revenue'));
+        // We expect total revenue to be 3000 + 2000 + 4000 = 9000
+        $this->assertEquals(9000.00, $response->json('kpis.total_revenue'));
 
         // We expect total expenses to be 1000 + 500 = 1500
         $this->assertEquals(1500.00, $response->json('kpis.total_expenses'));
 
-        // We expect cashflow_net to be 5000 - 1500 = 3500
-        $this->assertEquals(3500.00, $response->json('kpis.cashflow_net'));
+        // We expect cashflow_net to be 9000 - 1500 = 7500
+        $this->assertEquals(7500.00, $response->json('kpis.cashflow_net'));
+
+        // We expect rental revenue to be 3000 + 2000 = 5000 (excluding the 4000 general subvention)
+        $this->assertEquals(5000.00, $response->json('kpis.revenue_locatif_actual'));
+        $this->assertEquals(5000.00, $response->json('kpis.revenue_locatif_total'));
+        // unpaid rate locatif: (800 / (5000 + 800)) * 100 = 13.8%
+        $this->assertEquals(13.8, $response->json('kpis.unpaid_rate_locatif'));
 
         // We expect only 1 unpaid invoice (the one with status 'Impayé')
         $this->assertCount(1, $response->json('unpaid_invoices'));
@@ -245,6 +262,17 @@ class DashboardStatsTest extends TestCase
             'motif' => 'Loyer Juin 2026',
         ]);
 
+        // General non-rental revenue: 4000 (Subvention/loan, scoped to Agency 1)
+        Tresorerie::create([
+            'company_profile_id' => $this->company->id,
+            'agency_id' => $this->agency1->id,
+            'montant' => 4000.00,
+            'date_transaction' => now(),
+            'source_type' => 'App\Models\EntreeFonds',
+            'source_id' => 1,
+            'motif' => 'Subvention',
+        ]);
+
         // 4. Setup an employee user for Agency 1
         $employeeUser = User::factory()->create();
         $employeeUser->update(['company_profile_id' => $this->company->id]);
@@ -265,14 +293,18 @@ class DashboardStatsTest extends TestCase
         $response->assertOk();
 
         // Scoped values check:
-        // Revenue should be exactly 3000
-        $this->assertEquals(3000.00, $response->json('kpis.total_revenue'));
+        // Revenue should be exactly 3000 + 4000 = 7000
+        $this->assertEquals(7000.00, $response->json('kpis.total_revenue'));
 
         // Expenses should be exactly 1000
         $this->assertEquals(1000.00, $response->json('kpis.total_expenses'));
 
-        // Net cashflow should be 3000 - 1000 = 2000
-        $this->assertEquals(2000.00, $response->json('kpis.cashflow_net'));
+        // Net cashflow should be 7000 - 1000 = 6000
+        $this->assertEquals(6000.00, $response->json('kpis.cashflow_net'));
+
+        // Rental revenue should be exactly 3000 (excluding 4000 subvention)
+        $this->assertEquals(3000.00, $response->json('kpis.revenue_locatif_actual'));
+        $this->assertEquals(3000.00, $response->json('kpis.revenue_locatif_total'));
 
         // Breakdown should only count Agency 1's Maintenance expense: 1000
         $this->assertEquals(1000.00, $response->json('chart_expenses_by_type.Maintenance'));

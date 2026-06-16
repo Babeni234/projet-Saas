@@ -41,12 +41,12 @@
             <div class="bg-gradient-to-br from-white to-blue-50/10 rounded-3xl p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-blue-200/40 transition-all duration-500 hover:-translate-y-1 border border-slate-150 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-blue-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-600">
                             <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-xs font-bold shadow-sm">
+                    <div class="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold shadow-sm">
                         Ce mois
                     </div>
                 </div>
@@ -99,17 +99,46 @@
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-1 gap-6">
-            <!-- Unpaid Chart -->
-            <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150 col-span-full">
-                <div class="mb-6 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-850">Impayés par Période</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Distribution chronologique de l'encours locatif (30j, 60j, 90j, 120j, 150j+)</p>
+        <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Analyses Graphiques</h3>
+                    <p class="text-xs text-slate-500 mt-1">Consultez l'historique des impayés et comparez les charges par immeuble</p>
+                </div>
+                <button 
+                    @click="toggleChargesChart"
+                    class="px-4 py-2 text-xs font-bold rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02]"
+                    :class="showChargesChart ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200' : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent hover:shadow-lg hover:shadow-blue-500/20'"
+                >
+                    {{ showChargesChart ? 'Masquer le comparatif des charges' : 'Afficher le comparatif des charges' }}
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6" :class="showChargesChart ? 'lg:grid-cols-2' : ''">
+                <!-- Unpaid Chart -->
+                <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150">
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-850">Impayés par Période</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Distribution chronologique de l'encours locatif (30j, 60j, 90j, 120j, 150j+)</p>
+                        </div>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="unpaidChart"></canvas>
                     </div>
                 </div>
-                <div class="h-72">
-                    <canvas id="unpaidChart"></canvas>
+
+                <!-- Charges Comparison (Visible dynamically) -->
+                <div v-show="showChargesChart" class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-150">
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-850">Comparatif des Charges par Immeuble</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Charges récupérables vs charges réelles constatées</p>
+                        </div>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="chargesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -156,7 +185,7 @@
                                     'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold',
                                     c.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border border-emerald-250' : 'bg-amber-50 text-amber-700 border border-amber-250'
                                 ]">
-                                    <span class="w-1.5 h-1.5 rounded-full" :class="c.statut === 'Actif' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full" :class="c.statut === 'Actif' ? 'bg-emerald-550' : 'bg-amber-550'"></span>
                                     {{ c.statut }}
                                 </span>
                             </td>
@@ -196,8 +225,12 @@ const chargesTotal = ref(0);
 
 const contratsActifsList = ref([]);
 
-// Chart instance
+// Charts states
+const showChargesChart = ref(false);
+const chargesData = ref(null);
+
 let unpaidChartInstance = null;
+let chargesChartInstance = null;
 
 const getInitials = (name) => {
     if (!name) return 'JD';
@@ -239,6 +272,85 @@ const formatDate = (dateStr) => {
 
 const contactTenant = (contrat) => {
     alert(`Contacter le locataire ${contrat.locataire} à l'adresse : ${contrat.email || 'Non renseignée'}`);
+};
+
+const toggleChargesChart = () => {
+    showChargesChart.value = !showChargesChart.value;
+    if (showChargesChart.value) {
+        setTimeout(() => {
+            renderChargesChart();
+        }, 50);
+    } else {
+        if (chargesChartInstance) {
+            chargesChartInstance.destroy();
+            chargesChartInstance = null;
+        }
+    }
+};
+
+const renderChargesChart = () => {
+    if (chargesChartInstance) chargesChartInstance.destroy();
+    
+    const chargesCtx = document.getElementById('chargesChart');
+    if (chargesCtx && chargesData.value) {
+        const gradientRecoverable = chargesCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradientRecoverable.addColorStop(0, 'rgba(59, 130, 246, 0.85)');
+        gradientRecoverable.addColorStop(1, 'rgba(59, 130, 246, 0.25)');
+
+        const gradientActual = chargesCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradientActual.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
+        gradientActual.addColorStop(1, 'rgba(16, 185, 129, 0.25)');
+
+        chargesChartInstance = new Chart(chargesCtx, {
+            type: 'bar',
+            data: {
+                labels: chargesData.value.labels || [],
+                datasets: [
+                    {
+                        label: 'Récupérables',
+                        data: chargesData.value.expected || [],
+                        backgroundColor: gradientRecoverable,
+                        borderColor: '#3b82f6',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Réelles',
+                        data: chargesData.value.actual || [],
+                        backgroundColor: gradientActual,
+                        borderColor: '#10b981',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#64748b',
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '€' + value.toLocaleString(),
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    }
 };
 
 const renderCharts = (unpaidPeriodData) => {
@@ -341,10 +453,10 @@ const fetchStats = async () => {
         vacantCount.value = data.kpis.vacant_count;
         totalLogementsCount.value = data.kpis.count_logements;
 
-        monthlyRevenueActual.value = data.kpis.revenue_actual;
+        monthlyRevenueActual.value = data.kpis.revenue_locatif_actual;
         monthlyRevenueExpected.value = data.kpis.revenue_expected;
 
-        unpaidRate.value = data.kpis.unpaid_rate;
+        unpaidRate.value = data.kpis.unpaid_rate_locatif;
         unpaidTotal.value = data.kpis.unpaid_invoices_total;
 
         chargesRecoveryRate.value = data.kpis.charges_recovery_rate;
@@ -352,6 +464,7 @@ const fetchStats = async () => {
         chargesTotal.value = data.kpis.charges_total;
 
         contratsActifsList.value = data.active_contracts || [];
+        chargesData.value = data.chart_charges || null;
 
         renderCharts(data.unpaid_period_data);
     } catch (error) {
@@ -365,5 +478,6 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (unpaidChartInstance) unpaidChartInstance.destroy();
+    if (chargesChartInstance) chargesChartInstance.destroy();
 });
 </script>
