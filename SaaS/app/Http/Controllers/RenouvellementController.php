@@ -242,7 +242,7 @@ class RenouvellementController extends Controller
 
         // Enregistrer ou mettre à jour dans frais_contrats
         if ($renouvellement->frais_contrat > 0) {
-            FraisContrat::updateOrCreate(
+            $frais = FraisContrat::updateOrCreate(
                 ['renouvellement_id' => $renouvellement->id],
                 [
                     'company_profile_id' => $renouvellement->company_profile_id,
@@ -250,6 +250,16 @@ class RenouvellementController extends Controller
                     'montant' => $renouvellement->frais_contrat,
                     'date_paiement' => now()
                 ]
+            );
+
+            // Sync to Tresorerie
+            $renouvellement->load(['locataire.user']);
+            $locName = $renouvellement->locataire?->user?->name ?? 'Inconnu';
+            \App\Models\Tresorerie::enregistrer(
+                $frais,
+                (float) $frais->montant,
+                "Frais de renouvellement de contrat pour {$locName} (Renouvellement #{$renouvellement->id})",
+                now()->toDateString()
             );
         }
     }
@@ -264,6 +274,20 @@ class RenouvellementController extends Controller
         if ($user->employee && $user->employee->agency_id !== null) {
             $companyEmail = $renouvellement->company && $renouvellement->company->user ? $renouvellement->company->user->email : null;
             $this->sendMailSafe($companyEmail, new RenouvellementDeleted($renouvellement));
+        }
+
+        // Delete associated FraisContrat and Tresorerie if any
+        $frais = FraisContrat::where('renouvellement_id', $renouvellement->id)->first();
+        if ($frais) {
+            $frais->update(['deleted' => true]);
+            $frais->delete();
+
+            \App\Models\Tresorerie::where('source_type', FraisContrat::class)
+                ->where('source_id', $frais->id)
+                ->update(['deleted' => true]);
+            \App\Models\Tresorerie::where('source_type', FraisContrat::class)
+                ->where('source_id', $frais->id)
+                ->delete();
         }
 
         $renouvellement->delete();

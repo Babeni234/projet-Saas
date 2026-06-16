@@ -52,6 +52,15 @@ class EntreeFondsController extends Controller
 
         $entree->save();
 
+        if ($entree->statut === 'Encaissé') {
+            \App\Models\Tresorerie::enregistrer(
+                $entree,
+                (float) $entree->montant,
+                "Entrée de fonds : {$entree->titre} (Réf: {$entree->reference})",
+                $entree->date_entree ? $entree->date_entree->toDateString() : now()->toDateString()
+            );
+        }
+
         return response()->json($entree, 201);
     }
 
@@ -74,6 +83,22 @@ class EntreeFondsController extends Controller
 
         $entree_fond->update($validated);
 
+        if ($entree_fond->statut === 'Encaissé') {
+            \App\Models\Tresorerie::enregistrer(
+                $entree_fond,
+                (float) $entree_fond->montant,
+                "Entrée de fonds : {$entree_fond->titre} (Réf: {$entree_fond->reference})",
+                $entree_fond->date_entree ? $entree_fond->date_entree->toDateString() : now()->toDateString()
+            );
+        } else {
+            \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+                ->where('source_id', $entree_fond->id)
+                ->update(['deleted' => true]);
+            \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+                ->where('source_id', $entree_fond->id)
+                ->delete();
+        }
+
         return response()->json($entree_fond);
     }
 
@@ -90,6 +115,22 @@ class EntreeFondsController extends Controller
 
         $entree_fond->update($validated);
 
+        if ($entree_fond->statut === 'Encaissé') {
+            \App\Models\Tresorerie::enregistrer(
+                $entree_fond,
+                (float) $entree_fond->montant,
+                "Entrée de fonds : {$entree_fond->titre} (Réf: {$entree_fond->reference})",
+                $entree_fond->date_entree ? $entree_fond->date_entree->toDateString() : now()->toDateString()
+            );
+        } else {
+            \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+                ->where('source_id', $entree_fond->id)
+                ->update(['deleted' => true]);
+            \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+                ->where('source_id', $entree_fond->id)
+                ->delete();
+        }
+
         return response()->json($entree_fond);
     }
 
@@ -102,6 +143,13 @@ class EntreeFondsController extends Controller
 
         $entree_fond->update(['deleted' => true]);
         $entree_fond->delete();
+
+        \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+            ->where('source_id', $entree_fond->id)
+            ->update(['deleted' => true]);
+        \App\Models\Tresorerie::where('source_type', EntreeFonds::class)
+            ->where('source_id', $entree_fond->id)
+            ->delete();
 
         return response()->json(['message' => 'Supprimé avec succès']);
     }

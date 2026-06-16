@@ -99,6 +99,16 @@ class FactureController extends Controller
             'mode_reglement' => $request->input('mode_reglement'),
         ]);
 
+        // Sync to Tresorerie
+        $facture->load(['locataire.user']);
+        $locName = $facture->locataire?->user?->name ?? 'Inconnu';
+        \App\Models\Tresorerie::enregistrer(
+            $facture,
+            (float) $facture->total,
+            "Règlement de la facture {$facture->numero} par {$locName}",
+            now()->toDateString()
+        );
+
         return response()->json($this->formatFacture($facture->fresh(['locataire.user', 'contrat.logement.batiment', 'typeFacture', 'agency', 'company'])));
     }
 
@@ -115,6 +125,15 @@ class FactureController extends Controller
 
         $facture->update(['deleted' => true]);
         $facture->delete();
+
+        // Sync to Tresorerie
+        \App\Models\Tresorerie::where('source_type', Facture::class)
+            ->where('source_id', $facture->id)
+            ->update(['deleted' => true]);
+
+        \App\Models\Tresorerie::where('source_type', Facture::class)
+            ->where('source_id', $facture->id)
+            ->delete();
 
         return response()->json(['message' => 'Facture supprimée avec succès.']);
     }

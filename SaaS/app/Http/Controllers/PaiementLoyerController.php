@@ -82,6 +82,17 @@ class PaiementLoyerController extends Controller
                 ]);
             }
 
+            // Sync to Tresorerie
+            $p->load(['locataire.user', 'contrat']);
+            $locName = $p->locataire?->user?->name ?? 'Locataire';
+            $contratNum = $p->contrat?->numero ?? 'N/A';
+            \App\Models\Tresorerie::enregistrer(
+                $p,
+                (float) $totalAmount,
+                "Enregistrement de paiement de loyer de {$locName} pour le contrat {$contratNum} (Réf: {$p->reference})",
+                $p->date_reglement ? \Carbon\Carbon::parse($p->date_reglement)->toDateString() : now()->toDateString()
+            );
+
             return $p;
         });
 
@@ -101,6 +112,14 @@ class PaiementLoyerController extends Controller
 
         $paiementLoyer->update(['deleted' => true]);
         $paiementLoyer->delete();
+
+        \App\Models\Tresorerie::where('source_type', PaiementLoyer::class)
+            ->where('source_id', $paiementLoyer->id)
+            ->update(['deleted' => true]);
+
+        \App\Models\Tresorerie::where('source_type', PaiementLoyer::class)
+            ->where('source_id', $paiementLoyer->id)
+            ->delete();
 
         return response()->json(['message' => 'Paiement supprimé avec succès.']);
     }
