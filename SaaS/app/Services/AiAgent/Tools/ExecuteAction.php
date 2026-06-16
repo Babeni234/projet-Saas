@@ -17,6 +17,8 @@ class ExecuteAction extends BaseTool
         'navigate_notifications' => ['label' => 'Notifications', 'desc' => 'Afficher les notifications'],
         'toggle_theme' => ['label' => 'Thème', 'desc' => 'Basculer entre le mode sombre et le mode clair'],
         'pay_selected_rent' => ['label' => 'Payer loyer', 'desc' => 'Ouvrir la confirmation de paiement du loyer sélectionné'],
+        'process_rent_payment' => ['label' => 'Paiement automatique', 'desc' => 'Payer automatiquement les loyers impayés (1 mois par défaut, ou spécifier le nombre de mois)'],
+        'process_utility_payment' => ['label' => 'Paiement factures', 'desc' => 'Payer automatiquement les factures d\'eau et/ou d\'électricité en attente'],
         'open_recharge' => ['label' => 'Recharger', 'desc' => 'Ouvrir la modale de recharge du portefeuille'],
         'open_transfer' => ['label' => 'Transfert', 'desc' => 'Afficher le formulaire de transfert de fonds'],
         'open_new_ticket' => ['label' => 'Ticket', 'desc' => 'Ouvrir un nouveau ticket de support'],
@@ -51,8 +53,18 @@ class ExecuteAction extends BaseTool
                 ],
                 'params' => [
                     'type' => 'object',
-                    'description' => 'Paramètres optionnels de l\'action (ex: période de paiement, montant)',
-                    'properties' => (object)[],
+                    'description' => 'Paramètres optionnels. Pour process_rent_payment: { "months_count": 1 }. Pour process_utility_payment: { "utility_type": "all"|"water"|"electric", "months_count": 1 }',
+                    'properties' => [
+                        'months_count' => [
+                            'type' => 'integer',
+                            'description' => 'Nombre de mois à payer (1 par défaut, 999 = tous les impayés)',
+                        ],
+                        'utility_type' => [
+                            'type' => 'string',
+                            'enum' => ['all', 'water', 'electric'],
+                            'description' => 'Type de facture à payer: "all" (toutes), "water" (eau), "electric" (électricité)',
+                        ],
+                    ],
                 ],
             ],
             'required' => ['action'],
@@ -72,6 +84,20 @@ class ExecuteAction extends BaseTool
 
         $info = self::ACTIONS[$action];
 
+        $frontendAction = ['action' => $action, 'label' => $info['label']];
+
+        if ($action === 'process_rent_payment') {
+            $monthsCount = $params['params']['months_count'] ?? 1;
+            $frontendAction['months_count'] = $monthsCount;
+        }
+
+        if ($action === 'process_utility_payment') {
+            $utilityType = $params['params']['utility_type'] ?? 'all';
+            $frontendAction['utility_type'] = $utilityType;
+            $monthsCount = $params['params']['months_count'] ?? null;
+            if ($monthsCount) $frontendAction['months_count'] = (int)$monthsCount;
+        }
+
         return [
             'success' => true,
             'data' => [
@@ -79,9 +105,7 @@ class ExecuteAction extends BaseTool
                 'label' => $info['label'],
                 'description' => $info['desc'],
             ],
-            'frontend_actions' => [
-                ['action' => $action, 'label' => $info['label']],
-            ],
+            'frontend_actions' => [$frontendAction],
         ];
     }
 

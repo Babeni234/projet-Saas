@@ -2,8 +2,12 @@
   <div class="ai-assistant">
     <button class="ai-fab" :class="{ 'ai-fab-open': isOpen }" @click="toggleOpen">
       <svg v-if="!isOpen" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2a10 10 0 0110 10c0 2.5-1 4.8-2.6 6.4L21 22l-4.6-1.6A10 10 0 1112 2z"/>
-        <line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+        <rect x="3" y="6" width="18" height="12" rx="3"/>
+        <circle cx="9" cy="11" r="1.5" fill="currentColor"/>
+        <circle cx="15" cy="11" r="1.5" fill="currentColor"/>
+        <path d="M9 15c0 0 1.5 2 3 2s3-2 3-2"/>
+        <line x1="9" y1="4" x2="7" y2="6"/>
+        <line x1="15" y1="4" x2="17" y2="6"/>
       </svg>
       <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -16,7 +20,12 @@
           <div class="ai-header-left">
             <div class="ai-avatar">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2a10 10 0 0110 10c0 2.5-1 4.8-2.6 6.4L21 22l-4.6-1.6A10 10 0 1112 2z"/>
+                <rect x="4" y="7" width="16" height="11" rx="2.5"/>
+                <circle cx="9" cy="12" r="1.2" fill="currentColor"/>
+                <circle cx="15" cy="12" r="1.2" fill="currentColor"/>
+                <path d="M9.5 15.5c0 0 1 1.5 2.5 1.5s2.5-1.5 2.5-1.5"/>
+                <line x1="10" y1="5" x2="8.5" y2="7"/>
+                <line x1="14" y1="5" x2="15.5" y2="7"/>
               </svg>
             </div>
             <div>
@@ -37,7 +46,14 @@
         <div class="ai-messages" ref="messagesRef">
           <div v-for="(msg, i) in messages" :key="i" class="ai-msg-row" :class="msg.role === 'assistant' ? 'ai-msg-assistant' : 'ai-msg-user'">
             <div v-if="msg.role === 'assistant'" class="ai-msg-avatar">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0110 10c0 2.5-1 4.8-2.6 6.4L21 22l-4.6-1.6A10 10 0 1112 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="7" width="16" height="11" rx="2.5"/>
+                <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                <circle cx="15" cy="12" r="1" fill="currentColor"/>
+                <path d="M9.5 15.5c0 0 1 1.5 2.5 1.5s2.5-1.5 2.5-1.5"/>
+                <line x1="10" y1="5" x2="8.5" y2="7"/>
+                <line x1="14" y1="5" x2="15.5" y2="7"/>
+              </svg>
             </div>
             <div class="ai-msg-bubble" :class="msg.role === 'assistant' ? 'ai-bubble-assistant' : 'ai-bubble-user'">
               <div v-if="msg.type === 'action' && msg.actions" class="ai-action-group">
@@ -116,7 +132,7 @@ const props = defineProps({
   elecStatus: { type: String, default: '' },
 })
 
-const emit = defineEmits(['navigate', 'action'])
+const emit = defineEmits(['navigate', 'action', 'process-rent-payment', 'process-utility-payment'])
 
 const isOpen = ref(false)
 const userInput = ref('')
@@ -192,8 +208,25 @@ async function sendMessage() {
     }
 
     if (data.auto_execute && data.frontend_actions && data.frontend_actions.length > 0) {
-      // Auto-exécute la première action immédiatement
       const firstAction = data.frontend_actions[0]
+
+      if (firstAction.action === 'process_rent_payment') {
+        const monthsCount = firstAction.months_count || 1
+        addMessage('assistant', `⚡ Paiement automatique de ${monthsCount > 1 ? monthsCount + ' mois' : '1 mois'} en cours...`)
+        isOpen.value = false
+        emit('process-rent-payment', { monthsCount })
+        return
+      }
+
+      if (firstAction.action === 'process_utility_payment') {
+        const utilityType = firstAction.utility_type || 'all'
+        const monthsCount = firstAction.months_count || null
+        addMessage('assistant', '⚡ Paiement automatique des factures en cours...')
+        isOpen.value = false
+        emit('process-utility-payment', { utilityType, monthsCount })
+        return
+      }
+
       const actionLabel = firstAction.label || firstAction.action
       addMessage('assistant', `⚡ Exécution : ${actionLabel}...`)
       nextTick(() => {
@@ -393,10 +426,47 @@ onUnmounted(() => {
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 32px rgba(99,102,241,0.35);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: fabGlow 2s ease-in-out infinite;
+}
+.ai-fab svg {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+.ai-fab::before {
+  content: '';
+  position: absolute;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(99,102,241,0.35);
+  animation: fabPulse 2.4s ease-out infinite;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.ai-fab::after {
+  content: '';
+  position: absolute;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(99,102,241,0.15);
+  animation: fabPulse 2.4s ease-out 0.8s infinite;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+@keyframes fabPulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes fabGlow {
+  0%, 100% { box-shadow: 0 8px 32px rgba(99,102,241,0.35); }
+  50% { box-shadow: 0 8px 48px rgba(99,102,241,0.55), 0 0 20px rgba(99,102,241,0.2); }
+}
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.85; }
 }
 .ai-fab:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(99,102,241,0.45); }
 .ai-fab-open { transform: rotate(90deg); background: linear-gradient(135deg, #DC2626, #B91C1C); }
 .ai-fab-open:hover { transform: rotate(90deg) scale(1.08); }
+.ai-fab-open::before { display: none; }
 
 .ai-panel {
   position: fixed; bottom: 96px; right: 28px;

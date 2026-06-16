@@ -1526,6 +1526,51 @@
               </div>
             </div>
 
+            <!-- Payment Receipt — shown above the invoice list after AI/manual payment -->
+            <Transition name="fade-slide">
+              <div v-if="lastUtilityReceipt" class="glass-card rent-receipt-card receipt-above-table">
+                <div class="rent-receipt-header">
+                  <div class="rr-header-left">
+                    <div class="rr-icon-ring" :style="lastUtilityReceipt.type === 'water' ? 'background:linear-gradient(135deg,#DBEAFE,#BFDBFE);color:#2563EB' : 'background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#D97706'">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path v-if="lastUtilityReceipt.type === 'water'" d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/>
+                        <polygon v-else points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="rr-title">{{ lastUtilityReceipt.title }}</h3>
+                      <p class="rr-date">Paiement du {{ formatDate(lastUtilityReceipt.paid_at) }}</p>
+                    </div>
+                  </div>
+                  <span class="rr-badge">Payé</span>
+                </div>
+                <div class="rent-receipt-body">
+                  <div class="rr-meta-row">
+                    <div class="rr-meta-item">
+                      <span class="rrm-key">Référence</span>
+                      <span class="rrm-val">{{ lastUtilityReceipt.reference }}</span>
+                    </div>
+                    <div class="rr-meta-item">
+                      <span class="rrm-key">Montant</span>
+                      <span class="rrm-val">{{ formatCurrency(lastUtilityReceipt.amount) }}</span>
+                    </div>
+                    <div class="rr-meta-item">
+                      <span class="rrm-key">Transaction</span>
+                      <span class="rrm-val mono">{{ lastUtilityReceipt.transaction_id }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="rent-receipt-footer">
+                  <button class="btn-primary small" @click="generateReceiptPDF(lastUtilityReceipt)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Télécharger le reçu
+                  </button>
+                  <button class="btn-secondary small" @click="viewReceiptDetail(lastUtilityReceipt)">Détails</button>
+                  <button class="btn-secondary small" @click="lastUtilityReceipt = null">Masquer</button>
+                </div>
+              </div>
+            </Transition>
+
             <!-- Filter & Search Bar -->
             <div class="glass-card filter-bar">
               <div class="filter-tabs">
@@ -1724,52 +1769,6 @@
               </div>
             </Transition>
 
-            <!-- ═══════════════════════════════════════════
-                 UTILITY RECEIPT CARD
-            ═══════════════════════════════════════════ -->
-            <Transition name="fade-slide">
-              <div v-if="lastUtilityReceipt" class="glass-card rent-receipt-card">
-                <div class="rent-receipt-header">
-                  <div class="rr-header-left">
-                    <div class="rr-icon-ring" :style="lastUtilityReceipt.type === 'water' ? 'background:linear-gradient(135deg,#DBEAFE,#BFDBFE);color:#2563EB' : 'background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#D97706'">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path v-if="lastUtilityReceipt.type === 'water'" d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/>
-                        <polygon v-else points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="rr-title">{{ lastUtilityReceipt.title }}</h3>
-                      <p class="rr-date">Paiement du {{ formatDate(lastUtilityReceipt.paid_at) }}</p>
-                    </div>
-                  </div>
-                  <span class="rr-badge">Payé</span>
-                </div>
-                <div class="rent-receipt-body">
-                  <div class="rr-meta-row">
-                    <div class="rr-meta-item">
-                      <span class="rrm-key">Référence</span>
-                      <span class="rrm-val">{{ lastUtilityReceipt.reference }}</span>
-                    </div>
-                    <div class="rr-meta-item">
-                      <span class="rrm-key">Montant</span>
-                      <span class="rrm-val">{{ formatCurrency(lastUtilityReceipt.amount) }}</span>
-                    </div>
-                    <div class="rr-meta-item">
-                      <span class="rrm-key">Transaction</span>
-                      <span class="rrm-val mono">{{ lastUtilityReceipt.transaction_id }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="rent-receipt-footer">
-                  <button class="btn-primary small" @click="generateReceiptPDF(lastUtilityReceipt)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    Télécharger le reçu
-                  </button>
-                  <button class="btn-secondary small" @click="viewReceiptDetail(lastUtilityReceipt)">Détails</button>
-                  <button class="btn-secondary small" @click="lastUtilityReceipt = null">Masquer</button>
-                </div>
-              </div>
-            </Transition>
           </section>
 
           <!-- ═══════════════════════════════
@@ -1956,7 +1955,9 @@
         :latest-elec-cost="latestElecCost"
         :latest-elec-period="latestElecPeriod"
         :elec-status="elecStatusLabel"
-        @action="handleAiAction"/>
+        @action="handleAiAction"
+        @process-rent-payment="handleProcessRentPayment"
+        @process-utility-payment="handleProcessUtilityPayment"/>
 
       <!-- Bottom nav -- mobile-only -->
       <nav class="bottom-nav">
@@ -2679,6 +2680,28 @@
       </div>
     </Transition>
 
+    <!-- AI Payment Success Animation Overlay -->
+    <Transition name="fade">
+      <div v-if="showAiPaymentSuccess" class="ai-payment-overlay" @click.self="showAiPaymentSuccess = false">
+        <div class="payment-success-card" :class="'ps-' + (aiPayData.type === 'rent' ? 'rent' : 'utility')">
+          <div class="ps-pulse-ring" :style="{color: aiPayData.color}"></div>
+          <div class="ps-pulse-ring ps-pulse-2" :style="{color: aiPayData.color, width: '190px', height: '190px', margin: '-95px 0 0 -95px'}"></div>
+          <div class="ps-pulse-ring ps-pulse-3" :style="{color: aiPayData.color2 || aiPayData.color, width: '130px', height: '130px', margin: '-65px 0 0 -65px', animationDuration: '2.8s', animationDelay: '0.4s'}"></div>
+          <div class="ps-icon" :style="{background: aiPayData.bgGrad, color: aiPayData.color}">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <g v-html="aiPayData.iconSvg"></g>
+            </svg>
+          </div>
+          <svg class="ps-particles" width="180" height="180" viewBox="0 0 180 180" v-if="aiPayData.particles">
+            <circle v-for="(p, i) in aiPayData.particles" :key="i" :cx="p.x" :cy="p.y" :r="p.r" :fill="p.color" :style="{animation: 'sparkleFloat 2s ease-in-out ' + (p.delay || 0) + 's infinite'}"/>
+          </svg>
+          <div class="ps-spark" v-if="aiPayData.type === 'rent'"></div>
+          <h3 class="ps-title" :style="{color: aiPayData.color}">{{ aiPayData.title }}</h3>
+          <p class="ps-sub">{{ aiPayData.subtitle }}</p>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toast.show" class="toast" :class="'toast-' + toast.type" @click="toast.show = false">
@@ -2936,6 +2959,8 @@ const isDragging = ref(false)
 const toast = reactive({ show: false, type: 'success', message: '' })
 const processingPayment = ref(false)
 const savingProfile = ref(false)
+const showAiPaymentSuccess = ref(false)
+const aiPayData = reactive({ type: 'rent', color: '#6366F1', color2: '#818CF8', bgGrad: 'linear-gradient(135deg,#EEF2FF,#E0E7FF)', title: 'Paiement réussi !', subtitle: '', iconSvg: '', particles: [] })
 const passwordStrength = ref(4)
 const newTicketForm = reactive({ title: '', description: '', category: 'plumbing' })
 const showConfirmDialog = ref(false)
@@ -3411,12 +3436,177 @@ const formattedCardNumber = computed(() => {
 // ════════════════════════════════════════════════════════════
 //  METHODS
 // ════════════════════════════════════════════════════════════
+// 🎬 AI Payment Success Animation Trigger
+function triggerAiPaymentSuccess(type, amount, extra = {}) {
+  const configs = {
+    rent: {
+      color: '#6366F1', color2: '#818CF8',
+      bgGrad: 'linear-gradient(135deg,#EEF2FF,#E0E7FF)',
+      title: 'Paiement réussi !',
+      iconSvg: '<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/><circle cx="12" cy="15" r="2"/>',
+      particles: [
+        { x: 30, y: 35, r: 4, color: '#6366F1', delay: 0 },
+        { x: 150, y: 30, r: 3.5, color: '#818CF8', delay: 0.15 },
+        { x: 20, y: 130, r: 3.5, color: '#A5B4FC', delay: 0.3 },
+        { x: 160, y: 135, r: 3.5, color: '#6366F1', delay: 0.45 },
+        { x: 90, y: 15, r: 3, color: '#818CF8', delay: 0.6 },
+      ],
+    },
+    water: {
+      color: '#2563EB', color2: '#60A5FA',
+      bgGrad: 'linear-gradient(135deg,#DBEAFE,#BFDBFE)',
+      title: 'Facture payée !',
+      iconSvg: '<path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/>',
+      particles: [
+        { x: 25, y: 25, r: 3.5, color: '#3B82F6', delay: 0 },
+        { x: 135, y: 35, r: 2.5, color: '#60A5FA', delay: 0.2 },
+        { x: 20, y: 110, r: 3, color: '#93C5FD', delay: 0.4 },
+        { x: 140, y: 120, r: 2.5, color: '#3B82F6', delay: 0.6 },
+        { x: 80, y: 15, r: 2.5, color: '#60A5FA', delay: 0.8 },
+      ],
+    },
+    electric: {
+      color: '#D97706', color2: '#FBBF24',
+      bgGrad: 'linear-gradient(135deg,#FEF3C7,#FDE68A)',
+      title: 'Facture payée !',
+      iconSvg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+      particles: [
+        { x: 25, y: 25, r: 3.5, color: '#F59E0B', delay: 0 },
+        { x: 135, y: 35, r: 2.5, color: '#FBBF24', delay: 0.2 },
+        { x: 20, y: 110, r: 3, color: '#F59E0B', delay: 0.4 },
+        { x: 140, y: 120, r: 2.5, color: '#FBBF24', delay: 0.6 },
+        { x: 80, y: 15, r: 2.5, color: '#F59E0B', delay: 0.8 },
+      ],
+    },
+    utilities: {
+      color: '#10B981', color2: '#34D399',
+      bgGrad: 'linear-gradient(135deg,#D1FAE5,#A7F3D0)',
+      title: 'Factures payées !',
+      iconSvg: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+      particles: [
+        { x: 25, y: 25, r: 3.5, color: '#10B981', delay: 0 },
+        { x: 135, y: 35, r: 2.5, color: '#34D399', delay: 0.2 },
+        { x: 20, y: 110, r: 3, color: '#6EE7B7', delay: 0.4 },
+        { x: 140, y: 120, r: 2.5, color: '#10B981', delay: 0.6 },
+        { x: 80, y: 15, r: 2.5, color: '#34D399', delay: 0.8 },
+      ],
+    },
+  }
+  const cfg = configs[type] || configs.utilities
+  aiPayData.type = type
+  aiPayData.color = cfg.color
+  aiPayData.color2 = cfg.color2
+  aiPayData.bgGrad = cfg.bgGrad
+  aiPayData.title = extra.title || cfg.title
+  aiPayData.iconSvg = cfg.iconSvg
+  aiPayData.particles = cfg.particles
+  aiPayData.subtitle = extra.subtitle || (amount ? `${amount.toLocaleString()} XAF débité${amount > 1 ? 's' : ''} de votre portefeuille` : 'Opération effectuée avec succès')
+  showAiPaymentSuccess.value = true
+  playSuccessChime()
+  setTimeout(() => { showAiPaymentSuccess.value = false }, 3000)
+}
+
+// 🤖 AI Assistant — paiement automatique de loyer
+function handleProcessRentPayment({ monthsCount }) {
+  if (activeTab.value !== 'loyer') switchTab('loyer')
+
+  nextTick(() => {
+    const unpaid = rentMonths.value.filter(m => m.status === 'unpaid')
+    if (unpaid.length === 0) {
+      showToast('error', 'Aucun loyer impayé trouvé.')
+      return
+    }
+
+    const count = monthsCount > unpaid.length ? unpaid.length : monthsCount
+    const targetMonth = unpaid[count - 1]
+
+    if (!targetMonth) {
+      showToast('error', 'Impossible de déterminer les mois à payer.')
+      return
+    }
+
+    toggleMonthSelection(targetMonth)
+
+    nextTick(() => {
+      if (selectedMonthsKeys.value.length === 0) {
+        showToast('error', 'Aucun mois sélectionné.')
+        return
+      }
+
+      const total = totalPaymentAmount.value
+      if (walletBalance.value < total) {
+        showToast('error', `Solde insuffisant. Besoin de ${total.toLocaleString()} XAF, solde : ${walletBalance.value.toLocaleString()} XAF.`)
+        return
+      }
+
+      executePayment()
+      triggerAiPaymentSuccess('rent', total, { subtitle: `${total.toLocaleString()} XAF débités de votre portefeuille` })
+    })
+  })
+}
+
+// 🤖 AI Assistant — paiement automatique des factures eau/électricité
+function handleProcessUtilityPayment({ utilityType, monthsCount }) {
+  if (activeTab.value !== 'utilities') switchTab('utilities')
+
+  nextTick(() => {
+    let pending = utilityInvoices.value.filter(i => i.status === 'pending')
+    if (utilityType === 'water') pending = pending.filter(i => i.type === 'WATER')
+    else if (utilityType === 'electric') pending = pending.filter(i => i.type === 'ELECTRIC')
+
+    if (pending.length === 0) {
+      showToast('error', 'Aucune facture en attente trouvée.')
+      return
+    }
+
+    if (monthsCount) {
+      const months = [...new Set(pending.map(i => i.period))]
+        .sort((a, b) => {
+          const parse = (s) => {
+            const monthsMap = { 'Janvier': 0,'Février': 1,'Mars': 2,'Avril': 3,'Mai': 4,'Juin': 5,'Juillet': 6,'Août': 7,'Septembre': 8,'Octobre': 9,'Novembre': 10,'Décembre': 11 }
+            const [m, y] = s.split(' ')
+            return parseInt(y) * 12 + (monthsMap[m] || 0)
+          }
+          return parse(a) - parse(b)
+        })
+      const targetMonths = monthsCount === 999 ? months : months.slice(0, monthsCount)
+      pending = pending.filter(i => targetMonths.includes(i.period))
+      if (pending.length === 0) {
+        showToast('error', 'Aucune facture à payer pour la période demandée.')
+        return
+      }
+    }
+
+    const total = pending.reduce((sum, i) => sum + i.amount, 0)
+    if (walletBalance.value < total) {
+      showToast('error', `Solde insuffisant. Besoin de ${total.toLocaleString()} XAF, solde : ${walletBalance.value.toLocaleString()} XAF.`)
+      return
+    }
+
+    let animType = utilityType === 'water' ? 'water' : (utilityType === 'electric' ? 'electric' : 'utilities')
+    let paid = 0
+    for (const inv of pending) {
+      executeUtilityPayment(inv)
+      paid++
+    }
+
+    triggerAiPaymentSuccess(animType, total, { subtitle: `${total.toLocaleString()} XAF débités de votre portefeuille — ${paid} facture${paid > 1 ? 's' : ''}` })
+  })
+}
+
 // 🤖 AI Assistant action handler
 function handleAiAction(actionId) {
   // Theme toggle (no tab change needed)
   if (actionId === 'toggle_theme') {
     toggleTheme()
     showToast('success', 'Thème basculé ✅')
+    return
+  }
+
+  // Utility payment (switch to utilities tab)
+  if (actionId === 'process_utility_payment') {
+    if (activeTab.value !== 'utilities') switchTab('utilities')
+    showToast('success', 'Paiement des factures en cours ✅')
     return
   }
 
@@ -3429,7 +3619,7 @@ function handleAiAction(actionId) {
   }
 
   // Payment (switch to loyer tab + open modal)
-  if (actionId === 'navigate_payment' || actionId === 'pay_selected_rent') {
+  if (actionId === 'navigate_payment' || actionId === 'pay_selected_rent' || actionId === 'process_rent_payment') {
     if (activeTab.value !== 'loyer') switchTab('loyer')
     nextTick(() => { setTimeout(() => openPaymentConfirm(), 500) })
     showToast('success', 'Paiement en cours ✅')
@@ -3647,30 +3837,26 @@ function confirmUtilityPayment() {
 }
 
 function executeUtilityPayment(inv) {
-  processingPayment.value = true
-  setTimeout(() => {
-    walletBalance.value -= inv.amount
-    inv.status = 'paid'
-    transactions.value.unshift({
-      id: 'TX-' + Date.now(), type: 'payment', amount: inv.amount,
-      method: 'Portefeuille', description: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} - ${inv.period}`,
-      date: new Date().toISOString(), status: 'success'
-    })
-    const receipt = {
-      id: 'RCPT-' + Date.now(), type: inv.type === 'WATER' ? 'water' : 'electric',
-      title: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} ${inv.period}`,
-      reference: inv.reference.replace('INV', 'QUIT'), amount: inv.amount,
-      period: inv.period, paid_at: new Date().toISOString().split('T')[0],
-      method: 'Portefeuille', transaction_id: 'TX-' + Date.now(),
-      property: props.contracts[0]?.property?.name || 'Appartement',
-      tenant: `${profileForm.first_name} ${profileForm.last_name}`,
-      landlord: 'SCI Habitats SA'
-    }
-    allReceipts.value.unshift(receipt)
-    lastUtilityReceipt.value = receipt
-    processingPayment.value = false
-    showToast('success', `Facture ${inv.reference} payée ! Reçu généré.`)
-  }, 600)
+  walletBalance.value -= inv.amount
+  inv.status = 'paid'
+  transactions.value.unshift({
+    id: 'TX-' + Date.now(), type: 'payment', amount: inv.amount,
+    method: 'Portefeuille', description: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} - ${inv.period}`,
+    date: new Date().toISOString(), status: 'success'
+  })
+  const receipt = {
+    id: 'RCPT-' + Date.now(), type: inv.type === 'WATER' ? 'water' : 'electric',
+    title: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} ${inv.period}`,
+    reference: inv.reference.replace('INV', 'QUIT'), amount: inv.amount,
+    period: inv.period, paid_at: new Date().toISOString().split('T')[0],
+    method: 'Portefeuille', transaction_id: 'TX-' + Date.now(),
+    property: props.contracts[0]?.property?.name || 'Appartement',
+    tenant: `${profileForm.first_name} ${profileForm.last_name}`,
+    landlord: 'SCI Habitats SA'
+  }
+  allReceipts.value.unshift(receipt)
+  lastUtilityReceipt.value = receipt
+  showToast('success', `Facture ${inv.reference} payée ! Reçu généré.`)
 }
 
 // 📄 Contract fee payment modal + success
@@ -3845,62 +4031,57 @@ function confirmPaymentFromModal() {
 }
 
 function executePayment() {
-  processingPayment.value = true
-  setTimeout(() => {
-    walletBalance.value -= totalPaymentAmount.value
-    
-    // Mark each selected month as paid by adding a RENT invoice
-    const paidMonths = rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key))
-    for (const m of paidMonths) {
-      localInvoices.value.push({
-        id: 'INV-RENT-' + Date.now() + '-' + m.key,
-        type: 'RENT',
-        status: 'paid',
-        period: m.label,
-        amount: m.totalDue,
-        rentBase: m.amount,
-        penaltyAmount: m.penaltyAmount,
-        penaltyRate: m.penaltyRate,
-        paid_at: new Date().toISOString().split('T')[0],
-        reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
-      })
-    }
-    
-    const receipt = {
-      id: 'RCPT-' + Date.now(), type: 'rent',
-      title: `Loyer ${selectedMonthsNames.value}`,
-      reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
-      amount: totalPaymentAmount.value,
-      period: selectedMonthsNames.value,
+  walletBalance.value -= totalPaymentAmount.value
+
+  const paidMonths = rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key))
+  for (const m of paidMonths) {
+    localInvoices.value.push({
+      id: 'INV-RENT-' + Date.now() + '-' + m.key,
+      type: 'RENT',
+      status: 'paid',
+      period: m.label,
+      amount: m.totalDue,
+      rentBase: m.amount,
+      penaltyAmount: m.penaltyAmount,
+      penaltyRate: m.penaltyRate,
       paid_at: new Date().toISOString().split('T')[0],
-      method: 'Portefeuille',
-      transaction_id: 'TX-' + Date.now(),
-      property: props.contracts[0]?.property?.name || 'Appartement',
-      tenant: `${profileForm.first_name} ${profileForm.last_name}`,
-      landlord: 'SCI Habitats SA',
-      months: paidMonths.map(m => ({
-        label: m.label,
-        amount: m.amount,
-        penaltyAmount: m.penaltyAmount,
-        penaltyRate: m.penaltyRate,
-        totalDue: m.totalDue,
-      })),
-      includesPenalties: paidMonths.some(m => m.penaltyAmount > 0),
-    }
-    
-    transactions.value.unshift({
-      id: 'TX-' + Date.now(), type: 'payment',
-      amount: totalPaymentAmount.value, method: 'Portefeuille',
-      description: `Loyer : ${selectedMonthsNames.value}`,
-      date: new Date().toISOString(), status: 'success'
+      reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
     })
-    
-    allReceipts.value.unshift(receipt)
-    lastPaymentReceipt.value = receipt
-    selectedMonthsKeys.value = []
-    processingPayment.value = false
-    showToast('success', 'Règlement de loyer enregistré avec succès !')
-  }, 600)
+  }
+
+  const receipt = {
+    id: 'RCPT-' + Date.now(), type: 'rent',
+    title: `Loyer ${selectedMonthsNames.value}`,
+    reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
+    amount: totalPaymentAmount.value,
+    period: selectedMonthsNames.value,
+    paid_at: new Date().toISOString().split('T')[0],
+    method: 'Portefeuille',
+    transaction_id: 'TX-' + Date.now(),
+    property: props.contracts[0]?.property?.name || 'Appartement',
+    tenant: `${profileForm.first_name} ${profileForm.last_name}`,
+    landlord: 'SCI Habitats SA',
+    months: paidMonths.map(m => ({
+      label: m.label,
+      amount: m.amount,
+      penaltyAmount: m.penaltyAmount,
+      penaltyRate: m.penaltyRate,
+      totalDue: m.totalDue,
+    })),
+    includesPenalties: paidMonths.some(m => m.penaltyAmount > 0),
+  }
+
+  transactions.value.unshift({
+    id: 'TX-' + Date.now(), type: 'payment',
+    amount: totalPaymentAmount.value, method: 'Portefeuille',
+    description: `Loyer : ${selectedMonthsNames.value}`,
+    date: new Date().toISOString(), status: 'success'
+  })
+
+  allReceipts.value.unshift(receipt)
+  lastPaymentReceipt.value = receipt
+  selectedMonthsKeys.value = []
+  showToast('success', 'Règlement de loyer enregistré avec succès !')
 }
 
 // Pay individual water/electricity bills
@@ -5977,6 +6158,12 @@ function urlBase64ToUint8Array(base64String) {
   z-index: 1000; padding: 20px; backdrop-filter: blur(6px);
 }
 .dark-theme .payment-modal-overlay { background: rgba(0,0,0,0.6); }
+.ai-payment-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15,23,42,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1100; padding: 20px; backdrop-filter: blur(4px);
+}
 .payment-modal-card {
   width: 100%; max-width: 480px;
   padding: 0; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.2);
@@ -6311,6 +6498,7 @@ function urlBase64ToUint8Array(base64String) {
    RENT RECEIPT CARD (in loyer tab)
 ═══════════════════════════════════════════ */
 .rent-receipt-card { padding: 22px; margin-bottom: 20px; border: 1px solid #A7F3D0; }
+.receipt-above-table { margin-bottom: 28px; }
 .dark-theme .rent-receipt-card { border-color: rgba(5,150,101,0.2); }
 .rent-receipt-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .rr-header-left { display: flex; align-items: center; gap: 12px; }

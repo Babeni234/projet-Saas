@@ -220,13 +220,57 @@ class AiAgentService
 
         // ══ ACTIONS EXPLICITES ══
 
-        // Action: Payer le loyer
-        if (preg_match('/^(paye|paie|règle|regle|effectue.*paiement|fais.*paiement|je veux payer|j aimerais payer)\b/iu', $n) ||
-            preg_match('/\b(paye.*loyer|paie.*loyer|payer.*loyer|régler.*loyer|regler.*loyer|loyer.*maintenant|effectuer.*paiement)\b/u', $n)) {
+        // Action: Payer les factures d'eau/électricité (doit être AVANT loyer pour éviter conflit avec "mois")
+        if (preg_match('/\b(paye?|paie|règle|regle|payer|régler|regler|effectuer|effectue|fais|lance).*(facture|factures|eau|électricité|electricite|elec|consommation|compteur)\b/iu', $n)) {
+            $utilityType = 'all';
+            if (preg_match('/\b(eau|water)\b/iu', $n)) $utilityType = 'water';
+            elseif (preg_match('/\b(électricité|electricite|elec)\b/iu', $n)) $utilityType = 'electric';
+
+            $monthsCount = null;
+            if (preg_match('/(\d+)\s*mois\b/iu', $n, $m)) {
+                $monthsCount = (int)$m[1];
+            } elseif (preg_match('/\b(tout|tous|toutes|intégralité|integralite)\b/iu', $n)) {
+                $monthsCount = 999;
+            }
+
             return [
                 'type' => 'action',
-                'text' => "Je lance le paiement de votre loyer…",
-                'frontend_actions' => [['action' => 'navigate_payment', 'label' => 'Payer le loyer']],
+                'text' => $monthsCount
+                    ? "Je lance le paiement de {$monthsCount} mois de factures…"
+                    : "Je lance le paiement de vos factures…",
+                'frontend_actions' => [[
+                    'action' => 'process_utility_payment',
+                    'label' => $monthsCount ? "Payer {$monthsCount} mois de factures" : 'Payer les factures',
+                    'utility_type' => $utilityType,
+                    'months_count' => $monthsCount,
+                ]],
+                'auto_execute' => true,
+            ];
+        }
+
+        // Action: Payer le loyer (with month count support)
+        if ((preg_match('/(?:paye|paie|règle|regle|payer|régler|regler|effectuer|effectue|fais).*(?:loyer|mois)/iu', $n) &&
+             !preg_match('/\b(facture|eau|électricité|electricite|elec|consommation)\b/iu', $n)) ||
+            preg_match('/\b(paye.*loyer|paie.*loyer|payer.*loyer|régler.*loyer|regler.*loyer|loyer.*maintenant|effectuer.*paiement|je veux payer|j aimerais payer)\b/iu', $n)) {
+
+            $monthsCount = 1;
+
+            if (preg_match('/(\d+)\s*mois\b/iu', $n, $m)) {
+                $monthsCount = (int)$m[1];
+            } elseif (preg_match('/\b(tout|tous|toutes|intégralité|integralite|totalité|totalite|complete|complète|rembourse|solde)\b/iu', $n)) {
+                $monthsCount = 999;
+            }
+
+            return [
+                'type' => 'action',
+                'text' => $monthsCount > 1
+                    ? "Je lance le paiement de vos {$monthsCount} mois de loyer…"
+                    : "Je lance le paiement de votre loyer…",
+                'frontend_actions' => [[
+                    'action' => 'process_rent_payment',
+                    'label' => $monthsCount > 1 ? "Payer {$monthsCount} mois" : "Payer le loyer",
+                    'months_count' => $monthsCount,
+                ]],
                 'auto_execute' => true,
             ];
         }
@@ -295,6 +339,23 @@ class AiAgentService
             ]);
         }
 
+        // Action: Payer les factures d'eau/électricité
+        if (preg_match('/\b(paye?|paie|règle|regle|payer|régler|regler|effectuer|effectue|fais|lance).*(facture|factures|eau|électricité|electricite|elec|consommation|compteur)\b/iu', $n)) {
+            $type = 'all';
+            if (preg_match('/\b(eau|water)\b/iu', $n)) $type = 'water';
+            elseif (preg_match('/\b(électricité|electricite|elec)\b/iu', $n)) $type = 'electric';
+            return [
+                'type' => 'action',
+                'text' => "Je lance le paiement de vos factures…",
+                'frontend_actions' => [[
+                    'action' => 'process_utility_payment',
+                    'label' => 'Payer les factures',
+                    'utility_type' => $type,
+                ]],
+                'auto_execute' => true,
+            ];
+        }
+
         // Factures (général)
         if (preg_match('/\b(facture|factures|quittance|quittances|reçu|reçus|recu|recus)\b/u', $n)) {
             $type = 'all';
@@ -336,11 +397,21 @@ class AiAgentService
 
         // Commandes explicites
         if (preg_match('/\b(exécute|execute|fais|fait|effectue|lance|applique|paie|paye)\b/u', $n)) {
-            if (preg_match('/\b(paye?|paiement|règle|regle)\b/u', $n)) {
+            if (preg_match('/\b(paye?|paiement|règle|regle|payer)\b/u', $n)) {
+                $monthsCount = 1;
+                if (preg_match('/(\d+)\s*mois\b/iu', $n, $m)) {
+                    $monthsCount = (int)$m[1];
+                } elseif (preg_match('/\b(tout|tous|toutes|intégralité|integralite|solde)\b/iu', $n)) {
+                    $monthsCount = 999;
+                }
                 return [
                     'type' => 'action',
-                    'text' => 'Je lance le paiement…',
-                    'frontend_actions' => [['action' => 'navigate_payment', 'label' => 'Payer le loyer']],
+                    'text' => $monthsCount > 1 ? "Je lance le paiement de {$monthsCount} mois…" : 'Je lance le paiement…',
+                    'frontend_actions' => [[
+                        'action' => 'process_rent_payment',
+                        'label' => $monthsCount > 1 ? "Payer {$monthsCount} mois" : 'Payer le loyer',
+                        'months_count' => $monthsCount,
+                    ]],
                     'auto_execute' => true,
                 ];
             }
@@ -565,13 +636,20 @@ Tu es **HABITATUM**, un agent IA premium intégré au tableau de bord locataire.
 ## 📋 Actions disponibles (via execute_action)
 {$actionsList}
 ## ⚡ Règles d'exécution des actions
-1. Si l'utilisateur dit "paye mon loyer" → appelle `execute_action(action: "navigate_payment")`
-2. Si l'utilisateur dit "passe en mode sombre/clair" → appelle `execute_action(action: "toggle_theme")`
-3. Si l'utilisateur dit "recharge mon wallet/portefeuille" → appelle `execute_action(action: "navigate_recharge")`
-4. Si l'utilisateur dit "va dans/sur [section]" → appelle `execute_action(action: "navigate_[section]")`
-5. Si l'utilisateur demande des informations → appelle l'outil de données approprié
-6. **Ne renvoie JAMAIS l'utilisateur vers un lien ou une action manuelle** — utilise `execute_action` pour tout faire automatiquement.
-7. Tu exécutes TOUJOURS les actions demandées, tu ne les suggères pas.
+1. Si l'utilisateur dit "paye mon loyer" → appelle `execute_action(action: "process_rent_payment")` avec `params: { months_count: 1 }`
+2. Si l'utilisateur dit "paye X mois de loyer" ou "paye pour X mois" → appelle `execute_action(action: "process_rent_payment")` avec `params: { months_count: X }`
+3. Si l'utilisateur dit "paye tout" ou "paye tous mes loyers" → appelle `execute_action(action: "process_rent_payment")` avec `params: { months_count: 999 }`
+4. Si l'utilisateur dit "paye ma facture d'eau" → appelle `execute_action(action: "process_utility_payment")` avec `params: { utility_type: "water" }`
+5. Si l'utilisateur dit "paye ma facture d'électricité" → appelle `execute_action(action: "process_utility_payment")` avec `params: { utility_type: "electric" }`
+6. Si l'utilisateur dit "paye mes factures" → appelle `execute_action(action: "process_utility_payment")` avec `params: { utility_type: "all" }`
+7. Si l'utilisateur dit "paye X mois de factures" → appelle `execute_action(action: "process_utility_payment")` avec `params: { utility_type: "all", months_count: X }`
+8. Si l'utilisateur dit "paye tout" ou "paye toutes mes factures" → appelle `execute_action(action: "process_utility_payment")` avec `params: { utility_type: "all", months_count: 999 }`
+9. Si l'utilisateur dit "passe en mode sombre/clair" → appelle `execute_action(action: "toggle_theme")`
+10. Si l'utilisateur dit "recharge mon wallet/portefeuille" → appelle `execute_action(action: "navigate_recharge")`
+11. Si l'utilisateur dit "va dans/sur [section]" → appelle `execute_action(action: "navigate_[section]")`
+12. Si l'utilisateur demande des informations → appelle l'outil de données approprié
+13. **Ne renvoie JAMAIS l'utilisateur vers un lien ou une action manuelle** — utilise `execute_action` pour tout faire automatiquement.
+14. Tu exécutes TOUJOURS les actions demandées, tu ne les suggères pas.
 
 ## 📍 Règles générales
 1. Réponds en français, concis et professionnel.
