@@ -15,8 +15,8 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/40">
-                                <svg class="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                                <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
                             <div>
@@ -28,18 +28,18 @@
                     </div>
 
                     <!-- Right section - Stats -->
-                    <div class="flex gap-4 flex-wrap lg:flex-nowrap lg:gap-6">
-                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                            <span class="text-2xl sm:text-3xl font-bold text-emerald-400">{{ countAgencies }}</span>
-                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Agences</span>
+                    <div class="flex gap-4 flex-wrap lg:flex-nowrap lg:gap-6" v-if="!loading">
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 min-w-[100px]">
+                            <span class="text-2xl sm:text-3xl font-bold text-emerald-400">{{ kpis.count_agencies_or_employees }}</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1 font-medium">Agences</span>
                         </div>
-                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                            <span class="text-2xl sm:text-3xl font-bold text-blue-400">{{ formattedReservations }}</span>
-                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Réservations</span>
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 min-w-[100px]">
+                            <span class="text-2xl sm:text-3xl font-bold text-blue-400">{{ kpis.count_buildings }}</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1 font-medium">Immeubles</span>
                         </div>
-                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
-                            <span class="text-2xl sm:text-3xl font-bold text-amber-400">€{{ countRevenue }}K</span>
-                            <span class="text-xs sm:text-sm text-slate-400 mt-1">Revenu</span>
+                        <div class="flex flex-col items-center justify-center px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 min-w-[100px]">
+                            <span class="text-2xl sm:text-3xl font-bold text-amber-400">{{ kpis.count_contracts }}</span>
+                            <span class="text-xs sm:text-sm text-slate-400 mt-1 font-medium">Baux Actifs</span>
                         </div>
                     </div>
                 </div>
@@ -49,348 +49,408 @@
             </div>
         </div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Revenue Card -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L3 6m0 0l3-3m-3 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        +12.5%
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€284,500</div>
-                <div class="text-sm text-slate-500 mb-4">Chiffre d'Affaires Global</div>
-                <div class="pt-4 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>Immobilier: €156,800</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Hôtel: €127,700</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Occupancy Card -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L3 6m0 0l3-3m-3 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        +3.2%
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">87.5%</div>
-                <div class="text-sm text-slate-500 mb-4">Taux d'Occupation Combiné</div>
-                <div class="pt-4 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>Immobilier: 92.3%</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Hôtel: 82.7%</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cashflow Card -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L3 6m0 0l3-3m-3 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        +8.1%
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€45,200</div>
-                <div class="text-sm text-slate-500 mb-4">Trésorerie Nette</div>
-                <div class="pt-4 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>Entrées: €89,400</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Sorties: €44,200</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alerts Card -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100 border-l-4 border-l-red-500">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 6H3m0 0l4-4m-4 4l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        2 critiques
-                    </div>
-                </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">5</div>
-                <div class="text-sm text-slate-500 mb-4">Alertes Maintenance</div>
-                <div class="pt-4 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>Immeuble A: 2</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-600">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Hôtel: 3</span>
-                    </div>
-                </div>
-            </div>
+        <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-3">
+            <span class="animate-spin h-10 w-10 border-4 border-violet-600 border-t-transparent rounded-full"></span>
+            <p class="text-slate-500 text-sm font-semibold">Chargement des données en cours...</p>
         </div>
 
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Revenue Chart -->
-            <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold text-slate-800">Évolution du Chiffre d'Affaires</h3>
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span>
-                            <span class="text-sm text-slate-600">Immobilier</span>
+        <template v-else>
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Revenue Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white">
+                                <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span>
-                            <span class="text-sm text-slate-600">Hôtellerie</span>
+                        <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                            CA Global
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800 mb-1">{{ formatCurrency(kpis.total_revenue) }}</div>
+                    <div class="text-sm text-slate-500 mb-4">Chiffre d'Affaires Global</div>
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-600">
+                            <span>Revenus mensuels :</span>
+                            <strong class="text-slate-800">{{ formatCurrency(kpis.revenue_actual) }}</strong>
                         </div>
                     </div>
                 </div>
-                <div class="h-64">
-                    <canvas id="revenueChart"></canvas>
+
+                <!-- Occupancy Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white">
+                                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                            Taux
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800 mb-1">{{ kpis.occupancy_rate }}%</div>
+                    <div class="text-sm text-slate-500 mb-4">Taux d'Occupation</div>
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-600">
+                            <span>Loués / Total :</span>
+                            <strong class="text-slate-800">{{ kpis.occupied_count }} / {{ kpis.count_logements }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cashflow Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white">
+                                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                            Solde Net
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800 mb-1" :class="kpis.cashflow_net >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+                        {{ formatCurrency(kpis.cashflow_net) }}
+                    </div>
+                    <div class="text-sm text-slate-500 mb-4">Encaissements Nets</div>
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-600">
+                            <span>Charges Réelles :</span>
+                            <strong class="text-slate-800">{{ formatCurrency(kpis.total_expenses) }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100" :class="{ 'border-l-4 border-l-amber-500': pendingExpenses.length > 0 }">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white">
+                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold" v-if="pendingExpenses.length > 0">
+                            Action Requise
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800 mb-1">{{ pendingExpenses.length }}</div>
+                    <div class="text-sm text-slate-500 mb-4">Dépenses en attente</div>
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-600">
+                            <span>Factures impayées :</span>
+                            <strong class="text-slate-850 font-bold">{{ unpaidInvoices.length }}</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Occupation Pie Chart -->
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Revenue Chart -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-slate-800">Évolution Recettes vs Dépenses ({{ currentYear }})</h3>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
+                                <span class="text-xs text-slate-600 font-medium">Recettes (Encaissements)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></span>
+                                <span class="text-xs text-slate-600 font-medium">Dépenses (Payées)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Occupation Pie Chart -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col justify-between">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-slate-800">Répartition des charges par type</h3>
+                    </div>
+                    <div class="h-48 flex items-center justify-center relative mb-4">
+                        <canvas id="distributionChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" v-if="Object.keys(chartExpensesByType).length === 0">
+                            <p class="text-slate-400 text-xs italic">Aucune charge enregistrée</p>
+                        </div>
+                    </div>
+                    <!-- Detailed Breakdown -->
+                    <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar" v-if="Object.keys(chartExpensesByType).length > 0">
+                        <div v-for="(amount, type, index) in chartExpensesByType" :key="type" class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/50 transition-all duration-200">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-3.5 h-3.5 rounded-full shrink-0" :style="{ backgroundColor: getChartColor(index) }"></span>
+                                <span class="text-xs font-bold text-slate-700 truncate">{{ type }}</span>
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0">
+                                <span class="text-xs font-medium text-slate-500">{{ getPercentage(amount) }}%</span>
+                                <span class="text-xs font-bold text-slate-800">{{ formatCurrency(amount) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation and Unpaid sections -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Unpaid Invoices Section -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-bold text-slate-800">Factures non réglées</h3>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                            {{ unpaidInvoices.length }} à régulariser
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="min-w-full divide-y divide-slate-100" v-if="unpaidInvoices.length > 0">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Réf</th>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Locataire</th>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Agence</th>
+                                    <th class="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Total</th>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                <tr v-for="facture in unpaidInvoices.slice(0, 5)" :key="facture.id" class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs font-semibold text-slate-900">{{ facture.numero }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-700">{{ facture.locataire?.nom || 'N/A' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                                        <span v-if="facture.agency" class="inline-flex items-center rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-100">
+                                            {{ facture.agency.name }}
+                                        </span>
+                                        <span v-else class="inline-flex items-center rounded-lg bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-100">
+                                            Siège
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-right font-bold text-slate-900">{{ formatCurrency(facture.total) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800">
+                                            {{ facture.statut }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="flex flex-col items-center justify-center py-8 text-center" v-else>
+                            <svg class="h-8 w-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="text-xs text-slate-400 font-medium">Toutes les factures ont été réglées !</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Expenses Validation Section -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-bold text-slate-800">Dépenses en attente de validation</h3>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
+                            {{ pendingExpenses.length }} à valider
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="min-w-full divide-y divide-slate-100" v-if="pendingExpenses.length > 0">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Titre</th>
+                                    <th class="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Agence</th>
+                                    <th class="px-4 py-2 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Montant</th>
+                                    <th class="px-4 py-2 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                <tr v-for="depense in pendingExpenses.slice(0, 5)" :key="depense.id" class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-600">{{ formatDate(depense.date_depense) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs font-semibold text-slate-900">{{ depense.titre }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                                        <span v-if="depense.agency" class="inline-flex items-center rounded-lg bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-100">
+                                            {{ depense.agency.name }}
+                                        </span>
+                                        <span v-else class="inline-flex items-center rounded-lg bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-100">
+                                            Siège
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-right font-bold text-slate-900">{{ formatCurrency(depense.montant) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                        <router-link :to="{ name: 'accounting.depenses' }" class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold bg-violet-600 text-white rounded-lg hover:bg-violet-700 hover:scale-[1.02] transition-all">
+                                            Traiter
+                                        </router-link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="flex flex-col items-center justify-center py-8 text-center" v-else>
+                            <svg class="h-8 w-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="text-xs text-slate-400 font-medium">Aucune dépense en attente de validation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Section -->
             <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-slate-800">Répartition de l'Occupation</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800">Transactions Récentes</h3>
+                    <router-link :to="{ name: 'immobilier.historique' }" class="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition-colors">
+                        Tout Voir
+                    </router-link>
                 </div>
-                <div class="h-64">
-                    <canvas id="distributionChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alerts Section -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4">Alertes Critiques</h3>
-            <div class="space-y-3">
-                <div class="flex items-center gap-4 p-4 bg-red-50 rounded-xl border-l-4 border-red-500">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-500">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Ascenseur en panne - Immeuble A</div>
-                        <div class="text-sm text-slate-600">Depuis 2 jours - Impact sur 12 locataires</div>
-                    </div>
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Gérer</button>
-                </div>
-
-                <div class="flex items-center gap-4 p-4 bg-red-50 rounded-xl border-l-4 border-red-500">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-500">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Fuite d'eau - Suite 305</div>
-                        <div class="text-sm text-slate-600">Hôtel Principal - Chambre indisponible</div>
-                    </div>
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Gérer</button>
-                </div>
-
-                <div class="flex items-center gap-4 p-4 bg-amber-50 rounded-xl border-l-4 border-amber-500">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-amber-500">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-semibold text-slate-800">Climatisation défaillante - Bureau 204</div>
-                        <div class="text-sm text-slate-600">Immeuble B - Intervention programmée demain</div>
-                    </div>
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Gérer</button>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Motif / Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Agence</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                            <tr v-for="t in recentTransactions" :key="t.id" class="hover:bg-slate-50/80 transition-all">
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-600">{{ formatDate(t.date_transaction) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-800">{{ t.motif }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
+                                    <span v-if="t.agency" class="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 border border-blue-100 shadow-sm">
+                                        {{ t.agency.name }}
+                                    </span>
+                                    <span v-else class="inline-flex items-center rounded-lg bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 border border-slate-100 shadow-sm">
+                                        Siège Social
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-right font-bold" :class="Number(t.montant) >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+                                    {{ Number(t.montant) >= 0 ? '+' : '' }}{{ formatCurrency(t.montant) }}
+                                </td>
+                            </tr>
+                            <tr v-if="recentTransactions.length === 0">
+                                <td colspan="4" class="px-6 py-12 text-center text-xs text-slate-400 italic">Aucune transaction enregistrée.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4">Actions Rapides</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="text-left">
-                        <div class="font-semibold text-slate-800">3 Contrats</div>
-                        <div class="text-sm text-slate-600">À renouveler ce mois</div>
-                    </div>
-                </button>
-
-                <button class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="text-left">
-                        <div class="font-semibold text-slate-800">12 Chambres</div>
-                        <div class="text-sm text-slate-600">À nettoyer aujourd'hui</div>
-                    </div>
-                </button>
-
-                <button class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:scale-110 transition-transform">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="text-left">
-                        <div class="font-semibold text-slate-800">5 Tickets</div>
-                        <div class="text-sm text-slate-600">Maintenance en attente</div>
-                    </div>
-                </button>
-
-                <button class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 group">
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                            <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="text-left">
-                        <div class="font-semibold text-slate-800">8 Factures</div>
-                        <div class="text-sm text-slate-600">À envoyer ce jour</div>
-                    </div>
-                </button>
-            </div>
-        </div>
+        </template>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 import { Chart } from 'chart.js/auto';
 
-// Counters for banner
-const countAgencies = ref(0);
-const countReservations = ref(0);
-const countRevenue = ref(0);
+const loading = ref(true);
 
-// Formatted counters
-const formattedReservations = computed(() => countReservations.value.toLocaleString('fr-FR'));
+const kpis = ref({
+    count_agencies_or_employees: 0,
+    count_buildings: 0,
+    count_contracts: 0,
+    count_logements: 0,
+    total_revenue: 0,
+    total_expenses: 0,
+    revenue_actual: 0,
+    revenue_expected: 0,
+    occupancy_rate: 0,
+    occupied_count: 0,
+    vacant_count: 0,
+    cashflow_net: 0,
+});
 
-// Counter animation function
-const animateCounter = (ref, targetValue, duration = 1500) => {
-    const start = 0;
-    const startTime = Date.now();
+const unpaidInvoices = ref([]);
+const pendingExpenses = ref([]);
+const recentTransactions = ref([]);
+const chartRevenueExpenses = ref({ revenues: [], expenses: [] });
+const chartExpensesByType = ref({});
 
-    const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        ref.value = Math.floor(start + (targetValue - start) * progress);
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            ref.value = targetValue;
-        }
-    };
-
-    animate();
-};
+const currentYear = ref(new Date().getFullYear());
 
 const revenueChart = ref(null);
 const distributionChart = ref(null);
+let revenueChartInstance = null;
+let distributionChartInstance = null;
 
-onMounted(() => {
-    // Animate counters when component mounts
-    animateCounter(countAgencies, 12, 1500);
-    animateCounter(countReservations, 1245, 1500);
-    animateCounter(countRevenue, 89, 1500);
+const fetchStats = async () => {
+    try {
+        loading.value = true;
+        const response = await axios.get('/api/dashboard/stats');
+        const data = response.data;
+        
+        kpis.value = data.kpis;
+        unpaidInvoices.value = data.unpaid_invoices;
+        pendingExpenses.value = data.pending_expenses;
+        recentTransactions.value = data.recent_transactions;
+        chartRevenueExpenses.value = data.chart_revenue_expenses;
+        chartExpensesByType.value = data.chart_expenses_by_type;
+        currentYear.value = data.current_year;
 
-    // Revenue Chart - Line Chart with Gradient
+        // Render charts once data is loaded
+        setTimeout(() => {
+            renderCharts();
+        }, 100);
+    } catch (error) {
+        console.error('Erreur lors du chargement des statistiques:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+const renderCharts = () => {
+    // Destroy previous instances if any
+    if (revenueChartInstance) revenueChartInstance.destroy();
+    if (distributionChartInstance) distributionChartInstance.destroy();
+
+    // 1. Line Chart: Revenues vs Expenses
     const revenueCtx = document.getElementById('revenueChart');
     if (revenueCtx) {
-        const gradientImmobilier = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-        gradientImmobilier.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
-        gradientImmobilier.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+        const gradientRevenues = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradientRevenues.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        gradientRevenues.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
 
-        const gradientHotel = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-        gradientHotel.addColorStop(0, 'rgba(245, 158, 11, 0.5)');
-        gradientHotel.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+        const gradientExpenses = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradientExpenses.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
+        gradientExpenses.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
 
-        revenueChart.value = new Chart(revenueCtx, {
+        revenueChartInstance = new Chart(revenueCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août'],
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'],
                 datasets: [
                     {
-                        label: 'Immobilier',
-                        data: [145000, 148000, 152000, 155000, 158000, 162000, 165000, 168000],
-                        borderColor: '#3b82f6',
-                        backgroundColor: gradientImmobilier,
+                        label: 'Recettes (Encaissements)',
+                        data: chartRevenueExpenses.value.revenues,
+                        borderColor: '#10b981',
+                        backgroundColor: gradientRevenues,
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: '#10b981',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 8,
-                        pointShadowColor: 'rgba(59, 130, 246, 0.5)',
-                        pointShadowBlur: 10
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                     },
                     {
-                        label: 'Hôtellerie',
-                        data: [118000, 122000, 125000, 128000, 132000, 135000, 138000, 141000],
-                        borderColor: '#f59e0b',
-                        backgroundColor: gradientHotel,
+                        label: 'Dépenses (Payées)',
+                        data: chartRevenueExpenses.value.expenses,
+                        borderColor: '#f43f5e',
+                        backgroundColor: gradientExpenses,
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#f59e0b',
+                        pointBackgroundColor: '#f43f5e',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 8,
-                        pointShadowColor: 'rgba(245, 158, 11, 0.5)',
-                        pointShadowBlur: 10
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                     }
                 ]
             },
@@ -406,69 +466,46 @@ onMounted(() => {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: 'rgba(148, 163, 184, 0.2)',
-                        borderWidth: 1,
-                        cornerRadius: 12,
-                        padding: 12,
-                        displayColors: true,
-                        boxPadding: 4
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        cornerRadius: 8,
+                        padding: 10,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(148, 163, 184, 0.1)',
-                            drawBorder: false
-                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.08)' },
                         ticks: {
-                            callback: function(value) {
-                                return '€' + (value / 1000) + 'k';
-                            },
+                            callback: (val) => formatCurrency(val),
                             color: '#64748b',
-                            font: {
-                                size: 11
-                            }
+                            font: { size: 9 }
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 11
-                            }
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
                     }
                 }
             }
         });
     }
 
-    // Distribution Chart - Doughnut Chart
+    // 2. Doughnut Chart: Expenses by Type
     const distributionCtx = document.getElementById('distributionChart');
     if (distributionCtx) {
-        distributionChart.value = new Chart(distributionCtx, {
+        const labels = Object.keys(chartExpensesByType.value);
+        const data = Object.values(chartExpensesByType.value);
+
+        distributionChartInstance = new Chart(distributionCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Immobilier', 'Hôtellerie'],
+                labels: labels.length > 0 ? labels : ['Aucune charge'],
                 datasets: [{
-                    data: [52, 48],
-                    backgroundColor: [
-                        'rgba(59, 130, 246, 0.9)',
-                        'rgba(245, 158, 11, 0.9)'
-                    ],
-                    borderColor: [
-                        '#3b82f6',
-                        '#f59e0b'
-                    ],
-                    borderWidth: 3,
-                    hoverOffset: 10
+                    data: data.length > 0 ? data : [1],
+                    backgroundColor: labels.length > 0 ? chartColors.slice(0, labels.length) : ['rgba(226, 232, 240, 0.8)'],
+                    borderWidth: 2
                 }]
             },
             options: {
@@ -478,40 +515,77 @@ onMounted(() => {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
+                            boxWidth: 12,
+                            padding: 15,
                             color: '#64748b',
-                            font: {
-                                size: 12,
-                                weight: 500
-                            }
+                            font: { size: 10 }
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: 'rgba(148, 163, 184, 0.2)',
-                        borderWidth: 1,
-                        cornerRadius: 12,
-                        padding: 12,
                         callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
+                            label: (context) => {
+                                if (labels.length === 0) return 'Aucune dépense';
+                                return `${context.label}: ${formatCurrency(context.parsed)}`;
                             }
                         }
                     }
                 },
-                cutout: '65%'
+                cutout: '60%'
             }
         });
     }
+};
+
+onMounted(() => {
+    fetchStats();
 });
 
 onUnmounted(() => {
-    if (revenueChart.value) revenueChart.value.destroy();
-    if (distributionChart.value) distributionChart.value.destroy();
+    if (revenueChartInstance) revenueChartInstance.destroy();
+    if (distributionChartInstance) distributionChartInstance.destroy();
 });
+
+const chartColors = [
+    '#3b82f6',
+    '#f59e0b',
+    '#10b981',
+    '#8b5cf6',
+    '#ec4899',
+    '#64748b'
+];
+
+const getChartColor = (index) => {
+    return chartColors[index % chartColors.length];
+};
+
+const getPercentage = (amount) => {
+    if (!kpis.value.total_expenses) return 0;
+    return Math.round((amount / kpis.value.total_expenses) * 100);
+};
+
+const formatCurrency = (value) => {
+    if (!value && value !== 0) return '-';
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(value);
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateStr));
+};
 </script>
 
+<style scoped>
+.animate-scale-up {
+    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+</style>

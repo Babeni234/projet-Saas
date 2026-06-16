@@ -311,6 +311,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/entrees-fonds/{entree_fond}/status', [\App\Http\Controllers\EntreeFondsController::class, 'updateStatus'])->name('entrees-fonds.status');
     Route::delete('/api/entrees-fonds/{entree_fond}', [\App\Http\Controllers\EntreeFondsController::class, 'destroy'])->name('entrees-fonds.destroy');
 
+    // Dashboard Statistics API route
+    Route::get('/api/dashboard/stats', [\App\Http\Controllers\DashboardStatsController::class, 'getStats'])->name('dashboard.stats');
+
     // Contrats API routes
     Route::get('/api/contrats', [\App\Http\Controllers\ContratController::class, 'index'])->name('contrats.json');
     Route::post('/api/contrats', [\App\Http\Controllers\ContratController::class, 'store'])->name('contrats.store');

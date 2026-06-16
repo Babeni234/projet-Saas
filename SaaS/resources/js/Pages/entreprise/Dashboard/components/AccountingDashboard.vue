@@ -10,16 +10,19 @@
                             <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                    <div :class="[
+                        'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold',
+                        revenueChangePercent >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    ]">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L3 6m0 0l3-3m-3 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path :d="revenueChangePercent >= 0 ? 'M6 3L3 6m0 0l3 3m-3-3h6' : 'M6 9L3 6m0 0l3-3m-3 3h6'" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        +15.3%
+                        {{ revenueChangePercent >= 0 ? '+' : '' }}{{ revenueChangePercent }}%
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€441,300</div>
+                <div class="text-3xl font-bold text-slate-800 mb-1">{{ formatCurrency(currentMonthRevenue) }}</div>
                 <div class="text-sm text-slate-500 mb-4">Revenus du Mois</div>
-                <div class="text-xs text-slate-400">vs €382,800 le mois dernier</div>
+                <div class="text-xs text-slate-400">vs {{ formatCurrency(lastMonthRevenue) }} le mois dernier</div>
             </div>
 
             <!-- Expenses Card -->
@@ -30,16 +33,19 @@
                             <path d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <div class="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                    <div :class="[
+                        'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold',
+                        expensesChangePercent >= 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                    ]">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 6H3m0 0l4-4m-4 4l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path :d="expensesChangePercent >= 0 ? 'M6 3L3 6m0 0l3 3m-3-3h6' : 'M6 9L3 6m0 0l3-3m-3 3h6'" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        +8.7%
+                        {{ expensesChangePercent >= 0 ? '+' : '' }}{{ expensesChangePercent }}%
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€287,500</div>
+                <div class="text-3xl font-bold text-slate-800 mb-1">{{ formatCurrency(currentMonthExpenses) }}</div>
                 <div class="text-sm text-slate-500 mb-4">Dépenses du Mois</div>
-                <div class="text-xs text-slate-400">vs €264,300 le mois dernier</div>
+                <div class="text-xs text-slate-400">vs {{ formatCurrency(lastMonthExpenses) }} le mois dernier</div>
             </div>
 
             <!-- Profit Card -->
@@ -51,15 +57,12 @@
                         </svg>
                     </div>
                     <div class="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L3 6m0 0l3-3m-3 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        +24.1%
+                        Marge : {{ profitMargin }}%
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€153,800</div>
+                <div class="text-3xl font-bold text-slate-800 mb-1">{{ formatCurrency(netProfit) }}</div>
                 <div class="text-sm text-slate-500 mb-4">Bénéfice Net</div>
-                <div class="text-xs text-slate-400">Marge: 34.8%</div>
+                <div class="text-xs text-slate-400">Revenus de l'année en cours</div>
             </div>
 
             <!-- Pending Invoices Card -->
@@ -71,15 +74,12 @@
                         </svg>
                     </div>
                     <div class="flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 6H3m0 0l4-4m-4 4l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        8 en attente
+                        {{ pendingInvoicesCount }} en attente
                     </div>
                 </div>
-                <div class="text-3xl font-bold text-slate-800 mb-1">€42,500</div>
+                <div class="text-3xl font-bold text-slate-800 mb-1">{{ formatCurrency(pendingInvoicesAmount) }}</div>
                 <div class="text-sm text-slate-500 mb-4">Factures en Attente</div>
-                <div class="text-xs text-slate-400">3 en retard (>30j)</div>
+                <div class="text-xs text-slate-400">{{ lateInvoicesCount }} en retard (>30j)</div>
             </div>
         </div>
 
@@ -88,7 +88,7 @@
             <!-- Revenue vs Expenses -->
             <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-slate-800">Revenus vs Dépenses</h3>
+                    <h3 class="text-lg font-semibold text-slate-800">Revenus vs Dépenses (Année en cours)</h3>
                 </div>
                 <div class="h-64">
                     <canvas id="revenueExpensesChart"></canvas>
@@ -110,7 +110,6 @@
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-slate-800">Transactions Récentes</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Voir toutes</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -121,43 +120,33 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Catégorie</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Montant</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Statut</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Agence</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr>
-                            <td class="px-4 py-4 text-sm text-slate-600">15 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Loyer Immeuble A - Apt 204</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Revenu</span></td>
-                            <td class="px-4 py-4 text-sm font-semibold text-emerald-600">+€1,200</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Payé</span></td>
+                        <tr v-for="(tx, index) in recentTransactions" :key="index" :class="{'bg-slate-50/40': index % 2 === 1}">
+                            <td class="px-4 py-4 text-sm text-slate-600">{{ formatDate(tx.date_transaction) }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-700 font-medium">{{ tx.motif || 'Flux financier' }}</td>
+                            <td class="px-4 py-4">
+                                <span :class="[
+                                    'px-3 py-1 rounded-full text-xs font-semibold',
+                                    tx.montant > 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                                ]">
+                                    {{ tx.montant > 0 ? 'Revenu' : 'Dépense' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-sm font-semibold" :class="tx.montant > 0 ? 'text-emerald-600' : 'text-red-650'">
+                                {{ tx.montant > 0 ? '+' : '' }}{{ formatCurrency(tx.montant) }}
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Payé</span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-650 font-medium">
+                                {{ tx.agency ? tx.agency.name : 'Siège' }}
+                            </td>
                         </tr>
-                        <tr>
-                            <td class="px-4 py-4 text-sm text-slate-600">15 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Facture Électricité - Mai</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Dépense</span></td>
-                            <td class="px-4 py-4 text-sm font-semibold text-red-600">-€2,450</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Payé</span></td>
-                        </tr>
-                        <tr class="bg-amber-50">
-                            <td class="px-4 py-4 text-sm text-slate-600">14 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Loyer Immeuble B - Bureau 102</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Revenu</span></td>
-                            <td class="px-4 py-4 text-sm font-semibold text-emerald-600">+€2,500</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">En attente</span></td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 text-sm text-slate-600">14 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Maintenance Ascenseur A</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Dépense</span></td>
-                            <td class="px-4 py-4 text-sm font-semibold text-red-600">-€850</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Payé</span></td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 text-sm text-slate-600">13 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Réservation Hôtel - Suite 402</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Revenu</span></td>
-                            <td class="px-4 py-4 text-sm font-semibold text-emerald-600">+€890</td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Payé</span></td>
+                        <tr v-if="recentTransactions.length === 0">
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-400 italic">Aucune transaction enregistrée</td>
                         </tr>
                     </tbody>
                 </table>
@@ -168,87 +157,31 @@
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-slate-800">Factures en Attente</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Gérer</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="flex flex-col gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <div v-for="inv in activePendingInvoicesList" :key="inv.id" class="flex flex-col gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
                     <div class="flex items-center justify-between">
                         <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-amber-500">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="currentColor"/>
                             </svg>
                         </div>
-                        <div class="text-xs font-semibold text-amber-600">En retard</div>
+                        <div class="text-xs font-semibold text-amber-600" v-if="inv.statut === 'En retard'">En retard</div>
+                        <div class="text-xs font-semibold text-amber-600" v-else>À percevoir</div>
                     </div>
                     <div>
-                        <div class="font-semibold text-slate-800">INV-2026-089</div>
-                        <div class="text-xs text-slate-600">Loyer Immeuble C</div>
+                        <div class="font-semibold text-slate-800">{{ inv.numero }}</div>
+                        <div class="text-xs text-slate-650">Locataire : {{ inv.locataire ? (inv.locataire.user ? inv.locataire.user.name : inv.locataire.nom) : 'Inconnu' }}</div>
+                        <div class="text-[10px] text-slate-500" v-if="inv.agency">Agence : {{ inv.agency.name }}</div>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold text-slate-800">€950</span>
-                        <span class="text-xs text-slate-500">45j</span>
+                        <span class="text-sm font-bold text-slate-800">{{ formatCurrency(Number(inv.total) - Number(inv.montant_paye || 0)) }}</span>
+                        <span class="text-xs text-slate-500">Échéance: {{ formatDateShort(inv.date_echeance) }}</span>
                     </div>
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Relancer</button>
+                    <button @click="relaunchInvoice(inv)" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-650 hover:bg-slate-100 transition-colors">Relancer</button>
                 </div>
-
-                <div class="flex flex-col gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <div class="flex items-center justify-between">
-                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-amber-500">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div class="text-xs font-semibold text-amber-600">En retard</div>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-slate-800">INV-2026-087</div>
-                        <div class="text-xs text-slate-600">Loyer Immeuble D</div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold text-slate-800">€3,200</span>
-                        <span class="text-xs text-slate-500">38j</span>
-                    </div>
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Relancer</button>
-                </div>
-
-                <div class="flex flex-col gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between">
-                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-500">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div class="text-xs font-semibold text-slate-600">En attente</div>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-slate-800">INV-2026-092</div>
-                        <div class="text-xs text-slate-600">Loyer Immeuble B</div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold text-slate-800">€2,500</span>
-                        <span class="text-xs text-slate-500">5j</span>
-                    </div>
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Voir</button>
-                </div>
-
-                <div class="flex flex-col gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between">
-                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-500">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div class="text-xs font-semibold text-slate-600">En attente</div>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-slate-800">INV-2026-093</div>
-                        <div class="text-xs text-slate-600">Loyer Immeuble A</div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold text-slate-800">€1,100</span>
-                        <span class="text-xs text-slate-500">3j</span>
-                    </div>
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">Voir</button>
+                <div v-if="activePendingInvoicesList.length === 0" class="col-span-full py-6 text-center text-slate-400 italic">
+                    Aucune facture en attente de paiement
                 </div>
             </div>
         </div>
@@ -257,15 +190,58 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 import { Chart } from 'chart.js/auto';
 
-const revenueExpensesChart = ref(null);
-const expenseBreakdownChart = ref(null);
+// KPIs reactive refs
+const currentMonthRevenue = ref(0);
+const lastMonthRevenue = ref(0);
+const revenueChangePercent = ref(0);
 
-onMounted(() => {
-    // Revenue vs Expenses Chart - Grouped Bar Chart
+const currentMonthExpenses = ref(0);
+const lastMonthExpenses = ref(0);
+const expensesChangePercent = ref(0);
+
+const netProfit = ref(0);
+const profitMargin = ref(0);
+
+const pendingInvoicesAmount = ref(0);
+const pendingInvoicesCount = ref(0);
+const lateInvoicesCount = ref(0);
+
+const recentTransactions = ref([]);
+const activePendingInvoicesList = ref([]);
+
+// Charts instances
+let revenueExpensesChartInstance = null;
+let expenseBreakdownChartInstance = null;
+
+const formatCurrency = (val) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const formatDateShort = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+};
+
+const relaunchInvoice = (invoice) => {
+    alert(`Relance envoyée avec succès pour la facture ${invoice.numero}`);
+};
+
+const renderCharts = (revExpData, expensesByType) => {
+    if (revenueExpensesChartInstance) revenueExpensesChartInstance.destroy();
+    if (expenseBreakdownChartInstance) expenseBreakdownChartInstance.destroy();
+
     const revenueCtx = document.getElementById('revenueExpensesChart');
-    if (revenueCtx) {
+    if (revenueCtx && revExpData) {
         const gradientRevenue = revenueCtx.getContext('2d').createLinearGradient(0, 0, 0, 400);
         gradientRevenue.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
         gradientRevenue.addColorStop(1, 'rgba(16, 185, 129, 0.3)');
@@ -274,14 +250,16 @@ onMounted(() => {
         gradientExpenses.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
         gradientExpenses.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
 
-        revenueExpensesChart.value = new Chart(revenueCtx, {
+        const labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+        revenueExpensesChartInstance = new Chart(revenueCtx, {
             type: 'bar',
             data: {
-                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai'],
+                labels: labels,
                 datasets: [
                     {
                         label: 'Revenus',
-                        data: [380000, 395000, 410000, 425000, 441300],
+                        data: revExpData.revenues || Array(12).fill(0),
                         backgroundColor: gradientRevenue,
                         borderColor: '#10b981',
                         borderWidth: 2,
@@ -289,7 +267,7 @@ onMounted(() => {
                     },
                     {
                         label: 'Dépenses',
-                        data: [264000, 270000, 275000, 280000, 287500],
+                        data: revExpData.expenses || Array(12).fill(0),
                         backgroundColor: gradientExpenses,
                         borderColor: '#ef4444',
                         borderWidth: 2,
@@ -308,10 +286,7 @@ onMounted(() => {
                             usePointStyle: true,
                             pointStyle: 'circle',
                             color: '#64748b',
-                            font: {
-                                size: 12,
-                                weight: 500
-                            }
+                            font: { size: 12, weight: 500 }
                         }
                     },
                     tooltip: {
@@ -332,57 +307,55 @@ onMounted(() => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(148, 163, 184, 0.1)',
-                            drawBorder: false
-                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
                         ticks: {
-                            callback: function(value) {
-                                return '€' + (value / 1000) + 'k';
-                            },
+                            callback: function(value) { return '€' + (value / 1000) + 'k'; },
                             color: '#64748b',
-                            font: {
-                                size: 11
-                            }
+                            font: { size: 11 }
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 11
-                            }
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 11 } }
                     }
                 }
             }
         });
     }
 
-    // Expense Breakdown Chart - Doughnut Chart
     const expenseCtx = document.getElementById('expenseBreakdownChart');
-    if (expenseCtx) {
-        expenseBreakdownChart.value = new Chart(expenseCtx, {
+    if (expenseCtx && expensesByType) {
+        const categories = Object.keys(expensesByType);
+        const amounts = Object.values(expensesByType);
+
+        const labels = categories.length > 0 ? categories : ['Aucune dépense'];
+        const data = amounts.length > 0 ? amounts : [0];
+
+        const bgColors = [
+            'rgba(59, 130, 246, 0.9)',
+            'rgba(245, 158, 11, 0.9)',
+            'rgba(16, 185, 129, 0.9)',
+            'rgba(139, 92, 246, 0.9)',
+            'rgba(236, 72, 153, 0.9)',
+            'rgba(100, 116, 139, 0.9)'
+        ];
+        const borderColors = [
+            '#3b82f6',
+            '#f59e0b',
+            '#10b981',
+            '#8b5cf6',
+            '#ec4899',
+            '#64748b'
+        ];
+
+        expenseBreakdownChartInstance = new Chart(expenseCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Salaires', 'Maintenance', 'Énergie', 'Autres'],
+                labels: labels,
                 datasets: [{
-                    data: [45, 20, 15, 20],
-                    backgroundColor: [
-                        'rgba(59, 130, 246, 0.9)',
-                        'rgba(245, 158, 11, 0.9)',
-                        'rgba(16, 185, 129, 0.9)',
-                        'rgba(100, 116, 139, 0.9)'
-                    ],
-                    borderColor: [
-                        '#3b82f6',
-                        '#f59e0b',
-                        '#10b981',
-                        '#64748b'
-                    ],
+                    data: data,
+                    backgroundColor: bgColors.slice(0, labels.length),
+                    borderColor: borderColors.slice(0, labels.length),
                     borderWidth: 3,
                     hoverOffset: 10
                 }]
@@ -398,10 +371,7 @@ onMounted(() => {
                             usePointStyle: true,
                             pointStyle: 'circle',
                             color: '#64748b',
-                            font: {
-                                size: 12,
-                                weight: 500
-                            }
+                            font: { size: 12, weight: 500 }
                         }
                     },
                     tooltip: {
@@ -414,7 +384,7 @@ onMounted(() => {
                         padding: 12,
                         callbacks: {
                             label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
+                                return context.label + ': €' + context.parsed.toLocaleString();
                             }
                         }
                     }
@@ -423,10 +393,43 @@ onMounted(() => {
             }
         });
     }
+};
+
+const fetchStats = async () => {
+    try {
+        const response = await axios.get('/api/dashboard/stats');
+        const data = response.data;
+
+        currentMonthRevenue.value = data.kpis.revenue_actual;
+        lastMonthRevenue.value = data.kpis.revenue_last_month;
+        revenueChangePercent.value = data.kpis.revenue_change_percent;
+
+        currentMonthExpenses.value = data.kpis.expenses_actual;
+        lastMonthExpenses.value = data.kpis.expenses_last_month;
+        expensesChangePercent.value = data.kpis.expenses_change_percent;
+
+        netProfit.value = data.kpis.profit_actual;
+        profitMargin.value = data.kpis.profit_margin;
+
+        pendingInvoicesAmount.value = data.kpis.unpaid_invoices_total;
+        pendingInvoicesCount.value = data.kpis.unpaid_invoices_count;
+        lateInvoicesCount.value = data.kpis.unpaid_invoices_overdue_count;
+
+        recentTransactions.value = data.recent_transactions || [];
+        activePendingInvoicesList.value = (data.unpaid_invoices || []).slice(0, 4);
+
+        renderCharts(data.chart_revenue_expenses, data.chart_expenses_by_type);
+    } catch (error) {
+        console.error("Error fetching accounting stats:", error);
+    }
+};
+
+onMounted(() => {
+    fetchStats();
 });
 
 onUnmounted(() => {
-    if (revenueExpensesChart.value) revenueExpensesChart.value.destroy();
-    if (expenseBreakdownChart.value) expenseBreakdownChart.value.destroy();
+    if (revenueExpensesChartInstance) revenueExpensesChartInstance.destroy();
+    if (expenseBreakdownChartInstance) expenseBreakdownChartInstance.destroy();
 });
 </script>
