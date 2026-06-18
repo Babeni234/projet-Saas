@@ -44,6 +44,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'agencies' => $agencies,
+            'vapidPublicKey' => env('VAPID_PUBLIC_KEY'),
+
         ];
     }
 }
