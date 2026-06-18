@@ -1,0 +1,5 @@
+# HABITATUM — Exemple de crontab pour le scheduler Laravel (serveur Linux)
+# Ajouter cette ligne avec : crontab -e
+# Elle exécute le scheduler Laravel toutes les minutes
+
+* * * * * cd /chemin/vers/SaaS && php artisan schedule:run >> /dev/null 2>&1
