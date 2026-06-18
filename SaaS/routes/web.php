@@ -27,6 +27,9 @@ Route::get('/dashboard', function () {
     if ($user && $user->employee && $user->employee->agency_id !== null) {
         return redirect()->route('agence.dashboard');
     }
+    if ($user && $user->account_type === 'Locataire') {
+        return redirect()->route('locataire.dashboard');
+    }
     return Inertia::render('entreprise/Dashboard/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
