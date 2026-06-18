@@ -67,7 +67,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <span class="px-2 py-0.5 bg-emerald-55 text-emerald-700 rounded-full text-xs font-bold font-mono">+12.4%</span>
+                    <span :class="['px-2 py-0.5 rounded-full text-xs font-bold font-mono', kpis.revenue_change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700']">
+                        {{ kpis.revenue_change >= 0 ? '+' : '' }}{{ kpis.revenue_change }}%
+                    </span>
                 </div>
                 <div class="text-2xl font-bold text-slate-900 mb-1">{{ formatCurrency(kpis.revenue) }}</div>
                 <div class="text-sm font-semibold text-slate-500">Revenus Consolidés</div>
@@ -81,7 +83,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                         </svg>
                     </div>
-                    <span class="px-2 py-0.5 bg-rose-55 text-rose-700 rounded-full text-xs font-bold font-mono">-4.2%</span>
+                    <span :class="['px-2 py-0.5 rounded-full text-xs font-bold font-mono', kpis.expenses_change <= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700']">
+                        {{ kpis.expenses_change >= 0 ? '+' : '' }}{{ kpis.expenses_change }}%
+                    </span>
                 </div>
                 <div class="text-2xl font-bold text-slate-900 mb-1">{{ formatCurrency(kpis.expenses) }}</div>
                 <div class="text-sm font-semibold text-slate-500">Dépenses Exploitation</div>
@@ -95,7 +99,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
                         </svg>
                     </div>
-                    <span class="px-2 py-0.5 bg-indigo-55 text-indigo-700 rounded-full text-xs font-bold font-mono">+23.1%</span>
+                    <span :class="['px-2 py-0.5 rounded-full text-xs font-bold font-mono', kpis.net_cash_change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700']">
+                        {{ kpis.net_cash_change >= 0 ? '+' : '' }}{{ kpis.net_cash_change }}%
+                    </span>
                 </div>
                 <div class="text-2xl font-bold text-slate-900 mb-1">{{ formatCurrency(kpis.netCash) }}</div>
                 <div class="text-sm font-semibold text-slate-500">Flux Net de Trésorerie</div>
@@ -209,6 +215,9 @@ const kpis = ref({
     expenses: 0,
     netCash: 0,
     profitMargin: 0.0,
+    revenue_change: 0.0,
+    expenses_change: 0.0,
+    net_cash_change: 0.0,
 });
 
 const tableData = ref([]);

@@ -206,6 +206,8 @@ class DashboardStatsTest extends TestCase
         $this->assertNotNull($response->json('kpis.unpaid_rate'));
         $this->assertNotNull($response->json('unpaid_period_data'));
         $this->assertNotNull($response->json('active_contracts'));
+        $this->assertNotNull($response->json('pending_expenses'));
+        $this->assertNotNull($response->json('cancelled_expenses'));
     }
 
     public function test_agency_dashboard_stats_scopes_strictly_to_agency(): void
@@ -308,5 +310,7 @@ class DashboardStatsTest extends TestCase
 
         // Breakdown should only count Agency 1's Maintenance expense: 1000
         $this->assertEquals(1000.00, $response->json('chart_expenses_by_type.Maintenance'));
+        $this->assertNotNull($response->json('pending_expenses'));
+        $this->assertNotNull($response->json('cancelled_expenses'));
     }
 }

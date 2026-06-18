@@ -185,6 +185,69 @@
                 </div>
             </div>
         </div>
+
+        <!-- Expenses in Validation & Cancelled Expenses Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Pending Validation Expenses -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-slate-800">Dépenses en Attente de Validation</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="px-4 py-3">Réf</th>
+                                <th class="px-4 py-3">Titre</th>
+                                <th class="px-4 py-3 text-right">Montant</th>
+                                <th class="px-4 py-3">Agence</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            <tr v-for="d in pendingExpensesList" :key="d.id" class="hover:bg-slate-50/50">
+                                <td class="px-4 py-3 font-semibold text-slate-700">{{ d.reference }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ d.titre }}</td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-800">{{ formatCurrency(d.montant) }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ d.agency ? d.agency.name : 'Siège' }}</td>
+                            </tr>
+                            <tr v-if="pendingExpensesList.length === 0">
+                                <td colspan="4" class="px-4 py-6 text-center text-slate-400 italic">Aucune dépense en attente</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cancelled Expenses -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-slate-800">Dépenses Annulées</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="px-4 py-3">Réf</th>
+                                <th class="px-4 py-3">Titre</th>
+                                <th class="px-4 py-3 text-right">Montant</th>
+                                <th class="px-4 py-3">Agence</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            <tr v-for="d in cancelledExpensesList" :key="d.id" class="hover:bg-slate-50/50">
+                                <td class="px-4 py-3 font-semibold text-slate-700">{{ d.reference }}</td>
+                                <td class="px-4 py-3 text-slate-400 line-through">{{ d.titre }}</td>
+                                <td class="px-4 py-3 text-right font-bold text-slate-400 line-through">{{ formatCurrency(d.montant) }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ d.agency ? d.agency.name : 'Siège' }}</td>
+                            </tr>
+                            <tr v-if="cancelledExpensesList.length === 0">
+                                <td colspan="4" class="px-4 py-6 text-center text-slate-400 italic">Aucune dépense annulée</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -211,6 +274,8 @@ const lateInvoicesCount = ref(0);
 
 const recentTransactions = ref([]);
 const activePendingInvoicesList = ref([]);
+const pendingExpensesList = ref([]);
+const cancelledExpensesList = ref([]);
 
 // Charts instances
 let revenueExpensesChartInstance = null;
@@ -417,6 +482,8 @@ const fetchStats = async () => {
 
         recentTransactions.value = data.recent_transactions || [];
         activePendingInvoicesList.value = (data.unpaid_invoices || []).slice(0, 4);
+        pendingExpensesList.value = data.pending_expenses || [];
+        cancelledExpensesList.value = data.cancelled_expenses || [];
 
         renderCharts(data.chart_revenue_expenses, data.chart_expenses_by_type);
     } catch (error) {

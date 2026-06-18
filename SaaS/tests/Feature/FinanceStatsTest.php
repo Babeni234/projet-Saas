@@ -175,6 +175,11 @@ class FinanceStatsTest extends TestCase
         $this->assertEquals(5000000.00, $response->json('kpis.netCash'));
         $this->assertEquals(50.0, $response->json('kpis.profitMargin'));
 
+        // YoY compared to 2025 (5M rev, 3M exp, 2M netCash)
+        $this->assertEquals(100.0, $response->json('kpis.revenue_change'));
+        $this->assertEquals(66.7, $response->json('kpis.expenses_change'));
+        $this->assertEquals(150.0, $response->json('kpis.net_cash_change'));
+
         // Check monthly cashflows
         // Inflows: Jan (0), Feb (1000000), Mar (0), Apr (0), May (0), Jun (3000000 + 2000000 = 5000000), Jul (4000000)...
         $this->assertEquals(1000000.00, $response->json('chart_monthly.inflows.1')); // Feb

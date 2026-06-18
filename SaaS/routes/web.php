@@ -364,11 +364,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/paiement-loyers/{paiementLoyer}', [\App\Http\Controllers\PaiementLoyerController::class, 'destroy'])->name('paiement-loyers.destroy');
 });
 
-// Route simple pour afficher le dashboard du locataire
-Route::get('/dashboard-locataire', function () {
-    return Inertia::render('Locataire/dashboard-loc'); // Ne pas mettre l'extension .vue
-})->name('dashboard.locataire')->middleware(['auth']); 
-// Le middleware 'auth' sécurise la route pour que seuls les locataires connectés y accèdent
+
+// ─── Espace Locataire ───────────────────────────────────────────────────────
+// Route protégée : seuls les utilisateurs avec account_type 'Locataire' y ont accès
+Route::get('/dashboard-locataire', [\App\Http\Controllers\LocataireDashboardController::class, 'index'])
+    ->middleware(['auth', 'locataire'])
+    ->name('locataire.dashboard');
 
 require __DIR__.'/auth.php';
 

@@ -37,6 +37,34 @@ class FinanceStatsController extends Controller
         $netCash = $revenue - $expenses;
         $profitMargin = $revenue > 0 ? round(($netCash / $revenue) * 100, 1) : 0.0;
 
+        // Calculate YoY growth compared to the previous year
+        $prevYear = $year - 1;
+
+        $prevRevenue = (float) Tresorerie::where('company_profile_id', $companyId)
+            ->where('deleted', false)
+            ->where('montant', '>', 0)
+            ->whereYear('date_transaction', $prevYear)
+            ->sum('montant');
+
+        $prevExpenses = (float) Depense::where('company_profile_id', $companyId)
+            ->where('deleted', false)
+            ->where('statut', 'Payé')
+            ->whereYear('date_depense', $prevYear)
+            ->sum('montant');
+
+        $prevNetCash = $prevRevenue - $prevExpenses;
+
+        $revenueChange = $prevRevenue > 0 ? round((($revenue - $prevRevenue) / $prevRevenue) * 100, 1) : 0.0;
+        $expensesChange = $prevExpenses > 0 ? round((($expenses - $prevExpenses) / $prevExpenses) * 100, 1) : 0.0;
+        
+        if ($prevNetCash > 0) {
+            $netCashChange = round((($netCash - $prevNetCash) / $prevNetCash) * 100, 1);
+        } elseif ($prevNetCash < 0) {
+            $netCashChange = round((($netCash - $prevNetCash) / abs($prevNetCash)) * 100, 1);
+        } else {
+            $netCashChange = 0.0;
+        }
+
         // 2. Monthly cashflows (inflows vs outflows) for the year
         $monthlyInflows = array_fill(0, 12, 0.0);
         $monthlyOutflows = array_fill(0, 12, 0.0);
@@ -146,6 +174,9 @@ class FinanceStatsController extends Controller
                 'expenses' => $expenses,
                 'netCash' => $netCash,
                 'profitMargin' => $profitMargin,
+                'revenue_change' => $revenueChange,
+                'expenses_change' => $expensesChange,
+                'net_cash_change' => $netCashChange,
             ],
             'chart_monthly' => [
                 'inflows' => $monthlyInflows,

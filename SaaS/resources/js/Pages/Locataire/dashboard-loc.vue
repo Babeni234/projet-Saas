@@ -25,22 +25,34 @@
          SIDEBAR
     ══════════════════════════════════════════════════ -->
     <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <!-- Logo & Brand -->
+      <!-- Logo & Brand (logo de l'agence/compagnie propriétaire) -->
       <div class="sidebar-header">
         <div class="brand-logo">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="10" fill="url(#grad1)"/>
-            <path d="M16 7L25 13V19L16 25L7 19V13L16 7Z" fill="white" opacity="0.9"/>
-            <path d="M16 11L21 14V20L16 23L11 20V14L16 11Z" fill="url(#grad1)" opacity="0.6"/>
-            <defs>
-              <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
-                <stop offset="0%" stop-color="#2563EB"/>
-                <stop offset="100%" stop-color="#1E40AF"/>
-              </linearGradient>
-            </defs>
-          </svg>
+          <!-- Logo dynamique : priorité agence → compagnie → SVG générique -->
+          <template v-if="company?.logo_url || agency?.logo_url">
+            <img
+              :src="company?.logo_url || agency?.logo_url"
+              :alt="company?.name || agency?.name"
+              class="brand-logo-img"
+            />
+          </template>
+          <template v-else>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="10" fill="url(#grad1)"/>
+              <path d="M16 7L25 13V19L16 25L7 19V13L16 7Z" fill="white" opacity="0.9"/>
+              <path d="M16 11L21 14V20L16 23L11 20V14L16 11Z" fill="url(#grad1)" opacity="0.6"/>
+              <defs>
+                <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
+                  <stop offset="0%" stop-color="#2563EB"/>
+                  <stop offset="100%" stop-color="#1E40AF"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </template>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed" class="brand-name">Habitatum</span>
+            <span v-if="!sidebarCollapsed" class="brand-name">
+              {{ agency?.name || company?.name || 'Mon Agence' }}
+            </span>
           </Transition>
         </div>
         <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed">
@@ -87,6 +99,7 @@
 
       <!-- Bottom actions -->
       <div class="sidebar-footer">
+        <form method="POST" :action="route('logout')" ref="logoutForm" style="display:none"></form>
         <button class="nav-item logout-btn" @click="handleLogout" :title="sidebarCollapsed ? 'Déconnexion' : ''">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
@@ -971,120 +984,49 @@
 
 <script setup>
 import { ref, computed, reactive, nextTick, onMounted } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+
+// Route helper (Ziggy)
+const route = window.route ?? ((name) => '/' + name.replace('.', '/'))
 
 // ════════════════════════════════════════════════════════════
 //  PROPS (Inertia.js ready — connectables à un backend Laravel)
 // ════════════════════════════════════════════════════════════
 const props = defineProps({
+  // Données d'authentification (injectées par Inertia via HandleInertiaRequests ou le controller)
   auth: {
     type: Object,
-    default: () => ({
-      user: {
-        id: 1,
-        name: 'Armel Nguetsop',
-        first_name: 'Armel',
-        last_name: 'Nguetsop',
-        email: 'armel.nguetsop@email.com',
-        phone: '+237 691 234 567',
-        avatar: null,
-        role: 'tenant',
-      }
-    })
+    default: () => ({ user: { id: null, name: '—', first_name: '', last_name: '', email: '', phone: '', avatar: null } })
   },
+  // Compagnie propriétaire (logo + nom affiché dans la sidebar)
+  company: {
+    type: Object,
+    default: () => null   // { name, logo_url }
+  },
+  // Agence directe du locataire
+  agency: {
+    type: Object,
+    default: () => null   // { id, name, logo_url }
+  },
+  // Données du locataire (statut, téléphone, profil)
+  locataire: {
+    type: Object,
+    default: () => null
+  },
+  // Affectations + contrats formatés
   contracts: {
     type: Array,
-    default: () => ([
-      {
-        id: 'CTR-001',
-        type: 'Bail d\'habitation (3 ans)',
-        start_date: '2023-01-01',
-        end_date: '2025-12-31',
-        rent: 185000,
-        deposit: 370000,
-        charges: 25000,
-        revision_clause: 'Indexation annuelle IRL (plafonnée à 3,5%)',
-        property: {
-          name: 'Appartement Bastos — Résidence Les Palmiers',
-          address: 'Rue 3.120, Quartier Bastos, Yaoundé, Centre',
-          type: 'Appartement F3',
-          photo: null,
-          specs: [
-            { label: 'Surface', value: '78 m²' },
-            { label: 'Étage', value: '3ème (sur 5)' },
-            { label: 'Chambres', value: '2 chambres' },
-            { label: 'Salles de bain', value: '1 SDB + WC séparé' },
-            { label: 'Parking', value: '1 place couverte' },
-            { label: 'Exposition', value: 'Sud-Ouest' },
-          ],
-          equipment: ['Climatiseur x2', 'Chauffe-eau électrique', 'Cuisine équipée', 'Garde-robe intégrée', 'Fibre optique', 'Digicode + Interphone', 'Balcon 6m²'],
-        },
-        documents: [
-          { id: 'd1', name: 'Pièce d\'identité (CNI/Passeport)', status: 'uploaded', filename: 'CNI_Nguetsop.pdf', url: '#', uploaded_at: '2023-01-05' },
-          { id: 'd2', name: 'Justificatif de revenus (3 derniers)', status: 'uploaded', filename: 'Bulletins_2022.pdf', url: '#', uploaded_at: '2023-01-05' },
-          { id: 'd3', name: 'Attestation d\'assurance habitation', status: 'uploaded', filename: 'Assurance_2024.pdf', url: '#', uploaded_at: '2024-01-10' },
-          { id: 'd4', name: 'Contrat de travail / Justificatif emploi', status: 'uploaded', filename: 'Contrat_Nguetsop.pdf', url: '#', uploaded_at: '2023-01-05' },
-          { id: 'd5', name: 'RIB bancaire', status: 'missing', filename: null, url: null, uploaded_at: null },
-        ]
-      }
-    ])
+    default: () => []
   },
+  // Factures
   invoices: {
     type: Array,
-    default: () => ([
-      { id: 'INV-2024-012', reference: 'INV-2024-012', type: 'RENT', period: 'Décembre 2024', amount: 185000, status: 'paid', consumption: null },
-      { id: 'INV-2024-011', reference: 'INV-2024-011', type: 'RENT', period: 'Novembre 2024', amount: 185000, status: 'paid', consumption: null },
-      { id: 'INV-2024-EAU-012', reference: 'INV-EAU-2024-012', type: 'WATER', period: 'Décembre 2024', amount: 12500, status: 'paid', consumption: { value: '8.5', unit: 'm³', index: '1452' } },
-      { id: 'INV-2024-ELEC-012', reference: 'INV-ELEC-2024-012', type: 'ELECTRIC', period: 'Décembre 2024', amount: 18200, status: 'pending', consumption: { value: '124', unit: 'kWh', index: '08741' } },
-      { id: 'INV-2025-001', reference: 'INV-2025-001', type: 'RENT', period: 'Janvier 2025', amount: 185000, status: 'pending', consumption: null },
-      { id: 'INV-2024-010', reference: 'INV-2024-010', type: 'RENT', period: 'Octobre 2024', amount: 185000, status: 'paid', consumption: null },
-      { id: 'INV-2024-EAU-011', reference: 'INV-EAU-2024-011', type: 'WATER', period: 'Novembre 2024', amount: 11800, status: 'paid', consumption: { value: '7.9', unit: 'm³', index: '1443' } },
-      { id: 'INV-2024-009', reference: 'INV-2024-009', type: 'RENT', period: 'Septembre 2024', amount: 185000, status: 'paid', consumption: null },
-      { id: 'INV-2024-ELEC-009', reference: 'INV-ELEC-2024-009', type: 'ELECTRIC', period: 'Septembre 2024', amount: 15300, status: 'late', consumption: { value: '98', unit: 'kWh', index: '08617' } },
-    ])
+    default: () => []
   },
+  // Tickets support (phase 2)
   tickets: {
     type: Array,
-    default: () => ([
-      {
-        id: 'TKT-001',
-        title: 'Climatiseur chambre principale défaillant',
-        description: 'Le climatiseur de la chambre principale ne refroidit plus depuis 3 jours. Il souffle de l\'air tiède uniquement. La télécommande répond mais l\'appareil ne descend pas en dessous de 28°C.',
-        category: 'electrical',
-        status: 'in_progress',
-        priority: 'high',
-        created_at: '2025-01-08',
-        messages: [
-          { id: 'm1', sender: 'tenant', text: 'Le climatiseur de la chambre principale ne fonctionne plus correctement. Il ne refroidit plus depuis mercredi.', created_at: '2025-01-08T10:30:00' },
-          { id: 'm2', sender: 'manager', text: 'Bonjour M. Nguetsop, nous avons bien reçu votre signalement. Un technicien sera disponible vendredi 10 janvier entre 9h et 12h. Pouvez-vous confirmer votre disponibilité ?', created_at: '2025-01-08T14:15:00' },
-          { id: 'm3', sender: 'tenant', text: 'Oui, je serai disponible vendredi matin. Merci pour la réactivité !', created_at: '2025-01-08T15:02:00' },
-        ]
-      },
-      {
-        id: 'TKT-002',
-        title: 'Fuite d\'eau sous l\'évier cuisine',
-        description: 'Une petite fuite apparaît sous l\'évier de la cuisine depuis quelques jours. La fuite est lente mais constante. Un seau est posé en dessous pour l\'instant.',
-        category: 'plumbing',
-        status: 'open',
-        priority: 'medium',
-        created_at: '2025-01-10',
-        messages: [
-          { id: 'm4', sender: 'tenant', text: 'Bonjour, j\'ai remarqué une fuite sous l\'évier de cuisine. Ce n\'est pas urgent mais ça mérite d\'être réparé rapidement.', created_at: '2025-01-10T09:00:00' },
-        ]
-      },
-      {
-        id: 'TKT-003',
-        title: 'Ampoule de la cage d\'escalier grillée',
-        description: 'L\'ampoule du palier 3ème étage est grillée depuis une semaine. La cage d\'escalier est très sombre la nuit.',
-        category: 'general',
-        status: 'closed',
-        priority: 'low',
-        created_at: '2024-12-20',
-        messages: [
-          { id: 'm5', sender: 'tenant', text: 'L\'ampoule du palier est grillée.', created_at: '2024-12-20T18:00:00' },
-          { id: 'm6', sender: 'manager', text: 'Remplacée ce matin. Merci de votre signalement !', created_at: '2024-12-21T11:30:00' },
-        ]
-      },
-    ])
+    default: () => []
   }
 })
 
@@ -1127,13 +1069,13 @@ const isDragging = ref(false)
 // Toast
 const toast = reactive({ show: false, type: 'success', message: '' })
 
-// Profile Form
+// Profile Form — initialisé avec les vraies données utilisateur
 const profileForm = reactive({
-  first_name: props.auth.user.first_name || 'Armel',
-  last_name: props.auth.user.last_name || 'Nguetsop',
-  email: props.auth.user.email,
-  phone: props.auth.user.phone || '+237 691 234 567',
-  avatar: props.auth.user.avatar,
+  first_name: props.auth.user.first_name || props.auth.user.name?.split(' ')[0] || '',
+  last_name:  props.auth.user.last_name  || props.auth.user.name?.split(' ').slice(1).join(' ') || '',
+  email:      props.auth.user.email || '',
+  phone:      props.auth.user.phone || props.locataire?.telephone || '',
+  avatar:     props.auth.user.avatar || props.locataire?.profil_url || null,
 })
 
 const passwordForm = reactive({ current: '', new_password: '', confirm: '' })
@@ -1492,6 +1434,10 @@ function saveNotifPrefs() {
 }
 function handleLogout() {
   showToast('success', 'Déconnexion en cours...')
+  // Utilise Inertia pour envoyer la requête POST de déconnexion
+  setTimeout(() => {
+    router.post('/logout')
+  }, 800)
 }
 
 function showToast(type, message) {
@@ -1612,6 +1558,7 @@ onMounted(() => {
   min-height: 68px;
 }
 .brand-logo { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+.brand-logo-img { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; border: 1px solid var(--gray-200); background: white; flex-shrink: 0; }
 .brand-name { font-weight: 800; font-size: 18px; color: var(--gray-900); letter-spacing: -0.5px; white-space: nowrap; }
 .collapse-btn {
   width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--gray-200);

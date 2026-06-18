@@ -126,6 +126,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('agence.dashboard');
         }
 
+        // Rediriger le locataire vers son espace dédié
+        if ($user && $user->account_type === 'Locataire') {
+            return redirect()->route('locataire.dashboard');
+        }
+
         $intended = redirect()->intended(route('dashboard', absolute: false))->getTargetUrl();
         if (str_contains($intended, '/subscription')) {
             $intended = route('dashboard', absolute: false);

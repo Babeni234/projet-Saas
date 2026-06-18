@@ -259,6 +259,16 @@ class DashboardStatsController extends Controller
         }
         $pendingExpenses = $pendingExpensesQuery->orderBy('date_depense', 'desc')->get();
 
+        // 8b. Cancelled Expenses (Dépenses annulées)
+        $cancelledExpensesQuery = Depense::with(['typeDepense', 'agency'])
+            ->where('company_profile_id', $companyId)
+            ->where('deleted', false)
+            ->where('statut', 'Annulé');
+        if ($agencyId) {
+            $cancelledExpensesQuery->where('agency_id', $agencyId);
+        }
+        $cancelledExpenses = $cancelledExpensesQuery->orderBy('date_depense', 'desc')->get();
+
         // 9. Recent Transactions
         $recentTransactionsQuery = Tresorerie::with(['agency'])
             ->where('company_profile_id', $companyId)
@@ -420,6 +430,7 @@ class DashboardStatsController extends Controller
             ],
             'unpaid_invoices' => $unpaidInvoices,
             'pending_expenses' => $pendingExpenses,
+            'cancelled_expenses' => $cancelledExpenses,
             'recent_transactions' => $recentTransactions,
             'chart_revenue_expenses' => [
                 'revenues' => $monthlyRevenues,
