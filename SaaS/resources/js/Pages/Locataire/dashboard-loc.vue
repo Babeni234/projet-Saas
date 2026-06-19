@@ -59,23 +59,6 @@
         </div>
       </Transition>
 
-      <!-- 🏢 Company & Agency Info -->
-      <Transition name="fade-slide">
-        <div v-if="!sidebarCollapsed" class="company-agency-info">
-          <div class="company-logo-wrap" v-if="company?.logo_url">
-            <img :src="company.logo_url" :alt="company.name" class="company-logo"/>
-          </div>
-          <div class="company-info" v-if="company">
-            <p class="company-name">{{ company.name }}</p>
-          </div>
-          <div class="agency-info" v-if="agency">
-            <p class="agency-label">Agence</p>
-            <p class="agency-name">{{ agency.name }}</p>
-          </div>
-          <div class="company-divider"></div>
-        </div>
-      </Transition>
-
       <!-- 💳 SIDEBAR WALLET COMPACT -->
       <Transition name="fade-slide">
         <div v-if="!sidebarCollapsed" class="sidebar-wallet-card">
@@ -770,9 +753,12 @@
             <!-- 🗓️ CONSECUTIVE MONTH SELECTOR CARD (Professional & Realistic) -->
             <div class="glass-card rent-payment-selector-card">
               <h3 class="card-title">Sélectionneur de loyers successifs</h3>
-              <p class="card-subtitle-text">
+              <p v-if="contracts && contracts.length > 0" class="card-subtitle-text">
                 Les mois sont affichés en fonction des dates de votre contrat ({{ formatDate(contracts[0].start_date) }} - {{ formatDate(contracts[0].end_date) }}).
                 Vous devez obligatoirement régler les mois dans l'ordre chronologique.
+              </p>
+              <p v-else class="card-subtitle-text" style="color:var(--amber);">
+                Aucun contrat actif trouvé. Vous n'avez pas de loyers à régler pour le moment.
               </p>
               
               <div v-for="[year, months] in rentMonthsByYear" :key="year" class="year-group">
@@ -2817,14 +2803,6 @@ const props = defineProps({
         ]
       }
     ])
-  },
-  company: {
-    type: Object,
-    default: null
-  },
-  agency: {
-    type: Object,
-    default: null
   },
   vapidPublicKey: {
     type: String,
@@ -5329,52 +5307,6 @@ function urlBase64ToUint8Array(base64String) {
 .status-dot { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--emerald-500); border: 1.5px solid white;animation: pulseGlow 1.5s infinite;  }
 .tenant-name { font-size: 13px; font-weight: 700; color: var(--text-title); }
 .tenant-role { font-size: 10.5px; color: var(--text-muted); }
-
-/* 🏢 COMPANY & AGENCY SIDEBAR INFO */
-.company-agency-info {
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: rgba(37,99,235,0.03);
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-.company-logo-wrap {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
-}
-.company-logo {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  border-radius: 6px;
-}
-.company-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-title);
-  line-height: 1.3;
-}
-.agency-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.agency-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-body);
-}
-.company-divider {
-  height: 1px;
-  background: rgba(37,99,235,0.1);
-  margin: 4px 0;
-}
 
 /* 💳 PORTABLE WALLET SIDEBAR — PREMIUM CREDIT-CARD STYLE */
 .sidebar-wallet-card {

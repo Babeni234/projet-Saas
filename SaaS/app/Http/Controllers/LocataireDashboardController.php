@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CompanyProfile;
 use App\Models\Facture;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,11 +23,15 @@ class LocataireDashboardController extends Controller
             'affectations' => function ($q) {
                 $q->where('deleted', false)
                   ->where('statut', 'Actif')
-                  ->with(['logement.batiment', 'logement.categorie', 'typeContrat']);
+                  ->with([
+                      'logement.batiment',
+                      'logement.categorie',
+                      'typeContrat',
+                  ]);
             },
             'contrats' => function ($q) {
                 $q->where('deleted', false)
-                  ->where('statut', 'actif')
+                  ->whereIn('statut', ['actif', 'Actif', 'en_cours', 'signé', 'signe'])
                   ->with(['logement.batiment', 'typeContrat'])
                   ->latest();
             },
@@ -55,22 +58,55 @@ class LocataireDashboardController extends Controller
         if ($locataire && $locataire->affectations->isNotEmpty()) {
             foreach ($locataire->affectations as $aff) {
                 $logement = $aff->logement;
-                $contrat  = $locataire->contrats
+                $batiment = $logement?->batiment;
+
+                // Trouver le contrat formel lié à cet logement si existant
+                $contrat = $locataire->contrats
                     ->where('logement_id', $logement?->id)
                     ->first();
 
+                // Adresse complète du bâtiment
+                $adresseParts = array_filter([
+                    $batiment?->adresse,
+                    $batiment?->quartier,
+                    $batiment?->ville,
+                    $batiment?->pays,
+                ]);
+                $adresseComplete = implode(', ', $adresseParts) ?: '';
+
+                // Équipements du bâtiment (ascenseur, piscine, parking, générateur)
+                $equipements = [];
+                if ($batiment) {
+                    if ($batiment->ascenseur)    $equipements[] = 'Ascenseur';
+                    if ($batiment->piscine)       $equipements[] = 'Piscine';
+                    if ($batiment->gardiennage)   $equipements[] = 'Gardiennage';
+                    if ($batiment->generatrice)   $equipements[] = 'Groupe électrogène';
+                    if ($batiment->nombre_parkings > 0) $equipements[] = 'Parking (' . $batiment->nombre_parkings . ' places)';
+                }
+
                 $contracts[] = [
-                    'id'         => $aff->id,
-                    'reference'  => $aff->reference,
-                    'type'       => $aff->typeContrat?->nom ?? $aff->type_bail ?? 'Bail',
-                    'start_date' => $aff->date_debut?->toDateString(),
-                    'end_date'   => $aff->date_fin?->toDateString(),
-                    'rent'       => (float) $aff->loyer,
-                    'deposit'    => (float) $aff->caution,
-                    'charges'    => 0,
+                    // ── Affectation ──
+                    'id'              => $aff->id,
+                    'reference'       => $aff->reference,
+                    'statut'          => $aff->statut,
+
+                    // ── Contrat (si formel existe) ──
+                    'contrat_numero'  => $contrat?->numero ?? $aff->reference,
+                    'type'            => $aff->typeContrat?->nom ?? $aff->type_bail ?? ($contrat?->typeContrat?->nom) ?? 'Bail',
+
+                    // ── Dates & montants ──
+                    'start_date'      => $aff->date_debut?->toDateString(),
+                    'end_date'        => $aff->date_fin?->toDateString(),
+                    'rent'            => (float) $aff->loyer,
+                    'deposit'         => (float) $aff->caution,
+                    'charges'         => 0,
+                    'frais_contrat'   => (float) ($aff->frais_de_contrat ?? 0),
+                    'cycle_paiement'  => $aff->cycle_paiement ?? 'mensuel',
+                    'duree'           => $aff->duree,
                     'revision_clause' => 'Annuelle (IRL)',
-                    'statut'     => $aff->statut,
-                    'documents'  => $locataire->documentations
+
+                    // ── Documents locataire ──
+                    'documents' => $locataire->documentations
                         ? collect($locataire->documentations)->map(fn($d, $i) => [
                             'id'          => $i,
                             'name'        => $d['name'] ?? 'Justificatif',
@@ -80,18 +116,32 @@ class LocataireDashboardController extends Controller
                             'url'         => isset($d['path']) ? '/storage/' . $d['path'] : null,
                         ])->toArray()
                         : [],
+
+                    // ── Bien immobilier ──
                     'property' => [
-                        'name'    => $logement?->reference ?? 'Logement',
-                        'address' => $logement?->batiment?->adresse ?? '',
-                        'type'    => $logement?->categorie?->nom ?? 'Logement',
-                        'photo'   => null,
-                        'specs'   => [
-                            ['label' => 'Surface',  'value' => ($logement?->surface ?? '—') . ' m²'],
-                            ['label' => 'Étage',    'value' => $logement?->etage !== null ? 'Étage ' . $logement->etage : '—'],
-                            ['label' => 'Référence','value' => $logement?->reference ?? '—'],
-                            ['label' => 'Bâtiment', 'value' => $logement?->batiment?->nom ?? '—'],
+                        'id'           => $logement?->id,
+                        'name'         => $logement?->reference ?? 'Logement',
+                        'address'      => $adresseComplete,
+                        'city'         => $batiment?->ville ?? '',
+                        'country'      => $batiment?->pays ?? '',
+                        'quartier'     => $batiment?->quartier ?? '',
+                        'code_postal'  => $batiment?->code_postal ?? '',
+                        'latitude'     => $batiment?->latitude,
+                        'longitude'    => $batiment?->longitude,
+                        'type'         => $logement?->categorie?->nom ?? 'Logement',
+                        'batiment_nom' => $batiment?->nom ?? '',
+                        'batiment_ref' => $batiment?->reference ?? '',
+                        'type_batiment'=> $batiment?->type_batiment ?? '',
+                        'photo'        => null,
+                        'specs'        => [
+                            ['label' => 'Surface',    'value' => ($logement?->surface ?? '—') . ' m²'],
+                            ['label' => 'Étage',      'value' => $logement?->etage !== null ? 'Étage ' . $logement->etage : 'RDC'],
+                            ['label' => 'Référence',  'value' => $logement?->reference ?? '—'],
+                            ['label' => 'Bâtiment',   'value' => $batiment?->nom ?? '—'],
+                            ['label' => 'Ville',      'value' => $batiment?->ville ?? '—'],
+                            ['label' => 'Année const.','value' => $batiment?->annee_construction ?? '—'],
                         ],
-                        'equipment' => [],
+                        'equipment' => $equipements,
                     ],
                 ];
             }
@@ -116,17 +166,17 @@ class LocataireDashboardController extends Controller
             'agency' => $locataire?->agency ? [
                 'id'       => $locataire->agency->id,
                 'name'     => $locataire->agency->name,
-                'logo_url' => null, // Agency n'a pas de champ logo actuellement
+                'logo_url' => null,
             ] : null,
             'locataire' => $locataire ? [
-                'id'       => $locataire->id,
-                'statut'   => $locataire->statut,
-                'telephone'=> $locataire->telephone,
+                'id'         => $locataire->id,
+                'statut'     => $locataire->statut,
+                'telephone'  => $locataire->telephone,
                 'profil_url' => $locataire->profil ? '/storage/' . $locataire->profil : null,
             ] : null,
             'contracts' => $contracts,
             'invoices'  => $factures,
-            'tickets'   => [], // Phase 2 — module tickets pas encore créé
+            'tickets'   => [],
         ]);
     }
 
@@ -142,14 +192,16 @@ class LocataireDashboardController extends Controller
         };
 
         return [
-            'id'        => $f->id,
-            'reference' => $f->numero,
-            'type'      => $f->typeFacture?->nom ?? 'Loyer',
-            'period'    => $f->periode ?? $f->date_emission?->format('M Y'),
-            'amount'    => (float) $f->total,
-            'status'    => $statut,
+            'id'          => $f->id,
+            'reference'   => $f->numero,
+            'type'        => $f->typeFacture?->nom ?? 'Loyer',
+            'period'      => $f->periode ?? $f->date_emission?->format('M Y'),
+            'amount'      => (float) $f->total,
+            'status'      => $statut,
             'consumption' => null,
-            'paid_at'   => $f->statut === 'payée' ? $f->updated_at?->toDateString() : null,
+            'paid_at'     => in_array($f->statut, ['payée', 'payee', 'réglée', 'reglee'])
+                                ? $f->updated_at?->toDateString()
+                                : null,
         ];
     }
 }
