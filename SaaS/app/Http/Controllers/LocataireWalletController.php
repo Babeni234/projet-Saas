@@ -256,6 +256,19 @@ class LocataireWalletController extends Controller
 
             DB::commit();
 
+            // Send email to agency (or company if none)
+            $agencyEmail = $locataire->agency?->email;
+            $companyEmail = $locataire->company?->user?->email;
+            $recipient = $agencyEmail ?? $companyEmail;
+            
+            if ($recipient) {
+                try {
+                    Mail::to($recipient)->send(new \App\Mail\RentPaidNotificationMail($paiement, $locataire, $months));
+                } catch (\Exception $mailEx) {
+                    logger()->error("Erreur d'envoi de mail de notification de paiement loyer : " . $mailEx->getMessage());
+                }
+            }
+
             return response()->json([
                 'message' => 'Paiement effectué avec succès !',
                 'solde' => (float) $wallet->fresh()->solde,
@@ -484,6 +497,53 @@ class LocataireWalletController extends Controller
         return response()->json([
             'message' => 'Le portefeuille électronique a été activé pour le locataire et un email lui a été envoyé.',
             'wallet_status' => 'activated'
+        ]);
+    }
+
+    /**
+     * Alimente le wallet d'un locataire (depuis l'espace agence/entreprise).
+     */
+    public function rechargeTenantWalletFromAdmin(Request $request, Locataire $locataire)
+    {
+        $currentUser = Auth::user();
+        if ($locataire->company_profile_id !== $currentUser->company_profile_id) {
+            return response()->json(['message' => 'Action non autorisée.'], 403);
+        }
+
+        $wallet = $locataire->wallet;
+        if (!$wallet) {
+            return response()->json(['message' => 'Ce locataire ne possède pas de portefeuille électronique actif.'], 422);
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $amount = (float) $request->input('amount');
+        $refTx = 'ADM-RCG-' . strtoupper(Str::random(10));
+
+        DB::transaction(function () use ($wallet, $amount, $refTx) {
+            $wallet->increment('solde', $amount);
+
+            TransacWallet::create([
+                'wallet_id'    => $wallet->id,
+                'type'         => 'recharge',
+                'amount'       => $amount,
+                'description'  => 'Recharge manuelle par le bailleur / agence',
+                'reference_tx' => $refTx,
+            ]);
+        });
+
+        // Envoyer l'email au locataire avec les détails de la recharge
+        try {
+            Mail::to($locataire->user->email)->send(new \App\Mail\WalletRechargedForTenantMail($wallet->fresh(), $amount, (float) $wallet->solde, $refTx));
+        } catch (\Exception $e) {
+            logger()->error("Erreur d'envoi mail recharge wallet locataire: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Le portefeuille électronique a été alimenté avec succès et un email de confirmation a été envoyé au locataire.',
+            'solde' => (float) $wallet->solde,
         ]);
     }
 }

@@ -859,6 +859,7 @@ const saveContrat = async () => {
         const payload = {
             locataire_id: formData.value.locataire_id,
             logement_id: formData.value.logement_id,
+            affectation_id: selectedAssignmentId.value || formData.value.affectation_id || null,
             type_contrat_id: formData.value.type_contrat_id,
             loyer: formData.value.loyer,
             caution: formData.value.caution,

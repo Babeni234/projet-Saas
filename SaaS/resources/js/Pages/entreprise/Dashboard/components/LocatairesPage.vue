@@ -215,6 +215,16 @@
                                         </svg>
                                     </button>
                                     <button 
+                                        v-if="locataire.wallet_status === 'activated'"
+                                        @click="openRechargeModal(locataire)" 
+                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                        title="Alimenter le wallet"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    <button 
                                         @click="openProfileModal(locataire)" 
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                                         title="Voir le profil"
@@ -588,6 +598,53 @@
             </div>
         </div>
 
+        <!-- Recharge Wallet Modal -->
+        <div v-if="showRechargeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up border border-slate-100">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Alimenter le Portefeuille
+                    </h3>
+                    <button @click="closeRechargeModal" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-slate-500 mb-4">
+                    Saisissez le montant à ajouter au portefeuille électronique de <strong>{{ rechargingLocataire?.nom }}</strong>.
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Montant à recharger (€)</label>
+                        <input 
+                            v-model.number="rechargeAmount" 
+                            type="number" 
+                            min="1" 
+                            placeholder="Ex: 500" 
+                            required
+                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                        >
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button @click="closeRechargeModal" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
+                    <button @click="submitRecharge" :disabled="!rechargeAmount || rechargeAmount <= 0 || recharging" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition text-sm flex items-center justify-center gap-2">
+                        <svg v-if="recharging" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Recharger
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Error Modal -->
         <div v-if="showError" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
@@ -640,6 +697,11 @@ const photoPreview = ref(null);
 const selectedPhotoFile = ref(null);
 const selectedDocFiles = ref([]);
 const zoomedImageUrl = ref(null);
+
+const showRechargeModal = ref(false);
+const rechargeAmount = ref(null);
+const rechargingLocataire = ref(null);
+const recharging = ref(false);
 
 const formData = ref({
     nom: '',
@@ -861,6 +923,50 @@ const createTenantWallet = async (loc) => {
             errorMessage.value = 'Impossible de communiquer avec le serveur.';
             showError.value = true;
         }
+    }
+};
+
+const openRechargeModal = (loc) => {
+    rechargingLocataire.value = loc;
+    rechargeAmount.value = null;
+    showRechargeModal.value = true;
+};
+
+const closeRechargeModal = () => {
+    showRechargeModal.value = false;
+    rechargingLocataire.value = null;
+    rechargeAmount.value = null;
+};
+
+const submitRecharge = async () => {
+    if (!rechargingLocataire.value || !rechargeAmount.value || rechargeAmount.value <= 0) return;
+    recharging.value = true;
+    try {
+        const res = await fetch(`/api/locataires/${rechargingLocataire.value.id}/recharge-wallet`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
+            },
+            body: JSON.stringify({ amount: rechargeAmount.value })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            successMessage.value = `Le portefeuille électronique de ${rechargingLocataire.value.nom} a été alimenté de ${formatCurrency(rechargeAmount.value)}. Un email de confirmation lui a été envoyé.`;
+            closeRechargeModal();
+            fetchLocataires();
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = data.message || 'Une erreur est survenue.';
+            showError.value = true;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = 'Impossible de communiquer avec le serveur.';
+        showError.value = true;
+    } finally {
+        recharging.value = false;
     }
 };
 

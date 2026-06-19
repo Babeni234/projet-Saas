@@ -23,11 +23,16 @@ class LocataireDashboardController extends Controller
             'wallet',
             'affectations' => function ($q) {
                 $q->where('deleted', false)
-                  ->where('statut', 'Actif')
+                  ->whereIn('statut', [
+                      'Actif', 'actif', 'active', 'en_cours',
+                      'En cours d\'exécution', 'En cours', 'signé', 'signe'
+                  ])
                   ->with([
                       'logement.batiment',
                       'logement.categorie',
                       'typeContrat',
+                      'contrat.renouvellements.fraisContrats',
+                      'contrat.typeContrat',
                   ]);
             },
             'contrats' => function ($q) {
@@ -52,6 +57,14 @@ class LocataireDashboardController extends Controller
                 ->get()
                 ->map(fn($f) => $this->formatFacture($f))
                 ->toArray();
+        }
+
+        // Mois déjà payés (clés de période comme '2026-06')
+        $paidMonthsKeys = [];
+        if ($locataire) {
+            $paidMonthsKeys = \App\Models\MoisPaye::whereHas('paiementLoyer', function ($q) use ($locataire) {
+                $q->where('locataire_id', $locataire->id)->where('deleted', false);
+            })->pluck('periode')->toArray();
         }
 
         // Règle de loyer de la compagnie
@@ -167,15 +180,60 @@ class LocataireDashboardController extends Controller
 
         // Construire les données contrats / affectations pour le frontend
         $contracts = [];
+        $contractFeesList = []; // frais de contrat structurés pour la section dédiée
         if ($locataire && $locataire->affectations->isNotEmpty()) {
             foreach ($locataire->affectations as $aff) {
                 $logement = $aff->logement;
                 $batiment = $logement?->batiment;
 
-                // Trouver le contrat formel lié à cet logement si existant
-                $contrat = $locataire->contrats
-                    ->where('logement_id', $logement?->id)
-                    ->first();
+                // ── Contrat formel via jointure affectation_id (ou fallback par logement_id) ──
+                $contrat = $aff->contrat
+                    ?? $locataire->contrats->where('logement_id', $logement?->id)->first();
+
+                // ── Renouvellements du contrat ──
+                $renouvellements = $contrat?->renouvellements ?? collect();
+
+                // ── Frais initiaux du bail (affectation) ──
+                $fraisInitial = (float) ($aff->frais_de_contrat ?? 0);
+                if ($fraisInitial > 0) {
+                    $contractFeesList[] = [
+                        'id'          => 'INIT-' . $aff->id,
+                        'type'        => 'initial',
+                        'label'       => 'Frais de contrat initial',
+                        'amount'      => $fraisInitial,
+                        'date'        => $aff->date_debut?->toDateString(),
+                        'statut'      => 'payé',
+                        'reference'   => $aff->reference,
+                    ];
+                }
+
+                // ── Frais de renouvellements ──
+                foreach ($renouvellements as $rnv) {
+                    $fraisRnv = (float) ($rnv->frais_contrat ?? 0);
+                    if ($fraisRnv > 0) {
+                        $contractFeesList[] = [
+                            'id'          => 'RNV-' . $rnv->id,
+                            'type'        => 'renouvellement',
+                            'label'       => 'Frais renouvellement ' . ($rnv->reference ?? ''),
+                            'amount'      => $fraisRnv,
+                            'date'        => $rnv->created_at?->toDateString(),
+                            'statut'      => strtolower($rnv->statut ?? 'en_attente'),
+                            'reference'   => $rnv->reference ?? '',
+                        ];
+                    }
+                    // Frais de contrat enregistrés dans frais_contrats via le renouvellement
+                    foreach ($rnv->fraisContrats ?? [] as $fc) {
+                        $contractFeesList[] = [
+                            'id'          => 'FC-' . $fc->id,
+                            'type'        => 'frais_contrat',
+                            'label'       => 'Frais contrat - ' . ($rnv->reference ?? ''),
+                            'amount'      => (float) $fc->montant,
+                            'date'        => $fc->date_paiement?->toDateString(),
+                            'statut'      => 'payé',
+                            'reference'   => $rnv->reference ?? '',
+                        ];
+                    }
+                }
 
                 // Adresse complète du bâtiment
                 $adresseParts = array_filter([
@@ -202,7 +260,7 @@ class LocataireDashboardController extends Controller
                     'reference'       => $aff->reference,
                     'statut'          => $aff->statut,
 
-                    // ── Contrat (si formel existe) ──
+                    // ── Contrat formel (si existant via jointure affectation_id) ──
                     'contrat_numero'  => $contrat?->numero ?? $aff->reference,
                     'contrat_id'      => $contrat?->id,
                     'type'            => $aff->typeContrat?->nom ?? $aff->type_bail ?? ($contrat?->typeContrat?->nom) ?? 'Bail',
@@ -213,10 +271,22 @@ class LocataireDashboardController extends Controller
                     'rent'            => (float) $aff->loyer,
                     'deposit'         => (float) $aff->caution,
                     'charges'         => 0,
-                    'frais_contrat'   => (float) ($aff->frais_de_contrat ?? 0),
+                    'frais_contrat'   => $fraisInitial,
                     'cycle_paiement'  => $aff->cycle_paiement ?? 'mensuel',
                     'duree'           => $aff->duree,
                     'revision_clause' => 'Annuelle (IRL)',
+
+                    // ── Renouvellements ──
+                    'renouvellements' => $renouvellements->map(fn($r) => [
+                        'id'           => $r->id,
+                        'reference'    => $r->reference,
+                        'nouveau_loyer'=> (float) $r->nouveau_loyer,
+                        'frais_contrat'=> (float) ($r->frais_contrat ?? 0),
+                        'statut'       => $r->statut,
+                        'duree'        => $r->duree,
+                        'cycle'        => $r->cycle_paiement,
+                        'created_at'   => $r->created_at?->toDateString(),
+                    ])->values()->toArray(),
 
                     // ── Documents locataire ──
                     'documents' => $locataire->documentations
@@ -260,6 +330,8 @@ class LocataireDashboardController extends Controller
             }
         }
 
+
+
         return Inertia::render('Locataire/dashboard-loc', [
             'auth' => [
                 'user' => [
@@ -288,6 +360,7 @@ class LocataireDashboardController extends Controller
                 'profil_url' => $locataire->profil ? '/storage/' . $locataire->profil : null,
             ] : null,
             'contracts' => $contracts,
+            'contractFees' => $contractFeesList,
             'invoices'  => $factures,
             'tickets'   => [],
             'wallet'    => $locataire?->wallet ? [
@@ -310,6 +383,7 @@ class LocataireDashboardController extends Controller
                 'cycle' => $regleLoyer->cycle,
             ] : null,
             'receipts' => $receipts,
+            'paidMonthsKeys' => $paidMonthsKeys,
         ]);
     }
 

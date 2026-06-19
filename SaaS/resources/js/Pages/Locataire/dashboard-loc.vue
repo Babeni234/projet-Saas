@@ -491,52 +491,81 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 💰 CONTRACT FEE PAYMENT & RENEWAL RECEIPT -->
-            <div class="glass-card contract-fee-card">
-              <div class="contract-fee-row">
-                <div class="contract-fee-left">
-                  <div class="contract-fee-icon-ring">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+
+              <!-- 💰 CONTRACT FEE PAYMENT & RENEWAL RECEIPT -->
+              <div class="glass-card contract-fee-card">
+                <div class="contract-fee-row">
+                  <div class="contract-fee-left">
+                    <div class="contract-fee-icon-ring">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                  </div>
+                  <div class="contract-fee-info">
+                    <h3 class="card-title">Frais de contrat &amp; Renouvellement</h3>
+                    <p class="card-subtitle-text">Frais de dossier, renouvellement de bail et édition de quittance de versement.</p>
+                  </div>
+                  <div class="contract-fee-status">
+                    <span class="status-pill" :class="contractFeesSummary.hasFees ? 'status-paid' : 'status-pending'">
+                      {{ contractFeesSummary.hasFees ? `${contractFeesSummary.count} frais enregistré(s)` : 'Aucun frais' }}
+                    </span>
                   </div>
                 </div>
-                <div class="contract-fee-info">
-                  <h3 class="card-title">Frais de contrat & Renouvellement</h3>
-                  <p class="card-subtitle-text">Frais de dossier, renouvellement de bail et édition de quittance de versement.</p>
+
+                <!-- Liste des frais réels depuis la BDD -->
+                <div v-if="contractFeesSummary.hasFees" class="contract-fees-list" style="margin-top:16px;">
+                  <div
+                    v-for="fee in contractFeesSummary.fees"
+                    :key="fee.id"
+                    class="contract-fee-item"
+                    style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;background:rgba(var(--color-primary-rgb,37,99,235),0.06);border:1px solid rgba(var(--color-primary-rgb,37,99,235),0.12);margin-bottom:8px;"
+                  >
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-size:18px;">
+                        {{ fee.type === 'initial' ? '📄' : fee.type === 'renouvellement' ? '🔄' : '💰' }}
+                      </span>
+                      <div>
+                        <div style="font-size:13px;font-weight:600;color:var(--color-text-primary,#1e293b);">{{ fee.label }}</div>
+                        <div style="font-size:11px;color:var(--color-text-muted,#64748b);">{{ fee.date ? formatDate(fee.date) : '' }} · Réf: {{ fee.reference }}</div>
+                      </div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:14px;font-weight:700;color:var(--color-primary,#2563eb);">{{ formatCurrency(fee.amount) }}</div>
+                      <span class="status-pill" :class="fee.statut === 'payé' ? 'status-paid' : 'status-pending'" style="font-size:11px;padding:2px 8px;">
+                        {{ fee.statut === 'payé' ? 'Réglé' : fee.statut }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Total -->
+                  <div style="display:flex;justify-content:flex-end;padding:8px 14px 0;border-top:1px solid rgba(0,0,0,0.06);margin-top:4px;">
+                    <span style="font-size:13px;color:var(--color-text-muted,#64748b);margin-right:12px;">Total frais de contrat</span>
+                    <span style="font-size:15px;font-weight:700;color:var(--color-primary,#2563eb);">{{ formatCurrency(contractFeesSummary.total) }}</span>
+                  </div>
                 </div>
-                <div class="contract-fee-status">
-                  <span class="status-pill" :class="contractFeePaid ? 'status-paid' : 'status-pending'">
-                    {{ contractFeePaid ? 'Frais Réglés' : '50 000 XAF à régler' }}
-                  </span>
+
+                <!-- Aucun frais -->
+                <div v-else style="padding:16px 0 4px;color:var(--color-text-muted,#64748b);font-size:13px;text-align:center;">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 8px;opacity:.4"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+                  Aucun frais de contrat enregistré pour ce bail.
                 </div>
-              </div>
-              <div v-if="!contractFeePaid" class="contract-fee-actions">
-                <button class="btn-primary" @click="payContractFee" :disabled="walletBalance < 50000">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                  Payer frais de contrat (50 000 XAF)
-                </button>
-                <button class="btn-secondary" @click="generateRenewalReceipt">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  Reçu de renouvellement
-                </button>
-                <button class="btn-primary" @click="showRenewalFormModal = true" :disabled="!canRequestRenewal" style="background: linear-gradient(135deg, #10B981, #059669);">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                  Demander le renouvellement
-                </button>
-              </div>
-              <div v-else class="contract-fee-paid-msg">
-                <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap; width: 100%;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span>Frais de contrat réglés — <button class="link-btn" @click="generateRenewalReceipt">Télécharger le reçu</button></span>
-                  <button class="btn-primary small" @click="showRenewalFormModal = true" :disabled="!canRequestRenewal" style="background: linear-gradient(135deg, #10B981, #059669); margin-left: auto;">
+
+                <!-- Actions: Renouvellement -->
+                <div class="contract-fee-actions" style="margin-top:14px;">
+                  <button class="btn-secondary" @click="generateRenewalReceipt">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Reçu de renouvellement
+                  </button>
+                  <button class="btn-primary" @click="showRenewalFormModal = true" :disabled="!canRequestRenewal" style="background: linear-gradient(135deg, #10B981, #059669);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                     Demander le renouvellement
                   </button>
                 </div>
-              </div>
-              <div v-if="!canRequestRenewal" class="renewal-warning-box" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #D97706; font-size: 13px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>Le renouvellement n'est disponible qu'à moins de 30 jours de la fin du contrat (échéance proche). Encore {{ daysRemainingInContract }} jours restants.</span>
+
+                <div v-if="!canRequestRenewal" class="renewal-warning-box" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #D97706; font-size: 13px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Le renouvellement n'est disponible qu'à moins de 30 jours de la fin du contrat (échéance proche). Encore {{ daysRemainingInContract }} jours restants.</span>
+                </div>
               </div>
             </div>
 
@@ -776,11 +805,18 @@
                 </div>
                 <div class="penalty-banner-scale">
                   <span class="ps-label">Barème :</span>
-                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 11 }">J+11 → 5%</span>
-                  <span class="ps-arrow">→</span>
-                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 16 }">J+16 → 10%</span>
-                  <span class="ps-arrow">→</span>
-                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 21 }">J+21 → 15%</span>
+                  <template v-if="props.regleLoyer">
+                    <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= props.regleLoyer.jour_declenchement }">
+                      J+{{ props.regleLoyer.jour_declenchement }} → {{ props.regleLoyer.taux_penalite }}%
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 11 }">J+11 → 5%</span>
+                    <span class="ps-arrow">→</span>
+                    <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 16 }">J+16 → 10%</span>
+                    <span class="ps-arrow">→</span>
+                    <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 21 }">J+21 → 15%</span>
+                  </template>
                 </div>
               </div>
               <button class="penalty-banner-close" @click="dismissPenaltyBanner">&times;</button>
@@ -2876,7 +2912,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, reactive, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useI18n } from 'vue-i18n'
@@ -2996,6 +3032,14 @@ const props = defineProps({
   receipts: {
     type: Array,
     default: () => []
+  },
+  contractFees: {
+    type: Array,
+    default: () => []
+  },
+  paidMonthsKeys: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -3008,6 +3052,8 @@ const mobileSidebarOpen = ref(false)
 const isLoading = ref(false)
 const progressWidth = ref(0)
 const theme = ref('light')
+const switchingLang = ref(false)
+let autoRefreshInterval = null
 
 // Copies locale pour localStorage simulations
 const localInvoices = ref([])
@@ -3015,6 +3061,7 @@ const localTickets = ref([])
 
 // 💳 WALLET
 const walletBalance = ref(props.wallet ? props.wallet.solde : 0)
+const localPaidMonthsKeys = ref([])
 const hideBalance = ref(false)
 const balanceRevealed = ref(false)
 let balanceRevealTimer = null
@@ -3361,11 +3408,68 @@ watch(hideBalance, (val) => localStorage.setItem('hab_hide_balance', JSON.string
 watch(newTicketForm, (val) => localStorage.setItem('hab_ticket_draft', JSON.stringify(val)), { deep: true })
 watch(passwordForm, (val) => localStorage.setItem('hab_password_draft', JSON.stringify(val)), { deep: true })
 
+watch(() => props.invoices, (newInvoices) => {
+  if (newInvoices) {
+    localInvoices.value = [...newInvoices]
+    const utils = newInvoices.filter(i => i.type !== 'Loyer' && i.type !== 'RENT')
+    utilityInvoices.value = utils.map(i => {
+      let type = 'WATER'
+      if (i.type && ['électricité', 'electricite', 'electric', 'elec'].includes(i.type.toLowerCase())) {
+        type = 'ELECTRIC'
+      } else if (i.type && ['eau', 'water'].includes(i.type.toLowerCase())) {
+        type = 'WATER'
+      } else {
+        type = i.type
+      }
+      return {
+        ...i,
+        type: type,
+        consumption: i.consumption || { value: Math.floor(Math.random() * 50 + 10), unit: type === 'WATER' ? 'm³' : 'kWh', index: String(Math.floor(Math.random() * 8000 + 1000)) }
+      }
+    })
+  }
+}, { immediate: true, deep: true })
+
+watch(() => props.wallet, (newWallet) => {
+  if (newWallet) {
+    walletBalance.value = parseFloat(newWallet.solde)
+    transactions.value = newWallet.transactions || []
+  }
+}, { immediate: true, deep: true })
+
+watch(() => props.receipts, (newReceipts) => {
+  if (newReceipts) {
+    allReceipts.value = [...newReceipts]
+  }
+}, { immediate: true, deep: true })
+
+watch(() => props.oldContracts, (newOldContracts) => {
+  if (newOldContracts) {
+    oldContracts.value = [...newOldContracts]
+  }
+}, { immediate: true, deep: true })
+
 // ════════════════════════════════════════════════════════════
 //  COMPUTED METRICS
 // ════════════════════════════════════════════════════════════
 const currentNavLabel = computed(() => t('nav.' + (activeTab.value || 'overview')))
-const currentRent = computed(() => props.contracts[0]?.rent || 0)
+const activeContract = computed(() => {
+  const inactiveStatuts = ['termine', 'terminé', 'resilie', 'résilié', 'expired', 'expire', 'annulé', 'annule']
+  return (props.contracts || []).find(c => !inactiveStatuts.includes((c.statut || '').toLowerCase())) || props.contracts?.[0] || null
+})
+const currentRent = computed(() => activeContract.value?.rent || 0)
+
+// Computed : résumé des vrais frais de contrat depuis le backend
+const contractFeesSummary = computed(() => {
+  const fees = props.contractFees || []
+  return {
+    fees,
+    hasFees: fees.length > 0,
+    count: fees.length,
+    total: fees.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0),
+  }
+})
+
 const currentRentStatus = computed(() => {
   const currentMonth = '2026-' + String(new Date().getMonth() + 1).padStart(2, '0')
   const found = rentMonths.value.find(m => m.key === currentMonth)
@@ -3562,13 +3666,24 @@ function getMonthPenalty(monthKey, monthIndex, year, nowDate) {
   const currentDate = new Date(currentYear, currentMonth, 1)
 
   if (monthDate < currentDate) {
-    // Past month — locked at 15%
+    // Past month
+    if (props.regleLoyer) {
+      return { rate: props.regleLoyer.taux_penalite, amount: 0 }
+    }
     return { rate: 15, amount: 0 } // amount calculated below
   } else if (monthDate > currentDate) {
     // Future month — no penalty
     return { rate: 0, amount: 0 }
   }
-  // Current month — based on day
+  // Current month
+  if (props.regleLoyer) {
+    let rate = 0
+    if (day >= props.regleLoyer.jour_declenchement) {
+      rate = props.regleLoyer.taux_penalite
+    }
+    return { rate, amount: 0 }
+  }
+  // Default tiers
   let rate = 0
   if (day >= 21) rate = 15
   else if (day >= 16) rate = 10
@@ -3594,11 +3709,12 @@ const rentMonths = computed(() => {
     const label = current.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
     const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1)
     
-    // All months forced unpaid
-    const status = 'unpaid'
+    // Check if paid
+    const isPaid = props.paidMonthsKeys.includes(key) || localPaidMonthsKeys.value.includes(key)
+    const status = isPaid ? 'paid' : 'unpaid'
     
-    const penalty = getMonthPenalty(key, monthIndex, year, reactiveNow.value)
-    const penaltyAmount = Math.round(contract.rent * penalty.rate / 100)
+    const penalty = isPaid ? { rate: 0 } : getMonthPenalty(key, monthIndex, year, reactiveNow.value)
+    const penaltyAmount = isPaid ? 0 : Math.round(contract.rent * penalty.rate / 100)
     
     months.push({
       key,
@@ -3609,7 +3725,7 @@ const rentMonths = computed(() => {
       month: monthIndex,
       penaltyRate: penalty.rate,
       penaltyAmount,
-      totalDue: contract.rent + penaltyAmount,
+      totalDue: isPaid ? 0 : (contract.rent + penaltyAmount),
     })
     
     current.setMonth(current.getMonth() + 1)
@@ -4332,6 +4448,7 @@ function executePayment(pin) {
     paymentFlowStep.value = 'success'
     
     for (const m of paidMonths) {
+      localPaidMonthsKeys.value.push(m.key)
       localInvoices.value.push({
         id: 'INV-RENT-' + Date.now() + '-' + m.key,
         type: 'RENT',
@@ -4345,6 +4462,7 @@ function executePayment(pin) {
         reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
       })
     }
+    selectedMonthsKeys.value = []
 
     const receipt = {
       id: 'RCPT-' + Date.now(), type: 'rent',
@@ -5342,6 +5460,19 @@ onMounted(() => {
   startNotificationScheduler()
   startDateWatcher()
   registerServiceWorker()
+
+  // Real-time polling to fetch database changes automatically every 5s
+  autoRefreshInterval = setInterval(() => {
+    router.reload({
+      only: ['wallet', 'invoices', 'receipts', 'contracts', 'paidMonthsKeys', 'regleLoyer']
+    })
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval)
+  }
 })
 
 // 🛎️ Service Worker — background push notifications
@@ -6442,8 +6573,8 @@ function urlBase64ToUint8Array(base64String) {
 .mc-card.mc-selected::before { background: linear-gradient(90deg, #6366F1, #8B5CF6); }
 @keyframes mcPulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: translateY(-2px) scale(1); } }
 
-.mc-card.mc-paid { background: #F8FAFC; border-color: #E2E8F0; cursor: default; opacity: 0.7; }
-.dark-theme .mc-card.mc-paid { background: rgba(16,185,129,0.04); border-color: rgba(16,185,129,0.12); }
+.mc-card.mc-paid { background: #ecfdf5; border-color: #a7f3d0; cursor: default; opacity: 1 !important; }
+.dark-theme .mc-card.mc-paid { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); opacity: 1 !important; }
 .mc-card.mc-paid:hover { box-shadow: none; transform: none; }
 .mc-card.mc-paid::before { background: linear-gradient(90deg, #10B981, #059669); }
 .mc-card.mc-paid .mc-amount { color: #059669; }

@@ -17,6 +17,7 @@ class FraisContrat extends Model
         'uuid',
         'company_profile_id',
         'agency_id',
+        'affectation_id',
         'renouvellement_id',
         'montant',
         'date_paiement',
@@ -53,5 +54,10 @@ class FraisContrat extends Model
     public function renouvellement(): BelongsTo
     {
         return $this->belongsTo(Renouvellement::class, 'renouvellement_id');
+    }
+
+    public function affectation(): BelongsTo
+    {
+        return $this->belongsTo(Affectation::class, 'affectation_id');
     }
 }

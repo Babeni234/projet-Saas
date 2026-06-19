@@ -55,10 +55,12 @@ class ContratController extends Controller
             'fin'             => 'required|date|after_or_equal:debut',
             'content'         => 'required|string',
             'numero'          => 'nullable|string|max:100',
+            'affectation_id'  => 'nullable|integer|exists:affectations,id',
         ]);
 
         $locataireId = $request->input('locataire_id');
         $logementId = $request->input('logement_id');
+        $affectationId = $request->input('affectation_id');
 
         // Check if locataire has an active contract already
         $hasActiveContract = Contrat::where('locataire_id', $locataireId)
@@ -81,18 +83,25 @@ class ContratController extends Controller
                             ->where('company_profile_id', $companyProfileId)
                             ->firstOrFail();
 
-        // Check if there is an active assignment for this locataire/logement
-        $affectation = Affectation::where('locataire_id', $locataireId)
-                                  ->where('logement_id', $logementId)
-                                  ->where('statut', 'Actif')
-                                  ->first();
-
-        if (!$affectation) {
-            // Fallback to check if there is an assignment "En cours d'exécution" (just in case)
+        // Get affectation
+        if ($affectationId) {
+            $affectation = Affectation::where('id', $affectationId)
+                                      ->where('company_profile_id', $companyProfileId)
+                                      ->first();
+        } else {
+            // Check if there is an active assignment for this locataire/logement
             $affectation = Affectation::where('locataire_id', $locataireId)
                                       ->where('logement_id', $logementId)
-                                      ->where('statut', "En cours d'exécution")
+                                      ->where('statut', 'Actif')
                                       ->first();
+
+            if (!$affectation) {
+                // Fallback to check if there is an assignment "En cours d'exécution" (just in case)
+                $affectation = Affectation::where('locataire_id', $locataireId)
+                                          ->where('logement_id', $logementId)
+                                          ->where('statut', "En cours d'exécution")
+                                          ->first();
+            }
         }
 
         // Determine agency
@@ -107,6 +116,7 @@ class ContratController extends Controller
             $c = Contrat::create([
                 'company_profile_id' => $companyProfileId,
                 'agency_id'          => $agencyId,
+                'affectation_id'     => $affectation?->id,
                 'locataire_id'       => $locataire->id,
                 'logement_id'        => $logement->id,
                 'type_contrat_id'    => $request->input('type_contrat_id'),
@@ -119,7 +129,7 @@ class ContratController extends Controller
                 'numero'             => $request->input('numero'),
             ]);
 
-            // 2. Update affectation status to "En cours d'exécution"
+            // 2. Update affectation status to "En cours d'exécution" and link to contract
             if ($affectation) {
                 $affectation->update(['statut' => "En cours d'exécution"]);
             }
@@ -155,13 +165,14 @@ class ContratController extends Controller
         $this->authorizeCompany($contrat);
 
         $request->validate([
-            'loyer'   => 'sometimes|required|numeric|min:0',
-            'caution' => 'sometimes|required|numeric|min:0',
-            'debut'   => 'sometimes|required|date',
-            'fin'     => 'sometimes|required|date|after_or_equal:debut',
-            'content' => 'sometimes|required|string',
-            'numero'  => 'sometimes|required|string|max:100',
-            'statut'  => 'sometimes|required|string|in:Actif,Expiré,Résilié',
+            'loyer'          => 'sometimes|required|numeric|min:0',
+            'caution'        => 'sometimes|required|numeric|min:0',
+            'debut'          => 'sometimes|required|date',
+            'fin'            => 'sometimes|required|date|after_or_equal:debut',
+            'content'        => 'sometimes|required|string',
+            'numero'         => 'sometimes|required|string|max:100',
+            'statut'         => 'sometimes|required|string|in:Actif,Expiré,Résilié',
+            'affectation_id' => 'sometimes|nullable|integer|exists:affectations,id',
         ]);
 
         $contrat->update($request->all());
@@ -210,8 +221,10 @@ class ContratController extends Controller
 
     private function formatContrat(Contrat $c): array
     {
-        // On récupère l'affectation correspondante pour obtenir la durée et le cycle de paiement
-        $aff = Affectation::where('locataire_id', $c->locataire_id)
+        // Utiliser la relation directe affectation (via affectation_id)
+        // avec fallback sur la recherche par locataire_id + logement_id
+        $aff = $c->affectation
+            ?? Affectation::where('locataire_id', $c->locataire_id)
                           ->where('logement_id', $c->logement_id)
                           ->first();
 
@@ -222,6 +235,7 @@ class ContratController extends Controller
             'locataire'        => $c->locataire?->user?->name ?? 'Locataire Supprimé',
             'locataire_id'     => $c->locataire_id,
             'logement_id'      => $c->logement_id,
+            'affectation_id'   => $c->affectation_id,
             'batiment_id'      => $c->logement?->batiment_id,
             'agency_id'        => $c->agency_id,
             'type_contrat_id'  => $c->type_contrat_id,
@@ -235,6 +249,7 @@ class ContratController extends Controller
             'batiment'         => $c->logement?->batiment?->nom ?? 'Sans bâtiment',
             'duree'            => $aff?->duree ?? '1 an',
             'cycle_paiement'   => $aff?->cycle_paiement ?? 'Mensuel',
+            'frais_de_contrat' => (float)($aff?->frais_de_contrat ?? 0),
             'typeBail'         => $c->typeContrat?->nom ?? 'Habitation',
             'content'          => $c->content,
             'created_at'       => $c->created_at?->toDateString(),

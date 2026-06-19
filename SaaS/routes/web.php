@@ -363,6 +363,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/locataires/{locataire}/status', [LocataireController::class, 'updateStatus'])->name('locataires.status');
     Route::delete('/api/locataires/{locataire}/documents/{index}', [LocataireController::class, 'deleteDocument'])->name('locataires.documents.delete');
     Route::post('/api/locataires/{locataire}/create-wallet', [\App\Http\Controllers\LocataireWalletController::class, 'createWalletForTenant']);
+    Route::post('/api/locataires/{locataire}/recharge-wallet', [\App\Http\Controllers\LocataireWalletController::class, 'rechargeTenantWalletFromAdmin'])->name('locataires.recharge-wallet');
 
 
     // Affectations API routes

@@ -214,23 +214,28 @@ class RenouvellementController extends Controller
 
         // Mettre à jour le Contrat existant
         $contrat->update([
-            'fin' => $newEndDate,
+            'fin'   => $newEndDate,
             'loyer' => $renouvellement->nouveau_loyer,
         ]);
 
-        // Mettre à jour l'Affectation active
-        $affectation = Affectation::where('locataire_id', $renouvellement->locataire_id)
-            ->where('logement_id', $contrat->logement_id)
-            ->where('statut', 'Actif')
-            ->first();
+        // Mettre à jour l'Affectation via la relation directe (jointure affectation_id)
+        // Fallback sur la recherche par locataire_id + logement_id si pas de jointure
+        $affectation = $contrat->affectation
+            ?? Affectation::where('locataire_id', $renouvellement->locataire_id)
+                ->where('logement_id', $contrat->logement_id)
+                ->whereIn('statut', [
+                    'Actif', 'actif', 'active', 'en_cours',
+                    "En cours d'exécution", 'En cours', 'signé', 'signe'
+                ])
+                ->first();
 
         if ($affectation) {
             $affectation->update([
-                'loyer' => $renouvellement->nouveau_loyer,
-                'cycle_paiement' => $renouvellement->cycle_paiement,
-                'duree' => $renouvellement->duree,
+                'loyer'            => $renouvellement->nouveau_loyer,
+                'cycle_paiement'   => $renouvellement->cycle_paiement,
+                'duree'            => $renouvellement->duree,
                 'frais_de_contrat' => $renouvellement->frais_contrat,
-                'date_fin' => $newEndDate
+                'date_fin'         => $newEndDate
             ]);
         }
 
@@ -240,15 +245,16 @@ class RenouvellementController extends Controller
             $logement->update(['loyer' => $renouvellement->nouveau_loyer]);
         }
 
-        // Enregistrer ou mettre à jour dans frais_contrats
+        // Enregistrer ou mettre à jour dans frais_contrats (avec affectation_id)
         if ($renouvellement->frais_contrat > 0) {
             $frais = FraisContrat::updateOrCreate(
                 ['renouvellement_id' => $renouvellement->id],
                 [
                     'company_profile_id' => $renouvellement->company_profile_id,
-                    'agency_id' => $renouvellement->agency_id,
-                    'montant' => $renouvellement->frais_contrat,
-                    'date_paiement' => now()
+                    'agency_id'          => $renouvellement->agency_id,
+                    'affectation_id'     => $affectation?->id,
+                    'montant'            => $renouvellement->frais_contrat,
+                    'date_paiement'      => now()
                 ]
             );
 
@@ -263,6 +269,7 @@ class RenouvellementController extends Controller
             );
         }
     }
+
 
     public function destroy(Renouvellement $renouvellement)
     {

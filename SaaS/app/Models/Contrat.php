@@ -18,6 +18,7 @@ class Contrat extends Model
         'numero',
         'company_profile_id',
         'agency_id',
+        'affectation_id',
         'locataire_id',
         'logement_id',
         'type_contrat_id',
@@ -78,5 +79,15 @@ class Contrat extends Model
     public function typeContrat(): BelongsTo
     {
         return $this->belongsTo(TypeContrat::class, 'type_contrat_id');
+    }
+
+    public function affectation(): BelongsTo
+    {
+        return $this->belongsTo(Affectation::class, 'affectation_id');
+    }
+
+    public function renouvellements(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Renouvellement::class, 'contrat_id');
     }
 }

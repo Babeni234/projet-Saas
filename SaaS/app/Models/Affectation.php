@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Affectation extends Model
@@ -82,5 +84,15 @@ class Affectation extends Model
     public function typeContrat(): BelongsTo
     {
         return $this->belongsTo(TypeContrat::class, 'type_contrat_id');
+    }
+
+    public function contrat(): HasOne
+    {
+        return $this->hasOne(Contrat::class, 'affectation_id');
+    }
+
+    public function fraisContrats(): HasMany
+    {
+        return $this->hasMany(FraisContrat::class, 'affectation_id');
     }
 }
