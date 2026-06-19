@@ -109,7 +109,7 @@ class LocataireDashboardController extends Controller
         if ($locataire) {
             $rentReceipts = \App\Models\PaiementLoyer::where('locataire_id', $locataire->id)
                 ->where('deleted', false)
-                ->with(['contrat.logement', 'company'])
+                ->with(['contrat.logement', 'company', 'moisPayes'])
                 ->get()
                 ->map(function ($p) use ($locataire) {
                     return [
@@ -125,12 +125,18 @@ class LocataireDashboardController extends Controller
                         'property' => $p->contrat?->logement?->reference ?? 'Logement',
                         'tenant' => $locataire->nom,
                         'landlord' => $p->company?->legal_name ?? 'Propriétaire',
+                        'months' => $p->moisPayes->map(fn($mp) => [
+                            'label' => $mp->periode,
+                            'amount' => (float) $mp->loyer_de_base,
+                            'penaltyAmount' => (float) $mp->penalite,
+                            'totalDue' => (float) $mp->total_paye,
+                        ])->toArray()
                     ];
                 });
 
             $utilityReceipts = \App\Models\Facture::where('locataire_id', $locataire->id)
                 ->where('deleted', false)
-                ->where('statut', 'payée')
+                ->whereIn('statut', ['payée', 'Payé'])
                 ->whereHas('typeFacture', function ($q) {
                     $q->where('nom', '!=', 'Loyer');
                 })
@@ -332,6 +338,18 @@ class LocataireDashboardController extends Controller
 
 
 
+        $typeFactures = [];
+        if ($locataire) {
+            $typeFactures = \App\Models\TypeFacture::where('company_profile_id', $locataire->company_profile_id)
+                ->where('nom', '!=', 'Loyer')
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'nom' => $t->nom,
+                ])
+                ->toArray();
+        }
+
         return Inertia::render('Locataire/dashboard-loc', [
             'auth' => [
                 'user' => [
@@ -362,6 +380,7 @@ class LocataireDashboardController extends Controller
             'contracts' => $contracts,
             'contractFees' => $contractFeesList,
             'invoices'  => $factures,
+            'typeFactures' => $typeFactures,
             'tickets'   => [],
             'wallet'    => $locataire?->wallet ? [
                 'id'    => $locataire->wallet->id,
@@ -392,21 +411,23 @@ class LocataireDashboardController extends Controller
     private function formatFacture(Facture $f): array
     {
         $statut = match($f->statut) {
-            'payée', 'payee', 'réglée', 'reglee' => 'paid',
-            'en_attente', 'pending'               => 'pending',
-            'en_retard', 'retard', 'impayée'      => 'late',
-            default                               => strtolower($f->statut),
+            'payée', 'payee', 'réglée', 'reglee', 'Payé', 'payé' => 'paid',
+            'en_attente', 'pending'                              => 'pending',
+            'en_retard', 'retard', 'impayée'                     => 'late',
+            default                                              => strtolower($f->statut),
         };
 
         return [
-            'id'          => $f->id,
-            'reference'   => $f->numero,
-            'type'        => $f->typeFacture?->nom ?? 'Loyer',
-            'period'      => $f->periode ?? $f->date_emission?->format('M Y'),
-            'amount'      => (float) $f->total,
-            'status'      => $statut,
-            'consumption' => null,
-            'paid_at'     => in_array($f->statut, ['payée', 'payee', 'réglée', 'reglee'])
+            'id'            => $f->id,
+            'reference'     => $f->numero,
+            'type'          => $f->typeFacture?->nom ?? 'Loyer',
+            'period'        => $f->periode ?? $f->date_emission?->format('M Y'),
+            'amount'        => (float) $f->total,
+            'status'        => $statut,
+            'consumption'   => null,
+            'date_emission' => $f->date_emission?->toDateString(),
+            'date_echeance' => $f->date_echeance?->toDateString(),
+            'paid_at'       => in_array($f->statut, ['payée', 'payee', 'réglée', 'reglee', 'Payé', 'payé'])
                                 ? $f->updated_at?->toDateString()
                                 : null,
         ];

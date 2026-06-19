@@ -1541,70 +1541,45 @@
 
             <!-- Premium consumption cards -->
             <div class="util-premium-row anim-stagger">
-              <div class="glass-card util-premium-card water-card">
+              <div v-for="type in invoiceTypes" :key="type.id" class="glass-card util-premium-card" :class="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'water-card' : 'elec-card'">
                 <div class="util-premium-inner">
                   <div class="util-premium-left">
-                    <div class="util-icon-ring util-icon-water">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/></svg>
+                    <div class="util-icon-ring" :class="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'util-icon-water' : 'util-icon-elec'">
+                      <svg v-if="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water')" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/></svg>
+                      <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     </div>
                     <div class="util-premium-info">
-                      <span class="util-premium-label">{{ t('utilities.water') }}</span>
-                      <span class="util-premium-conso">{{ latestWaterConso }} <small>{{ latestWaterUnit }}</small></span>
-                      <span class="util-premium-cost">{{ formatCurrency(latestWaterCost) }}</span>
+                      <span class="util-premium-label">{{ type.nom }}</span>
+                      <span class="util-premium-conso">
+                        {{ latestUtilityByType[type.id]?.consumption?.value || '—' }} 
+                        <small>{{ latestUtilityByType[type.id]?.consumption?.unit || (type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'm³' : 'kWh') }}</small>
+                      </span>
+                      <span class="util-premium-cost">{{ formatCurrency(latestUtilityByType[type.id]?.amount || 0) }}</span>
                     </div>
                   </div>
                   <div class="util-premium-right">
-                    <span class="util-premium-period">{{ latestWaterPeriod }}</span>
-                    <span class="util-premium-badge" :class="waterStatusClass">{{ waterStatusLabel }}</span>
+                    <span class="util-premium-period">{{ latestUtilityByType[type.id]?.period || '' }}</span>
+                    <span class="util-premium-badge" :class="latestUtilityByType[type.id]?.status === 'paid' ? 'badge-paid' : 'badge-pending'">
+                      {{ latestUtilityByType[type.id]?.status === 'paid' ? 'Payé' : 'En attente' }}
+                    </span>
                   </div>
                 </div>
                 <div class="util-premium-bar-track">
-                  <div class="util-premium-bar-fill util-bar-water" :style="{ width: waterBarPct + '%' }"></div>
-                </div>
-              </div>
-
-              <div class="glass-card util-premium-card elec-card">
-                <div class="util-premium-inner">
-                  <div class="util-premium-left">
-                    <div class="util-icon-ring util-icon-elec">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    </div>
-                    <div class="util-premium-info">
-                      <span class="util-premium-label">{{ t('utilities.electricity') }}</span>
-                      <span class="util-premium-conso">{{ latestElecConso }} <small>{{ latestElecUnit }}</small></span>
-                      <span class="util-premium-cost">{{ formatCurrency(latestElecCost) }}</span>
-                    </div>
-                  </div>
-                  <div class="util-premium-right">
-                    <span class="util-premium-period">{{ latestElecPeriod }}</span>
-                    <span class="util-premium-badge" :class="elecStatusClass">{{ elecStatusLabel }}</span>
-                  </div>
-                </div>
-                <div class="util-premium-bar-track">
-                  <div class="util-premium-bar-fill util-bar-elec" :style="{ width: elecBarPct + '%' }"></div>
+                  <div class="util-premium-bar-fill" :class="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'util-bar-water' : 'util-bar-elec'" :style="{ width: getBarPct(type) + '%' }"></div>
                 </div>
               </div>
             </div>
 
             <!-- Summary cards -->
             <div class="finance-summary-row anim-stagger">
-              <div class="glass-card fin-summary-card">
-                <div class="fin-sum-icon-wrap sum-icon-blue">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/></svg>
+              <div v-for="type in invoiceTypes" :key="type.id" class="glass-card fin-summary-card">
+                <div class="fin-sum-icon-wrap" :class="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'sum-icon-blue' : 'sum-icon-amber'">
+                  <svg v-if="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water')" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/></svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 </div>
                 <div class="fin-sum-body">
-                  <p class="fin-sum-label">{{ t('utilities.water') }}</p>
-                  <p class="fin-sum-value blue">{{ waterPendingCount }}</p>
-                  <p class="fin-sum-hint">en attente</p>
-                </div>
-              </div>
-              <div class="glass-card fin-summary-card">
-                <div class="fin-sum-icon-wrap sum-icon-amber">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                </div>
-                <div class="fin-sum-body">
-                  <p class="fin-sum-label">{{ t('utilities.electricity') }}</p>
-                  <p class="fin-sum-value amber">{{ elecPendingCount }}</p>
+                  <p class="fin-sum-label">{{ type.nom }}</p>
+                  <p class="fin-sum-value" :class="type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 'blue' : 'amber'">{{ pendingCountsByType[type.id] || 0 }}</p>
                   <p class="fin-sum-hint">en attente</p>
                 </div>
               </div>
@@ -1693,9 +1668,8 @@
                     <tr>
                       <th>Référence</th>
                       <th>Type</th>
-                      <th>Période</th>
-                      <th>Consommation</th>
-                      <th>Index</th>
+                      <th>Date d'émission</th>
+                      <th>Date d'échéance</th>
                       <th>Montant</th>
                       <th>Statut</th>
                       <th>Actions</th>
@@ -1705,16 +1679,12 @@
                     <tr v-for="inv in filteredUtilityInvoices" :key="inv.id" class="table-row">
                       <td class="ref-code">{{ inv.reference }}</td>
                       <td>
-                        <span class="type-badge" :class="'type-' + inv.type.toLowerCase()">
-                          {{ inv.type === 'WATER' ? 'Eau' : 'Électricité' }}
+                        <span class="type-badge" :class="'type-' + (inv.type || '').toLowerCase()">
+                          {{ inv.type === 'WATER' ? 'Eau' : inv.type === 'ELECTRIC' ? 'Électricité' : inv.type }}
                         </span>
                       </td>
-                      <td>{{ inv.period }}</td>
-                      <td>
-                        <span v-if="inv.consumption" class="conso-value">{{ inv.consumption.value }} {{ inv.consumption.unit }}</span>
-                        <span v-else>—</span>
-                      </td>
-                      <td><span class="conso-index">{{ inv.consumption?.index || '—' }}</span></td>
+                      <td>{{ formatDate(inv.date_emission || inv.dateEmission) || '—' }}</td>
+                      <td>{{ formatDate(inv.date_echeance || inv.dateEcheance) || '—' }}</td>
                       <td class="amount-cell"><strong>{{ formatCurrency(inv.amount) }}</strong></td>
                       <td>
                         <span class="status-pill" :class="'status-' + inv.status">
@@ -3040,6 +3010,10 @@ const props = defineProps({
   paidMonthsKeys: {
     type: Array,
     default: () => []
+  },
+  typeFactures: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -3273,12 +3247,19 @@ const rechargeTabs = [
 // 🧾 UTILITY (WATER & ELECTRICITY) MANAGEMENT
 const utilityFilter = ref('all')
 const utilitySearch = ref('')
-const utilityFilters = [
-  { id: 'all', label: 'Tous' },
-  { id: 'WATER', label: 'Eau' },
-  { id: 'ELECTRIC', label: 'Électricité' },
-  { id: 'pending', label: 'En attente' },
-]
+const utilityFilters = computed(() => {
+  const list = [
+    { id: 'all', label: 'Tous' },
+    { id: 'pending', label: 'En attente' }
+  ]
+  invoiceTypes.value.forEach(type => {
+    list.push({
+      id: type.id,
+      label: type.nom
+    })
+  })
+  return list
+})
 const utilityInvoices = ref([])
 
 const financeFilters = [
@@ -3518,16 +3499,31 @@ const totalDue = computed(() => {
 })
 const openTicketsCount = computed(() => localTickets.value.filter(t => t.status !== 'closed').length)
 
+const findReceiptForMonth = (monthKey) => {
+  return allReceipts.value.find(r => {
+    if (r.type !== 'rent') return false
+    if (r.months && r.months.some(m => m.label === monthKey)) return true
+    return false
+  })
+}
+
 const filteredInvoices = computed(() => {
-  let list = [...localInvoices.value].filter(i => i.type === 'RENT')
+  let list = [...rentMonths.value]
   if (financeFilter.value !== 'all') {
-    list = list.filter(i => i.status === financeFilter.value)
+    const statusFilter = financeFilter.value === 'pending' ? 'unpaid' : financeFilter.value
+    list = list.filter(m => m.status === statusFilter)
   }
   if (invoiceSearch.value.trim()) {
     const s = invoiceSearch.value.toLowerCase()
-    list = list.filter(i => i.reference.toLowerCase().includes(s) || i.period.toLowerCase().includes(s))
+    list = list.filter(m => m.label.toLowerCase().includes(s))
   }
-  return list
+  return list.map((m) => ({
+    id: m.key,
+    reference: 'RENT-' + m.key,
+    period: m.label,
+    amount: m.amount + m.penaltyAmount,
+    status: m.status === 'paid' ? 'paid' : 'pending',
+  }))
 })
 
 const totalPaid12Months = computed(() => {
@@ -3572,51 +3568,99 @@ const penaltyInfo = computed(() => {
 })
 
 // 🧾 UTILITIES COMPUTED
-const waterPendingCount = computed(() => utilityInvoices.value.filter(i => i.type === 'WATER' && i.status === 'pending').length)
-const elecPendingCount = computed(() => utilityInvoices.value.filter(i => i.type === 'ELECTRIC' && i.status === 'pending').length)
+const invoiceTypes = computed(() => {
+  if (props.typeFactures && props.typeFactures.length > 0) {
+    return props.typeFactures
+  }
+  return [
+    { id: 'water_fallback', nom: 'Eau' },
+    { id: 'elec_fallback', nom: 'Électricité' }
+  ]
+})
+
+const pendingCountsByType = computed(() => {
+  const counts = {}
+  invoiceTypes.value.forEach(type => {
+    const normNom = type.nom.toLowerCase()
+    counts[type.id] = utilityInvoices.value.filter(i => {
+      if (i.status !== 'pending') return false
+      const iType = i.type ? i.type.toLowerCase() : ''
+      if (iType === normNom) return true
+      if (normNom === 'eau' && (iType === 'water' || iType === 'eau')) return true
+      if (normNom === 'électricité' && (iType === 'electric' || iType === 'electricity' || iType === 'électricité' || iType === 'electricite')) return true
+      return false
+    }).length
+  })
+  return counts
+})
+
+const latestUtilityByType = computed(() => {
+  const latest = {}
+  invoiceTypes.value.forEach(type => {
+    const normNom = type.nom.toLowerCase()
+    const matching = utilityInvoices.value.filter(i => {
+      const iType = i.type ? i.type.toLowerCase() : ''
+      if (iType === normNom) return true
+      if (normNom === 'eau' && (iType === 'water' || iType === 'eau')) return true
+      if (normNom === 'électricité' && (iType === 'electric' || iType === 'electricity' || iType === 'électricité' || iType === 'electricite')) return true
+      return false
+    })
+    if (matching.length > 0) {
+      const sorted = [...matching].sort((a, b) => b.period.localeCompare(a.period))
+      latest[type.id] = sorted[0]
+    } else {
+      latest[type.id] = null
+    }
+  })
+  return latest
+})
+
+function getBarPct(type) {
+  const latest = latestUtilityByType.value[type.id]
+  if (!latest || !latest.consumption) return 0
+  const normNom = type.nom.toLowerCase()
+  const matching = utilityInvoices.value.filter(i => {
+    const iType = i.type ? i.type.toLowerCase() : ''
+    if (iType === normNom) return true
+    if (normNom === 'eau' && (iType === 'water' || iType === 'eau')) return true
+    if (normNom === 'électricité' && (iType === 'electric' || iType === 'electricity' || iType === 'électricité' || iType === 'electricite')) return true
+    return false
+  })
+  const max = Math.max(...matching.map(i => parseFloat(i.consumption?.value || 0)), type.nom.toLowerCase().includes('eau') || type.nom.toLowerCase().includes('water') ? 10 : 100)
+  return (parseFloat(latest.consumption.value || 0) / max) * 100
+}
+
 const utilitiesTotalDue = computed(() => utilityInvoices.value.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0))
 const latestUtilityDate = computed(() => {
   const paid = utilityInvoices.value.filter(i => i.status === 'paid')
   if (paid.length === 0) return 'Aucune'
-  return paid.sort((a, b) => b.period.localeCompare(a.period))[0].period
+  return [...paid].sort((a, b) => b.period.localeCompare(a.period))[0].period
 })
+
 const filteredUtilityInvoices = computed(() => {
   let list = [...utilityInvoices.value]
   if (utilityFilter.value !== 'all') {
-    if (utilityFilter.value === 'pending') list = list.filter(i => i.status === 'pending')
-    else list = list.filter(i => i.type === utilityFilter.value)
+    if (utilityFilter.value === 'pending') {
+      list = list.filter(i => i.status === 'pending')
+    } else {
+      const typeObj = invoiceTypes.value.find(t => String(t.id) === String(utilityFilter.value))
+      if (typeObj) {
+        const normNom = typeObj.nom.toLowerCase()
+        list = list.filter(i => {
+          const iType = i.type ? i.type.toLowerCase() : ''
+          if (iType === normNom) return true
+          if (normNom === 'eau' && (iType === 'water' || iType === 'eau')) return true
+          if (normNom === 'électricité' && (iType === 'electric' || iType === 'electricity' || iType === 'électricité' || iType === 'electricite')) return true
+          return false
+        })
+      }
+    }
   }
   if (utilitySearch.value.trim()) {
     const s = utilitySearch.value.toLowerCase()
     list = list.filter(i => i.reference.toLowerCase().includes(s) || i.period.toLowerCase().includes(s))
   }
   return list
-})
-
-// Premium utility card helpers
-const latestWater = computed(() => utilityInvoices.value.filter(i => i.type === 'WATER').sort((a, b) => b.period.localeCompare(a.period))[0])
-const latestElec = computed(() => utilityInvoices.value.filter(i => i.type === 'ELECTRIC').sort((a, b) => b.period.localeCompare(a.period))[0])
-const latestWaterConso = computed(() => latestWater.value?.consumption?.value || '—')
-const latestWaterUnit = computed(() => latestWater.value?.consumption?.unit || '')
-const latestWaterCost = computed(() => latestWater.value?.amount || 0)
-const latestWaterPeriod = computed(() => latestWater.value?.period || '')
-const waterStatusClass = computed(() => latestWater.value?.status === 'paid' ? 'badge-paid' : 'badge-pending')
-const waterStatusLabel = computed(() => latestWater.value?.status === 'paid' ? 'Payé' : 'En attente')
-const waterBarPct = computed(() => {
-  const w = utilityInvoices.value.filter(i => i.type === 'WATER')
-  const max = Math.max(...w.map(i => parseFloat(i.consumption?.value || 0)), 10)
-  return (parseFloat(latestWater.value?.consumption?.value || 0) / max) * 100
-})
-const latestElecConso = computed(() => latestElec.value?.consumption?.value || '—')
-const latestElecUnit = computed(() => latestElec.value?.consumption?.unit || '')
-const latestElecCost = computed(() => latestElec.value?.amount || 0)
-const latestElecPeriod = computed(() => latestElec.value?.period || '')
-const elecStatusClass = computed(() => latestElec.value?.status === 'paid' ? 'badge-paid' : 'badge-pending')
-const elecStatusLabel = computed(() => latestElec.value?.status === 'paid' ? 'Payé' : 'En attente')
-const elecBarPct = computed(() => {
-  const e = utilityInvoices.value.filter(i => i.type === 'ELECTRIC')
-  const max = Math.max(...e.map(i => parseFloat(i.consumption?.value || 0)), 100)
-  return (parseFloat(latestElec.value?.consumption?.value || 0) / max) * 100
 })
 
 // 🧾 RECEIPTS COMPUTED
@@ -5155,7 +5199,31 @@ function submitTicket() {
 }
 
 function downloadReceipt(invoice) {
-  showToast('success', `Téléchargement quittance : ${invoice.reference}`)
+  const receipt = findReceiptForMonth(invoice.id)
+  if (receipt) {
+    generateReceiptPDF(receipt)
+  } else {
+    const contract = props.contracts[0]
+    const now = formatDateTime(new Date().toISOString())
+    const ref = 'QUIT-' + invoice.reference
+    const html = generateProReceiptHTML({
+      brand: 'HABITATUM', title: 'QUITTANCE DE VERSEMENT LOYER',
+      ref: ref, lines: [
+        ['Locataire', `${props.auth.user.first_name} ${props.auth.user.last_name}`],
+        ['Bien', contract?.property?.name || 'Logement'],
+        ['Type', 'Loyer'],
+        ['Période', invoice.period],
+        ['Date versement', now.split('à')[0] || now],
+        ['Méthode', 'Portefeuille'],
+        ['Transaction', 'TX-' + invoice.id],
+        ['Bailleur', props.company?.name || 'SCI Habitats SA'],
+      ], amount: invoice.amount,
+      status: '✓ Payé',
+      footer: 'Merci pour votre confiance — Habitatum', now
+    })
+    generateProPDF(html, `Quittance_${ref}.pdf`)
+    showToast('success', `Quittance ${ref} générée et téléchargée`)
+  }
 }
 function openProofUpload(invoice) {
   selectedProofInvoice.value = invoice

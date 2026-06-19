@@ -240,9 +240,14 @@ class LocataireWalletController extends Controller
                         $query->select('id')->from('type_factures')->where('nom', 'Loyer')->limit(1);
                     })
                     ->where('periode', 'like', '%' . $m['key'] . '%')
-                    ->where('statut', '!=', 'payée')
+                    ->where(function($q) {
+                        $q->where('statut', '!=', 'payée')
+                          ->where('statut', '!=', 'Payé');
+                    })
                     ->update([
-                        'statut' => 'payée',
+                        'statut'         => 'Payé',
+                        'montant_paye'   => DB::raw('total'),
+                        'mode_reglement' => 'wallet',
                     ]);
             }
 
@@ -306,7 +311,7 @@ class LocataireWalletController extends Controller
             ->where('locataire_id', $locataire->id)
             ->firstOrFail();
 
-        if ($invoice->statut === 'payée') {
+        if (in_array($invoice->statut, ['payée', 'Payé'])) {
             return response()->json(['message' => 'Cette facture est déjà réglée.'], 422);
         }
 
@@ -330,7 +335,9 @@ class LocataireWalletController extends Controller
 
             // Mettre à jour la facture
             $invoice->update([
-                'statut' => 'payée',
+                'statut'         => 'Payé',
+                'montant_paye'   => $invoice->total,
+                'mode_reglement' => 'wallet',
             ]);
 
             // Enregistrer dans la trésorerie globale
