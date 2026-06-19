@@ -1,7 +1,7 @@
 // HABITATUM — Service Worker
 // Gère le cache, les notifications push et les messages de l'application
 
-const CACHE = 'hab-v2'
+const CACHE = 'hab-v3'
 const STATIC_ASSETS = [
   '/manifest.json',
   '/favicon.ico',
@@ -30,6 +30,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const { request } = e
   const url = new URL(request.url)
+
+  // Only handle same-origin requests (exclude external CDNs, Vite dev server, etc.)
+  if (url.origin !== self.location.origin) {
+    return
+  }
 
   // Cache First pour les icônes et images
   if (url.pathname.startsWith('/icons/') || url.pathname.startsWith('/build/assets/')) {

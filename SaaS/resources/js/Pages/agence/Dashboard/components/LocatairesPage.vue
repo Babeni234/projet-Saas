@@ -170,25 +170,44 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="[
-                                    'px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 shadow-sm',
-                                    locataire.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                    locataire.statut === 'Affecté' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    locataire.statut === 'Suspendu' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                                    'bg-slate-50 text-slate-600 border-slate-200'
-                                ]">
-                                    <span :class="[
-                                        'w-1.5 h-1.5 rounded-full',
-                                        locataire.statut === 'Actif' ? 'bg-emerald-500' :
-                                        locataire.statut === 'Affecté' ? 'bg-blue-500' :
-                                        locataire.statut === 'Suspendu' ? 'bg-rose-500' :
-                                        'bg-slate-400'
-                                    ]"></span>
-                                    {{ locataire.statut }}
-                                </span>
+                               <div class="flex flex-col gap-1.5 items-start">
+                                   <span :class="[
+                                       'px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 shadow-sm',
+                                       locataire.statut === 'Actif' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                       locataire.statut === 'Affecté' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                       locataire.statut === 'Suspendu' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                       'bg-slate-50 text-slate-600 border-slate-200'
+                                   ]">
+                                       <span :class="[
+                                           'w-1.5 h-1.5 rounded-full',
+                                           locataire.statut === 'Actif' ? 'bg-emerald-500' :
+                                           locataire.statut === 'Affecté' ? 'bg-blue-500' :
+                                           locataire.statut === 'Suspendu' ? 'bg-rose-500' :
+                                           'bg-slate-400'
+                                       ]"></span>
+                                       {{ locataire.statut }}
+                                   </span>
+                                   <span v-if="locataire.wallet_status === 'activated'" class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-sm">
+                                       <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                           <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                           <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                       </svg>
+                                       Wallet activé
+                                   </span>
+                               </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end gap-1">
+                                    <button 
+                                        v-if="locataire.wallet_status === 'none'"
+                                        @click="createTenantWallet(locataire)" 
+                                        class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                        title="Créer le wallet"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                        </svg>
+                                    </button>
                                     <button 
                                         @click="openProfileModal(locataire)" 
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -763,6 +782,34 @@ const saveLocataire = async () => {
         showError.value = true;
     } finally {
         saving.value = false;
+    }
+};
+
+// Create Electronic Wallet for Tenant
+const createTenantWallet = async (loc) => {
+    if (confirm(`Voulez-vous vraiment activer le portefeuille électronique pour ${loc.nom} ? Le code PIN sera généré et lui sera envoyé par email.`)) {
+        try {
+            const res = await fetch(`/api/locataires/${loc.id}/create-wallet`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf(),
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                successMessage.value = 'Le portefeuille électronique a été activé pour le locataire et un email lui a été envoyé.';
+                showSuccess.value = true;
+                fetchLocataires();
+            } else {
+                errorMessage.value = data.message || 'Une erreur est survenue.';
+                showError.value = true;
+            }
+        } catch (err) {
+            console.error(err);
+            errorMessage.value = 'Impossible de communiquer avec le serveur.';
+            showError.value = true;
+        }
     }
 };
 

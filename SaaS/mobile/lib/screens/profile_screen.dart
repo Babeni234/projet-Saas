@@ -24,368 +24,380 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final localeProvider = context.watch<LocaleProvider>();
     final isDark = themeProvider.isDark;
     final language = localeProvider.isFrench ? 'fr' : 'en';
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Profil & Paramètres', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 28)),
-            const SizedBox(height: 8),
-            Text('Gérez vos informations, sécurité et préférences.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
-            const SizedBox(height: 28),
+            // Header Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Profil', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1)),
+                    Text('Paramètres & Compte', style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
 
+            // Profile Card
             GlassContainer(
               padding: const EdgeInsets.all(24),
-              borderRadius: 28,
-              child: Row(
+              borderRadius: 32,
+              child: Column(
                 children: [
-                  Container(
-                    width: 72, height: 72,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.actionGradient,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
-                    ),
-                    child: const Center(child: Icon(Icons.person_rounded, color: Colors.white, size: 36)),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Thomas Dubois', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        const Text('thomas.dubois@email.com', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-                          child: const Text('Locataire vérifié', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 100, height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.actionGradient,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
+                        child: const Center(child: Icon(Icons.person_rounded, color: Colors.white, size: 50)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Thomas Dubois', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                  const SizedBox(height: 4),
+                  const Text('thomas.dubois@email.com', style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHeaderAction(Icons.edit_rounded, 'Éditer'),
+                      const SizedBox(width: 12),
+                      _buildHeaderAction(Icons.share_rounded, 'Partager'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildSectionHeader('INFORMATIONS PERSONNELLES'),
+            const SizedBox(height: 12),
+            GlassContainer(
+              padding: EdgeInsets.zero,
+              borderRadius: 24,
+              child: Column(
+                children: [
+                  _buildListTile(Icons.person_outline_rounded, 'Nom', 'Thomas Dubois', showDivider: true),
+                  _buildListTile(Icons.phone_iphone_rounded, 'Téléphone', '06 12 34 56 78', showDivider: true),
+                  _buildListTile(Icons.mail_outline_rounded, 'Email', 'thomas.dubois@email.com', showDivider: true),
+                  _buildListTile(Icons.location_on_outlined, 'Adresse', '14 Rue des fleurs, 75000 Paris'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildSectionHeader('SÉCURITÉ ET ACCÈS'),
+            const SizedBox(height: 12),
+            GlassContainer(
+              padding: EdgeInsets.zero,
+              borderRadius: 24,
+              child: Column(
+                children: [
+                  _buildListTile(Icons.lock_reset_rounded, 'Mot de passe', 'Modifier', isAction: true, showDivider: true),
+                  _buildListTile(Icons.verified_user_outlined, 'Double facteur (2FA)', 'Désactivé', isAction: true, showDivider: true, color: AppColors.warning),
+                  _buildListTile(Icons.fingerprint_rounded, 'Biométrie', _biometric ? 'Activée' : 'Désactivée', isAction: true, onTap: () => setState(() => _biometric = !_biometric)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildSectionHeader('PRÉFÉRENCES'),
+            const SizedBox(height: 12),
+            GlassContainer(
+              padding: EdgeInsets.zero,
+              borderRadius: 24,
+              child: Column(
+                children: [
+                  _buildPreferenceRow(
+                    isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                    'Thème d\'affichage',
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildThemeToggle(isDark, themeProvider),
                       ],
                     ),
+                    showDivider: true,
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.edit_rounded, color: AppColors.primary)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            Text('Informations personnelles', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            GlassContainer(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildInfoRow(Icons.person_rounded, 'Nom', 'Thomas Dubois'),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildInfoRow(Icons.phone_rounded, 'Téléphone', '06 12 34 56 78'),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildInfoRow(Icons.email_rounded, 'Email', 'thomas.dubois@email.com'),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildInfoRow(Icons.location_on_rounded, 'Adresse', '14 Rue des fleurs, 75000 Paris'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            Text('Sécurité', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            GlassContainer(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildSecurityItem(Icons.lock_rounded, 'Mot de passe', 'Modifier', () {}),
-                  const Divider(height: 24, color: AppColors.background),
-                  _build2FAItem(),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildSecurityItem(Icons.fingerprint_rounded, 'Connexion biométrique', _biometric ? 'Activée' : 'Désactivée', () {
-                    setState(() => _biometric = !_biometric);
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            Text('Apparence', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            GlassContainer(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                        child: Icon(isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded, color: AppColors.primary, size: 20),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(child: Text('Thème d\'affichage', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
-                      GestureDetector(
-                        onTap: () => themeProvider.toggleTheme(),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.textTertiary.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: !isDark ? AppColors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text('Clair', style: TextStyle(
-                                  color: !isDark ? Colors.white : AppColors.textSecondary,
-                                  fontSize: 13, fontWeight: FontWeight.w600,
-                                )),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: isDark ? AppColors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text('Sombre', style: TextStyle(
-                                  color: isDark ? Colors.white : AppColors.textSecondary,
-                                  fontSize: 13, fontWeight: FontWeight.w600,
-                                )),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  _buildPreferenceRow(
+                    Icons.language_rounded,
+                    'Langue',
+                    _buildLanguageToggle(language, localeProvider),
+                    showDivider: true,
                   ),
-                  const Divider(height: 24, color: AppColors.background),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                        child: const Icon(Icons.language_rounded, color: AppColors.primary, size: 20),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(child: Text('Langue', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
-                      GestureDetector(
-                        onTap: () => localeProvider.toggleLocale(),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.textTertiary.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: language == 'fr' ? AppColors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text('FR', style: TextStyle(
-                                  color: language == 'fr' ? Colors.white : AppColors.textSecondary,
-                                  fontSize: 13, fontWeight: FontWeight.w600,
-                                )),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: language == 'en' ? AppColors.primary : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text('EN', style: TextStyle(
-                                  color: language == 'en' ? Colors.white : AppColors.textSecondary,
-                                  fontSize: 13, fontWeight: FontWeight.w600,
-                                )),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  _buildPreferenceRow(
+                    Icons.notifications_none_rounded,
+                    'Notifications Push',
+                    Switch.adaptive(value: _pushNotifications, onChanged: (v) => setState(() => _pushNotifications = v), activeColor: AppColors.primary),
+                    showDivider: true,
+                  ),
+                  _buildPreferenceRow(
+                    Icons.receipt_long_outlined,
+                    'Reçus par email',
+                    Switch.adaptive(value: _emailReceipts, onChanged: (v) => setState(() => _emailReceipts = v), activeColor: AppColors.primary),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
-            Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
+            _buildSectionHeader('HISTORIQUE DE CONNEXION'),
+            const SizedBox(height: 12),
             GlassContainer(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              borderRadius: 24,
               child: Column(
                 children: [
-                  _buildSettingItem(Icons.notifications_rounded, 'Notifications push', _pushNotifications, (v) => setState(() => _pushNotifications = v)),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildSettingItem(Icons.payments_rounded, 'Rappel de loyer', _rentReminder, (v) => setState(() => _rentReminder = v)),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildSettingItem(Icons.email_rounded, 'Reçus par email', _emailReceipts, (v) => setState(() => _emailReceipts = v)),
-                  const Divider(height: 24, color: AppColors.background),
-                  _buildSettingItem(Icons.sms_rounded, 'Alertes SMS', false, (_) {}),
+                  _buildLoginRow('Aujourd\'hui, 10:32', 'Chrome • Paris, FR', true),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Divider(height: 1, color: AppColors.background)),
+                  _buildLoginRow('Hier, 18:15', 'iPhone 15 • Paris, FR', false),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
-
-            Text('Journal de connexion', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            GlassContainer(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildLoginEntry('Aujourd\'hui', '10:32', 'Chrome, Windows', 'Paris, France'),
-                  const Divider(height: 20, color: AppColors.background),
-                  _buildLoginEntry('Hier', '18:15', 'Safari, iPhone', 'Paris, France'),
-                  const Divider(height: 20, color: AppColors.background),
-                  _buildLoginEntry('15 Juin 2026', '09:40', 'Firefox, MacOS', 'Paris, France'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 40),
 
             SizedBox(
-              height: 56,
-              child: OutlinedButton.icon(
+              width: double.infinity,
+              height: 64,
+              child: ElevatedButton.icon(
                 onPressed: () {},
-                style: OutlinedButton.styleFrom(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
                   foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: AppColors.error, width: 1.5)),
                 ),
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text('Déconnexion', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                label: const Text('Déconnexion', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
               ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
         ),
-        const SizedBox(width: 14),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Widget _buildHeaderAction(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 18),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListTile(IconData icon, String label, String value, {bool showDivider = false, bool isAction = false, VoidCallback? onTap, Color? color}) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: (color ?? AppColors.primary).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                  child: Icon(icon, color: color ?? AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16))),
+                if (isAction)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: (color ?? AppColors.primary).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(value, style: TextStyle(color: color ?? AppColors.primary, fontSize: 13, fontWeight: FontWeight.w700)),
+                  )
+                else
+                  Text(value, style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          if (showDivider)
+            const Padding(
+              padding: EdgeInsets.only(left: 68),
+              child: Divider(height: 1, color: AppColors.background),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferenceRow(IconData icon, String label, Widget trailing, {bool showDivider = false}) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16))),
+              trailing,
+            ],
+          ),
+        ),
+        if (showDivider)
+          const Padding(
+            padding: EdgeInsets.only(left: 68),
+            child: Divider(height: 1, color: AppColors.background),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildThemeToggle(bool isDark, ThemeProvider provider) {
+    return GestureDetector(
+      onTap: () => provider.toggleTheme(),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(20)),
+        child: Row(
           children: [
-            Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            _toggleItem('Clair', !isDark),
+            _toggleItem('Sombre', isDark),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildSecurityItem(IconData icon, String label, String value, VoidCallback onTap) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+  Widget _buildLanguageToggle(String lang, LocaleProvider provider) {
+    return GestureDetector(
+      onTap: () => provider.toggleLocale(),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(20)),
+        child: Row(
+          children: [
+            _toggleItem('FR', lang == 'fr'),
+            _toggleItem('EN', lang == 'en'),
+          ],
         ),
-        const SizedBox(width: 14),
-        Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
+  Widget _toggleItem(String label, bool active) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: active ? AppColors.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: active ? Colors.white : AppColors.textSecondary,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginRow(String time, String info, bool current) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: current ? AppColors.success.withValues(alpha: 0.1) : AppColors.textTertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(current ? Icons.check_circle_rounded : Icons.history_rounded, color: current ? AppColors.success : AppColors.textSecondary, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(time, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                Text(info, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
             ),
-            child: Text(value, style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
-        ),
-      ],
+          if (current)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: const Text('Actuel', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 11)),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _build2FAItem() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: const Icon(Icons.verified_user_rounded, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Validation double facteur (2FA)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-              const Text('Sécurisez votre compte via une clé TOTP', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text('Inactive', style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w600)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingItem(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
-        Switch.adaptive(
-          value: value,
-          onChanged: onChanged,
-          activeTrackColor: AppColors.primary,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginEntry(String date, String time, String device, String location) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), shape: BoxShape.circle),
-          child: const Icon(Icons.login_rounded, color: AppColors.primary, size: 18),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$date à $time', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              Text('$device • $location', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }

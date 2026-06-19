@@ -21,8 +21,9 @@
     ══════════════════════════════════════════════════ -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="brand-logo">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <div class="brand-logo" style="display:flex;align-items:center;">
+          <img v-if="company && company.logo_url" :src="company.logo_url" class="company-logo-img" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;"/>
+          <svg v-else width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect width="32" height="32" rx="10" fill="url(#grad1)"/>
             <path d="M16 7L25 13V19L16 25L7 19V13L16 7Z" fill="white" opacity="0.9"/>
             <path d="M16 11L21 14V20L16 23L11 20V14L16 11Z" fill="url(#grad1)" opacity="0.6"/>
@@ -34,9 +35,9 @@
             </defs>
           </svg>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed" class="brand-name">Habitatum</span>
-                </Transition>
-              </div>
+            <span v-if="!sidebarCollapsed" class="brand-name" style="margin-left:8px;">{{ company?.nom || company?.name || 'Habitatum' }}</span>
+          </Transition>
+        </div>
         <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 18l-6-6 6-6" v-if="!sidebarCollapsed"/>
@@ -54,7 +55,10 @@
           </div>
           <div class="tenant-meta">
             <p class="tenant-name">{{ profileForm.first_name }} {{ profileForm.last_name }}</p>
-            <p class="tenant-role">Locataire</p>
+            <p class="tenant-role">
+              Locataire
+              <span v-if="agency" class="tenant-agency-name" style="display:block;font-size:10px;opacity:0.8;margin-top:2px;">{{ agency.nom || agency.name }}</span>
+            </p>
           </div>
         </div>
       </Transition>
@@ -62,21 +66,32 @@
       <!-- 💳 SIDEBAR WALLET COMPACT -->
       <Transition name="fade-slide">
         <div v-if="!sidebarCollapsed" class="sidebar-wallet-card">
-          <div class="wallet-card-header">
-            <span class="wallet-title">Solde Wallet</span>
-            <span class="wallet-badge" @click="toggleBalanceVisibility" style="cursor:pointer">
-              {{ hideBalance ? 'Afficher' : 'Masquer' }}
-            </span>
-          </div>
-          <p class="wallet-balance-val" :class="{ 'balance-flash': balanceFlash }">
-            {{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}
-          </p>
-          <button class="wallet-recharge-btn" @click="openRechargeModal">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Recharger
-          </button>
+          <template v-if="props.wallet">
+            <div class="wallet-card-header">
+              <span class="wallet-title">Solde Wallet</span>
+              <span class="wallet-badge" @click="toggleBalanceVisibility" style="cursor:pointer">
+                {{ hideBalance ? 'Afficher' : 'Masquer' }}
+              </span>
+            </div>
+            <p class="wallet-balance-val" :class="{ 'balance-flash': balanceFlash }">
+              {{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}
+            </p>
+            <button class="wallet-recharge-btn" @click="openRechargeModal">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Recharger
+            </button>
+          </template>
+          <template v-else>
+            <div class="wallet-card-header">
+              <span class="wallet-title">Portefeuille</span>
+            </div>
+            <p class="wallet-balance-val" style="font-size: 14px; opacity: 0.7; margin-bottom: 8px;">Non activé</p>
+            <button class="wallet-recharge-btn" @click="showCreateWalletModal = true" style="background: rgba(37, 99, 235, 0.2); border-color: rgba(37, 99, 235, 0.4); justify-content: center; gap: 4px;">
+              Activer
+            </button>
+          </template>
         </div>
-        <div v-else class="sidebar-wallet-collapsed" @click="openRechargeModal" title="Recharger">
+        <div v-else class="sidebar-wallet-collapsed" @click="props.wallet ? openRechargeModal() : (showCreateWalletModal = true)" :title="props.wallet ? 'Recharger' : 'Activer Portefeuille'">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
       </Transition>
@@ -208,14 +223,22 @@
                 </div>
                 <div class="kp-body">
                   <p class="kp-label">Mon Portefeuille</p>
-                  <p class="kp-value kp-value-wallet">{{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</p>
-                  <div class="wallet-kpi-actions">
-                    <button class="wallet-inline-btn" @click="openRechargeModal">Recharger</button>
-                    <button class="wallet-inline-btn secondary" @click="toggleBalanceVisibility">{{ hideBalance ? 'Afficher' : 'Masquer' }}</button>
-                    <button class="wallet-inline-btn secondary" @click="showTransferForm = !showTransferForm">
-                      {{ showTransferForm ? 'Annuler' : 'Transférer' }}
+                  <template v-if="props.wallet">
+                    <p class="kp-value kp-value-wallet">{{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</p>
+                    <div class="wallet-kpi-actions">
+                      <button class="wallet-inline-btn" @click="openRechargeModal">Recharger</button>
+                      <button class="wallet-inline-btn secondary" @click="toggleBalanceVisibility">{{ hideBalance ? 'Afficher' : 'Masquer' }}</button>
+                      <button class="wallet-inline-btn secondary" @click="showTransferForm = !showTransferForm">
+                        {{ showTransferForm ? 'Annuler' : 'Transférer' }}
+                      </button>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <p class="kp-value kp-value-wallet" style="font-size:16px; opacity:0.8; margin-bottom: 8px;">Non activé</p>
+                    <button class="wallet-inline-btn" @click="showCreateWalletModal = true" style="width:100%; justify-content:center;">
+                      Activer mon Portefeuille
                     </button>
-                  </div>
+                  </template>
                 </div>
               </div>
 
@@ -497,10 +520,23 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                   Reçu de renouvellement
                 </button>
+                <button class="btn-primary" @click="showRenewalFormModal = true" :disabled="!canRequestRenewal" style="background: linear-gradient(135deg, #10B981, #059669);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                  Demander le renouvellement
+                </button>
               </div>
               <div v-else class="contract-fee-paid-msg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span>Frais de contrat réglés — <button class="link-btn" @click="generateRenewalReceipt">Télécharger le reçu</button></span>
+                <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap; width: 100%;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Frais de contrat réglés — <button class="link-btn" @click="generateRenewalReceipt">Télécharger le reçu</button></span>
+                  <button class="btn-primary small" @click="showRenewalFormModal = true" :disabled="!canRequestRenewal" style="background: linear-gradient(135deg, #10B981, #059669); margin-left: auto;">
+                    Demander le renouvellement
+                  </button>
+                </div>
+              </div>
+              <div v-if="!canRequestRenewal" class="renewal-warning-box" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #D97706; font-size: 13px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Le renouvellement n'est disponible qu'à moins de 30 jours de la fin du contrat (échéance proche). Encore {{ daysRemainingInContract }} jours restants.</span>
               </div>
             </div>
 
@@ -1345,6 +1381,33 @@
                     <input type="password" v-model="passwordForm.confirm" class="form-input"/>
                   </div>
                   <button class="btn-primary small btn-password-submit" @click="changePassword">{{ t('profile.modifyPassword') }}</button>
+                </div>
+
+                <!-- 🔑 MODIFICATION DU CODE PIN WALLET -->
+                <div class="security-section pin-modification-section" v-if="props.wallet">
+                  <h4 class="section-subtitle">Modifier le Code PIN de Sécurité</h4>
+                  <p class="section-desc">Ce code PIN à 4 chiffres sécurise les transactions et débits de votre portefeuille.</p>
+                  
+                  <div class="form-group">
+                    <label>Code PIN Actuel</label>
+                    <input type="password" v-model="changePinForm.current_pin" maxlength="4" placeholder="••••" class="form-input" style="letter-spacing: 0.5em; text-align: center; max-width: 120px;"/>
+                  </div>
+                  <div class="form-group">
+                    <label>Nouveau Code PIN (4 chiffres)</label>
+                    <input type="password" v-model="changePinForm.new_pin" maxlength="4" placeholder="••••" class="form-input" style="letter-spacing: 0.5em; text-align: center; max-width: 120px;"/>
+                  </div>
+                  <div class="form-group">
+                    <label>Confirmer le Nouveau Code PIN</label>
+                    <input type="password" v-model="changePinForm.new_pin_confirmation" maxlength="4" placeholder="••••" class="form-input" style="letter-spacing: 0.5em; text-align: center; max-width: 120px;"/>
+                  </div>
+                  
+                  <div v-if="changePinForm.errors.general" class="rent-pin-error" style="margin-top: 10px; color: #EF4444; font-size: 13px;">
+                    {{ changePinForm.errors.general }}
+                  </div>
+                  
+                  <button class="btn-primary small btn-pin-submit" @click="submitChangePin" style="margin-top: 10px;">
+                    Modifier le Code PIN
+                  </button>
                 </div>
 
                 <!-- 🔐 2FA SETUP SECTION -->
@@ -2705,6 +2768,103 @@
       </div>
     </Transition>
 
+    <!-- 💬 Support Bientôt Dispo Modal -->
+    <Transition name="modal">
+      <div v-if="showSupportSoonModal" class="modal-overlay" @click.self="showSupportSoonModal = false">
+        <div class="modal-box glass-card text-center" style="max-width: 400px; padding: 32px 24px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; border: 1px solid rgba(59, 130, 246, 0.3);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px;">Support & Messagerie</h3>
+          <p style="font-size: 14px; color: #94A3B8; margin-bottom: 24px; line-height: 1.5;">Cette fonctionnalité de messagerie en temps réel et de gestion d'incidents est en cours d'optimisation par notre équipe technique. Elle sera disponible très prochainement.</p>
+          <button class="btn-primary" style="width: 100%;" @click="showSupportSoonModal = false">Compris</button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 🔄 Lease Renewal Modal -->
+    <Transition name="modal">
+      <div v-if="showRenewalFormModal" class="modal-overlay" @click.self="showRenewalFormModal = false">
+        <div class="modal-box glass-card" style="max-width: 480px; padding: 24px; border-radius: 20px; background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15);">
+          <div class="modal-header" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="modal-title" style="color: #fff; font-size: 18px; font-weight: 700; margin:0;">Demande de renouvellement</h3>
+            <button class="modal-close" @click="showRenewalFormModal = false" style="color: #94A3B8; background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          <div class="modal-body" style="color: #CBD5E1; display:flex; flex-direction:column; gap:16px;">
+            <div style="background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 10px; font-size: 13px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>Bien occupé:</span>
+                <strong style="color: #fff;">{{ props.contracts[0]?.property?.name }}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>Loyer de base:</span>
+                <strong style="color: #fff;">{{ formatCurrency(props.contracts[0]?.rent) }} / mois</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>Durée du nouveau bail:</span>
+                <strong style="color: #fff;">12 mois (Reconduction standard)</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Frais de dossier de contrat:</span>
+                <strong style="color: #F59E0B;">50 000 XAF</strong>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="display:block; margin-bottom:6px; color:#fff; font-size:13px;">Motif de la demande (optionnel)</label>
+              <textarea v-model="motifDemandeRenewal" placeholder="Ex: Souhaite prolonger le bail de 12 mois sans modifications..." class="form-input" style="width: 100%; min-height: 90px; border-radius: 8px; background: rgba(15,23,42,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 10px; font-family:inherit; resize:vertical;"></textarea>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px; font-size:12px; opacity:0.8; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); padding:10px; border-radius:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Le règlement des frais de dossier (50 000 XAF) s'effectuera depuis votre portefeuille et est requis pour soumettre la demande.</span>
+            </div>
+          </div>
+          <div class="modal-btn-row" style="margin-top: 24px; display:flex; gap:12px;">
+            <button class="btn-secondary flex-1" @click="showRenewalFormModal = false">Annuler</button>
+            <button class="btn-primary flex-1" style="background: linear-gradient(135deg, #F59E0B, #D97706); border: none;" @click="submitRenewalRequest">
+              Régler & Soumettre
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 💳 Create Wallet Modal -->
+    <Transition name="modal">
+      <div v-if="showCreateWalletModal" class="modal-overlay" @click.self="showCreateWalletModal = false">
+        <div class="modal-box glass-card" style="max-width: 400px; padding: 24px; border-radius: 20px; background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15);">
+          <div class="modal-header" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="modal-title" style="color: #fff; font-size: 18px; font-weight: 700; margin:0;">Activer votre portefeuille</h3>
+            <button class="modal-close" @click="showCreateWalletModal = false" style="color: #94A3B8; background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+          </div>
+          <div class="modal-body" style="color: #CBD5E1; display:flex; flex-direction:column; gap:16px;">
+            <p style="font-size: 13.5px; line-height: 1.5; margin:0;">Configurez un code PIN de sécurité à 4 chiffres. Ce code vous sera demandé pour valider chaque règlement (loyer, factures d'eau/élec, frais de contrat).</p>
+            
+            <div class="form-group" style="margin:0;">
+              <label style="display:block; margin-bottom:6px; color:#fff; font-size:13px;">Code PIN (4 chiffres)</label>
+              <input type="password" v-model="createWalletForm.pin" maxlength="4" placeholder="••••" class="form-input" style="text-align:center; font-size:18px; letter-spacing:8px;"/>
+              <span v-if="createWalletForm.errors.pin" style="color:#EF4444; font-size:11px; margin-top:4px; display:block;">{{ createWalletForm.errors.pin }}</span>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="display:block; margin-bottom:6px; color:#fff; font-size:13px;">Confirmer le code PIN</label>
+              <input type="password" v-model="createWalletForm.pin_confirmation" maxlength="4" placeholder="••••" class="form-input" style="text-align:center; font-size:18px; letter-spacing:8px;"/>
+              <span v-if="createWalletForm.errors.pin_confirmation" style="color:#EF4444; font-size:11px; margin-top:4px; display:block;">{{ createWalletForm.errors.pin_confirmation }}</span>
+            </div>
+
+            <div v-if="createWalletForm.errors.general" style="color:#EF4444; font-size:12px; text-align:center; background:rgba(239,68,68,0.1); padding:8px; border-radius:6px; margin:0;">
+              {{ createWalletForm.errors.general }}
+            </div>
+          </div>
+          <div class="modal-btn-row" style="margin-top: 24px; display:flex; gap:12px;">
+            <button class="btn-secondary flex-1" @click="showCreateWalletModal = false">Annuler</button>
+            <button class="btn-primary flex-1" @click="submitCreateWallet">Activer</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toast.show" class="toast" :class="'toast-' + toast.type" @click="toast.show = false">
@@ -2721,6 +2881,7 @@ import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useI18n } from 'vue-i18n'
 import AiAssistant from '../../Components/AiAssistant.vue'
+import { router } from '@inertiajs/vue3'
 
 const { t, locale } = useI18n()
 
@@ -2807,6 +2968,34 @@ const props = defineProps({
   vapidPublicKey: {
     type: String,
     default: 'BHpjN8KknDl3Kb1ggFJ5vu7LgwcPEJ5Q7BuDNNJdgnouYNhwwBgUmEGWK_NlX0QGqA8cyIiDIH95xrT5VeiCWaM'
+  },
+  locataire: {
+    type: Object,
+    default: null
+  },
+  company: {
+    type: Object,
+    default: null
+  },
+  agency: {
+    type: Object,
+    default: null
+  },
+  wallet: {
+    type: Object,
+    default: null
+  },
+  oldContracts: {
+    type: Array,
+    default: () => []
+  },
+  regleLoyer: {
+    type: Object,
+    default: null
+  },
+  receipts: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -2825,10 +3014,109 @@ const localInvoices = ref([])
 const localTickets = ref([])
 
 // 💳 WALLET
-const walletBalance = ref(150000)
+const walletBalance = ref(props.wallet ? props.wallet.solde : 0)
 const hideBalance = ref(false)
 const balanceRevealed = ref(false)
 let balanceRevealTimer = null
+
+// Profil & Paramètres
+const profileForm = reactive({
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone: '',
+  avatar: null
+})
+const savingProfile = ref(false)
+const passwordForm = reactive({
+  current: '',
+  new_password: '',
+  confirm: ''
+})
+const passwordStrength = ref(0)
+
+// 2FA Security
+const twoFAEnabled = ref(false)
+const show2FAModal = ref(false)
+const tfaStep = ref(1)
+const tfaToken = ref('')
+const hasDownloadedBackupCodes = ref(false)
+const mock2FASecret = 'JBSWY3DPEHPK3PXP'
+const tfaBackupCodes = ref(['1234-5678', '8765-4321', '2345-6789', '9876-5432', '3456-7890'])
+const tfaCountdown = ref(30)
+let tfaCountdownTimer = null
+
+// Global Dialogs & Alerts
+const showConfirmDialog = ref(false)
+const confirmDialogMessage = ref('')
+const confirmDialogCallback = ref(null)
+const toast = reactive({ show: false, type: 'info', message: '' })
+
+// Invoice & Receipt Details
+const invDetail = ref(null)
+const recDetail = ref(null)
+const ocDetail = ref(null)
+const showReceiptsPreview = ref(false)
+const showOldContractDetail = ref(false)
+const showReceiptDetail = ref(false)
+const showInvoiceDetail = ref(false)
+const showAvatarDeleteConfirm = ref(false)
+const showProofModal = ref(false)
+const selectedProofInvoice = ref(null)
+const proofFile = ref(null)
+const isProofDragging = ref(false)
+const showLogoutModal = ref(false)
+
+// Payments & Recharges
+const selectedMonthsKeys = ref([])
+const showPaymentConfirmModal = ref(false)
+const lastPaymentReceipt = ref(null)
+const paymentFlowStep = ref('idle')
+const pendingPaymentModal = ref(null)
+const showUtilityConfirmModal = ref(false)
+const selectedUtilityInv = ref(null)
+const lastUtilityReceipt = ref(null)
+const showContractFeeConfirmModal = ref(false)
+const lastContractFeeReceipt = ref(null)
+const showRechargeModal = ref(false)
+const processingPayment = ref(false)
+
+// Recharge States
+const orangeOtpSent = ref(false)
+const orangeOtp = ref('')
+const orangeAmount = ref('')
+const orangePhone = ref('')
+const mtnAmount = ref('')
+const mtnPhone = ref('')
+const mtnPin = ref('')
+const cardForm = reactive({ number: '', name: '', expiry: '', cvv: '', amount: '' })
+const paypalAmount = ref('')
+const processingRecharge = ref(false)
+const orangeOtpCountdown = ref(0)
+let orangeOtpTimer = null
+
+// Transfer
+const showTransferForm = ref(false)
+const transferAmount = ref('')
+const transferMemo = ref('')
+
+// Support Chat
+const selectedTicket = ref(null)
+const isTyping = ref(false)
+const chatMessagesRef = ref(null)
+const newMessage = ref('')
+const attachedFile = ref(null)
+const isRecording = ref(false)
+const recordingTime = ref(0)
+let recordingTimer = null
+const mockAudioPlayingId = ref(null)
+const showNewTicketModal = ref(false)
+const newTicketForm = reactive({ title: '', description: '', category: 'plumbing' })
+
+// Search & Filter
+const financeFilter = ref('all')
+const invoiceSearch = ref('')
+
 
 // 🔐 Wallet password gate
 const showPasswordGate = ref(false)
@@ -2837,6 +3125,29 @@ const walletPasswordError = ref('')
 const walletPendingAction = ref(null)
 const walletPendingLabel = ref('')
 const WALLET_PIN = '1234'
+
+// 💬 Support / Messagerie Bientôt dispo Modal
+const showSupportSoonModal = ref(false)
+
+// 💳 Wallet Creation Modal & States
+const showCreateWalletModal = ref(false)
+const createWalletForm = reactive({
+  pin: '',
+  pin_confirmation: '',
+  errors: {}
+})
+
+// 🔄 Lease Renewal Modal & States
+const showRenewalFormModal = ref(false)
+const motifDemandeRenewal = ref('')
+
+// 🔑 Change Wallet PIN in Profile
+const changePinForm = reactive({
+  current_pin: '',
+  new_pin: '',
+  new_pin_confirmation: '',
+  errors: {}
+})
 
 function requireWalletPassword(label, actionFn) {
   walletPasswordInput.value = ''
@@ -2886,115 +3197,8 @@ const transactions = ref([
   { id: 'TX-002', type: 'payment', amount: 185000, method: 'Portefeuille', description: 'Loyer Avril 2026', date: '2026-05-05T14:12:00', status: 'success' },
 ])
 
-// Transfer to Landlord states
-const showTransferForm = ref(false)
-const transferAmount = ref('')
-const transferMemo = ref('')
-
-// Recharge Wallet States
-const showRechargeModal = ref(false)
-const activeRechargeTab = ref('orange')
-const orangePhone = ref('')
-const orangeAmount = ref('')
-const orangeOtp = ref('')
-const orangeOtpSent = ref(false)
-const orangeOtpCountdown = ref(20)
-let orangeOtpTimer = null
-const processingRecharge = ref(false)
-
-const mtnPhone = ref('')
-const mtnPin = ref('')
-const mtnAmount = ref('')
-
-const cardForm = reactive({ number: '', name: '', expiry: '', cvv: '', amount: '' })
-const isCardFlipped = ref(false)
-const paypalAmount = ref('')
-
-// 🗓️ RENT CONSECUTIVE SELECTION ENGINE STATE
-const selectedMonthsKeys = ref([])
-
-// 🔐 2FA保護
-const show2FAModal = ref(false)
-const tfaStep = ref(1)
-const tfaToken = ref('')
-const twoFAEnabled = ref(false)
-const mock2FASecret = 'JBSW Y3DP EHPK 3PXP'
-const tfaCountdown = ref(30)
-let tfaCountdownTimer = null
-const tfaBackupCodes = ref(['A7C3-89F2', 'E012-99AD', '5BF4-CC8D', '11A8-77F1', '90E4-3A21', 'D8F0-664C', 'C419-BD12', 'F29B-AA77'])
-const hasDownloadedBackupCodes = ref(false)
-
-// 📑 SECURITY LOGS
-const loginLogs = ref([
-  { id: 1, device: 'desktop', device_name: 'Chrome — Windows 11', ip: '196.210.45.12', location: 'Yaoundé, CM', date: '2026-06-10T02:30:00', status: 'success' },
-  { id: 2, device: 'mobile', device_name: 'Safari — iPhone 15', ip: '196.210.45.10', location: 'Douala, CM', date: '2026-06-09T20:15:00', status: 'success' },
-])
-
-// Filters & Forms
-const financeFilter = ref('all')
-const invoiceSearch = ref('')
-const selectedTicket = ref(null)
-const newMessage = ref('')
-const chatMessagesRef = ref(null)
-const showNewTicketModal = ref(false)
-const showProofModal = ref(false)
-const selectedProofInvoice = ref(null)
-const isProofDragging = ref(false)
-const proofFile = ref(null)
-
-// Messaging Extended States
-const isTyping = ref(false)
-const isRecording = ref(false)
-const recordingTime = ref(0)
-let recordingTimer = null
-const attachedFile = ref(null)
-const mockAudioPlayingId = ref(null)
-
-const profileForm = reactive({
-  first_name: props.auth.user.first_name || 'Armel',
-  last_name: props.auth.user.last_name || 'Nguetsop',
-  email: props.auth.user.email,
-  phone: props.auth.user.phone || '+237 691 234 567',
-  avatar: props.auth.user.avatar,
-})
-const passwordForm = reactive({ current: '', new_password: '', confirm: '' })
-const isDragging = ref(false)
-const toast = reactive({ show: false, type: 'success', message: '' })
-const processingPayment = ref(false)
-const savingProfile = ref(false)
-const showAiPaymentSuccess = ref(false)
-const aiPayData = reactive({ type: 'rent', color: '#6366F1', color2: '#818CF8', bgGrad: 'linear-gradient(135deg,#EEF2FF,#E0E7FF)', title: 'Paiement réussi !', subtitle: '', iconSvg: '', particles: [] })
-const passwordStrength = ref(4)
-const newTicketForm = reactive({ title: '', description: '', category: 'plumbing' })
-const showConfirmDialog = ref(false)
-const confirmDialogMessage = ref('')
-const confirmDialogCallback = ref(() => {})
-
-// 🚪 Logout confirmation
-const showLogoutModal = ref(false)
-
-// 🌐 Language switching animation
-const switchingLang = ref(false)
-
-// 🗑️ Avatar delete confirmation
-const showAvatarDeleteConfirm = ref(false)
-
-// 📜 Old contract detail modal
-const showOldContractDetail = ref(false)
-const ocDetail = ref(null)
-
-// 📄 Invoice detail modal
-const showInvoiceDetail = ref(false)
-const invDetail = ref(null)
-
-const showReceiptDetail = ref(false)
-const recDetail = ref(null)
-
-// 📋 Unified receipts preview modal
-const showReceiptsPreview = ref(false)
-
-// 💰 CONTRACT FEE PAYMENT
-const contractFeePaid = ref(false)
+// // 💰 CONTRACT FEE PAYMENT
+const contractFeePaid = ref(props.receipts ? props.receipts.some(r => r.type === 'contract_fee') : false)
 
 // ════════════════════════════════════════════════════════════
 //  CONSTANTS / CONFIG
@@ -3004,11 +3208,11 @@ const defaultAvatar = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 const navItems = computed(() => [
   { id: 'overview', label: t('nav.overview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', badge: null },
   { id: 'contract', label: t('nav.contract'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', badge: null },
-  { id: 'loyer', label: t('nav.loyer'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>', badge: '1' },
-  { id: 'utilities', label: t('nav.utilities'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><path d="M12 2v20"/></svg>', badge: null },
+  { id: 'loyer', label: t('nav.loyer'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>', badge: rentMonths.value.filter(m => m.status === 'unpaid').length ? String(rentMonths.value.filter(m => m.status === 'unpaid').length) : null },
+  { id: 'utilities', label: t('nav.utilities'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/><path d="M12 2v20"/></svg>', badge: utilityInvoices.value.filter(i => i.status === 'pending').length ? String(utilityInvoices.value.filter(i => i.status === 'pending').length) : null },
   { id: 'receipts', label: t('nav.receipts'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', badge: null },
   { id: 'old-contracts', label: t('nav.oldContracts'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', badge: null },
-  { id: 'support', label: t('nav.support'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', badge: '2' },
+  { id: 'support', label: t('nav.support'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', badge: null },
   { id: 'profile', label: t('nav.profile'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', badge: null },
 ])
 
@@ -3028,14 +3232,7 @@ const utilityFilters = [
   { id: 'ELECTRIC', label: 'Électricité' },
   { id: 'pending', label: 'En attente' },
 ]
-const utilityInvoices = ref([
-  { id: 'INV-EAU-2026-006', reference: 'INV-EAU-2026-006', type: 'WATER', period: 'Juin 2026', amount: 12500, status: 'pending', consumption: { value: '9.2', unit: 'm³', index: '1461' } },
-  { id: 'INV-ELEC-2026-006', reference: 'INV-ELEC-2026-006', type: 'ELECTRIC', period: 'Juin 2026', amount: 19500, status: 'pending', consumption: { value: '131', unit: 'kWh', index: '08872' } },
-  { id: 'INV-EAU-2026-005', reference: 'INV-EAU-2026-005', type: 'WATER', period: 'Mai 2026', amount: 12500, status: 'paid', consumption: { value: '8.5', unit: 'm³', index: '1452' } },
-  { id: 'INV-ELEC-2026-005', reference: 'INV-ELEC-2026-005', type: 'ELECTRIC', period: 'Mai 2026', amount: 18200, status: 'pending', consumption: { value: '124', unit: 'kWh', index: '08741' } },
-  { id: 'INV-EAU-2026-004', reference: 'INV-EAU-2026-004', type: 'WATER', period: 'Avril 2026', amount: 12500, status: 'paid', consumption: { value: '7.8', unit: 'm³', index: '1443' } },
-  { id: 'INV-ELEC-2026-004', reference: 'INV-ELEC-2026-004', type: 'ELECTRIC', period: 'Avril 2026', amount: 16700, status: 'paid', consumption: { value: '112', unit: 'kWh', index: '08629' } },
-])
+const utilityInvoices = ref([])
 
 const financeFilters = [
   { id: 'all', label: 'Tous' },
@@ -3052,19 +3249,11 @@ const receiptFilters = [
   { id: 'utilities', label: 'Eau/Électricité' },
   { id: 'contract_fee', label: 'Frais contrat' },
 ]
-const allReceipts = ref([
-  { id: 'RCPT-001', type: 'rent', title: 'Loyer Juin 2026', reference: 'QUIT-2026-006', amount: 185000, period: 'Juin 2026', paid_at: '2026-06-05', method: 'Portefeuille', transaction_id: 'TX-1749000001', property: 'Appartement Bastos', tenant: 'Armel Nguetsop', landlord: 'SCI Habitats SA' },
-  { id: 'RCPT-002', type: 'rent', title: 'Loyer Mai 2026', reference: 'QUIT-2026-005', amount: 185000, period: 'Mai 2026', paid_at: '2026-05-05', method: 'Portefeuille', transaction_id: 'TX-1746400001', property: 'Appartement Bastos', tenant: 'Armel Nguetsop', landlord: 'SCI Habitats SA' },
-  { id: 'RCPT-003', type: 'water', title: 'Facture Eau Mai 2026', reference: 'QUIT-EAU-2026-005', amount: 12500, period: 'Mai 2026', paid_at: '2026-05-12', method: 'Portefeuille', transaction_id: 'TX-1746480001', property: 'Appartement Bastos', tenant: 'Armel Nguetsop', landlord: 'SCI Habitats SA' },
-  { id: 'RCPT-004', type: 'contract_fee', title: 'Frais de contrat (Renouvellement)', reference: 'FEE-CTR-2026-001', amount: 50000, period: '2026', paid_at: '2026-06-01', method: 'Portefeuille', transaction_id: 'TX-1748900001', property: 'Appartement Bastos', tenant: 'Armel Nguetsop', landlord: 'SCI Habitats SA' },
-])
+const allReceipts = ref([])
 
 // 🏛️ OLD CONTRACTS
 const oldContractSearch = ref('')
-const oldContracts = ref([
-  { id: 'OCTR-001', property_name: 'Studio Mvog-Mbi', address: 'Quartier Mvog-Mbi, Yaoundé', owner: 'M. Bidzogo Evariste', start_date: '2021-03-01', end_date: '2023-02-28', rent: 95000, deposit: 190000, duration: '2 ans', status: 'ended', documents: ['Bail signé', 'État des lieux'] },
-  { id: 'OCTR-002', property_name: 'Appartement Ekounou', address: 'Quartier Ekounou, Douala', owner: 'Mme. Nkongo Sophie', start_date: '2019-06-01', end_date: '2021-05-31', rent: 120000, deposit: 240000, duration: '2 ans', status: 'ended', documents: ['Bail signé', 'État des lieux', 'Quittance de régularisation'] },
-])
+const oldContracts = ref([])
 
 const ticketCategories = [
   { id: 'plumbing', label: '🔧 Plomberie' },
@@ -3080,9 +3269,9 @@ const priorities = [
 ]
 
 const notifPreferences = ref([
-  { id: 'rent_reminder', label: 'Rappels de loyers', description: 'Alertes 5 jours avant échéance', channels: ['email', 'push'] },
-  { id: 'payment_confirm', label: 'Reçus de paiement', description: 'Confirmation immédiate de quittance', channels: ['email'] },
-  { id: 'ticket_update', label: 'Modifications tickets', description: 'Notifications de réponse du bailleur', channels: ['email', 'push'] },
+  { id: 'rent_reminder', label: 'Rappels de loyers', description: 'Alertes 5 jours avant échéance', channels: ['email', 'sms', 'push'] },
+  { id: 'payment_confirm', label: 'Reçus de paiement', description: 'Confirmation immédiate de quittance', channels: ['email', 'sms', 'push'] },
+  { id: 'ticket_update', label: 'Modifications tickets', description: 'Notifications de réponse du bailleur', channels: ['email', 'sms', 'push'] },
   { id: 'security_alert', label: 'Sécurité de compte', description: 'Tentatives de connexion ou modifs 2FA', channels: ['email', 'sms', 'push'] }
 ])
 
@@ -3102,28 +3291,40 @@ function loadPersistedState() {
   const savedTab = localStorage.getItem('hab_active_tab')
   if (savedTab) activeTab.value = savedTab
 
-  const savedProfile = localStorage.getItem('hab_profile_draft')
-  if (savedProfile) Object.assign(profileForm, JSON.parse(savedProfile))
+  // Initialize from live props instead of stale localStorage
+  profileForm.first_name = props.auth.user.first_name || ''
+  profileForm.last_name = props.auth.user.last_name || ''
+  profileForm.email = props.auth.user.email || ''
+  profileForm.phone = props.auth.user.phone || ''
+  profileForm.avatar = props.auth.user.avatar || null
 
-  const savedWallet = localStorage.getItem('hab_wallet_balance')
-  if (savedWallet) walletBalance.value = parseFloat(savedWallet)
+  walletBalance.value = props.wallet ? parseFloat(props.wallet.solde) : 0
+  transactions.value = props.wallet?.transactions || []
 
-  const savedTransactions = localStorage.getItem('hab_transactions')
-  if (savedTransactions) transactions.value = JSON.parse(savedTransactions)
+  localInvoices.value = props.invoices ? [...props.invoices] : []
+  allReceipts.value = props.receipts ? [...props.receipts] : []
+  oldContracts.value = props.oldContracts ? [...props.oldContracts] : []
 
-  const savedInvoices = localStorage.getItem('hab_invoices')
-  if (savedInvoices) {
-    localInvoices.value = JSON.parse(savedInvoices)
-  } else {
-    localInvoices.value = [...props.invoices]
-  }
+  // Filter and map utility invoices for the tab
+  const utils = (props.invoices || []).filter(i => i.type !== 'Loyer' && i.type !== 'RENT')
+  utilityInvoices.value = utils.map(i => {
+    let type = 'WATER'
+    if (i.type && ['électricité', 'electricite', 'electric', 'elec'].includes(i.type.toLowerCase())) {
+      type = 'ELECTRIC'
+    } else if (i.type && ['eau', 'water'].includes(i.type.toLowerCase())) {
+      type = 'WATER'
+    } else {
+      type = i.type
+    }
+    return {
+      ...i,
+      type: type,
+      consumption: i.consumption || { value: Math.floor(Math.random() * 50 + 10), unit: type === 'WATER' ? 'm³' : 'kWh', index: String(Math.floor(Math.random() * 8000 + 1000)) }
+    }
+  })
 
-  const savedTickets = localStorage.getItem('hab_tickets')
-  if (savedTickets) {
-    localTickets.value = JSON.parse(savedTickets)
-  } else {
-    localTickets.value = [...props.tickets]
-  }
+  // Load tickets from props (or fallback to local simulation if appropriate)
+  localTickets.value = props.tickets ? [...props.tickets] : []
 
   const saved2FA = localStorage.getItem('hab_2fa_enabled')
   if (saved2FA) twoFAEnabled.value = JSON.parse(saved2FA)
@@ -3169,6 +3370,20 @@ const currentRentStatus = computed(() => {
   const currentMonth = '2026-' + String(new Date().getMonth() + 1).padStart(2, '0')
   const found = rentMonths.value.find(m => m.key === currentMonth)
   return found && found.status === 'paid' ? 'paid' : 'pending'
+})
+
+const daysRemainingInContract = computed(() => {
+  if (!props.contracts || props.contracts.length === 0) return 999
+  const contract = props.contracts[0]
+  const end = new Date(contract.end_date)
+  const today = new Date()
+  const diffTime = end - today
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+})
+
+const canRequestRenewal = computed(() => {
+  return daysRemainingInContract.value <= 30
 })
 
 const invoicePreviewRows = computed(() => {
@@ -3684,6 +3899,11 @@ function handleAiAction(actionId) {
 }
 
 function switchTab(id) {
+  if (id === 'support' || id === 'messagerie') {
+    showSupportSoonModal.value = true
+    mobileSidebarOpen.value = false
+    return
+  }
   if (id === activeTab.value) return
 
   // If on PIN step when switching tab, close modals and save pending state for return
@@ -3809,17 +4029,7 @@ function toggleMonthSelection(month) {
   }
 }
 
-// Payment confirmation modal + success state
-const showPaymentConfirmModal = ref(false)
-const lastPaymentReceipt = ref(null)
-// Shared flow step for recap → PIN → success within a single overlay
-const paymentFlowStep = ref('idle') // 'idle' | 'recap' | 'pin' | 'success'
-const pendingPaymentModal = ref(null) // 'rent' | 'utility' | 'contract' | null
 
-// 🔧 Utility payment modal + success
-const showUtilityConfirmModal = ref(false)
-const selectedUtilityInv = ref(null)
-const lastUtilityReceipt = ref(null)
 
 function openUtilityConfirm(inv) {
   if (walletBalance.value < inv.amount) {
@@ -3835,36 +4045,59 @@ function openUtilityConfirm(inv) {
 function confirmUtilityPayment() {
   const inv = selectedUtilityInv.value
   if (!inv) return
-  openPremiumPinGate(inv.amount, 'utility', () => executeUtilityPayment(inv))
+  openPremiumPinGate(inv.amount, 'utility', (pin) => executeUtilityPayment(inv, pin))
   paymentFlowStep.value = 'pin'
 }
 
-function executeUtilityPayment(inv) {
-  walletBalance.value -= inv.amount
-  inv.status = 'paid'
-  transactions.value.unshift({
-    id: 'TX-' + Date.now(), type: 'payment', amount: inv.amount,
-    method: 'Portefeuille', description: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} - ${inv.period}`,
-    date: new Date().toISOString(), status: 'success'
+function executeUtilityPayment(inv, pin) {
+  window.axios.post('/api/locataire/wallet/pay-utility', {
+    invoice_id: inv.id,
+    pin: pin
   })
-  const receipt = {
-    id: 'RCPT-' + Date.now(), type: inv.type === 'WATER' ? 'water' : 'electric',
-    title: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} ${inv.period}`,
-    reference: inv.reference.replace('INV', 'QUIT'), amount: inv.amount,
-    period: inv.period, paid_at: new Date().toISOString().split('T')[0],
-    method: 'Portefeuille', transaction_id: 'TX-' + Date.now(),
-    property: props.contracts[0]?.property?.name || 'Appartement',
-    tenant: `${profileForm.first_name} ${profileForm.last_name}`,
-    landlord: 'SCI Habitats SA'
-  }
-  allReceipts.value.unshift(receipt)
-  lastUtilityReceipt.value = receipt
-  showToast('success', `Facture ${inv.reference} payée ! Reçu généré.`)
+  .then(response => {
+    walletBalance.value = response.data.solde
+    
+    // Play success animation
+    playSuccessChime()
+    paymentFlowStep.value = 'success'
+    
+    inv.status = 'paid'
+    transactions.value.unshift({
+      id: 'TX-' + Date.now(), type: 'payment', amount: inv.amount,
+      method: 'Portefeuille', description: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} - ${inv.period}`,
+      date: new Date().toISOString(), status: 'success'
+    })
+    const receipt = {
+      id: 'RCPT-' + Date.now(), type: inv.type === 'WATER' ? 'water' : 'electric',
+      title: `Facture ${inv.type === 'WATER' ? 'Eau' : 'Électricité'} ${inv.period}`,
+      reference: inv.reference.replace('INV', 'QUIT'), amount: inv.amount,
+      period: inv.period, paid_at: new Date().toISOString().split('T')[0],
+      method: 'Portefeuille', transaction_id: 'TX-' + Date.now(),
+      property: props.contracts[0]?.property?.name || 'Appartement',
+      tenant: `${profileForm.first_name} ${profileForm.last_name}`,
+      landlord: 'SCI Habitats SA'
+    }
+    allReceipts.value.unshift(receipt)
+    lastUtilityReceipt.value = receipt
+    showToast('success', `Facture ${inv.reference} payée ! Reçu généré.`)
+    
+    setTimeout(() => {
+      paymentFlowStep.value = 'idle'
+      showUtilityConfirmModal.value = false
+      premiumPinOriginTab.value = null
+      pendingPaymentModal.value = null
+    }, 2200)
+    
+    router.reload({ only: ['wallet', 'invoices', 'receipts'] })
+  })
+  .catch(error => {
+    rentWalletPinInput.value = ''
+    rentWalletPinError.value = error.response?.data?.message || 'Erreur de paiement.'
+    setTimeout(focusRentPinInput, 100)
+  })
 }
 
-// 📄 Contract fee payment modal + success
-const showContractFeeConfirmModal = ref(false)
-const lastContractFeeReceipt = ref(null)
+
 
 function openContractFeeConfirm() {
   if (walletBalance.value < 50000) {
@@ -3877,15 +4110,32 @@ function openContractFeeConfirm() {
 }
 
 function confirmContractFeePayment() {
-  openPremiumPinGate(50000, 'contract', executeContractFeePayment)
+  openPremiumPinGate(50000, 'contract', (pin) => executeContractFeePayment(pin))
   paymentFlowStep.value = 'pin'
 }
 
-function executeContractFeePayment() {
+function executeContractFeePayment(pin) {
+  const contract = props.contracts[0]
+  if (!contract) {
+    showToast('error', 'Aucun contrat actif.')
+    return
+  }
+  
   processingPayment.value = true
-  setTimeout(() => {
-    walletBalance.value -= 50000
+  window.axios.post('/api/locataire/wallet/pay-contract-fee', {
+    contrat_id: contract.id,
+    frais_contrat: 50000,
+    motif_demande: motifDemandeRenewal.value,
+    pin: pin
+  })
+  .then(response => {
+    walletBalance.value = response.data.solde
     contractFeePaid.value = true
+    
+    // Play success animation
+    playSuccessChime()
+    paymentFlowStep.value = 'success'
+    
     transactions.value.unshift({
       id: 'TX-' + Date.now(), type: 'payment', amount: 50000,
       method: 'Portefeuille', description: 'Frais de contrat / Renouvellement de bail',
@@ -3904,9 +4154,25 @@ function executeContractFeePayment() {
     }
     allReceipts.value.unshift(receipt)
     lastContractFeeReceipt.value = receipt
+    showToast('success', response.data.message || 'Frais de contrat réglés ! Reçu généré.')
+    
+    setTimeout(() => {
+      paymentFlowStep.value = 'idle'
+      showContractFeeConfirmModal.value = false
+      premiumPinOriginTab.value = null
+      pendingPaymentModal.value = null
+    }, 2200)
+    
+    router.reload({ only: ['wallet', 'invoices', 'receipts'] })
+  })
+  .catch(error => {
+    rentWalletPinInput.value = ''
+    rentWalletPinError.value = error.response?.data?.message || 'Erreur lors du règlement.'
+    setTimeout(focusRentPinInput, 100)
+  })
+  .finally(() => {
     processingPayment.value = false
-    showToast('success', 'Frais de contrat réglés ! Reçu généré.')
-  }, 600)
+  })
 }
 
 // 🔐 Premium wallet PIN gate (generic reusable)
@@ -3982,27 +4248,10 @@ function onRentPinInput() {
 }
 
 function submitRentWalletPin() {
-  if (rentWalletPinInput.value === WALLET_PIN) {
-    rentWalletPinError.value = ''
-    playSuccessChime()
-    paymentFlowStep.value = 'success'
-    setTimeout(() => {
-      paymentFlowStep.value = 'idle'
-      showPaymentConfirmModal.value = false
-      showUtilityConfirmModal.value = false
-      showContractFeeConfirmModal.value = false
-      premiumPinOriginTab.value = null
-      if (premiumPinResolve.value) {
-        const resolve = premiumPinResolve.value
-        premiumPinResolve.value = null
-        resolve()
-      }
-    }, 2200)
-  } else {
-    rentWalletPinAttempts.value++
-    rentWalletPinError.value = 'Code incorrect. Tentative ' + (rentWalletPinAttempts.value + 1) + '/3'
-    rentWalletPinInput.value = ''
-    setTimeout(focusRentPinInput, 100)
+  if (rentWalletPinInput.value.length < 4) return
+  rentWalletPinError.value = ''
+  if (premiumPinResolve.value) {
+    premiumPinResolve.value(rentWalletPinInput.value)
   }
 }
 
@@ -4020,8 +4269,38 @@ function cancelPaymentFlow() {
 }
 
 function openPaymentConfirm() {
-  if (walletBalance.value < totalPaymentAmount.value) {
-    showToast('error', 'Votre solde est insuffisant pour finaliser.')
+  const total = totalPaymentAmount.value
+  if (walletBalance.value < total) {
+    const selectedMonths = rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key))
+    if (selectedMonths.length === 0) return
+    
+    let accumulated = 0
+    const affordableMonthsKeys = []
+    
+    for (const m of selectedMonths) {
+      if (accumulated + m.totalDue <= walletBalance.value) {
+        accumulated += m.totalDue
+        affordableMonthsKeys.push(m.key)
+      } else {
+        break
+      }
+    }
+    
+    if (affordableMonthsKeys.length > 0) {
+      const affordableNames = rentMonths.value.filter(m => affordableMonthsKeys.includes(m.key)).map(m => m.label).join(', ')
+      confirmDialogMessage.value = `Votre solde (${formatCurrency(walletBalance.value)}) est insuffisant pour payer tous les mois sélectionnés (${formatCurrency(total)}). Voulez-vous plutôt régler les mois que vous pouvez vous permettre : ${affordableNames} pour un total de ${formatCurrency(accumulated)} ?`
+      confirmDialogCallback.value = () => {
+        selectedMonthsKeys.value = affordableMonthsKeys
+        showConfirmDialog.value = false
+        openPremiumPinGate(accumulated, 'rent', (pin) => executePayment(pin))
+        paymentFlowStep.value = 'pin'
+        showPaymentConfirmModal.value = true
+      }
+      showConfirmDialog.value = true
+    } else {
+      showToast('error', `Votre solde (${formatCurrency(walletBalance.value)}) est insuffisant pour payer même le premier mois sélectionné (${formatCurrency(selectedMonths[0].totalDue)}).`)
+      openRechargeModal()
+    }
     return
   }
   paymentFlowStep.value = 'recap'
@@ -4029,85 +4308,106 @@ function openPaymentConfirm() {
 }
 
 function confirmPaymentFromModal() {
-  openPremiumPinGate(totalPaymentAmount.value, 'rent', executePayment)
+  openPremiumPinGate(totalPaymentAmount.value, 'rent', (pin) => executePayment(pin))
   paymentFlowStep.value = 'pin'
 }
 
-function executePayment() {
-  walletBalance.value -= totalPaymentAmount.value
-
+function executePayment(pin) {
+  processingPayment.value = true
   const paidMonths = rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key))
-  for (const m of paidMonths) {
-    localInvoices.value.push({
-      id: 'INV-RENT-' + Date.now() + '-' + m.key,
-      type: 'RENT',
-      status: 'paid',
-      period: m.label,
-      amount: m.totalDue,
-      rentBase: m.amount,
-      penaltyAmount: m.penaltyAmount,
-      penaltyRate: m.penaltyRate,
-      paid_at: new Date().toISOString().split('T')[0],
-      reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
-    })
-  }
-
-  const receipt = {
-    id: 'RCPT-' + Date.now(), type: 'rent',
-    title: `Loyer ${selectedMonthsNames.value}`,
-    reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
-    amount: totalPaymentAmount.value,
-    period: selectedMonthsNames.value,
-    paid_at: new Date().toISOString().split('T')[0],
-    method: 'Portefeuille',
-    transaction_id: 'TX-' + Date.now(),
-    property: props.contracts[0]?.property?.name || 'Appartement',
-    tenant: `${profileForm.first_name} ${profileForm.last_name}`,
-    landlord: 'SCI Habitats SA',
+  
+  window.axios.post('/api/locataire/wallet/pay-rent', {
     months: paidMonths.map(m => ({
-      label: m.label,
+      key: m.key,
       amount: m.amount,
       penaltyAmount: m.penaltyAmount,
-      penaltyRate: m.penaltyRate,
-      totalDue: m.totalDue,
+      totalDue: m.totalDue
     })),
-    includesPenalties: paidMonths.some(m => m.penaltyAmount > 0),
-  }
-
-  transactions.value.unshift({
-    id: 'TX-' + Date.now(), type: 'payment',
-    amount: totalPaymentAmount.value, method: 'Portefeuille',
-    description: `Loyer : ${selectedMonthsNames.value}`,
-    date: new Date().toISOString(), status: 'success'
+    pin: pin
   })
+  .then(response => {
+    walletBalance.value = response.data.solde
+    
+    playSuccessChime()
+    paymentFlowStep.value = 'success'
+    
+    for (const m of paidMonths) {
+      localInvoices.value.push({
+        id: 'INV-RENT-' + Date.now() + '-' + m.key,
+        type: 'RENT',
+        status: 'paid',
+        period: m.label,
+        amount: m.totalDue,
+        rentBase: m.amount,
+        penaltyAmount: m.penaltyAmount,
+        penaltyRate: m.penaltyRate,
+        paid_at: new Date().toISOString().split('T')[0],
+        reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
+      })
+    }
 
-  allReceipts.value.unshift(receipt)
-  lastPaymentReceipt.value = receipt
-  selectedMonthsKeys.value = []
-  showToast('success', 'Règlement de loyer enregistré avec succès !')
+    const receipt = {
+      id: 'RCPT-' + Date.now(), type: 'rent',
+      title: `Loyer ${selectedMonthsNames.value}`,
+      reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
+      amount: totalPaymentAmount.value,
+      period: selectedMonthsNames.value,
+      paid_at: new Date().toISOString().split('T')[0],
+      method: 'Portefeuille',
+      transaction_id: 'TX-' + Date.now(),
+      property: props.contracts[0]?.property?.name || 'Appartement',
+      tenant: `${profileForm.first_name} ${profileForm.last_name}`,
+      landlord: 'SCI Habitats SA',
+      months: paidMonths.map(m => ({
+        label: m.label,
+        amount: m.amount,
+        penaltyAmount: m.penaltyAmount,
+        penaltyRate: m.penaltyRate,
+        totalDue: m.totalDue,
+      })),
+      includesPenalties: paidMonths.some(m => m.penaltyAmount > 0),
+    }
+
+    transactions.value.unshift({
+      id: 'TX-' + Date.now(), type: 'payment',
+      amount: totalPaymentAmount.value, method: 'Portefeuille',
+      description: `Loyer : ${selectedMonthsNames.value}`,
+      date: new Date().toISOString(), status: 'success'
+    })
+
+    allReceipts.value.unshift(receipt)
+    lastPaymentReceipt.value = receipt
+    selectedMonthsKeys.value = []
+    
+    showToast('success', response.data.message || 'Règlement de loyer enregistré avec succès !')
+    
+    setTimeout(() => {
+      paymentFlowStep.value = 'idle'
+      showPaymentConfirmModal.value = false
+      premiumPinOriginTab.value = null
+      pendingPaymentModal.value = null
+    }, 2200)
+    
+    router.reload({ only: ['wallet', 'invoices', 'receipts'] })
+  })
+  .catch(error => {
+    rentWalletPinInput.value = ''
+    rentWalletPinError.value = error.response?.data?.message || 'Erreur de paiement.'
+    setTimeout(focusRentPinInput, 100)
+  })
+  .finally(() => {
+    processingPayment.value = false
+  })
 }
 
-// Pay individual water/electricity bills
 function payIndividualInvoice(invoice) {
-  if (walletBalance.value < invoice.amount) {
-    showToast('error', 'Solde insuffisant pour ce règlement.')
-    openRechargeModal()
-    return
+  const foundMonth = rentMonths.value.find(m => m.label === invoice.period)
+  if (foundMonth) {
+    selectedMonthsKeys.value = [foundMonth.key]
+    openPaymentConfirm()
+  } else {
+    showToast('error', 'Mois de loyer introuvable.')
   }
-  requireWalletPassword(`Paiement facture ${invoice.reference}`, () => {
-    walletBalance.value -= invoice.amount
-    invoice.status = 'paid'
-    transactions.value.unshift({
-      id: 'TX-' + Date.now(),
-      type: 'payment',
-      amount: invoice.amount,
-      method: 'Portefeuille',
-      description: `Facture ${invoiceTypeLabel(invoice.type)} - ${invoice.period}`,
-      date: new Date().toISOString(),
-      status: 'success'
-    })
-    showToast('success', `Règlement de la facture ${invoice.reference} effectué !`)
-  })
 }
 
 // 💧 UTILITY PAYMENT (Water/Electricity via Wallet)
@@ -4383,6 +4683,34 @@ function openRechargeModal() {
   paypalAmount.value = ''
 }
 
+function submitRechargeBackend(amount, method) {
+  processingRecharge.value = true
+  window.axios.post('/api/locataire/wallet/recharge', {
+    amount: amount,
+    method: method
+  })
+  .then(response => {
+    walletBalance.value = response.data.solde
+    transactions.value.unshift({
+      id: 'TX-' + Date.now(),
+      type: 'recharge',
+      amount: amount,
+      method: method,
+      date: new Date().toISOString(),
+      status: 'success'
+    })
+    showRechargeModal.value = false
+    showToast('success', response.data.message || 'Portefeuille rechargé avec succès !')
+    router.reload({ only: ['wallet'] })
+  })
+  .catch(error => {
+    showToast('error', error.response?.data?.message || 'Erreur lors de la recharge.')
+  })
+  .finally(() => {
+    processingRecharge.value = false
+  })
+}
+
 function processOrangeRecharge() {
   if (!orangePhone.value || !orangeAmount.value) {
     showToast('error', 'Champs obligatoires manquants.')
@@ -4405,29 +4733,12 @@ function processOrangeRecharge() {
           orangeOtpSent.value = false
           showToast('error', 'Le code de test OTP a expiré.')
         }
-  }, 100)
+      }, 1000)
     }, 1500)
   } else {
     if (orangeOtp.value === '8842') {
-      requireWalletPassword('Recharge Orange Money', () => {
-        clearInterval(orangeOtpTimer)
-        processingRecharge.value = true
-        setTimeout(() => {
-          const amt = parseFloat(orangeAmount.value)
-          walletBalance.value += amt
-          transactions.value.unshift({
-            id: 'TX-' + Date.now(),
-            type: 'recharge',
-            amount: amt,
-            method: 'Orange Money',
-            date: new Date().toISOString(),
-            status: 'success'
-          })
-          processingRecharge.value = false
-          showRechargeModal.value = false
-          showToast('success', 'Portefeuille rechargé avec succès !')
-        }, 1200)
-      })
+      clearInterval(orangeOtpTimer)
+      submitRechargeBackend(parseFloat(orangeAmount.value), 'Orange Money')
     } else {
       showToast('error', 'Code OTP incorrect. Veuillez utiliser 8842.')
     }
@@ -4439,24 +4750,7 @@ function processMtnRecharge() {
     showToast('error', 'Champs requis manquants.')
     return
   }
-  requireWalletPassword('Recharge MTN MoMo', () => {
-    processingRecharge.value = true
-    setTimeout(() => {
-      const amt = parseFloat(mtnAmount.value)
-      walletBalance.value += amt
-      transactions.value.unshift({
-        id: 'TX-' + Date.now(),
-        type: 'recharge',
-        amount: amt,
-        method: 'MTN MoMo',
-        date: new Date().toISOString(),
-        status: 'success'
-      })
-      processingRecharge.value = false
-      showRechargeModal.value = false
-      showToast('success', `MTN MoMo rechargé : +${formatCurrency(amt)}`)
-    }, 1800)
-  })
+  submitRechargeBackend(parseFloat(mtnAmount.value), 'MTN MoMo')
 }
 
 function formatCardNumber(e) {
@@ -4497,46 +4791,12 @@ function processCardRecharge() {
     showToast('error', 'Algorithme de Luhn invalide pour cette carte.')
     return
   }
-  requireWalletPassword('Recharge Carte Bancaire', () => {
-    processingRecharge.value = true
-    setTimeout(() => {
-      const amt = parseFloat(cardForm.amount)
-      walletBalance.value += amt
-      transactions.value.unshift({
-        id: 'TX-' + Date.now(),
-        type: 'recharge',
-        amount: amt,
-        method: 'Carte Bancaire',
-        date: new Date().toISOString(),
-        status: 'success'
-      })
-      processingRecharge.value = false
-      showRechargeModal.value = false
-      showToast('success', `Règlement CB approuvé : +${formatCurrency(amt)}`)
-    }, 2000)
-  })
+  submitRechargeBackend(parseFloat(cardForm.amount), 'Carte Bancaire')
 }
 
 function processPaypalRecharge() {
   if (!paypalAmount.value) return
-  requireWalletPassword('Recharge PayPal', () => {
-    processingRecharge.value = true
-    setTimeout(() => {
-      const amt = parseFloat(paypalAmount.value)
-      walletBalance.value += amt
-      transactions.value.unshift({
-        id: 'TX-' + Date.now(),
-        type: 'recharge',
-        amount: amt,
-        method: 'PayPal',
-        date: new Date().toISOString(),
-        status: 'success'
-      })
-      processingRecharge.value = false
-      showRechargeModal.value = false
-      showToast('success', 'Virement PayPal finalisé.')
-    }, 2000)
-  })
+  submitRechargeBackend(parseFloat(paypalAmount.value), 'PayPal')
 }
 
 // 🔐 2FA SETUP WIZARDS ACTIONS
@@ -4853,11 +5113,84 @@ function changePassword() {
   passwordForm.confirm = ''
   localStorage.removeItem('hab_password_draft')
 }
+
+function submitCreateWallet() {
+  createWalletForm.errors = {}
+  if (createWalletForm.pin.length !== 4 || !/^\d+$/.test(createWalletForm.pin)) {
+    createWalletForm.errors.pin = 'Le code secret doit contenir exactement 4 chiffres.'
+    return
+  }
+  if (createWalletForm.pin !== createWalletForm.pin_confirmation) {
+    createWalletForm.errors.pin_confirmation = 'Les codes secrets ne correspondent pas.'
+    return
+  }
+
+  isLoading.value = true
+  window.axios.post('/api/locataire/wallet/create', {
+    pin: createWalletForm.pin
+  })
+  .then(response => {
+    showCreateWalletModal.value = false
+    showToast('success', response.data.message || 'Portefeuille activé avec succès !')
+    router.reload({
+      only: ['wallet'],
+      onSuccess: () => {
+        walletBalance.value = props.wallet ? parseFloat(props.wallet.solde) : 0
+        transactions.value = props.wallet?.transactions || []
+      }
+    })
+  })
+  .catch(error => {
+    createWalletForm.errors.general = error.response?.data?.message || 'Erreur lors de la création.'
+  })
+  .finally(() => {
+    isLoading.value = false
+  })
+}
+
+function submitChangePin() {
+  changePinForm.errors = {}
+  if (!changePinForm.current_pin || !changePinForm.new_pin || !changePinForm.new_pin_confirmation) {
+    changePinForm.errors.general = 'Veuillez remplir tous les champs.'
+    return
+  }
+  if (changePinForm.new_pin.length !== 4 || !/^\d+$/.test(changePinForm.new_pin)) {
+    changePinForm.errors.general = 'Le nouveau code PIN doit être de 4 chiffres.'
+    return
+  }
+  if (changePinForm.new_pin !== changePinForm.new_pin_confirmation) {
+    changePinForm.errors.general = 'Les confirmations de code PIN ne correspondent pas.'
+    return
+  }
+
+  isLoading.value = true
+  window.axios.post('/api/locataire/wallet/change-pin', {
+    current_pin: changePinForm.current_pin,
+    new_pin: changePinForm.new_pin
+  })
+  .then(response => {
+    showToast('success', response.data.message || 'Code PIN modifié avec succès !')
+    changePinForm.current_pin = ''
+    changePinForm.new_pin = ''
+    changePinForm.new_pin_confirmation = ''
+  })
+  .catch(error => {
+    changePinForm.errors.general = error.response?.data?.message || 'Erreur de modification du PIN.'
+  })
+  .finally(() => {
+    isLoading.value = false
+  })
+}
+
+function submitRenewalRequest() {
+  showRenewalFormModal.value = false
+  payContractFee()
+}
 function handleLogout() { showLogoutModal.value = true }
 function confirmLogout() {
   showLogoutModal.value = false
   showToast('success', 'Fermeture de session...')
-  setTimeout(() => { window.location.href = '/logout' }, 800)
+  router.post('/logout')
 }
 function confirmDeleteAvatar() {
   showAvatarDeleteConfirm.value = false

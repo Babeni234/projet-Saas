@@ -362,6 +362,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/locataires/{locataire}', [LocataireController::class, 'destroy'])->name('locataires.destroy');
     Route::post('/api/locataires/{locataire}/status', [LocataireController::class, 'updateStatus'])->name('locataires.status');
     Route::delete('/api/locataires/{locataire}/documents/{index}', [LocataireController::class, 'deleteDocument'])->name('locataires.documents.delete');
+    Route::post('/api/locataires/{locataire}/create-wallet', [\App\Http\Controllers\LocataireWalletController::class, 'createWalletForTenant']);
+
 
     // Affectations API routes
     Route::get('/api/affectations', [AffectationController::class, 'index'])->name('affectations.json');
@@ -394,6 +396,16 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard-locataire', [\App\Http\Controllers\LocataireDashboardController::class, 'index'])
     ->middleware(['auth', 'locataire'])
     ->name('locataire.dashboard');
+
+Route::middleware(['auth', 'locataire'])->prefix('api/locataire')->group(function () {
+    Route::post('/wallet/create', [\App\Http\Controllers\LocataireWalletController::class, 'create']);
+    Route::post('/wallet/change-pin', [\App\Http\Controllers\LocataireWalletController::class, 'changePin']);
+    Route::post('/wallet/recharge', [\App\Http\Controllers\LocataireWalletController::class, 'recharge']);
+    Route::post('/wallet/pay-rent', [\App\Http\Controllers\LocataireWalletController::class, 'payRent']);
+    Route::post('/wallet/pay-utility', [\App\Http\Controllers\LocataireWalletController::class, 'payUtility']);
+    Route::post('/wallet/pay-contract-fee', [\App\Http\Controllers\LocataireWalletController::class, 'payContractFee']);
+});
+
 
 require __DIR__.'/auth.php';
 

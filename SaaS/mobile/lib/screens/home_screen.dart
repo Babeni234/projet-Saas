@@ -152,167 +152,158 @@ class DashboardView extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Modern Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Bonjour,',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-                    ),
-                    Text(
-                      'Thomas Dubois',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24),
-                    ),
+                    Text('Habitatum', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 2)),
+                    const SizedBox(height: 2),
+                    Text('Bonjour, Thomas', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -1)),
                   ],
                 ),
                 Builder(
                   builder: (ctx) => GestureDetector(
                     onTap: () => Scaffold.maybeOf(ctx)?.openDrawer(),
                     child: Container(
-                      width: 48,
-                      height: 48,
+                      width: 52, height: 52,
                       decoration: BoxDecoration(
-                        gradient: AppColors.actionGradient,
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: const Icon(Icons.menu_rounded, color: Colors.white, size: 24),
+                      child: const Icon(Icons.menu_rounded, color: AppColors.primary, size: 28),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Voici l\'état de votre location',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
-            ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
+            // Premium Wallet Card
             Container(
-              height: 200,
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 gradient: AppColors.walletGradient,
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(36),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
-                  ),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 40, offset: const Offset(0, 20)),
                 ],
               ),
-              padding: const EdgeInsets.all(28),
-              child: Stack(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Positioned(
-                    right: -20, top: -20,
-                    child: Container(
-                      width: 100, height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Mon Portefeuille', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
-                          Icon(Icons.contactless_rounded, color: Colors.white.withValues(alpha: 0.8)),
-                        ],
-                      ),
-                      const Text(
-                        '1 450,00 €',
-                        style: TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w800, letterSpacing: -1),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(child: Text('Habitatum Premium', style: const TextStyle(color: Colors.white54, fontSize: 14), overflow: TextOverflow.ellipsis)),
-              GestureDetector(
-                onTap: () => _showRechargeModal(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
+                      const Text('PORTÉFEUILLE', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                      Icon(Icons.nfc_rounded, color: Colors.white.withValues(alpha: 0.4)),
+                    ],
                   ),
-                  child: const Text('Recharger', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-                ),
-              ),
+                  const SizedBox(height: 12),
+                  const Text('1 450,00 €', style: TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900, letterSpacing: -1.5)),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('STATUT COMPTE', style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.w700)),
+                          Text('Premium Platinium', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                         ],
+                      ),
+                      GestureDetector(
+                        onTap: () => _showRechargeModal(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                          child: const Text('Recharger', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13)),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
-            Text('Aperçu', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildKpiCard(context, 'Loyer mensuel', '850 €', Icons.receipt_long_rounded, AppColors.primary, 'À jour')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, 'Portefeuille', '1 450 €', Icons.account_balance_wallet_rounded, AppColors.success, 'Solde')),
-              ],
-            ),
+            _buildSectionHeader('VUE D\'ENSEMBLE'),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildKpiCard(context, 'Solde dû total', '0 €', Icons.payments_rounded, Colors.amber, 'À jour')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildKpiCard(context, 'Tickets', '1 en cours', Icons.support_agent_rounded, AppColors.warning, 'En cours')),
+                Expanded(child: _buildKpiCard(context, 'Loyer Mensuel', '850 €', Icons.house_rounded, AppColors.primary)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildKpiCard(context, 'Consommation', '124 €', Icons.bolt_rounded, AppColors.warning)),
               ],
             ),
-            const SizedBox(height: 28),
-
-            Text('Actions Rapides', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildKpiCard(context, 'Tickets Support', '1 actif', Icons.support_agent_rounded, AppColors.success)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildKpiCard(context, 'Documents', '12 reçus', Icons.description_rounded, AppColors.primaryLight)),
+              ],
+            ),
+            const SizedBox(height: 32),
+
+            _buildSectionHeader('ACTIONS RAPIDES'),
+            const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildQuickAction(context, Icons.receipt_long_rounded, 'Payer\nLoyer', AppColors.primary),
-                  const SizedBox(width: 12),
-                  _buildQuickAction(context, Icons.build_rounded, 'Signaler\nProblème', AppColors.warning),
-                  const SizedBox(width: 12),
-                  _buildQuickAction(context, Icons.description_rounded, 'Mes\nReçus', AppColors.primary),
-                  const SizedBox(width: 12),
-                  _buildQuickAction(context, Icons.chat_bubble_rounded, 'Support', AppColors.success),
+                  _buildQuickAction(context, Icons.receipt_long_rounded, 'Payer', AppColors.primary),
+                  const SizedBox(width: 16),
+                  _buildQuickAction(context, Icons.build_rounded, 'Signaler', AppColors.warning),
+                  const SizedBox(width: 16),
+                  _buildQuickAction(context, Icons.history_rounded, 'Historique', AppColors.success),
+                  const SizedBox(width: 16),
+                  _buildQuickAction(context, Icons.chat_bubble_rounded, 'Support', AppColors.primaryLight),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
-            Text('Mouvements récents', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            _buildTransactionItem(context, 'Crédit Portefeuille', '+200,00 €', 'Recharge', Icons.add_circle_rounded, AppColors.success, 'Orange Money • 15 Juin'),
-            const Divider(height: 24, color: AppColors.background),
-            _buildTransactionItem(context, 'Paiement Loyer Mai', '-850,00 €', 'Paiement', Icons.remove_circle_rounded, Colors.amber, 'Wallet • 05 Mai'),
-            const Divider(height: 24, color: AppColors.background),
-            _buildTransactionItem(context, 'Crédit Portefeuille', '+500,00 €', 'Recharge', Icons.add_circle_rounded, AppColors.success, 'Visa • 28 Avril'),
+            _buildSectionHeader('ACTIVITÉS RÉCENTES'),
+            const SizedBox(height: 12),
+            GlassContainer(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              borderRadius: 32,
+              child: Column(
+                children: [
+                  _buildTransactionItem(context, 'Recharge Portefeuille', '+200,00 €', '15 Juin', Icons.add_circle_rounded, AppColors.success),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Divider(height: 1, color: AppColors.background)),
+                  _buildTransactionItem(context, 'Loyer Mai 2026', '-850,00 €', '05 Mai', Icons.remove_circle_rounded, AppColors.error),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Divider(height: 1, color: AppColors.background)),
+                  _buildTransactionItem(context, 'Recharge Portefeuille', '+500,00 €', '28 Avril', Icons.add_circle_rounded, AppColors.success),
+                ],
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
         ),
       ),
     );
@@ -322,42 +313,58 @@ class DashboardView extends StatelessWidget {
     return Column(
       children: [
         GlassContainer(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           borderRadius: 24,
           child: Icon(icon, color: color, size: 28),
         ),
-        const SizedBox(height: 8),
-        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 10),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
       ],
     );
   }
 
-  Widget _buildKpiCard(BuildContext context, String title, String value, IconData icon, Color color, String badge) {
+  Widget _buildKpiCard(BuildContext context, String title, String value, IconData icon, Color color) {
     return GlassContainer(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 22,
+      padding: const EdgeInsets.all(24),
+      borderRadius: 28,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: badge == 'À jour' ? AppColors.success.withValues(alpha: 0.12) : AppColors.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                child: Text(badge, style: TextStyle(color: badge == 'À jour' ? AppColors.success : AppColors.warning, fontSize: 10, fontWeight: FontWeight.w600)),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 14),
-          Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          const SizedBox(height: 20),
+          Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: color)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: color, letterSpacing: -0.5)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(BuildContext context, String label, String amount, String date, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                Text(date, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          Text(amount, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: color)),
         ],
       ),
     );
@@ -391,25 +398,17 @@ class DashboardView extends StatelessWidget {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _rechargeAmountChip('500 CFA', () {})),
+                Expanded(child: _rechargeAmountChip('500 €', () {})),
                 const SizedBox(width: 12),
-                Expanded(child: _rechargeAmountChip('1 000 CFA', () {})),
+                Expanded(child: _rechargeAmountChip('1 000 €', () {})),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _rechargeAmountChip('2 500 CFA', () {})),
+                Expanded(child: _rechargeAmountChip('2 500 €', () {})),
                 const SizedBox(width: 12),
-                Expanded(child: _rechargeAmountChip('5 000 CFA', () {})),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _rechargeAmountChip('10 000 CFA', () {})),
-                const SizedBox(width: 12),
-                Expanded(child: _rechargeAmountChip('25 000 CFA', () {})),
+                Expanded(child: _rechargeAmountChip('5 000 €', () {})),
               ],
             ),
             const SizedBox(height: 24),
@@ -420,13 +419,13 @@ class DashboardView extends StatelessWidget {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Recharge en cours de traitement...'),
+                      content: const Text('Recharge en cours...'),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                   );
                 },
-                child: const Text('Recharger maintenant'),
+                child: const Text('Confirmer la recharge'),
               ),
             ),
           ],
@@ -452,29 +451,5 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionItem(BuildContext context, String label, String amount, String type, IconData icon, Color color, String meta) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                Text(meta, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
-          ),
-          Text(amount, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: color)),
-        ],
-      ),
-    );
-  }
+
 }

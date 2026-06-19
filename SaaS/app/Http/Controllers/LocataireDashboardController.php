@@ -20,6 +20,7 @@ class LocataireDashboardController extends Controller
         // Charger le locataire avec toutes ses relations
         $locataire = $user->locataire?->load([
             'agency',
+            'wallet',
             'affectations' => function ($q) {
                 $q->where('deleted', false)
                   ->where('statut', 'Actif')
@@ -51,6 +52,117 @@ class LocataireDashboardController extends Controller
                 ->get()
                 ->map(fn($f) => $this->formatFacture($f))
                 ->toArray();
+        }
+
+        // Règle de loyer de la compagnie
+        $regleLoyer = \App\Models\RegleLoyer::where('company_profile_id', $user->company_profile_id)->first();
+
+        // Anciens contrats
+        $oldContracts = [];
+        if ($locataire) {
+            $oldContracts = $locataire->contrats()
+                ->where('deleted', false)
+                ->whereIn('statut', ['termine', 'terminé', 'resilie', 'résilié', 'expired', 'expire'])
+                ->with(['logement.batiment', 'typeContrat'])
+                ->get()
+                ->map(function ($c) {
+                    $logement = $c->logement;
+                    $batiment = $logement?->batiment;
+                    $adresseParts = array_filter([
+                        $batiment?->adresse,
+                        $batiment?->quartier,
+                        $batiment?->ville,
+                        $batiment?->pays,
+                    ]);
+                    return [
+                        'id' => $c->id,
+                        'property_name' => $logement?->reference ?? 'Logement',
+                        'address' => implode(', ', $adresseParts) ?: '',
+                        'owner' => $c->company?->legal_name ?? 'Propriétaire',
+                        'start_date' => $c->debut?->toDateString(),
+                        'end_date' => $c->fin?->toDateString(),
+                        'rent' => (float) $c->loyer,
+                        'deposit' => (float) $c->caution,
+                        'duration' => $c->duree ?? '12 mois',
+                        'status' => in_array(strtolower($c->statut), ['termine', 'terminé', 'expired', 'expire']) ? 'ended' : 'resigned',
+                        'documents' => [],
+                    ];
+                })
+                ->toArray();
+        }
+
+        // Reçus / Quittances
+        $receipts = [];
+        if ($locataire) {
+            $rentReceipts = \App\Models\PaiementLoyer::where('locataire_id', $locataire->id)
+                ->where('deleted', false)
+                ->with(['contrat.logement', 'company'])
+                ->get()
+                ->map(function ($p) use ($locataire) {
+                    return [
+                        'id' => 'RCPT-RENT-' . $p->id,
+                        'type' => 'rent',
+                        'title' => 'Loyer ' . ($p->date_reglement ? $p->date_reglement->format('M Y') : ''),
+                        'reference' => $p->reference,
+                        'amount' => (float) $p->montant_total,
+                        'period' => $p->date_reglement ? $p->date_reglement->format('M Y') : '',
+                        'paid_at' => $p->date_reglement ? $p->date_reglement->toDateString() : null,
+                        'method' => $p->mode_reglement,
+                        'transaction_id' => $p->reference_tx ?? ('TX-' . $p->id),
+                        'property' => $p->contrat?->logement?->reference ?? 'Logement',
+                        'tenant' => $locataire->nom,
+                        'landlord' => $p->company?->legal_name ?? 'Propriétaire',
+                    ];
+                });
+
+            $utilityReceipts = \App\Models\Facture::where('locataire_id', $locataire->id)
+                ->where('deleted', false)
+                ->where('statut', 'payée')
+                ->whereHas('typeFacture', function ($q) {
+                    $q->where('nom', '!=', 'Loyer');
+                })
+                ->with(['typeFacture', 'company'])
+                ->get()
+                ->map(function ($f) use ($locataire) {
+                    return [
+                        'id' => 'RCPT-UTIL-' . $f->id,
+                        'type' => strtolower($f->typeFacture?->nom) === 'eau' ? 'water' : 'electricity',
+                        'title' => 'Facture ' . ($f->typeFacture?->nom ?? 'Autre'),
+                        'reference' => 'QUIT-' . $f->numero,
+                        'amount' => (float) $f->total,
+                        'period' => $f->periode,
+                        'paid_at' => $f->updated_at ? $f->updated_at->toDateString() : ($f->date_emission ? $f->date_emission->toDateString() : null),
+                        'method' => 'Wallet',
+                        'transaction_id' => 'TX-' . $f->id,
+                        'property' => $locataire->affectations->first()?->logement?->reference ?? 'Logement',
+                        'tenant' => $locataire->nom,
+                        'landlord' => $f->company?->legal_name ?? 'Propriétaire',
+                    ];
+                });
+
+            $contractFeeReceipts = \App\Models\FraisContrat::whereHas('renouvellement', function ($q) use ($locataire) {
+                    $q->where('locataire_id', $locataire->id);
+                })
+                ->with(['renouvellement.contrat.logement', 'company'])
+                ->get()
+                ->map(function ($fc) use ($locataire) {
+                    return [
+                        'id' => 'RCPT-FEE-' . $fc->id,
+                        'type' => 'contract_fee',
+                        'title' => 'Frais de contrat (Renouvellement)',
+                        'reference' => 'FEE-CTR-' . $fc->id,
+                        'amount' => (float) $fc->montant,
+                        'period' => $fc->date_paiement ? $fc->date_paiement->format('Y') : '',
+                        'paid_at' => $fc->date_paiement ? $fc->date_paiement->toDateString() : null,
+                        'method' => 'Wallet',
+                        'transaction_id' => 'TX-' . $fc->id,
+                        'property' => $fc->renouvellement?->contrat?->logement?->reference ?? 'Logement',
+                        'tenant' => $locataire->nom,
+                        'landlord' => $fc->company?->legal_name ?? 'Propriétaire',
+                    ];
+                });
+
+            $receipts = $rentReceipts->concat($utilityReceipts)->concat($contractFeeReceipts)->toArray();
         }
 
         // Construire les données contrats / affectations pour le frontend
@@ -92,6 +204,7 @@ class LocataireDashboardController extends Controller
 
                     // ── Contrat (si formel existe) ──
                     'contrat_numero'  => $contrat?->numero ?? $aff->reference,
+                    'contrat_id'      => $contrat?->id,
                     'type'            => $aff->typeContrat?->nom ?? $aff->type_bail ?? ($contrat?->typeContrat?->nom) ?? 'Bail',
 
                     // ── Dates & montants ──
@@ -177,6 +290,26 @@ class LocataireDashboardController extends Controller
             'contracts' => $contracts,
             'invoices'  => $factures,
             'tickets'   => [],
+            'wallet'    => $locataire?->wallet ? [
+                'id'    => $locataire->wallet->id,
+                'solde' => (float) $locataire->wallet->solde,
+                'transactions' => \App\Models\TransacWallet::where('wallet_id', $locataire->wallet->id)->latest()->get()->map(fn($t) => [
+                    'id' => $t->id,
+                    'type' => $t->type,
+                    'amount' => (float) $t->amount,
+                    'description' => $t->description,
+                    'reference' => $t->reference_tx,
+                    'date' => $t->created_at?->toIso8601String(),
+                ])->toArray(),
+            ] : null,
+            'oldContracts' => $oldContracts,
+            'regleLoyer' => $regleLoyer ? [
+                'id' => $regleLoyer->id,
+                'jour_declenchement' => (int) $regleLoyer->jour_declenchement,
+                'taux_penalite' => (float) $regleLoyer->taux_penalite,
+                'cycle' => $regleLoyer->cycle,
+            ] : null,
+            'receipts' => $receipts,
         ]);
     }
 

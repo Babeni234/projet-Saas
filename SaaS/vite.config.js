@@ -7,7 +7,6 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/js/app.js',
-                'resources/js/Pages/Locataire/dashboard-loc.vue',
             ],
             refresh: true,
         }),
@@ -20,4 +19,13 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        minify: false,
+        sourcemap: false,
+        cssMinify: false,
+    },
+    server: {
+        cors: true,
+        host: '127.0.0.1',
+    },
 });

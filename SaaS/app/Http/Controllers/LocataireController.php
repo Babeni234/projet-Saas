@@ -26,7 +26,7 @@ class LocataireController extends Controller
 
         $query = Locataire::where('company_profile_id', $companyProfileId)
                           ->where('deleted', false)
-                          ->with(['user', 'agency', 'affectations.logement']);
+                          ->with(['user', 'agency', 'affectations.logement', 'wallet']);
 
         // Filtrage par agence si l'utilisateur connecté est un agent
         $isAgent = $user->employee && $user->employee->agency_id !== null;
@@ -305,6 +305,7 @@ class LocataireController extends Controller
                 'path'     => $d['path'] ?? '',
                 'url'      => isset($d['path']) ? '/storage/' . $d['path'] : null,
             ])->toArray() : [],
+            'wallet_status'      => $l->wallet ? 'activated' : 'none',
             'created_at'         => $l->created_at?->toDateString(),
         ];
     }

@@ -11,7 +11,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: AppColors.background,
+        surface: AppColors.surface,
         error: AppColors.error,
       ),
       scaffoldBackgroundColor: AppColors.background,
@@ -74,11 +74,11 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    const bgDark = Color(0xFF090D16);
-    const surfaceDark = Color(0xFF141A24);
+    const bgDark = Color(0xFF000000); // Pure Black for OLED
+    const surfaceDark = Color(0xFF1C1C1E); // iOS Dark Gray Surface
     const textPrimaryDark = Color(0xFFFFFFFF);
-    const textSecondaryDark = Color(0xFF9EA3B5);
-    const textTertiaryDark = Color(0xFF5C6070);
+    const textSecondaryDark = Color(0xFF8E8E93);
+    const textTertiaryDark = Color(0xFF48484A);
 
     return ThemeData(
       useMaterial3: true,
@@ -87,7 +87,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: bgDark,
+        surface: surfaceDark,
         error: AppColors.error,
         brightness: Brightness.dark,
       ),

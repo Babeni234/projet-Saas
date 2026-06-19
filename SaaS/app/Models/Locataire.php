@@ -81,4 +81,9 @@ class Locataire extends Model
     {
         return $this->hasMany(Contrat::class, 'locataire_id');
     }
+
+    public function wallet(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Wallet::class, 'locataire_id');
+    }
 }
