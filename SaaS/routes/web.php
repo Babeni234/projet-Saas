@@ -55,8 +55,21 @@ Route::get('/dashboard', function () {
     if ($user && $user->account_type === 'Locataire') {
         return redirect()->route('locataire.dashboard');
     }
+    if ($user && in_array(strtolower(str_replace([' ', '_'], '', $user->account_type)), ['superadmin'])) {
+        return redirect()->route('superadmin.dashboard');
+    }
     return Inertia::render('entreprise/Dashboard/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmin'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/companies', [\App\Http\Controllers\SuperAdminController::class, 'companies'])->name('companies.index');
+    Route::post('/companies/{company}/verify', [\App\Http\Controllers\SuperAdminController::class, 'verifyCompany'])->name('companies.verify');
+    Route::post('/companies/{company}/plan', [\App\Http\Controllers\SuperAdminController::class, 'updateCompanyPlan'])->name('companies.plan');
+    Route::get('/users', [\App\Http\Controllers\SuperAdminController::class, 'users'])->name('users.index');
+    Route::post('/users/{user}/status', [\App\Http\Controllers\SuperAdminController::class, 'updateUserStatus'])->name('users.status');
+    Route::delete('/users/{user}', [\App\Http\Controllers\SuperAdminController::class, 'deleteUser'])->name('users.delete');
+});
 
 Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Agence\AgencyDashboardController::class, 'index'])->name('dashboard');

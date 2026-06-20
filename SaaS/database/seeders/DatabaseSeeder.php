@@ -13,5 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         // Call IllustrationSeeder to seed test user, company, roles, agencies, and illustrations
         $this->call(IllustrationSeeder::class);
+        
+        // Call SuperAdminSeeder to seed default super administrator
+        $this->call(SuperAdminSeeder::class);
     }
 }

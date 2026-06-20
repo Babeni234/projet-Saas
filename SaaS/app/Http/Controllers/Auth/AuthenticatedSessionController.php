@@ -131,6 +131,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('locataire.dashboard');
         }
 
+        // Rediriger le super admin vers son espace dédié
+        if ($user && in_array(strtolower(str_replace([' ', '_'], '', $user->account_type)), ['superadmin'])) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
         $intended = redirect()->intended(route('dashboard', absolute: false))->getTargetUrl();
         if (str_contains($intended, '/subscription')) {
             $intended = route('dashboard', absolute: false);
