@@ -129,9 +129,13 @@ class ContratController extends Controller
                 'numero'             => $request->input('numero'),
             ]);
 
-            // 2. Update affectation status to "En cours d'exécution" and link to contract
+            // 2. Update affectation status to "En cours d'exécution", sync dates, and link to contract
             if ($affectation) {
-                $affectation->update(['statut' => "En cours d'exécution"]);
+                $affectation->update([
+                    'statut' => "En cours d'exécution",
+                    'date_debut' => $request->input('debut'),
+                    'date_fin' => $request->input('fin'),
+                ]);
             }
 
             // 3. Update locataire status to "Actif"
@@ -176,6 +180,21 @@ class ContratController extends Controller
         ]);
 
         $contrat->update($request->all());
+
+        // Sync dates to affectation if updated
+        $affectation = $contrat->affectation;
+        if ($affectation) {
+            $updates = [];
+            if ($request->has('debut')) {
+                $updates['date_debut'] = $request->input('debut');
+            }
+            if ($request->has('fin')) {
+                $updates['date_fin'] = $request->input('fin');
+            }
+            if (!empty($updates)) {
+                $affectation->update($updates);
+            }
+        }
 
         return response()->json($this->formatContrat($contrat->fresh(['locataire.user', 'logement.batiment', 'typeContrat'])));
     }

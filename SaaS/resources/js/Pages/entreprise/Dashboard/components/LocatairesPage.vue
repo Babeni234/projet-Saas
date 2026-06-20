@@ -118,6 +118,7 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Coordonnées</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Agence gérante</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Logement Occupé</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">N° Contrat Actif</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Statut Dossier</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -174,6 +175,17 @@
                                         Aucun logement
                                     </span>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                                <span v-if="locataire.contrat_actif" class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs border border-amber-200 font-semibold inline-flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {{ locataire.contrat_actif }}
+                                </span>
+                                <span v-else class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 text-slate-400 border border-slate-100">
+                                    Aucun contrat
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                <div class="flex flex-col gap-1.5 items-start">
@@ -278,7 +290,7 @@
                             </td>
                         </tr>
                         <tr v-if="filteredLocataires.length === 0">
-                            <td colspan="6" class="text-center py-12 text-slate-400">
+                            <td colspan="7" class="text-center py-12 text-slate-400">
                                 Aucun locataire trouvé correspondant à vos critères de recherche.
                             </td>
                         </tr>
@@ -598,6 +610,60 @@
             </div>
         </div>
 
+        <!-- Premium Create Wallet Confirmation Modal -->
+        <div v-if="showWalletConfirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up border border-slate-100">
+                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mx-auto mb-4">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-center text-slate-900 mb-2">Activer le Portefeuille</h3>
+                <p class="text-center text-slate-500 text-sm mb-6">
+                    Voulez-vous activer le portefeuille électronique pour le locataire <strong class="text-slate-800 font-semibold">{{ walletTargetLocataire?.nom }}</strong> ? Un code PIN d'accès lui sera envoyé par email.
+                </p>
+
+                <!-- Feature list -->
+                <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-6 space-y-2.5">
+                    <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Paiement des loyers en un clic
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Rechargement sécurisé par virement
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="button" 
+                        @click="closeWalletConfirmModal" 
+                        :disabled="walletActivating"
+                        class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm disabled:opacity-50"
+                    >
+                        Annuler
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="confirmCreateWallet" 
+                        :disabled="walletActivating"
+                        class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        <svg v-if="walletActivating" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {{ walletActivating ? 'Activation...' : 'Activer' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Recharge Wallet Modal -->
         <div v-if="showRechargeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up border border-slate-100">
@@ -686,6 +752,10 @@ const showDeleteModal = ref(false);
 const showSuccess = ref(false);
 const showError = ref(false);
 const saving = ref(false);
+
+const showWalletConfirmModal = ref(false);
+const walletTargetLocataire = ref(null);
+const walletActivating = ref(false);
 
 const editingLocataire = ref(null);
 const selectedLocataire = ref(null);
@@ -899,30 +969,43 @@ const saveLocataire = async () => {
 };
 
 // Create Electronic Wallet for Tenant
-const createTenantWallet = async (loc) => {
-    if (confirm(`Voulez-vous vraiment activer le portefeuille électronique pour ${loc.nom} ? Le code PIN sera généré et lui sera envoyé par email.`)) {
-        try {
-            const res = await fetch(`/api/locataires/${loc.id}/create-wallet`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrf(),
-                }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                successMessage.value = 'Le portefeuille électronique a été activé pour le locataire et un email lui a été envoyé.';
-                showSuccess.value = true;
-                fetchLocataires();
-            } else {
-                errorMessage.value = data.message || 'Une erreur est survenue.';
-                showError.value = true;
+const createTenantWallet = (loc) => {
+    walletTargetLocataire.value = loc;
+    showWalletConfirmModal.value = true;
+};
+
+const closeWalletConfirmModal = () => {
+    showWalletConfirmModal.value = false;
+    walletTargetLocataire.value = null;
+};
+
+const confirmCreateWallet = async () => {
+    if (!walletTargetLocataire.value) return;
+    walletActivating.value = true;
+    try {
+        const res = await fetch(`/api/locataires/${walletTargetLocataire.value.id}/create-wallet`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf(),
             }
-        } catch (err) {
-            console.error(err);
-            errorMessage.value = 'Impossible de communiquer avec le serveur.';
+        });
+        const data = await res.json();
+        if (res.ok) {
+            successMessage.value = 'Le portefeuille électronique a été activé pour le locataire et un email contenant son code PIN lui a été envoyé.';
+            closeWalletConfirmModal();
+            fetchLocataires();
+            showSuccess.value = true;
+        } else {
+            errorMessage.value = data.message || 'Une erreur est survenue.';
             showError.value = true;
         }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = 'Impossible de communiquer avec le serveur.';
+        showError.value = true;
+    } finally {
+        walletActivating.value = false;
     }
 };
 

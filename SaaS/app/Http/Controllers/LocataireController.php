@@ -26,7 +26,7 @@ class LocataireController extends Controller
 
         $query = Locataire::where('company_profile_id', $companyProfileId)
                           ->where('deleted', false)
-                          ->with(['user', 'agency', 'affectations.logement', 'wallet']);
+                          ->with(['user', 'agency', 'affectations.logement', 'wallet', 'contrats.logement']);
 
         // Filtrage par agence si l'utilisateur connecté est un agent
         $isAgent = $user->employee && $user->employee->agency_id !== null;
@@ -125,7 +125,7 @@ class LocataireController extends Controller
             logger()->error("Erreur lors de l'envoi de mail de création locataire : " . $e->getMessage());
         }
 
-        $locataire->load(['user', 'agency', 'affectations.logement']);
+        $locataire->load(['user', 'agency', 'affectations.logement', 'contrats.logement']);
 
         return response()->json($this->formatLocataire($locataire), 201);
     }
@@ -194,7 +194,7 @@ class LocataireController extends Controller
             ]);
         });
 
-        $locataire->load(['user', 'agency', 'affectations.logement']);
+        $locataire->load(['user', 'agency', 'affectations.logement', 'contrats.logement']);
 
         return response()->json($this->formatLocataire($locataire));
     }
@@ -248,7 +248,7 @@ class LocataireController extends Controller
             $locataire->user->update(['status' => $userStatus]);
         });
 
-        $locataire->load(['user', 'agency', 'affectations.logement']);
+        $locataire->load(['user', 'agency', 'affectations.logement', 'contrats.logement']);
 
         return response()->json($this->formatLocataire($locataire));
     }
@@ -273,7 +273,7 @@ class LocataireController extends Controller
             $locataire->update(['documentations' => $docs]);
         }
 
-        $locataire->load(['user', 'agency', 'affectations.logement']);
+        $locataire->load(['user', 'agency', 'affectations.logement', 'contrats.logement']);
 
         return response()->json($this->formatLocataire($locataire));
     }
@@ -283,7 +283,11 @@ class LocataireController extends Controller
     private function formatLocataire(Locataire $l): array
     {
         $activeAffectation = $l->affectations->where('statut', 'Actif')->first();
-        $logementRef = $activeAffectation && $activeAffectation->logement ? $activeAffectation->logement->reference : null;
+        $activeContrat = $l->contrats->where('statut', 'Actif')->first();
+        
+        $logementRef = $activeContrat && $activeContrat->logement ? $activeContrat->logement->reference : null;
+        $contratNumero = $activeContrat ? $activeContrat->numero : null;
+        
         $batimentId = $activeAffectation && $activeAffectation->logement ? $activeAffectation->logement->batiment_id : null;
 
         return [
@@ -298,6 +302,7 @@ class LocataireController extends Controller
             'profil_url'         => $l->profil ? '/storage/' . $l->profil : null,
             'statut'             => ucfirst($l->statut), // Actif, Inactif, Suspendu, Affecté
             'logement'           => $logementRef ?? 'Aucun',
+            'contrat_actif'      => $contratNumero,
             'garantie'           => (float)($activeAffectation ? $activeAffectation->caution : 0),
             'documents'          => $l->documentations ? collect($l->documentations)->map(fn($d) => [
                 'name'     => $d['name'] ?? '',
