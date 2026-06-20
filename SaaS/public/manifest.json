@@ -1,6 +1,6 @@
 {
-  "name": "HABITATUM — Gestion Locative",
-  "short_name": "HABITATUM",
+  "name": "Property AI — Gestion Locative",
+  "short_name": "Property AI",
   "description": "Plateforme de gestion locative et de suivi des loyers",
   "start_url": "/dashboard-locataire",
   "display": "standalone",

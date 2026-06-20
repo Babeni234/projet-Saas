@@ -31,10 +31,23 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $agencies = [];
+        $companyName = 'Property AI';
+        $companyLogo = asset('icons/property-ai-logo.svg');
+
         if ($user) {
             $user->load(['company', 'role', 'employee.agency']);
             if ($user->company_profile_id) {
                 $agencies = \App\Models\Agency::where('company_profile_id', $user->company_profile_id)->get();
+            }
+
+            $company = $user->company;
+            if ($company) {
+                if ($company->legal_name) {
+                    $companyName = $company->legal_name;
+                }
+                if ($company->logo_path) {
+                    $companyLogo = asset('storage/' . $company->logo_path);
+                }
             }
         }
 
@@ -43,9 +56,14 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'branding' => [
+                'name' => $companyName,
+                'logo' => $companyLogo,
+            ],
             'agencies' => $agencies,
             'vapidPublicKey' => env('VAPID_PUBLIC_KEY'),
 
         ];
     }
 }
+

@@ -6,17 +6,17 @@
         <meta name="theme-color" content="#1a73e8">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
-        <meta name="apple-mobile-web-app-title" content="HABITATUM">
+        <meta name="apple-mobile-web-app-title" content="Property AI">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Property AI') }}</title>
 
         <!-- PWA Manifest -->
         <link rel="manifest" href="/manifest.json">
 
         <!-- Icons -->
-        <link rel="icon" type="image/svg+xml" href="/icons/icon-96.svg">
+        <link rel="icon" type="image/svg+xml" href="/icons/property-ai-logo.svg">
         <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72.svg">
         <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96.svg">
         <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144.svg">

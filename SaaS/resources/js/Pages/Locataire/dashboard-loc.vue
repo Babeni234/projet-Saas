@@ -22,20 +22,9 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="brand-logo" style="display:flex;align-items:center;">
-          <img v-if="company && company.logo_url" :src="company.logo_url" class="company-logo-img" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;"/>
-          <svg v-else width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="10" fill="url(#grad1)"/>
-            <path d="M16 7L25 13V19L16 25L7 19V13L16 7Z" fill="white" opacity="0.9"/>
-            <path d="M16 11L21 14V20L16 23L11 20V14L16 11Z" fill="url(#grad1)" opacity="0.6"/>
-            <defs>
-              <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
-                <stop offset="0%" stop-color="#2563EB"/>
-                <stop offset="100%" stop-color="#1E40AF"/>
-              </linearGradient>
-            </defs>
-          </svg>
+          <img :src="company?.logo_url || $page.props.branding?.logo || '/icons/property-ai-logo.svg'" class="company-logo-img" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;"/>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed" class="brand-name" style="margin-left:8px;">{{ company?.nom || company?.name || 'Habitatum' }}</span>
+            <span v-if="!sidebarCollapsed" class="brand-name" style="margin-left:8px;">{{ company?.nom || company?.name || $page.props.branding?.name || 'Property AI' }}</span>
           </Transition>
         </div>
         <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed">
@@ -611,7 +600,7 @@
                           </div>
                           <div class="pm-wi-details">
                             <span class="pm-wi-label">Paiement depuis</span>
-                            <span class="pm-wi-value">Portefeuille HABITATUM</span>
+                            <span class="pm-wi-value">Portefeuille Property AI</span>
                             <span class="pm-wi-balance">Solde : {{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</span>
                           </div>
                           <div class="pm-wi-check">
@@ -958,7 +947,7 @@
                           </div>
                           <div class="pm-wi-details">
                             <span class="pm-wi-label">Paiement depuis</span>
-                            <span class="pm-wi-value">Portefeuille HABITATUM</span>
+                            <span class="pm-wi-value">Portefeuille Property AI</span>
                             <span class="pm-wi-balance">Solde : {{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</span>
                           </div>
                           <div class="pm-wi-check">
@@ -1769,7 +1758,7 @@
                           </div>
                           <div class="pm-wi-details">
                             <span class="pm-wi-label">Paiement depuis</span>
-                            <span class="pm-wi-value">Portefeuille HABITATUM</span>
+                            <span class="pm-wi-value">Portefeuille Property AI</span>
                             <span class="pm-wi-balance">Solde : {{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</span>
                           </div>
                           <div class="pm-wi-check">
@@ -2197,7 +2186,7 @@
                 <div class="rm-card-inner">
                   <div class="rm-card-face rm-card-front">
                     <div class="rm-card-top">
-                      <span class="rm-card-brand">HABITATUM</span>
+                      <span class="rm-card-brand">Property AI</span>
                       <svg class="rm-card-type" width="36" height="24" viewBox="0 0 36 24" fill="none"><rect width="36" height="24" rx="3" fill="#fff" opacity="0.9"/><circle cx="14" cy="12" r="6" fill="#EB001B" opacity="0.7"/><circle cx="22" cy="12" r="6" fill="#F79E1B" opacity="0.7"/></svg>
                     </div>
                     <p class="rm-card-number">{{ formattedCardNumber || '••••  ••••  ••••  ••••' }}</p>
@@ -2508,7 +2497,7 @@
             <div class="rcpt-preview">
               <div class="rcpt-hdr">
                 <div class="rcpt-hdr-top">
-                  <div><div class="rcpt-brand">HABITATUM</div><div class="rcpt-tag">Gestion locative premium</div></div>
+                  <div><div class="rcpt-brand">Property AI</div><div class="rcpt-tag">Gestion locative premium</div></div>
                   <div class="rcpt-title-wrap"><div class="rcpt-title">VERSEMENT CONTRAT</div><div class="rcpt-ori">Original</div></div>
                 </div>
                 <div class="rcpt-hdr-bar">
@@ -2543,7 +2532,7 @@
               </div>
               <div class="rcpt-ftr">
                 <span>Merci pour votre confiance</span>
-                <span><strong>HABITATUM</strong></span>
+                <span><strong>Property AI</strong></span>
               </div>
             </div>
             <button class="btn-primary full-width modal-btn-gap" @click="downloadOldContractReceipt(ocDetail)">
@@ -2567,7 +2556,7 @@
             <div class="rcpt-preview">
               <div class="rcpt-hdr">
                 <div class="rcpt-hdr-top">
-                  <div><div class="rcpt-brand">HABITATUM</div><div class="rcpt-tag">Gestion locative premium</div></div>
+                  <div><div class="rcpt-brand">Property AI</div><div class="rcpt-tag">Gestion locative premium</div></div>
                   <div class="rcpt-title-wrap"><div class="rcpt-title">FACTURE</div><div class="rcpt-ori">Original</div></div>
                 </div>
                 <div class="rcpt-hdr-bar">
@@ -2598,7 +2587,7 @@
               </div>
               <div class="rcpt-ftr">
                 <span>Merci pour votre confiance</span>
-                <span><strong>HABITATUM</strong></span>
+                <span><strong>Property AI</strong></span>
               </div>
             </div>
             <div class="modal-btn-row">
@@ -2625,7 +2614,7 @@
             <div class="rcpt-preview">
               <div class="rcpt-hdr">
                 <div class="rcpt-hdr-top">
-                  <div><div class="rcpt-brand">HABITATUM</div><div class="rcpt-tag">Gestion locative premium</div></div>
+                  <div><div class="rcpt-brand">Property AI</div><div class="rcpt-tag">Gestion locative premium</div></div>
                   <div class="rcpt-title-wrap"><div class="rcpt-title">QUITTANCE</div><div class="rcpt-ori">Original</div></div>
                 </div>
                 <div class="rcpt-hdr-bar">
@@ -2670,7 +2659,7 @@
               </div>
               <div class="rcpt-ftr">
                 <span>Merci pour votre confiance</span>
-                <span><strong>HABITATUM</strong></span>
+                <span><strong>Property AI</strong></span>
               </div>
             </div>
             <div class="modal-btn-row">
@@ -4617,7 +4606,7 @@ function generateRenewalReceipt() {
   const ref = `RENEW-${contract.id}-${new Date().getFullYear()}`
   const now = formatDateTime(new Date().toISOString())
   const html = generateProReceiptHTML({
-    brand: 'HABITATUM', title: 'RENOUVELLEMENT DE CONTRAT', ref,
+    brand: 'Property AI', title: 'RENOUVELLEMENT DE CONTRAT', ref,
     lines: [
       ['Locataire', `${profileForm.first_name} ${profileForm.last_name}`],
       ['Email', profileForm.email],
@@ -4631,7 +4620,7 @@ function generateRenewalReceipt() {
     amount: contract.rent,
     status: contractFeePaid.value ? '✓ Renouvellement confirmé' : '● En attente de paiement',
     statusColor: contractFeePaid.value ? '#059669' : '#F59E0B',
-    footer: 'Merci pour votre confiance — Habitatum', now
+    footer: 'Merci pour votre confiance — Property AI', now
   })
   generateProPDF(html, `Renouvellement_Contrat_${contract.id}.pdf`)
   showToast('success', 'Reçu de renouvellement généré !')
@@ -4764,7 +4753,7 @@ function generateFromInvoice(inv) {
   const label = inv.type === 'water' ? 'Eau' : inv.type === 'electricity' ? 'Électricité' : 'Facture'
   const now = formatDateTime(new Date().toISOString())
   const html = generateProReceiptHTML({
-    brand: 'HABITATUM', title: 'FACTURE ' + label.toUpperCase(),
+    brand: 'Property AI', title: 'FACTURE ' + label.toUpperCase(),
     ref: inv.reference, lines: [
       ['Période', inv.period],
       ['Montant', formatCurrency(inv.amount)],
@@ -4773,7 +4762,7 @@ function generateFromInvoice(inv) {
     ], amount: inv.amount,
     status: inv.status === 'paid' ? '✓ Payée' : '● Impayée',
     statusColor: inv.status === 'paid' ? '#059669' : '#EF4444',
-    footer: 'Habitatum — Gestion locative premium', now
+    footer: 'Property AI — Gestion locative premium', now
   })
   generateProPDF(html, `Facture_${inv.reference}.pdf`)
   showToast('success', `Facture ${inv.reference} téléchargée`)
@@ -4782,7 +4771,7 @@ function generateFromInvoice(inv) {
 function generateReceiptPDF(rec) {
   const now = formatDateTime(new Date().toISOString())
   const html = generateProReceiptHTML({
-    brand: 'HABITATUM', title: 'QUITTANCE DE VERSEMENT',
+    brand: 'Property AI', title: 'QUITTANCE DE VERSEMENT',
     ref: rec.reference, lines: [
       ['Locataire', rec.tenant],
       ['Bien', rec.property],
@@ -4794,7 +4783,7 @@ function generateReceiptPDF(rec) {
       ['Bailleur', rec.landlord],
     ], amount: rec.amount,
     status: '✓ Payé',
-    footer: 'Merci pour votre confiance — Habitatum', now
+    footer: 'Merci pour votre confiance — Property AI', now
   })
   generateProPDF(html, `Quittance_${rec.reference}.pdf`)
   showToast('success', `Quittance ${rec.reference} téléchargée`)
@@ -4812,7 +4801,7 @@ function viewOldContractDetail(oc) {
 function downloadOldContractReceipt(oc) {
   const now = formatDateTime(new Date().toISOString())
   const html = generateProReceiptHTML({
-    brand: 'HABITATUM', title: 'VERSEMENT CONTRAT',
+    brand: 'Property AI', title: 'VERSEMENT CONTRAT',
     ref: oc.id, lines: [
       ['Propriété', oc.property_name],
       ['Adresse', oc.address],
@@ -4825,7 +4814,7 @@ function downloadOldContractReceipt(oc) {
     amount: oc.deposit,
     status: oc.status === 'ended' ? '✓ Contrat terminé' : '✕ Résilié',
     statusColor: oc.status === 'ended' ? '#059669' : '#EF4444',
-    footer: 'Merci pour votre confiance — Habitatum', now
+    footer: 'Merci pour votre confiance — Property AI', now
   })
   generateProPDF(html, `Recu_Contrat_${oc.id}.pdf`)
   showToast('success', `Reçu contrat ${oc.id} généré !`)
@@ -5238,7 +5227,7 @@ function downloadReceipt(invoice) {
     const now = formatDateTime(new Date().toISOString())
     const ref = 'QUIT-' + invoice.reference
     const html = generateProReceiptHTML({
-      brand: 'HABITATUM', title: 'QUITTANCE DE VERSEMENT LOYER',
+      brand: 'Property AI', title: 'QUITTANCE DE VERSEMENT LOYER',
       ref: ref, lines: [
         ['Locataire', `${props.auth.user.first_name} ${props.auth.user.last_name}`],
         ['Bien', contract?.property?.name || 'Logement'],
@@ -5250,7 +5239,7 @@ function downloadReceipt(invoice) {
         ['Bailleur', props.company?.name || 'SCI Habitats SA'],
       ], amount: invoice.amount,
       status: '✓ Payé',
-      footer: 'Merci pour votre confiance — Habitatum', now
+      footer: 'Merci pour votre confiance — Property AI', now
     })
     generateProPDF(html, `Quittance_${ref}.pdf`)
     showToast('success', `Quittance ${ref} générée et téléchargée`)
@@ -5476,12 +5465,12 @@ function showPushNotification(title, body, icon = '🔔') {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: 'SHOW_NOTIFICATION',
-      title: `HABITATUM — ${title}`,
+      title: `Property AI — ${title}`,
       body,
       icon: '/favicon.ico'
     })
   } else if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(`HABITATUM — ${title}`, { body, icon: '/favicon.ico' })
+    new Notification(`Property AI — ${title}`, { body, icon: '/favicon.ico' })
   }
   showToast('info', `${icon} ${title} : ${body}`)
 }

@@ -29,7 +29,7 @@
               </svg>
             </div>
             <div>
-              <div class="ai-name">Agent HABITATUM</div>
+              <div class="ai-name">Agent Property AI</div>
               <div class="ai-status" :class="agentStatusClass">● {{ agentStatusText }}</div>
             </div>
           </div>
@@ -365,7 +365,7 @@ function buildGreeting() {
     extra = `\n\n⚠️ **${props.penaltyInfo.unpaidCount} mois impayés** avec pénalité ${props.penaltyInfo.currentLabel}. Total dû : **${(props.penaltyInfo.totalDue || 0).toLocaleString()} XAF**.`
   }
 
-  return `${prefix}${greeting} ${name} ! Je suis votre **agent intelligent HABITATUM**. Je peux consulter vos informations et effectuer des actions pour vous en temps réel.${extra}\n\nQue souhaitez-vous ?`
+  return `${prefix}${greeting} ${name} ! Je suis votre **agent intelligent Property AI**. Je peux consulter vos informations et effectuer des actions pour vous en temps réel.${extra}\n\nQue souhaitez-vous ?`
 }
 
 function scrollDown() {

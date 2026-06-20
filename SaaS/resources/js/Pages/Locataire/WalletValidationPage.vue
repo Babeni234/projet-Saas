@@ -95,7 +95,7 @@ const submitPin = async () => {
         <!-- Logo / Brand -->
         <div class="mb-8 text-center animate-fade-in">
             <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Portefeuille Électronique</span>
-            <h2 class="text-2xl font-black text-slate-800 tracking-tight mt-1">HABITATUM</h2>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tight mt-1">Property AI</h2>
         </div>
 
         <!-- Main Card -->

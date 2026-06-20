@@ -167,11 +167,11 @@ const userInitials = computed(() => {
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 });
 
-const companyName = computed(() => page.props.auth?.user?.company?.legal_name || 'Entreprise');
+const companyName = computed(() => page.props.auth?.user?.company?.legal_name || 'Property AI');
 const agencyName = computed(() => page.props.auth?.user?.employee?.agency?.name || 'Mon Agence');
-const companyLogo = computed(() => page.props.auth?.user?.company?.logo_path ? '/storage/' + page.props.auth.user.company.logo_path : null);
+const companyLogo = computed(() => page.props.auth?.user?.company?.logo_path ? '/storage/' + page.props.auth.user.company.logo_path : '/icons/property-ai-logo.svg');
 const companyInitials = computed(() => {
-    const name = companyName.value || 'E';
+    const name = companyName.value || 'PA';
     return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 });
 
