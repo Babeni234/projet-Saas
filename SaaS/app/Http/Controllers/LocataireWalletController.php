@@ -350,6 +350,19 @@ class LocataireWalletController extends Controller
 
             DB::commit();
 
+            // Send email to agency (or company if none)
+            $agencyEmail = $locataire->agency?->email;
+            $companyEmail = $locataire->company?->user?->email;
+            $recipient = $agencyEmail ?? $companyEmail;
+            
+            if ($recipient) {
+                try {
+                    Mail::to($recipient)->send(new \App\Mail\InvoicePaidNotificationMail($invoice, $locataire));
+                } catch (\Exception $mailEx) {
+                    logger()->error("Erreur d'envoi de mail de notification de paiement facture : " . $mailEx->getMessage());
+                }
+            }
+
             return response()->json([
                 'message' => 'Facture réglée avec succès !',
                 'solde' => (float) $wallet->fresh()->solde,
@@ -552,5 +565,194 @@ class LocataireWalletController extends Controller
             'message' => 'Le portefeuille électronique a été alimenté avec succès et un email de confirmation a été envoyé au locataire.',
             'solde' => (float) $wallet->solde,
         ]);
+    }
+
+    /**
+     * Affiche la page de validation publique du paiement par wallet.
+     */
+    public function showValidationPage($token)
+    {
+        $pending = \App\Models\PendingWalletPayment::where('token', $token)
+            ->where('status', 'pending')
+            ->with('locataire.user')
+            ->first();
+
+        if (!$pending) {
+            return \Inertia\Inertia::render('Locataire/WalletValidationPage', [
+                'error' => 'Cette demande de paiement est introuvable, déjà validée ou expirée.'
+            ]);
+        }
+
+        $locataire = $pending->locataire;
+        $companyName = $locataire->company ? ($locataire->company->legal_name ?? 'PropertyAI') : 'PropertyAI';
+        $agencyName = $locataire->agency ? $locataire->agency->name : 'N/A';
+
+        if ($pending->type === 'loyer') {
+            $months = data_get($pending->data, 'months', []);
+            $periodNames = array_map(function($m) {
+                $parts = explode('-', $m['periode']);
+                if (count($parts) >= 2) {
+                    $monthsList = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                    return $monthsList[intval($parts[1]) - 1] . ' ' . $parts[0];
+                }
+                return $m['periode'];
+            }, $months);
+            $description = 'Règlement de loyer pour : ' . implode(', ', $periodNames);
+        } else {
+            $invoiceNum = data_get($pending->data, 'invoice_num', 'N/A');
+            $description = 'Règlement de la facture N° ' . $invoiceNum;
+        }
+
+        return \Inertia\Inertia::render('Locataire/WalletValidationPage', [
+            'pendingPayment' => [
+                'token' => $pending->token,
+                'amount' => (float)$pending->amount,
+                'type' => $pending->type,
+                'description' => $description,
+                'locataire_nom' => $locataire->nom,
+                'company_name' => $companyName,
+                'agency_name' => $agencyName,
+            ]
+        ]);
+    }
+
+    /**
+     * Valide et exécute le paiement par wallet en attente.
+     */
+    public function validatePendingPayment(Request $request, $token)
+    {
+        $pending = \App\Models\PendingWalletPayment::where('token', $token)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$pending) {
+            return response()->json(['message' => 'Cette demande de paiement est introuvable, déjà validée ou expirée.'], 422);
+        }
+
+        $request->validate([
+            'pin' => 'required|string|size:4',
+        ]);
+
+        $locataire = $pending->locataire;
+        $wallet = $locataire->wallet;
+
+        if (!$wallet) {
+            return response()->json(['message' => 'Portefeuille électronique introuvable.'], 422);
+        }
+
+        if (!Hash::check($request->input('pin'), $wallet->password)) {
+            return response()->json(['message' => 'Le code secret est incorrect.'], 422);
+        }
+
+        if ($wallet->solde < $pending->amount) {
+            return response()->json(['message' => 'Le solde de votre portefeuille est insuffisant.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Débiter le wallet
+            $wallet->decrement('solde', $pending->amount);
+
+            $txType = $pending->type === 'loyer' ? 'RENT' : 'UTL';
+            $txRef = $txType . '-VAL-' . strtoupper(Str::random(10));
+
+            // Créer la transaction wallet
+            TransacWallet::create([
+                'wallet_id'    => $wallet->id,
+                'type'         => 'debit',
+                'amount'       => $pending->amount,
+                'description'  => $pending->type === 'loyer' ? 'Règlement Loyer (autorisation de paiement)' : 'Règlement Facture (autorisation de paiement)',
+                'reference_tx' => $txRef,
+            ]);
+
+            if ($pending->type === 'loyer') {
+                // Créer le PaiementLoyer
+                $p = PaiementLoyer::create([
+                    'company_profile_id' => $pending->company_profile_id,
+                    'agency_id'          => $pending->agency_id,
+                    'locataire_id'       => $pending->locataire_id,
+                    'contrat_id'         => $pending->target_id,
+                    'date_reglement'     => now(),
+                    'montant_total'      => $pending->amount,
+                    'mode_reglement'     => 'Wallet',
+                    'reference_tx'       => $txRef,
+                ]);
+
+                // Créer les MoisPayes et solder les factures correspondantes
+                $months = data_get($pending->data, 'months', []);
+                foreach ($months as $m) {
+                    MoisPaye::create([
+                        'paiement_loyer_id' => $p->id,
+                        'periode'           => $m['periode'],
+                        'loyer_de_base'     => (float) $m['loyer_de_base'],
+                        'penalite'          => (float) $m['penalite'],
+                        'total_paye'        => (float) $m['total_paye'],
+                    ]);
+
+                    Facture::where('locataire_id', $pending->locataire_id)
+                        ->where('type_facture_id', function($query) {
+                            $query->select('id')->from('type_factures')->where('nom', 'Loyer')->limit(1);
+                        })
+                        ->where('periode', 'like', '%' . $m['periode'] . '%')
+                        ->where(function($q) {
+                            $q->where('statut', '!=', 'payée')
+                              ->where('statut', '!=', 'Payé');
+                        })
+                        ->update([
+                            'statut'         => 'Payé',
+                            'montant_paye'   => DB::raw('total'),
+                            'mode_reglement' => 'wallet',
+                        ]);
+                }
+
+                // Trésorerie
+                $contrat = $p->contrat;
+                $contratNum = $contrat?->numero ?? 'N/A';
+                Tresorerie::enregistrer(
+                    $p,
+                    (float) $pending->amount,
+                    "Enregistrement de paiement de loyer de {$locataire->nom} pour le contrat {$contratNum} (Réf: {$p->reference})",
+                    now()->toDateString()
+                );
+            } else {
+                // Facture
+                $invoice = Facture::findOrFail($pending->target_id);
+                $invoice->update([
+                    'statut'         => 'Payé',
+                    'montant_paye'   => $invoice->total,
+                    'mode_reglement' => 'wallet',
+                ]);
+
+                // Trésorerie
+                Tresorerie::enregistrer(
+                    $invoice,
+                    (float) $invoice->total,
+                    "Règlement de la facture {$invoice->numero} par {$locataire->nom}",
+                    now()->toDateString()
+                );
+
+                // Notification e-mail
+                $agencyEmail = $locataire->agency?->email;
+                $companyEmail = $locataire->company?->user?->email;
+                $recipient = $agencyEmail ?? $companyEmail;
+                if ($recipient) {
+                    try {
+                        Mail::to($recipient)->send(new \App\Mail\InvoicePaidNotificationMail($invoice, $locataire));
+                    } catch (\Exception $e) {
+                        logger()->error("Mail error invoice paid notification: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Mettre à jour la demande en validée
+            $pending->update(['status' => 'validated']);
+
+            DB::commit();
+
+            return response()->json(['message' => 'Le paiement a été validé et enregistré avec succès.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Une erreur est survenue lors de la validation du paiement.', 'error' => $e->getMessage()], 500);
+        }
     }
 }

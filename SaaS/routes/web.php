@@ -392,6 +392,11 @@ Route::middleware('auth')->group(function () {
 });
 
 
+// Public Wallet Payment Validation Flow
+Route::get('/wallet/validate-payment/{token}', [\App\Http\Controllers\LocataireWalletController::class, 'showValidationPage'])->name('wallet.validate_payment_page');
+Route::post('/api/wallet/validate-payment/{token}', [\App\Http\Controllers\LocataireWalletController::class, 'validatePendingPayment'])->name('wallet.validate_payment');
+
+
 // ─── Espace Locataire ───────────────────────────────────────────────────────
 // Route protégée : seuls les utilisateurs avec account_type 'Locataire' y ont accès
 Route::get('/dashboard-locataire', [\App\Http\Controllers\LocataireDashboardController::class, 'index'])

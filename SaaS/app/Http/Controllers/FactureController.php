@@ -93,6 +93,47 @@ class FactureController extends Controller
             'mode_reglement' => 'required|string|in:cash,wallet',
         ]);
 
+        $mode = strtolower($request->input('mode_reglement'));
+        if ($mode === 'wallet') {
+            $locataire = $facture->locataire;
+            if (!$locataire) {
+                return response()->json(['message' => 'Profil locataire introuvable.'], 404);
+            }
+            $wallet = $locataire->wallet;
+            if (!$wallet) {
+                return response()->json(['message' => 'Ce locataire ne possède pas de portefeuille électronique actif.'], 422);
+            }
+            if ($wallet->solde < $facture->total) {
+                return response()->json(['message' => 'Le solde du portefeuille électronique du locataire est insuffisant (Requis : ' . number_format($facture->total, 2, ',', ' ') . ' €).'], 422);
+            }
+
+            $token = \Illuminate\Support\Str::random(40);
+            $pending = \App\Models\PendingWalletPayment::create([
+                'company_profile_id' => $facture->company_profile_id,
+                'agency_id'          => $facture->agency_id,
+                'locataire_id'       => $locataire->id,
+                'type'               => 'facture',
+                'target_id'          => $facture->id,
+                'amount'             => $facture->total,
+                'token'              => $token,
+                'data'               => array_merge($request->all(), ['invoice_num' => $facture->numero]),
+                'status'             => 'pending',
+            ]);
+
+            if ($locataire->user && $locataire->user->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($locataire->user->email)->send(new \App\Mail\WalletPaymentValidationMail($pending, $locataire));
+                } catch (\Exception $e) {
+                    logger()->error("Mail error validation wallet payment: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'message' => 'Une demande d\'autorisation a été envoyée par e-mail au locataire. Le paiement sera enregistré dès qu\'il l\'aura autorisé avec son code secret.',
+                'pending' => true
+            ], 200);
+        }
+
         $facture->update([
             'statut'         => 'Payé',
             'montant_paye'   => $facture->total,

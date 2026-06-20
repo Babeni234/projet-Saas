@@ -59,6 +59,45 @@ class PaiementLoyerController extends Controller
         $monthsInput = $request->input('months');
         $totalAmount = array_reduce($monthsInput, fn($sum, $m) => $sum + (float)$m['total_paye'], 0.0);
 
+        // Intercept wallet payment to send verification email to tenant
+        $mode = strtolower($request->input('mode_reglement'));
+        if ($mode === 'wallet') {
+            $locataire = \App\Models\Locataire::findOrFail($request->input('locataire_id'));
+            $wallet = $locataire->wallet;
+            if (!$wallet) {
+                return response()->json(['message' => 'Ce locataire ne possède pas de portefeuille électronique actif.'], 422);
+            }
+            if ($wallet->solde < $totalAmount) {
+                return response()->json(['message' => 'Le solde du portefeuille électronique du locataire est insuffisant (Requis : ' . number_format($totalAmount, 2, ',', ' ') . ' €).'], 422);
+            }
+
+            $token = \Illuminate\Support\Str::random(40);
+            $pending = \App\Models\PendingWalletPayment::create([
+                'company_profile_id' => $companyProfileId,
+                'agency_id'          => $agencyId,
+                'locataire_id'       => $locataire->id,
+                'type'               => 'loyer',
+                'target_id'          => $contrat->id,
+                'amount'             => $totalAmount,
+                'token'              => $token,
+                'data'               => $request->all(),
+                'status'             => 'pending',
+            ]);
+
+            if ($locataire->user && $locataire->user->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($locataire->user->email)->send(new \App\Mail\WalletPaymentValidationMail($pending, $locataire));
+                } catch (\Exception $e) {
+                    logger()->error("Mail error validation wallet payment: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'message' => 'Une demande d\'autorisation a été envoyée par e-mail au locataire. Le paiement sera enregistré dès qu\'il l\'aura autorisé avec son code secret.',
+                'pending' => true
+            ], 200);
+        }
+
         $payment = DB::transaction(function () use ($companyProfileId, $agencyId, $request, $totalAmount, $monthsInput) {
             $p = PaiementLoyer::create([
                 'company_profile_id' => $companyProfileId,

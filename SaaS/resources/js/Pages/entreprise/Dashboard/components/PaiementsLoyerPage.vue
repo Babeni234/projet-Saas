@@ -1181,6 +1181,14 @@ const savePayment = async () => {
             months: payloadMonths
         });
 
+        if (response.data.pending) {
+            showPaymentMethodModal.value = false;
+            showModal.value = false;
+            successMessage.value = response.data.message;
+            showSuccess.value = true;
+            return;
+        }
+
         payments.value.unshift(response.data);
         showPaymentMethodModal.value = false;
         showModal.value = false;

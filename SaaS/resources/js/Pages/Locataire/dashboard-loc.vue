@@ -629,7 +629,7 @@
                     </div>
                     <div v-else-if="paymentFlowStep === 'pin'" key="pin" class="rent-pin-modal" @click="focusRentPinInput">
                       <div class="rent-pin-bg-ornament"></div>
-                      <button class="rent-pin-close" @click="cancelPaymentFlow">&times;</button>
+                      <button class="rent-pin-close" @click="cancelPaymentFlow" :disabled="processingPayment">&times;</button>
                       <div class="rent-pin-icon-wrap">
                         <div class="rent-pin-icon-ring">
                           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -648,7 +648,7 @@
                       </div>
                       <div class="rent-pin-input-row">
                         <input ref="rentPinInputEl" type="password" v-model="rentWalletPinInput" maxlength="4"
-                          class="rent-pin-input" autofocus
+                          class="rent-pin-input" autofocus :disabled="processingPayment"
                           @input="onRentPinInput"
                           @keyup.enter="submitRentWalletPin"/>
                       </div>
@@ -659,10 +659,19 @@
                         </div>
                       </Transition>
                       <div class="rent-pin-actions">
-                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow">Annuler</button>
-                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                          Valider
+                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow" :disabled="processingPayment">Annuler</button>
+                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4 || processingPayment">
+                          <template v-if="processingPayment">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" style="display:inline-block">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Traitement...
+                          </template>
+                          <template v-else>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block"><polyline points="20 6 9 17 4 12"/></svg>
+                            Valider
+                          </template>
                         </button>
                       </div>
                     </div>
@@ -967,7 +976,7 @@
                     </div>
                     <div v-else-if="paymentFlowStep === 'pin'" key="pin" class="rent-pin-modal" @click="focusRentPinInput">
                       <div class="rent-pin-bg-ornament"></div>
-                      <button class="rent-pin-close" @click="cancelPaymentFlow">&times;</button>
+                      <button class="rent-pin-close" @click="cancelPaymentFlow" :disabled="processingPayment">&times;</button>
                       <div class="rent-pin-icon-wrap">
                         <div class="rent-pin-icon-ring">
                           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -986,7 +995,7 @@
                       </div>
                       <div class="rent-pin-input-row">
                         <input ref="rentPinInputEl" type="password" v-model="rentWalletPinInput" maxlength="4"
-                          class="rent-pin-input" autofocus
+                          class="rent-pin-input" autofocus :disabled="processingPayment"
                           @input="onRentPinInput"
                           @keyup.enter="submitRentWalletPin"/>
                       </div>
@@ -997,10 +1006,19 @@
                         </div>
                       </Transition>
                       <div class="rent-pin-actions">
-                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow">Annuler</button>
-                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                          Valider
+                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow" :disabled="processingPayment">Annuler</button>
+                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4 || processingPayment">
+                          <template v-if="processingPayment">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" style="display:inline-block">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Traitement...
+                          </template>
+                          <template v-else>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block"><polyline points="20 6 9 17 4 12"/></svg>
+                            Valider
+                          </template>
                         </button>
                       </div>
                     </div>
@@ -1769,7 +1787,7 @@
                     </div>
                     <div v-else-if="paymentFlowStep === 'pin'" key="pin" class="rent-pin-modal" @click="focusRentPinInput">
                       <div class="rent-pin-bg-ornament"></div>
-                      <button class="rent-pin-close" @click="cancelPaymentFlow">&times;</button>
+                      <button class="rent-pin-close" @click="cancelPaymentFlow" :disabled="processingPayment">&times;</button>
                       <div class="rent-pin-icon-wrap">
                         <div class="rent-pin-icon-ring">
                           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -1788,7 +1806,7 @@
                       </div>
                       <div class="rent-pin-input-row">
                         <input ref="rentPinInputEl" type="password" v-model="rentWalletPinInput" maxlength="4"
-                          class="rent-pin-input" autofocus
+                          class="rent-pin-input" autofocus :disabled="processingPayment"
                           @input="onRentPinInput"
                           @keyup.enter="submitRentWalletPin"/>
                       </div>
@@ -1799,10 +1817,19 @@
                         </div>
                       </Transition>
                       <div class="rent-pin-actions">
-                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow">Annuler</button>
-                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                          Valider
+                        <button class="rent-pin-btn rent-pin-btn-secondary" @click="cancelPaymentFlow" :disabled="processingPayment">Annuler</button>
+                        <button class="rent-pin-btn rent-pin-btn-primary" @click="submitRentWalletPin" :disabled="rentWalletPinInput.length < 4 || processingPayment">
+                          <template v-if="processingPayment">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" style="display:inline-block">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Traitement...
+                          </template>
+                          <template v-else>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block"><polyline points="20 6 9 17 4 12"/></svg>
+                            Valider
+                          </template>
                         </button>
                       </div>
                     </div>
@@ -4210,6 +4237,7 @@ function confirmUtilityPayment() {
 }
 
 function executeUtilityPayment(inv, pin) {
+  processingPayment.value = true
   window.axios.post('/api/locataire/wallet/pay-utility', {
     invoice_id: inv.id,
     pin: pin
@@ -4255,9 +4283,10 @@ function executeUtilityPayment(inv, pin) {
     rentWalletPinError.value = error.response?.data?.message || 'Erreur de paiement.'
     setTimeout(focusRentPinInput, 100)
   })
+  .finally(() => {
+    processingPayment.value = false
+  })
 }
-
-
 
 function openContractFeeConfirm() {
   if (walletBalance.value < 50000) {
@@ -4395,12 +4424,14 @@ function playSuccessChime() {
 }
 
 function onPinDotsClick() {
+  if (processingPayment.value) return
   pinDotsRipple.value = true
   focusRentPinInput()
   setTimeout(() => { pinDotsRipple.value = false }, 400)
 }
 
 function onRentPinInput() {
+  if (processingPayment.value) return
   rentWalletPinInput.value = rentWalletPinInput.value.replace(/\D/g, '').slice(0, 4)
   if (rentWalletPinInput.value.length === 4) {
     setTimeout(() => submitRentWalletPin(), 200)
@@ -4408,7 +4439,7 @@ function onRentPinInput() {
 }
 
 function submitRentWalletPin() {
-  if (rentWalletPinInput.value.length < 4) return
+  if (processingPayment.value || rentWalletPinInput.value.length < 4) return
   rentWalletPinError.value = ''
   if (premiumPinResolve.value) {
     premiumPinResolve.value(rentWalletPinInput.value)

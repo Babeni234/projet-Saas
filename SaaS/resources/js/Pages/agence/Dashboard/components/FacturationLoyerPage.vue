@@ -1116,6 +1116,13 @@ const confirmPayment = async () => {
             mode_reglement: paymentMode.value
         });
         
+        if (res.data.pending) {
+            closePaymentModal();
+            successMessage.value = res.data.message;
+            showSuccess.value = true;
+            return;
+        }
+
         const idx = invoices.value.findIndex(i => i.id === paymentInvoice.value.id);
         if (idx !== -1) {
             invoices.value[idx] = res.data;
