@@ -318,5 +318,83 @@ class IllustrationSeeder extends Seeder
                 ]));
             }
         }
+
+        // Seed 4 additional company profiles as partners for illustration
+        $mockPartners = [
+            [
+                'email' => 'contact@horizonestates.com',
+                'name' => 'Jean-Marc Horizon',
+                'company' => 'Horizon Estates',
+                'city' => 'Lyon',
+                'country' => 'FR',
+                'address' => '12 Rue de la République',
+                'phone' => '+33 4 72 00 11 22',
+                'business_type' => 'real_estate',
+            ],
+            [
+                'email' => 'info@nexusliving.com',
+                'name' => 'Sarah Nexus',
+                'company' => 'Nexus Living',
+                'city' => 'Marseille',
+                'country' => 'FR',
+                'address' => '88 Quai du Port',
+                'phone' => '+33 4 91 33 44 55',
+                'business_type' => 'real_estate',
+            ],
+            [
+                'email' => 'management@lumierehotels.com',
+                'name' => 'Pierre Lumière',
+                'company' => 'Lumière Group',
+                'city' => 'Cannes',
+                'country' => 'FR',
+                'address' => '58 Boulevard de la Croisette',
+                'phone' => '+33 4 93 45 67 89',
+                'business_type' => 'hotel',
+            ],
+            [
+                'email' => 'hello@vortexrealty.com',
+                'name' => 'Alex Vortex',
+                'company' => 'Vortex Realty',
+                'city' => 'Bordeaux',
+                'country' => 'FR',
+                'address' => '5 Cours de l\'Intendance',
+                'phone' => '+33 5 56 78 90 12',
+                'business_type' => 'real_estate',
+            ],
+        ];
+
+        foreach ($mockPartners as $partnerData) {
+            $partnerUser = User::where('email', $partnerData['email'])->first();
+            if (!$partnerUser) {
+                $partnerUser = User::create([
+                    'name' => $partnerData['name'],
+                    'email' => $partnerData['email'],
+                    'password' => Hash::make('password'),
+                    'account_type' => 'company',
+                    'subscription_plan' => 'professional',
+                ]);
+            }
+
+            $partnerCompany = CompanyProfile::where('user_id', $partnerUser->id)->first();
+            if (!$partnerCompany) {
+                CompanyProfile::create([
+                    'user_id' => $partnerUser->id,
+                    'business_type' => $partnerData['business_type'],
+                    'legal_name' => $partnerData['company'],
+                    'registration_number' => 'REG' . rand(100000, 999999),
+                    'tax_id' => 'TAX' . rand(100000, 999999),
+                    'country' => $partnerData['country'],
+                    'address' => $partnerData['address'],
+                    'city' => $partnerData['city'],
+                    'postal_code' => '00000',
+                    'legal_representative_name' => $partnerData['name'],
+                    'legal_representative_id_number' => 'ID' . rand(1000, 9999),
+                    'phone' => $partnerData['phone'],
+                    'logo_path' => null,
+                    'verification_status' => 'approved',
+                ]);
+            }
+        }
     }
 }
+

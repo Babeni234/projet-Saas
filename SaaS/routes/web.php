@@ -14,13 +14,38 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $partners = \App\Models\CompanyProfile::with('user:id,email')->get(['id', 'user_id', 'legal_name', 'logo_path', 'business_type', 'city', 'country', 'address', 'phone'])->map(function ($partner) {
+        return [
+            'id' => $partner->id,
+            'name' => $partner->legal_name,
+            'logo_url' => $partner->logo_path ? asset('storage/' . $partner->logo_path) : null,
+            'business_type' => $partner->business_type,
+            'city' => $partner->city,
+            'country' => $partner->country,
+            'address' => $partner->address,
+            'phone' => $partner->phone,
+            'email' => $partner->user?->email,
+        ];
+    })->toArray();
+
+    $userCount = \App\Models\User::where('email', '!=', 'superadmin@propertyai.com')
+        ->where('account_type', '!=', 'superadmin')
+        ->where('account_type', '!=', 'super_admin')
+        ->count();
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'partners' => $partners,
+        'userCount' => $userCount,
     ]);
 });
+
+Route::post('/api/partners/contact', [\App\Http\Controllers\PartnerController::class, 'contact'])->name('partners.contact');
+Route::post('/api/contact', [\App\Http\Controllers\PartnerController::class, 'generalContact'])->name('general.contact');
+
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
