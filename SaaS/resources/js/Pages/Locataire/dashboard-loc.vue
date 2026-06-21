@@ -182,57 +182,66 @@
             </div>
 
             <!-- KPI Cards Grid -->
-            <div class="kpi-grid anim-stagger">
-              <div class="glass-card kpi-card" :class="kpiStatusClass(currentRentStatus)">
-                <div class="kpi-icon-wrap">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+            <div class="kpi-grid">
+              <div class="glass-card kpi-card kpi-loyer">
+                <div class="kp-glow"></div>
+                <div class="kp-noise"></div>
+                <div class="kp-icon-wrap">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
                 </div>
-                <div class="kpi-body">
-                  <p class="kpi-label">Loyer mensuel</p>
-                  <p class="kpi-value">{{ formatCurrency(currentRent) }}</p>
-                  <span class="kpi-badge" :class="'badge-' + currentRentStatus">
+                <div class="kp-body">
+                  <p class="kp-label">Loyer mensuel</p>
+                  <p class="kp-value">{{ formatCurrency(currentRent) }}</p>
+                  <span class="kp-badge" :class="'badge-' + currentRentStatus">
+                    <span class="kp-badge-dot"></span>
                     {{ rentStatusLabel(currentRentStatus) }}
                   </span>
                 </div>
               </div>
 
               <!-- 💳 WALLET KPI CARD -->
-              <div class="glass-card kpi-card wallet-kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-blue">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              <div class="glass-card kpi-card kpi-wallet">
+                <div class="kp-glow"></div>
+                <div class="kp-noise"></div>
+                <div class="kp-icon-wrap kpi-icon-blue">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 </div>
-                <div class="kpi-body">
-                  <p class="kpi-label">Mon Portefeuille</p>
-                  <p class="kpi-value value-wallet">{{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</p>
+                <div class="kp-body">
+                  <p class="kp-label">Mon Portefeuille</p>
+                  <p class="kp-value kp-value-wallet">{{ hideBalance ? '••••••' : formatCurrency(walletBalance) }}</p>
                   <div class="wallet-kpi-actions">
                     <button class="wallet-inline-btn" @click="openRechargeModal">Recharger</button>
-                    <button class="wallet-inline-btn secondary" @click="toggleBalanceVisibility">{{ hideBalance ? 'Afficher' : 'Masquer' }} solde</button>
-                    <button class="wallet-inline-btn secondary" style="margin-left:4px" @click="showTransferForm = !showTransferForm">
+                    <button class="wallet-inline-btn secondary" @click="toggleBalanceVisibility">{{ hideBalance ? 'Afficher' : 'Masquer' }}</button>
+                    <button class="wallet-inline-btn secondary" @click="showTransferForm = !showTransferForm">
                       {{ showTransferForm ? 'Annuler' : 'Transférer' }}
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div class="glass-card kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-amber">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+              <div class="glass-card kpi-card kpi-due">
+                <div class="kp-glow"></div>
+                <div class="kp-noise"></div>
+                <div class="kp-icon-wrap kpi-icon-amber">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
                 </div>
-                <div class="kpi-body">
-                  <p class="kpi-label">Solde dû total</p>
-                  <p class="kpi-value">{{ formatCurrency(totalDue) }}</p>
-                  <span class="kpi-hint">{{ totalDue === 0 ? 'À jour 🎉' : 'Règlement requis' }}</span>
+                <div class="kp-body">
+                  <p class="kp-label">Solde dû total</p>
+                  <p class="kp-value" :class="{ 'kp-value-danger': totalDue > 0 }">{{ formatCurrency(totalDue) }}</p>
+                  <span class="kp-hint" :class="{ 'kp-hint-ok': totalDue === 0, 'kp-hint-warn': totalDue > 0 }">{{ totalDue === 0 ? 'À jour' : 'Règlement requis' }}</span>
                 </div>
               </div>
 
-              <div class="glass-card kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-violet">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <div class="glass-card kpi-card kpi-tickets">
+                <div class="kp-glow"></div>
+                <div class="kp-noise"></div>
+                <div class="kp-icon-wrap kpi-icon-violet">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                 </div>
-                <div class="kpi-body">
-                  <p class="kpi-label">Tickets de support</p>
-                  <p class="kpi-value">{{ openTicketsCount }}</p>
-                  <span class="kpi-hint">{{ openTicketsCount === 0 ? 'Aucune panne signalée' : 'Incidents en cours' }}</span>
+                <div class="kp-body">
+                  <p class="kp-label">Tickets de support</p>
+                  <p class="kp-value" :class="{ 'kp-value-warning': openTicketsCount > 0 }">{{ openTicketsCount }}</p>
+                  <span class="kp-hint" :class="{ 'kp-hint-ok': openTicketsCount === 0, 'kp-hint-warn': openTicketsCount > 0 }">{{ openTicketsCount === 0 ? 'Aucun incident' : 'Incidents en cours' }}</span>
                 </div>
               </div>
             </div>
@@ -272,99 +281,50 @@
               </div>
             </Transition>
 
-            <!-- Chart + Quick Actions Row -->
+            <!-- Quick Actions & Recent Transactions -->
             <div class="overview-lower-grid anim-stagger">
-              <div class="glass-card chart-card">
-                <div class="card-header-row">
-                  <h3 class="card-title">Historique des dépenses</h3>
-                  <div class="chart-legend">
-                    <span class="legend-dot blue"></span><span>Loyer</span>
-                    <span class="legend-dot amber" style="margin-left:12px"></span><span>Charges</span>
-                  </div>
-                </div>
-                <div class="chart-wrapper">
-                  <svg :viewBox="`0 0 ${chartW} ${chartH}`" class="expense-chart">
-                    <g class="grid-lines">
-                      <line v-for="(g, i) in 5" :key="'g'+i"
-                        :x1="chartPad" :y1="chartPad + (i * (chartH - 2*chartPad)/4)"
-                        :x2="chartW - chartPad" :y2="chartPad + (i * (chartH - 2*chartPad)/4)"
-                        stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4,4"/>
-                    </g>
-                    <g class="y-labels">
-                      <text v-for="(label, i) in chartYLabels" :key="'yl'+i"
-                        :x="chartPad - 8" :y="chartPad + (i * (chartH - 2*chartPad)/4) + 4"
-                        text-anchor="end" font-size="10" fill="#9CA3AF">{{ label }}</text>
-                    </g>
-                    <defs>
-                      <linearGradient id="rentGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#2563EB" stop-opacity="0.15"/>
-                        <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
-                      </linearGradient>
-                      <linearGradient id="chargesGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.12"/>
-                        <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    <path :d="rentAreaPath" fill="url(#rentGrad)"/>
-                    <path :d="chargesAreaPath" fill="url(#chargesGrad)"/>
-                    <path :d="rentLinePath" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path :d="chargesLinePath" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle v-for="(pt, i) in rentPoints" :key="'rp'+i" :cx="pt.x" :cy="pt.y" r="4" fill="white" stroke="#2563EB" stroke-width="2.5"/>
-                    <circle v-for="(pt, i) in chargesPoints" :key="'cp'+i" :cx="pt.x" :cy="pt.y" r="4" fill="white" stroke="#F59E0B" stroke-width="2.5"/>
-                    <g class="x-labels">
-                      <text v-for="(m, i) in chartMonths" :key="'xl'+i"
-                        :x="chartXforIndex(i)" :y="chartH - chartPad + 18"
-                        text-anchor="middle" font-size="11" fill="#6B7280">{{ m }}</text>
-                    </g>
-                  </svg>
+              <div class="glass-card quick-actions-card">
+                <h3 class="card-title">Actions Rapides</h3>
+                <div class="quick-actions-list">
+                  <button class="quick-action-btn primary" @click="switchTab('loyer')">
+                    <span class="qa-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </span>
+                    <span class="qa-text">
+                      <strong>Payer mon loyer</strong>
+                      <small>Sélection mensuelle consécutive</small>
+                    </span>
+                  </button>
+                  <button class="quick-action-btn" @click="switchTab('support'); openNewTicket()">
+                    <span class="qa-icon amber">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <span class="qa-text">
+                      <strong>Signaler une panne</strong>
+                      <small>Ouvrir un ticket d'incident</small>
+                    </span>
+                  </button>
                 </div>
               </div>
 
-              <!-- Quick Actions & Transactions -->
-              <div class="overview-right-col">
-                <div class="glass-card quick-actions-card">
-                  <h3 class="card-title">Actions Rapides</h3>
-                  <div class="quick-actions-list">
-                    <button class="quick-action-btn primary" @click="switchTab('loyer')">
-                      <span class="qa-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                      </span>
-                      <span class="qa-text">
-                        <strong>Payer mon loyer</strong>
-                        <small>Sélection mensuelle consécutive</small>
-                      </span>
-                    </button>
-                    <button class="quick-action-btn" @click="switchTab('support'); openNewTicket()">
-                      <span class="qa-icon amber">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      </span>
-                      <span class="qa-text">
-                        <strong>Signaler une panne</strong>
-                        <small>Ouvrir un ticket d'incident</small>
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Wallet transactions summary -->
-                <div class="glass-card wallet-tx-card">
-                  <h3 class="card-title">Mouvements de fonds récents</h3>
-                  <div class="wallet-tx-list">
-                      <div v-for="tx in transactions.slice(0, 3)" :key="tx.id" class="tx-item">
-                      <div class="tx-icon" :class="tx.type">
-                        <svg v-if="tx.type === 'recharge'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-                        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                      </div>
-                      <div class="tx-info">
-                        <p class="tx-name">{{ tx.type === 'recharge' ? 'Crédit Portefeuille' : tx.description }}</p>
-                        <p class="tx-meta">{{ formatDateTime(tx.date) }} • {{ tx.method }}</p>
-                      </div>
-                      <p class="tx-amount" :class="tx.type">
-                        {{ tx.type === 'recharge' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
-                      </p>
+              <!-- Wallet transactions summary -->
+              <div class="glass-card wallet-tx-card">
+                <h3 class="card-title">Mouvements de fonds récents</h3>
+                <div class="wallet-tx-list">
+                    <div v-for="tx in transactions.slice(0, 3)" :key="tx.id" class="tx-item">
+                    <div class="tx-icon" :class="tx.type">
+                      <svg v-if="tx.type === 'recharge'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
                     </div>
-                    <div v-if="transactions.length === 0" class="tx-empty">Aucune transaction répertoriée.</div>
+                    <div class="tx-info">
+                      <p class="tx-name">{{ tx.type === 'recharge' ? 'Crédit Portefeuille' : tx.description }}</p>
+                      <p class="tx-meta">{{ formatDateTime(tx.date) }} • {{ tx.method }}</p>
+                    </div>
+                    <p class="tx-amount" :class="tx.type">
+                      {{ tx.type === 'recharge' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
+                    </p>
                   </div>
+                  <div v-if="transactions.length === 0" class="tx-empty">Aucune transaction répertoriée.</div>
                 </div>
               </div>
             </div>
@@ -764,6 +724,32 @@
               </div>
             </div>
 
+            <!-- ⚠️ Penalty warning banner -->
+            <div v-if="penaltyInfo.isOverdue && showPenaltyBanner" class="glass-card penalty-banner">
+              <div class="penalty-banner-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="penalty-banner-body">
+                <div class="penalty-banner-title">Pénalité de retard — {{ penaltyInfo.period }}</div>
+                <div class="penalty-banner-details">
+                  <span>Loyer : <strong>{{ formatCurrency(penaltyInfo.rentAmount) }}</strong></span>
+                  <span class="penalty-sep">•</span>
+                  <span>Pénalité <strong>{{ penaltyInfo.penaltyRate }}%</strong> : <strong class="text-red">{{ formatCurrency(penaltyInfo.penaltyAmount) }}</strong></span>
+                  <span class="penalty-sep">•</span>
+                  <span>Total dû : <strong class="text-indigo">{{ formatCurrency(penaltyInfo.totalDue) }}</strong></span>
+                </div>
+                <div class="penalty-banner-scale">
+                  <span class="ps-label">Barème :</span>
+                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 11 }">J+11 → 5%</span>
+                  <span class="ps-arrow">→</span>
+                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 16 }">J+16 → 10%</span>
+                  <span class="ps-arrow">→</span>
+                  <span class="ps-tier" :class="{ 'ps-active': penaltyInfo.day >= 21 }">J+21 → 15%</span>
+                </div>
+              </div>
+              <button class="penalty-banner-close" @click="dismissPenaltyBanner">&times;</button>
+            </div>
+
             <!-- 🗓️ CONSECUTIVE MONTH SELECTOR CARD (Professional & Realistic) -->
             <div class="glass-card rent-payment-selector-card">
               <h3 class="card-title">Sélectionneur de loyers successifs</h3>
@@ -792,10 +778,12 @@
                       <span class="mc-label">{{ month.label }}</span>
                       <span v-if="month.status === 'paid'" class="mc-badge mc-paid-badge">Payé</span>
                       <span v-else-if="selectedMonthsKeys.includes(month.key)" class="mc-badge mc-sel-badge">Sélectionné</span>
+                      <span v-else-if="month.penaltyRate > 0" class="mc-badge mc-penalty-badge">+{{ month.penaltyRate }}%</span>
                       <span v-else class="mc-badge mc-unpaid-badge">À régler</span>
                     </div>
                     <div class="mc-amount-wrap">
                       <span class="mc-amount">{{ formatCurrency(month.amount) }}</span>
+                      <span v-if="month.penaltyRate > 0" class="mc-penalty-amount">+{{ formatCurrency(month.penaltyAmount) }}</span>
                     </div>
                     <div class="mc-bar"></div>
                   </div>
@@ -854,16 +842,21 @@
                           <div class="pm-months-list">
                             <div v-for="mk in selectedMonthsKeys" :key="mk" class="pm-month-row">
                               <div class="pm-month-dot"></div>
-                              <span class="pm-month-label">{{ rentMonths.find(m => m.key === mk)?.label }}</span>
-                              <span class="pm-month-amount">{{ formatCurrency(currentRent) }}</span>
+                              <span class="pm-month-label">{{ (rentMonths.find(m => m.key === mk) || {}).label }}</span>
+                              <span class="pm-month-amount" style="display:flex;flex-direction:column;align-items:flex-end">
+                                <span>{{ formatCurrency((rentMonths.find(m => m.key === mk) || {}).totalDue || 0) }}</span>
+                                <span v-if="(rentMonths.find(m => m.key === mk) || {}).penaltyAmount > 0" class="pm-penalty-hint">
+                                  dont +{{ (rentMonths.find(m => m.key === mk) || {}).penaltyRate }}% pénalité
+                                </span>
+                              </span>
                             </div>
                           </div>
                         </div>
                         <div class="pm-divider"></div>
                         <div class="pm-summary">
-                          <div class="pm-summary-row">
-                            <span class="pms-label">Total loyers</span>
-                            <span class="pms-value">{{ formatCurrency(totalPaymentAmount) }}</span>
+                          <div v-if="selectedPenaltyAmount > 0" class="pm-summary-row">
+                            <span class="pms-label">Dont pénalités</span>
+                            <span class="pms-value red">{{ formatCurrency(selectedPenaltyAmount) }}</span>
                           </div>
                           <div class="pm-summary-row">
                             <span class="pms-label">Frais</span>
@@ -1816,7 +1809,11 @@
                   </div>
                   <span class="receipt-amount">{{ formatCurrency(rec.amount) }}</span>
                 </div>
-                <div class="receipt-card-body">
+                  <div class="receipt-card-body">
+                  <div v-if="rec.includesPenalties" class="receipt-penalty-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Pénalités incluses
+                  </div>
                   <div class="receipt-details-row">
                     <span class="rd-label">Période</span>
                     <span class="rd-value">{{ rec.period }}</span>
@@ -1933,6 +1930,15 @@
 
         </div>
       </Transition>
+
+      <AiAssistant
+        :user="props.auth?.user || {}"
+        :invoices="localInvoices"
+        :contract="props.contracts[0] || {}"
+        :wallet-balance="walletBalance"
+        :current-tab="activeTab"
+        :penalty-info="penaltyInfo"
+        @action="handleAiAction"/>
 
       <!-- Bottom nav -- mobile-only -->
       <nav class="bottom-nav">
@@ -2521,6 +2527,18 @@
                   <div class="rcpt-row rcpt-row-even" v-if="recDetail?.transaction_id"><span class="rcpt-label">Transaction</span><span class="rcpt-value">{{ recDetail?.transaction_id }}</span></div>
                   <div class="rcpt-row" v-if="recDetail?.landlord"><span class="rcpt-label">Bailleur</span><span class="rcpt-value">{{ recDetail?.landlord }}</span></div>
                 </div>
+                <div v-if="recDetail?.includesPenalties && recDetail?.months" class="rcpt-penalty-section">
+                  <div class="rcpt-sec-title" style="margin-top:12px">Pénalités par mois</div>
+                  <div class="rcpt-table">
+                    <div v-for="(m, mi) in recDetail.months" :key="mi" class="rcpt-row" :class="mi % 2 === 0 ? 'rcpt-row-even' : ''">
+                      <span class="rcpt-label">{{ m.label }}</span>
+                      <span class="rcpt-value" style="display:flex;flex-direction:column;align-items:flex-end">
+                        <span>{{ formatCurrency(m.amount) }}</span>
+                        <span v-if="m.penaltyAmount > 0" style="font-size:11px;color:#DC2626">+{{ m.penaltyRate }}% pénalité : {{ formatCurrency(m.penaltyAmount) }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <div v-if="recDetail?.amount" class="rcpt-total">
                   <div class="rcpt-total-inner">
                     <span class="rcpt-total-label">Total versé</span>
@@ -2658,6 +2676,7 @@ import { ref, computed, reactive, nextTick, onMounted, watch } from 'vue'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useI18n } from 'vue-i18n'
+import AiAssistant from '../../Components/AiAssistant.vue'
 
 const { t, locale } = useI18n()
 
@@ -2686,8 +2705,8 @@ const props = defineProps({
       {
         id: 'CTR-001',
         type: 'Bail d\'habitation (3 ans)',
-        start_date: '2025-01-01',
-        end_date: '2026-01-01',
+        start_date: '2026-01-01',
+        end_date: '2027-01-01',
         rent: 185000,
         deposit: 370000,
         charges: 25000,
@@ -2740,6 +2759,10 @@ const props = defineProps({
         ]
       }
     ])
+  },
+  vapidPublicKey: {
+    type: String,
+    default: 'BNw4zJxt9LuHtFoY62KqCPFgh0V6XCPEON6z_wYLLm3EXb3BNtGHSSqWKFFK3vCAC-PnlA3Mf0_lIP-BgJYjT_Q'
   }
 })
 
@@ -2844,7 +2867,6 @@ const isCardFlipped = ref(false)
 const paypalAmount = ref('')
 
 // 🗓️ RENT CONSECUTIVE SELECTION ENGINE STATE
-const lastPaidMonthKey = ref('2025-12')
 const selectedMonthsKeys = ref([])
 
 // 🔐 2FA保護
@@ -3024,30 +3046,6 @@ const desktopIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
 // ════════════════════════════════════════════════════════════
 //  CHART CONFIG
 // ════════════════════════════════════════════════════════════
-const chartW = 600
-const chartH = 220
-const chartPad = 50
-const chartMonths = ['Déc 25', 'Jan 26', 'Fév 26', 'Mar 26', 'Avr 26', 'Mai 26', 'Juin 26']
-const rentData = [185000, 185000, 185000, 185000, 185000, 185000, 185000]
-const chargesData = [20000, 15000, 25000, 22000, 30000, 18200, 0]
-
-const maxVal = computed(() => Math.max(...rentData, ...chargesData) * 1.15)
-const chartYLabels = computed(() => {
-  const step = maxVal.value / 4
-  return [0, 1, 2, 3, 4].reverse().map(i => formatCurrencyShort(i * step))
-})
-function chartXforIndex(i) {
-  return chartPad + (i / (chartMonths.length - 1)) * (chartW - 2 * chartPad)
-}
-function chartYforVal(val) {
-  return chartPad + (1 - val / maxVal.value) * (chartH - 2 * chartPad)
-}
-const rentPoints = computed(() => rentData.map((v, i) => ({ x: chartXforIndex(i), y: chartYforVal(v) })))
-const chargesPoints = computed(() => chargesData.map((v, i) => ({ x: chartXforIndex(i), y: chartYforVal(v) })))
-const rentLinePath = computed(() => rentPoints.value.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' '))
-const chargesLinePath = computed(() => chargesPoints.value.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' '))
-const rentAreaPath = computed(() => `${rentLinePath.value} L ${chartXforIndex(chartMonths.length-1)} ${chartH - chartPad} L ${chartPad} ${chartH - chartPad} Z`)
-const chargesAreaPath = computed(() => `${chargesLinePath.value} L ${chartXforIndex(chartMonths.length-1)} ${chartH - chartPad} L ${chartPad} ${chartH - chartPad} Z`)
 
 // ════════════════════════════════════════════════════════════
 //  LOCAL STORAGE MANAGEMENT
@@ -3084,10 +3082,7 @@ function loadPersistedState() {
   const saved2FA = localStorage.getItem('hab_2fa_enabled')
   if (saved2FA) twoFAEnabled.value = JSON.parse(saved2FA)
 
-  // Reset all 2026 rent payments
-  localStorage.removeItem('hab_last_paid_month_key')
-  localStorage.removeItem('hab_selected_months')
-  lastPaidMonthKey.value = '2025-12'
+  // Reset selected months on mount
   selectedMonthsKeys.value = []
 
   const savedTicketDraft = localStorage.getItem('hab_ticket_draft')
@@ -3113,7 +3108,6 @@ watch(localInvoices, (val) => localStorage.setItem('hab_invoices', JSON.stringif
 watch(localTickets, (val) => localStorage.setItem('hab_tickets', JSON.stringify(val)), { deep: true })
 watch(twoFAEnabled, (val) => localStorage.setItem('hab_2fa_enabled', JSON.stringify(val)))
 watch(profileForm, (val) => localStorage.setItem('hab_profile_draft', JSON.stringify(val)), { deep: true })
-watch(lastPaidMonthKey, (val) => localStorage.setItem('hab_last_paid_month_key', val))
 watch(selectedMonthsKeys, (val) => localStorage.setItem('hab_selected_months', JSON.stringify(val)), { deep: true })
 watch(sidebarCollapsed, (val) => localStorage.setItem('hab_sidebar_collapsed', JSON.stringify(val)))
 watch(hideBalance, (val) => localStorage.setItem('hab_hide_balance', JSON.stringify(val)))
@@ -3126,8 +3120,9 @@ watch(passwordForm, (val) => localStorage.setItem('hab_password_draft', JSON.str
 const currentNavLabel = computed(() => t('nav.' + (activeTab.value || 'overview')))
 const currentRent = computed(() => props.contracts[0]?.rent || 0)
 const currentRentStatus = computed(() => {
-  const currentMonthCode = '2026-06'
-  return currentMonthCode <= lastPaidMonthKey.value ? 'paid' : 'pending'
+  const currentMonth = '2026-' + String(new Date().getMonth() + 1).padStart(2, '0')
+  const found = rentMonths.value.find(m => m.key === currentMonth)
+  return found && found.status === 'paid' ? 'paid' : 'pending'
 })
 
 const invoicePreviewRows = computed(() => {
@@ -3150,8 +3145,8 @@ const invoicePreviewRows = computed(() => {
 })
 
 const totalDue = computed(() => {
-  // Unpaid rents from contract months
-  const unpaidRentAmt = rentMonths.value.filter(m => m.status === 'unpaid').reduce((acc, m) => acc + m.amount, 0)
+  // Unpaid rents from contract months (incl. penalties)
+  const unpaidRentAmt = rentMonths.value.filter(m => m.status === 'unpaid').reduce((acc, m) => acc + m.totalDue, 0)
   // Unpaid utility bills
   const unpaidBillsAmt = localInvoices.value.filter(i => i.type !== 'RENT' && i.status !== 'paid').reduce((acc, i) => acc + i.amount, 0)
   return unpaidRentAmt + unpaidBillsAmt
@@ -3179,6 +3174,36 @@ const paidRentsCount = computed(() => rentMonths.value.filter(m => m.status === 
 const totalRentsCount = computed(() => rentMonths.value.length)
 const pendingInvoicesCount = computed(() => {
   return rentMonths.value.filter(m => m.status === 'unpaid').length + localInvoices.value.filter(i => i.type !== 'RENT' && i.status === 'pending').length
+})
+
+const showPenaltyBanner = ref(true)
+function dismissPenaltyBanner() { showPenaltyBanner.value = false }
+const penaltyInfo = computed(() => {
+  const now = reactiveNow.value || new Date()
+  const day = now.getDate()
+  const unpaid = rentMonths.value.filter(m => m.status === 'unpaid' && m.penaltyRate > 0)
+  if (unpaid.length === 0) {
+    return { isOverdue: false, period: '', rentAmount: 0, penaltyRate: 0, penaltyAmount: 0, totalDue: 0, day, dueDay: 10, details: [], unpaidCount: 0 }
+  }
+  const first = unpaid[0]
+  return {
+    isOverdue: true,
+    period: first.label,
+    rentAmount: first.amount,
+    penaltyRate: first.penaltyRate,
+    penaltyAmount: first.penaltyAmount,
+    totalDue: first.totalDue,
+    day,
+    dueDay: 10,
+    details: unpaid.map(m => ({
+      period: m.label,
+      rent: m.amount,
+      penalty: m.penaltyAmount,
+      rate: m.penaltyRate,
+      totalDue: m.totalDue,
+    })),
+    unpaidCount: unpaid.length,
+  }
 })
 
 // 🧾 UTILITIES COMPUTED
@@ -3264,6 +3289,32 @@ const passwordStrengthClass = computed(() => ['strength-weak', 'strength-medium'
 const passwordStrengthLabel = computed(() => ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'][passwordStrength.value] || '')
 
 // 🗓️ RENT CONSECUTIVE MONTHS GENERATOR
+
+function getMonthPenalty(monthKey, monthIndex, year, nowDate) {
+  const now = nowDate || new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth()
+  const day = now.getDate()
+
+  // Build a Date for the month's start
+  const monthDate = new Date(year, monthIndex, 1)
+  const currentDate = new Date(currentYear, currentMonth, 1)
+
+  if (monthDate < currentDate) {
+    // Past month — locked at 15%
+    return { rate: 15, amount: 0 } // amount calculated below
+  } else if (monthDate > currentDate) {
+    // Future month — no penalty
+    return { rate: 0, amount: 0 }
+  }
+  // Current month — based on day
+  let rate = 0
+  if (day >= 21) rate = 15
+  else if (day >= 16) rate = 10
+  else if (day >= 11) rate = 5
+  return { rate, amount: 0 }
+}
+
 const rentMonths = computed(() => {
   const months = []
   if (!props.contracts || props.contracts.length === 0) return []
@@ -3282,14 +3333,22 @@ const rentMonths = computed(() => {
     const label = current.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
     const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1)
     
-    // Status depends strictly on lastPaidMonthKey pointer
-    const status = key <= lastPaidMonthKey.value ? 'paid' : 'unpaid'
+    // All months forced unpaid
+    const status = 'unpaid'
+    
+    const penalty = getMonthPenalty(key, monthIndex, year, reactiveNow.value)
+    const penaltyAmount = Math.round(contract.rent * penalty.rate / 100)
     
     months.push({
       key,
       label: capitalizedLabel,
       amount: contract.rent,
-      status
+      status,
+      year,
+      month: monthIndex,
+      penaltyRate: penalty.rate,
+      penaltyAmount,
+      totalDue: contract.rent + penaltyAmount,
     })
     
     current.setMonth(current.getMonth() + 1)
@@ -3310,7 +3369,16 @@ const rentMonthsByYear = computed(() => {
 const selectedMonthsNames = computed(() => {
   return rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key)).map(m => m.label).join(', ')
 })
-const totalPaymentAmount = computed(() => selectedMonthsKeys.value.length * currentRent.value)
+const totalPaymentAmount = computed(() => {
+  return rentMonths.value
+    .filter(m => selectedMonthsKeys.value.includes(m.key))
+    .reduce((sum, m) => sum + m.totalDue, 0)
+})
+const selectedPenaltyAmount = computed(() => {
+  return rentMonths.value
+    .filter(m => selectedMonthsKeys.value.includes(m.key))
+    .reduce((sum, m) => sum + m.penaltyAmount, 0)
+})
 
 // Credit card display formatting helper
 const formattedCardNumber = computed(() => {
@@ -3325,6 +3393,36 @@ const formattedCardNumber = computed(() => {
 // ════════════════════════════════════════════════════════════
 //  METHODS
 // ════════════════════════════════════════════════════════════
+// 🤖 AI Assistant action handler
+function handleAiAction(actionId) {
+  const tabMap = {
+    navigate_overview: 'overview',
+    navigate_contract: 'contract',
+    navigate_loyer: 'loyer',
+    navigate_rent: 'loyer',
+    navigate_payment: 'loyer',
+    navigate_support: 'support',
+    navigate_profile: 'profile',
+    navigate_utilities: 'utilities',
+    navigate_invoices: 'loyer',
+    navigate_receipts: 'receipts',
+    navigate_recharge: 'recharge',
+    navigate_notifications: 'profile',
+    navigate_old_contracts: 'old-contracts',
+  }
+  const tab = tabMap[actionId]
+  if (tab && tab !== activeTab.value) {
+    switchTab(tab)
+  }
+  if (actionId === 'navigate_recharge') {
+    nextTick(() => openRechargeModal())
+  }
+  if (actionId === 'navigate_payment' && tab === 'rent') {
+    nextTick(() => { setTimeout(() => openPaymentConfirm(), 300) })
+  }
+  showToast('success', 'Action exécutée ✅')
+}
+
 function switchTab(id) {
   if (id === activeTab.value) return
 
@@ -3390,11 +3488,6 @@ function formatCurrency(amount) {
   if (!amount && amount !== 0) return '—'
   return new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount)
 }
-function formatCurrencyShort(amount) {
-  if (amount >= 1000000) return (amount/1000000).toFixed(1) + 'M'
-  if (amount >= 1000) return (amount/1000).toFixed(0) + 'k'
-  return Math.round(amount).toString()
-}
 function formatDate(dateStr) {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -3407,9 +3500,6 @@ function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-function kpiStatusClass(status) {
-  return { 'kpi-success': status === 'paid', 'kpi-warning': status === 'pending' }
-}
 function rentStatusLabel(s) { return { paid: 'Payé ✓', pending: 'En attente' }[s] || s }
 function invoiceStatusLabel(s) { return { paid: 'Payé', pending: 'En attente' }[s] || s }
 function invoiceTypeLabel(t) { return { RENT: 'Loyer', WATER: 'Eau', ELECTRIC: 'Electricité' }[t] || t }
@@ -3692,8 +3782,22 @@ function executePayment() {
   setTimeout(() => {
     walletBalance.value -= totalPaymentAmount.value
     
-    const maxSelectedKey = selectedMonthsKeys.value.reduce((max, key) => key > max ? key : max, lastPaidMonthKey.value)
-    lastPaidMonthKey.value = maxSelectedKey
+    // Mark each selected month as paid by adding a RENT invoice
+    const paidMonths = rentMonths.value.filter(m => selectedMonthsKeys.value.includes(m.key))
+    for (const m of paidMonths) {
+      localInvoices.value.push({
+        id: 'INV-RENT-' + Date.now() + '-' + m.key,
+        type: 'RENT',
+        status: 'paid',
+        period: m.label,
+        amount: m.totalDue,
+        rentBase: m.amount,
+        penaltyAmount: m.penaltyAmount,
+        penaltyRate: m.penaltyRate,
+        paid_at: new Date().toISOString().split('T')[0],
+        reference: 'QUIT-' + new Date().getFullYear() + '-' + String(allReceipts.value.length + 1).padStart(3, '0'),
+      })
+    }
     
     const receipt = {
       id: 'RCPT-' + Date.now(), type: 'rent',
@@ -3707,10 +3811,14 @@ function executePayment() {
       property: props.contracts[0]?.property?.name || 'Appartement',
       tenant: `${profileForm.first_name} ${profileForm.last_name}`,
       landlord: 'SCI Habitats SA',
-      months: selectedMonthsKeys.value.map(k => {
-        const m = rentMonths.value.find(r => r.key === k)
-        return m ? { label: m.label, amount: m.amount } : null
-      }).filter(Boolean)
+      months: paidMonths.map(m => ({
+        label: m.label,
+        amount: m.amount,
+        penaltyAmount: m.penaltyAmount,
+        penaltyRate: m.penaltyRate,
+        totalDue: m.totalDue,
+      })),
+      includesPenalties: paidMonths.some(m => m.penaltyAmount > 0),
     }
     
     transactions.value.unshift({
@@ -4513,10 +4621,179 @@ function showToast(type, msg) {
   setTimeout(() => { toast.show = false }, 3500)
 }
 
+// 🕒 Reactive date — auto-updates every 30s so penalties re-evaluate without page reload
+const reactiveNow = ref(new Date())
+let dateWatcherTimer = null
+let lastPenaltyRates = {}
+
+function startDateWatcher() {
+  // Initial snapshot of current penalty rates
+  snapshotPenaltyRates()
+  dateWatcherTimer = setInterval(() => {
+    const old = reactiveNow.value
+    const n = new Date()
+    reactiveNow.value = n
+    // Check if day threshold changed (penalty may have changed)
+    if (old.getDate() !== n.getDate() || old.getMonth() !== n.getMonth()) {
+      const changed = detectPenaltyChange()
+      if (changed) {
+        showPushNotification('Pénalité mise à jour ⚡', changed)
+      }
+    }
+  }, 30000)
+}
+
+function snapshotPenaltyRates() {
+  lastPenaltyRates = {}
+  const now = reactiveNow.value
+  for (const m of rentMonths.value) {
+    lastPenaltyRates[m.key] = { rate: m.penaltyRate, amount: m.penaltyAmount, label: m.label }
+  }
+}
+
+function detectPenaltyChange() {
+  // Compare current penalty with last snapshot
+  const changes = []
+  for (const m of rentMonths.value) {
+    const prev = lastPenaltyRates[m.key]
+    if (prev && (prev.rate !== m.penaltyRate || prev.amount !== m.penaltyAmount)) {
+      changes.push(`${m.label} : ${prev.rate}% → ${m.penaltyRate}% (${(m.penaltyAmount - (prev.amount||0)).toLocaleString()} XAF)`)
+    }
+  }
+  if (changes.length > 0) {
+    // Update snapshot
+    for (const m of rentMonths.value) {
+      lastPenaltyRates[m.key] = { rate: m.penaltyRate, amount: m.penaltyAmount, label: m.label }
+    }
+    return changes.join(' | ')
+  }
+  return null
+}
+
+// 🔔 Push notification helper
+function showPushNotification(title, body, icon = '🔔') {
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(`HABITATUM — ${title}`, { body, icon: '/favicon.ico' })
+    } else if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  } catch (e) { /* notification not available */ }
+  // Also notify via service worker for background delivery
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SHOW_NOTIFICATION',
+      title: `HABITATUM — ${title}`,
+      body,
+      icon: '/favicon.ico'
+    })
+  }
+  showToast('info', `${icon} ${title} : ${body}`)
+}
+
+// ⏰ Schedule periodic checks for payment reminders
+let notificationInterval = null
+
+function startNotificationScheduler() {
+  checkAndNotify()
+  notificationInterval = setInterval(checkAndNotify, 60 * 60 * 1000) // every hour
+}
+
+function checkAndNotify() {
+  const now = reactiveNow.value
+  const day = now.getDate()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const month = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const rentAmt = props.contracts[0]?.rent || 185000
+
+  // Reminder: 5 days before due date (5th of month)
+  if (day === 5) {
+    const unpaid = rentMonths.value.find(m => m.status === 'unpaid' && m.label === month)
+    if (unpaid) {
+      showPushNotification('Rappel échéance', `Le loyer de ${month} (${rentAmt.toLocaleString()} XAF) est à payer avant le 10.`)
+    }
+  }
+
+  // End-of-month reminder: next month's rent due soon
+  if (day >= daysInMonth - 3 && day <= daysInMonth) {
+    const nextUnpaid = rentMonths.value.find(m => m.status === 'unpaid' && m.label === nextMonth)
+    if (nextUnpaid) {
+      showPushNotification('Rappel fin de mois', `Le loyer de ${nextMonth} (${rentAmt.toLocaleString()} XAF) sera à payer sous peu.`)
+    }
+  }
+
+  // Overdue penalty notification
+  if (day === 11 || day === 16 || day === 21) {
+    const info = penaltyInfo.value
+    if (info.isOverdue) {
+      showPushNotification('Pénalité activée ⚠️', `${info.period} : pénalité de ${info.penaltyRate}% (${info.penaltyAmount.toLocaleString()} XAF). Régularisez dès maintenant.`)
+    }
+  }
+
+  // New invoice notification (simulated — first day of month)
+  if (day === 1) {
+    showPushNotification('Nouvelle facture', `La facture de ${month} est disponible. Consultez votre espace factures.`)
+  }
+}
+
 onMounted(() => {
   loadPersistedState()
   triggerLoader()
+  // Request notification permission and start scheduler
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+  startNotificationScheduler()
+  startDateWatcher()
+  registerServiceWorker()
 })
+
+// 🛎️ Service Worker — background push notifications
+async function registerServiceWorker() {
+  try {
+    if (!('serviceWorker' in navigator)) return
+    const reg = await navigator.serviceWorker.register('/sw.js')
+    console.log('[SW] Registered')
+    // Subscribe to push if supported
+    if ('PushManager' in window) {
+      const sub = await reg.pushManager.getSubscription()
+      if (!sub) {
+        // Request permission then subscribe
+        if (Notification.permission === 'granted') {
+          await subscribeToPush(reg)
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[SW] Registration failed:', e)
+  }
+}
+
+async function subscribeToPush(reg) {
+  try {
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(props.vapidPublicKey)
+    })
+    // Send subscription to backend
+    await window.axios.post('/api/push-subscriptions', sub.toJSON())
+  } catch (e) {
+    console.warn('[SW] Push subscribe skipped:', e)
+  }
+}
+
+// Utility: convert base64 to Uint8Array for VAPID key
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
 </script>
 
 <style>
@@ -4658,6 +4935,7 @@ onMounted(() => {
 .page-panel {
   width: 100%;
   padding: 28px 30px;
+  overflow-x: hidden;
   transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
   will-change: transform, opacity;
 }
@@ -4925,48 +5203,374 @@ onMounted(() => {
 .logout-btn:hover { background: var(--red-50); color: var(--red-600); }
 
 /* ══════════════════════════════════════════════════════════════════
-   A. VUE D'ENSEMBLE & DYNAMIC TRANSFER CARD
+   A. VUE D'ENSEMBLE — ULTRA PREMIUM KPI WIDGETS
    ══════════════════════════════════════════════════════════════════ */
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px; }
-.kpi-card { padding: 22px; display: flex; gap: 16px; align-items: flex-start; }
-.kpi-icon-wrap {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  background: #EFF6FF; color: var(--blue-600); flex-shrink: 0;
+
+/* — Grid */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px;
 }
-.kpi-icon-blue { background: #EFF6FF; color: var(--blue-600); }
-.kpi-icon-amber { background: #FFFBEB; color: var(--amber-500); }
-.kpi-icon-violet { background: #F3E8FF; color: #7C3AED; }
-.kpi-body { flex: 1; min-width: 0; }
-.kpi-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
-.kpi-value { font-size: 22px; font-weight: 800; color: var(--text-title); letter-spacing: -0.3px; line-height: 1.2; }
-.kpi-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
-.kpi-badge.badge-paid { background: #D1FAE5; color: #059669; }
-.kpi-badge.badge-pending { background: #FEF3C7; color: #D97706; }
-.kpi-hint { font-size: 10.5px; color: var(--text-muted); display: block; margin-top: 2px; }
-.value-wallet {
+
+/* — Card base (permanently lifted) */
+.kpi-card {
+  padding: 26px 24px 22px; display: flex; gap: 16px; align-items: flex-start;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.18);
+  transform: translateY(-7px);
+  box-shadow:
+    0 24px 70px rgba(15,23,42,0.08),
+    0 8px 28px rgba(15,23,42,0.04),
+    0 0 0 1px rgba(99,102,241,0.12);
+  cursor: default;
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.45s ease,
+    border-color 0.3s ease;
+}
+/* Hover: micro-lift + deeper shadow + active border */
+.kpi-card.kpi-card:hover {
+  transform: translateY(-10px);
+  box-shadow:
+    0 32px 90px rgba(15,23,42,0.10),
+    0 12px 40px rgba(15,23,42,0.06),
+    0 0 0 1px rgba(99,102,241,0.20);
+}
+.dark-theme .kpi-card {
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(99,102,241,0.15);
+}
+.dark-theme .kpi-card.kpi-card:hover {
+  box-shadow:
+    0 32px 90px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(99,102,241,0.25);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   NOISE TEXTURE  —  subtle grain overlay
+   ───────────────────────────────────────────────────────────────── */
+.kp-noise {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 0.020;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  mix-blend-mode: overlay;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   1.  AMBIENT GLOW  —  permanently intense breathing orb
+   ───────────────────────────────────────────────────────────────── */
+.kp-glow {
+  position: absolute; top: -40%; right: -30%; width: 130px; height: 130px;
+  border-radius: 50%;
+  pointer-events: none; z-index: 0;
+  animation: glowIntense 2.2s ease-in-out infinite;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+@keyframes glowIntense {
+  0%, 100% { opacity: 0.50; transform: translate(-6px, -8px) scale(1.20); }
+  50%      { opacity: 0.70; transform: translate(-10px, -12px) scale(1.40); }
+}
+/* Hover: glow amplifies */
+.kpi-card:hover .kp-glow {
+  animation: glowHover 1.4s ease-in-out infinite;
+}
+@keyframes glowHover {
+  0%, 100% { opacity: 0.60; transform: translate(-8px, -10px) scale(1.40); }
+  50%      { opacity: 0.85; transform: translate(-12px, -14px) scale(1.60); }
+}
+/* per-card glow colors */
+.kpi-loyer .kp-glow { background: radial-gradient(circle, rgba(37,99,235,0.35), transparent 70%); }
+.kpi-wallet .kp-glow { background: radial-gradient(circle, rgba(99,102,241,0.35), transparent 70%); }
+.kpi-due .kp-glow   { background: radial-gradient(circle, rgba(245,158,11,0.30), transparent 70%); }
+.kpi-tickets .kp-glow { background: radial-gradient(circle, rgba(124,58,237,0.30), transparent 70%); }
+.dark-theme .kpi-loyer .kp-glow { background: radial-gradient(circle, rgba(59,130,246,0.25), transparent 70%); }
+.dark-theme .kpi-wallet .kp-glow { background: radial-gradient(circle, rgba(129,140,248,0.25), transparent 70%); }
+.dark-theme .kpi-due .kp-glow   { background: radial-gradient(circle, rgba(251,191,36,0.20), transparent 70%); }
+.dark-theme .kpi-tickets .kp-glow { background: radial-gradient(circle, rgba(167,139,250,0.20), transparent 70%); }
+
+/* ─────────────────────────────────────────────────────────────────
+   2.  SHINE SWEEP  —  always looping across the card
+   ───────────────────────────────────────────────────────────────── */
+.kpi-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg,
+    transparent 20%,
+    rgba(255,255,255,0.04) 38%,
+    rgba(255,255,255,0.10) 44%,
+    rgba(255,255,255,0.04) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  pointer-events: none; z-index: 1;
+  animation: shineSweep 5s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+/* Hover: sweep accelerates */
+.kpi-card:hover::before {
+  animation-duration: 2.2s;
+  opacity: 1;
+}
+@keyframes shineSweep {
+  0%, 100% { background-position: 200% 0; }
+  50%      { background-position: -30% 0; }
+}
+.dark-theme .kpi-card::before {
+  background: linear-gradient(105deg,
+    transparent 20%,
+    rgba(255,255,255,0.02) 38%,
+    rgba(255,255,255,0.05) 44%,
+    rgba(255,255,255,0.02) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   3.  BORDER ACCENT  —  per-card tinted overlay (always visible)
+   ───────────────────────────────────────────────────────────────── */
+.kpi-card::after {
+  content: ''; position: absolute; inset: -1px;
+  border-radius: inherit;
+  pointer-events: none; z-index: 2;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+/* Hover: border accent brightens */
+.kpi-card:hover::after { opacity: 1; }
+.kpi-loyer::after { background: linear-gradient(135deg, rgba(37,99,235,0.25), transparent 60%); }
+.kpi-wallet::after { background: linear-gradient(135deg, rgba(99,102,241,0.25), transparent 60%); }
+.kpi-due::after   { background: linear-gradient(135deg, rgba(245,158,11,0.20), transparent 60%); }
+.kpi-tickets::after { background: linear-gradient(135deg, rgba(124,58,237,0.20), transparent 60%); }
+
+/* ─────────────────────────────────────────────────────────────────
+   4.  ICON  —  circular, slightly rotated + ring pulse
+       HOVER: spring bounce + ring flare
+   ───────────────────────────────────────────────────────────────── */
+.kp-icon-wrap {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  color: var(--blue-600); flex-shrink: 0;
+  box-shadow: 0 8px 28px rgba(37,99,235,0.22), inset 0 1px 0 rgba(255,255,255,0.6);
+  position: relative; z-index: 3;
+  transform: scale(1.08);
+  transition:
+    transform 0.6s cubic-bezier(0.34, 1.9, 0.64, 1),
+    box-shadow 0.4s ease;
+}
+/* Hover: icon springs with a bounce + rotation */
+.kpi-card:hover .kp-icon-wrap {
+  transform: scale(1.22) rotate(-8deg);
+  box-shadow: 0 12px 40px rgba(37,99,235,0.30), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Ring pulse — always visible */
+.kp-icon-wrap::after {
+  content: ''; position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.20;
+  pointer-events: none;
+  animation: iconRing 2s ease-in-out infinite;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Hover: ring flares out then pulses larger */
+.kpi-card:hover .kp-icon-wrap::after {
+  inset: -14px;
+  opacity: 0.35;
+  border-width: 2.5px;
+  animation: iconRingHover 1.2s ease-in-out infinite;
+}
+@keyframes iconRing {
+  0%, 100% { transform: scale(1); opacity: 0.20; }
+  50%      { transform: scale(1.08); opacity: 0.06; }
+}
+@keyframes iconRingHover {
+  0%, 100% { transform: scale(1); opacity: 0.30; border-width: 2.5px; }
+  50%      { transform: scale(1.15); opacity: 0.08; border-width: 1.5px; }
+}
+
+.dark-theme .kp-icon-wrap {
+  background: linear-gradient(135deg, rgba(37,99,235,0.18), rgba(37,99,235,0.08));
+  box-shadow: 0 8px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Accent variants */
+.kpi-icon-blue {
+  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
   color: #6366F1;
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  box-shadow: 0 8px 28px rgba(99,102,241,0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.kpi-card:hover .kpi-icon-blue { box-shadow: 0 12px 40px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.6); }
+.dark-theme .kpi-icon-blue { background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(99,102,241,0.08)); box-shadow: 0 8px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+.kpi-icon-amber {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  color: var(--amber-500);
+  box-shadow: 0 8px 28px rgba(245,158,11,0.20), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.kpi-card:hover .kpi-icon-amber { box-shadow: 0 12px 40px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.6); }
+.dark-theme .kpi-icon-amber { background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.08)); box-shadow: 0 8px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+.kpi-icon-violet {
+  background: linear-gradient(135deg, #F3E8FF 0%, #EDE9FE 100%);
+  color: #7C3AED;
+  box-shadow: 0 8px 28px rgba(124,58,237,0.20), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.kpi-card:hover .kpi-icon-violet { box-shadow: 0 12px 40px rgba(124,58,237,0.30), inset 0 1px 0 rgba(255,255,255,0.6); }
+.dark-theme .kpi-icon-violet { background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(124,58,237,0.08)); box-shadow: 0 8px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05); }
+
+/* — Body */
+.kp-body { flex: 1; min-width: 0; position: relative; z-index: 3; }
+
+/* Corner accent dot on body */
+.kp-body::after {
+  content: ''; position: absolute; top: -2px; right: -2px;
+  width: 6px; height: 6px; border-radius: 50%;
+  opacity: 0.35;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.kpi-card:hover .kp-body::after {
+  opacity: 0.70;
+  transform: scale(1.4);
+}
+.kpi-loyer .kp-body::after { background: #3B82F6; box-shadow: 0 0 8px rgba(59,130,246,0.3); }
+.kpi-wallet .kp-body::after { background: #6366F1; box-shadow: 0 0 8px rgba(99,102,241,0.3); }
+.kpi-due .kp-body::after   { background: #F59E0B; box-shadow: 0 0 8px rgba(245,158,11,0.3); }
+.kpi-tickets .kp-body::after { background: #7C3AED; box-shadow: 0 0 8px rgba(124,58,237,0.3); }
+.dark-theme .kpi-loyer .kp-body::after { background: #60A5FA; }
+.dark-theme .kpi-wallet .kp-body::after { background: #818CF8; }
+.dark-theme .kpi-due .kp-body::after   { background: #FBBF24; }
+.dark-theme .kpi-tickets .kp-body::after { background: #A78BFA; }
+
+/* — Label */
+.kp-label {
+  font-size: 10px; font-weight: 750;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+/* — Value */
+.kp-value {
+  font-size: 26px; font-weight: 850;
+  color: var(--text-title);
+  letter-spacing: -0.6px; line-height: 1.1;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+/* Hover: value glows subtly */
+.kpi-card:hover .kp-value {
+  color: var(--text-title);
+}
+.kpi-loyer:hover .kp-value { text-shadow: 0 0 16px rgba(37,99,235,0.06); }
+.kpi-wallet:hover .kp-value { text-shadow: 0 0 16px rgba(99,102,241,0.06); }
+.kpi-due:hover .kp-value   { text-shadow: 0 0 16px rgba(245,158,11,0.06); }
+.kpi-tickets:hover .kp-value { text-shadow: 0 0 16px rgba(124,58,237,0.06); }
+
+/* Wallet gradient value */
+.kp-value-wallet {
+  background: linear-gradient(135deg, #6366F1, #A78BFA, #6366F1);
+  background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: walletGradient 4s ease-in-out infinite;
 }
-.wallet-kpi-actions { display: flex; gap: 8px; margin-top: 8px; }
+@keyframes walletGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.kpi-wallet:hover .kp-value-wallet { animation-duration: 1.8s; }
+
+/* Danger / warning value tints */
+.kp-value-danger { color: #DC2626; }
+.dark-theme .kp-value-danger { color: #F87171; }
+.kp-value-warning { color: #D97706; }
+.dark-theme .kp-value-warning { color: #FBBF24; }
+
+/* — Badge (pill with dot) */
+.kp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9.5px; font-weight: 750;
+  padding: 4px 12px 4px 10px; border-radius: 20px;
+  margin-top: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  position: relative; z-index: 3;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Hover: badge scales slightly */
+.kpi-card:hover .kp-badge {
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.kp-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  display: inline-block;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.kp-badge.badge-paid { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); color: #059669; }
+.kp-badge.badge-paid .kp-badge-dot { background: #059669; }
+.dark-theme .kp-badge.badge-paid { background: rgba(5,150,101,0.15); color: #34D399; }
+.dark-theme .kp-badge.badge-paid .kp-badge-dot { background: #34D399; }
+.kp-badge.badge-pending { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #D97706; }
+.kp-badge.badge-pending .kp-badge-dot { background: #D97706; }
+.dark-theme .kp-badge.badge-pending { background: rgba(217,119,6,0.15); color: #FBBF24; }
+.dark-theme .kp-badge.badge-pending .kp-badge-dot { background: #FBBF24; }
+
+/* — Hint */
+.kp-hint {
+  font-size: 10.5px; font-weight: 500;
+  display: block; margin-top: 4px;
+  position: relative; z-index: 3;
+  transition: color 0.3s ease;
+}
+.kp-hint-ok { color: #059669; }
+.kp-hint-warn { color: #D97706; }
+.dark-theme .kp-hint-ok { color: #34D399; }
+.dark-theme .kp-hint-warn { color: #FBBF24; }
+
+/* — Wallet inline actions */
+.wallet-kpi-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; position: relative; z-index: 3; }
 .wallet-inline-btn {
-  padding: 6px 14px; border-radius: 8px; border: none;
+  padding: 7px 14px; border-radius: 10px; border: none;
   background: linear-gradient(135deg, #6366F1, #8B5CF6);
   color: white; font-family: var(--font-main);
-  font-size: 11px; font-weight: 700; cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  font-size: 10.5px; font-weight: 750; cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 3px 12px rgba(99,102,241,0.20);
+  letter-spacing: 0.2px;
 }
-.wallet-inline-btn:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.3); transform: translateY(-1px); }
-.wallet-inline-btn:active { transform: scale(0.96); }
+.wallet-inline-btn:hover { box-shadow: 0 6px 24px rgba(99,102,241,0.35); transform: translateY(-2px) scale(1.02); }
+.wallet-inline-btn:active { transform: scale(0.94); }
 .wallet-inline-btn.secondary {
-  background: var(--gray-100); color: var(--text-body);
+  background: var(--gray-100); color: #475569;
   box-shadow: none;
 }
+.dark-theme .wallet-inline-btn.secondary { background: rgba(148,163,184,0.12); color: #CBD5E1; }
 .wallet-inline-btn.secondary:hover { background: var(--gray-200); box-shadow: none; transform: translateY(-1px); }
+.dark-theme .wallet-inline-btn.secondary:hover { background: rgba(148,163,184,0.2); }
+
+/* — Stagger entrance animation */
+.kpi-grid > .kpi-card {
+  animation: kpiEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.kpi-grid > .kpi-card:nth-child(1) { animation-delay: 0.03s; }
+.kpi-grid > .kpi-card:nth-child(2) { animation-delay: 0.08s; }
+.kpi-grid > .kpi-card:nth-child(3) { animation-delay: 0.13s; }
+.kpi-grid > .kpi-card:nth-child(4) { animation-delay: 0.18s; }
+@keyframes kpiEntrance {
+  0% { opacity: 0; transform: translateY(18px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 /* Transfer to Landlord panel layout */
 .transfer-widget-card { padding: 0; margin-bottom: 20px; overflow: hidden; border: none; box-shadow: 0 4px 24px rgba(99,102,241,0.06); }
@@ -4995,19 +5599,10 @@ onMounted(() => {
 .tw-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border: none; border-radius: 10px; background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s; font-family: var(--font-main); }
 .tw-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.25); }
 .tw-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.overview-lower-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
-.chart-card { padding: 24px; }
-.card-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.overview-lower-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 18px; }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text-title); letter-spacing: -0.2px; }
 .card-subtitle-text { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-top: 2px; }
-.chart-legend { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.legend-dot.blue { background: var(--blue-600); }
-.legend-dot.amber { background: var(--amber-500); }
-.chart-wrapper { width: 100%; overflow-x: auto; }
-.expense-chart { width: 100%; height: auto; display: block; }
 
-.overview-right-col { display: flex; flex-direction: column; gap: 18px; }
 .quick-actions-card { padding: 20px; }
 .quick-actions-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .quick-action-btn {
@@ -5240,6 +5835,10 @@ onMounted(() => {
 .mc-sel-badge { background: rgba(99,102,241,0.1); color: #6366F1; }
 .mc-unpaid-badge { background: #F1F5F9; color: #94A3B8; }
 .dark-theme .mc-unpaid-badge { background: rgba(148,163,184,0.1); color: #94A3B8; }
+.mc-penalty-badge { background: rgba(239,68,68,0.12); color: #DC2626; font-weight: 700; }
+.dark-theme .mc-penalty-badge { background: rgba(239,68,68,0.18); color: #F87171; }
+.mc-penalty-amount { display: block; font-size: 0.7rem; color: #DC2626; font-weight: 600; margin-top: 2px; }
+.dark-theme .mc-penalty-amount { color: #F87171; }
 
 .mc-amount-wrap { position: relative; z-index: 1; }
 .mc-amount { font-size: 14px; font-weight: 800; color: #1E293B; }
@@ -5308,6 +5907,11 @@ onMounted(() => {
 .pms-label { color: var(--text-muted); }
 .pms-value { font-weight: 700; color: var(--text-title); }
 .pms-value.green { color: #059669; }
+.pms-value.red { color: #DC2626; }
+.pm-penalty-hint { font-size: 10px; color: #DC2626; font-weight: 600; }
+.dark-theme .pm-penalty-hint { color: #F87171; }
+.receipt-penalty-badge { display:flex; align-items:center; gap:4px; padding:4px 8px; border-radius:6px; background:rgba(239,68,68,0.1); color:#DC2626; font-size:10px; font-weight:700; margin-bottom:8px; }
+.rcpt-penalty-section { margin-top: 8px; }
 .pm-summary-row.pm-total { padding-top: 8px; border-top: 1px dashed var(--border-input); }
 .pm-summary-row.pm-total .pms-label { font-size: 14px; font-weight: 700; color: var(--text-title); }
 .pm-summary-row.pm-total .pms-value.total { font-size: 18px; font-weight: 800; color: #6366F1; }
@@ -6208,6 +6812,47 @@ input:checked + .custom-switch-slider:before { transform: translateX(16px); }
 }
 
 /* ═══════════════════════════════════════════
+   PENALTY BANNER
+   ═══════════════════════════════════════════ */
+.penalty-banner {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; margin-bottom: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #FEF2F2, #FFE4E6);
+  border: 1px solid rgba(220,38,38,0.15);
+  position: relative;
+  animation: penaltySlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dark-theme .penalty-banner { background: linear-gradient(135deg, rgba(220,38,38,0.12), rgba(220,38,38,0.06)); border-color: rgba(220,38,38,0.2); }
+@keyframes penaltySlideIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.penalty-banner-icon { flex-shrink: 0; color: #DC2626; }
+.penalty-banner-body { flex: 1; min-width: 0; }
+.penalty-banner-title { font-size: 13px; font-weight: 800; color: #991B1B; margin-bottom: 4px; }
+.dark-theme .penalty-banner-title { color: #FCA5A5; }
+.penalty-banner-details { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: #7F1D1D; }
+.dark-theme .penalty-banner-details { color: #FECACA; }
+.penalty-sep { color: rgba(220,38,38,0.3); }
+.text-red { color: #DC2626; }
+.text-indigo { color: #6366F1; }
+.penalty-banner-scale { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; }
+.ps-label { color: var(--text-muted); font-weight: 600; }
+.ps-tier { padding: 2px 8px; border-radius: 6px; background: rgba(100,116,139,0.08); color: var(--text-muted); font-weight: 600; transition: all 0.3s; }
+.ps-tier.ps-active { background: rgba(220,38,38,0.12); color: #DC2626; }
+.dark-theme .ps-tier.ps-active { background: rgba(220,38,38,0.2); }
+.ps-arrow { color: var(--text-muted); font-size: 11px; }
+.penalty-banner-close {
+  position: absolute; top: 8px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%; border: none;
+  background: transparent; color: #DC2626; cursor: pointer;
+  font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  opacity: 0.5; transition: opacity 0.2s;
+}
+.penalty-banner-close:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════
    PREMIUM SMOOTH TRANSITIONS — centered cross-fade
    ═══════════════════════════════════════════ */
 
@@ -6728,7 +7373,7 @@ input:checked + .custom-switch-slider:before { transform: translateX(16px); }
   .bn-item svg { width: 20px; height: 20px; }
   .page-panel { padding: 16px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .kpi-value { font-size: 17px; }
+  .kp-value { font-size: 18px; }
   .finance-summary-row { grid-template-columns: 1fr 1fr; }
   .util-premium-row { grid-template-columns: 1fr; }
   .page-title { font-size: 20px; }
