@@ -185,6 +185,7 @@ class AgencyController extends Controller
      */
     public function store(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('agencies');
         $companyProfileId = auth()->user()->company_profile_id;
 
         $validated = $request->validate([

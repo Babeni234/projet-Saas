@@ -28,6 +28,12 @@ const form = useForm({
     slug: '',
     account_type: 'company',
     price: '',
+    max_logements: -1,
+    max_locataires: -1,
+    max_employees: -1,
+    max_agencies: -1,
+    max_buildings: -1,
+    has_ai: true,
     billing_cycle: 'monthly',
     features: [],
     popular: false,
@@ -160,6 +166,79 @@ const submit = () => {
                                 <span v-if="form.errors.price" class="text-[10px] text-red-500 mt-1 font-semibold block">{{ form.errors.price }}</span>
                             </div>
 
+                            <!-- Resource limits -->
+                            <div class="grid grid-cols-2 gap-4 border-t border-[var(--border-color)]/30 pt-4">
+                                <div>
+                                    <label class="block text-[10px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Logements Max</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="form.max_logements"
+                                        required
+                                        min="-1"
+                                        class="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] focus:border-indigo-500 outline-none transition-all font-mono"
+                                    />
+                                    <p class="text-[9px] text-[var(--text-muted)] mt-1 font-semibold">-1 pour illimité</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Locataires Max</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="form.max_locataires"
+                                        required
+                                        min="-1"
+                                        class="w-full px-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] focus:border-indigo-500 outline-none transition-all font-mono"
+                                    />
+                                    <p class="text-[9px] text-[var(--text-muted)] mt-1 font-semibold">-1 pour illimité</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[9px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Collaborateurs</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="form.max_employees"
+                                        required
+                                        min="-1"
+                                        class="w-full px-3 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] focus:border-indigo-500 outline-none transition-all font-mono"
+                                    />
+                                    <p class="text-[8px] text-[var(--text-muted)] mt-1 font-semibold">-1=illimité, 0=aucun</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Agences Max</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="form.max_agencies"
+                                        required
+                                        min="-1"
+                                        class="w-full px-3 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] focus:border-indigo-500 outline-none transition-all font-mono"
+                                    />
+                                    <p class="text-[8px] text-[var(--text-muted)] mt-1 font-semibold">-1=illimité, 0=aucun</p>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Bâtiments Max</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="form.max_buildings"
+                                        required
+                                        min="-1"
+                                        class="w-full px-3 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] focus:border-indigo-500 outline-none transition-all font-mono"
+                                    />
+                                    <p class="text-[8px] text-[var(--text-muted)] mt-1 font-semibold">-1 pour illimité</p>
+                                </div>
+                            </div>
+
+                            <!-- AI toggle checkbox -->
+                            <div class="flex items-center gap-2 py-1">
+                                <input 
+                                    type="checkbox" 
+                                    id="has_ai" 
+                                    v-model="form.has_ai"
+                                    class="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <label for="has_ai" class="text-xs font-bold text-[var(--text-main)] cursor-pointer select-none">Activer les fonctionnalités d'IA</label>
+                            </div>
+
                             <!-- Gradient / Color Selection -->
                             <div>
                                 <label class="block text-[10px] uppercase font-black tracking-wider text-[var(--text-muted)] mb-2">Thème de Dégradé</label>
@@ -280,6 +359,32 @@ const submit = () => {
                                 <div class="mt-4 flex items-baseline gap-1">
                                     <span class="text-2xl font-black text-amber-600">{{ Number(plan.price).toLocaleString('fr-FR') }}</span>
                                     <span class="text-[10px] text-[var(--text-muted)] font-bold">FCFA / {{ plan.billing_cycle === 'monthly' ? 'mois' : 'an' }}</span>
+                                </div>
+
+                                <hr class="border-[var(--border-color)]/30 my-4" />
+
+                                <!-- Resource Limits Badges -->
+                                <div class="grid grid-cols-2 gap-2 mb-4 bg-[var(--bg-input)]/20 p-3 rounded-2xl border border-[var(--border-color)]/10">
+                                    <span class="text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-house text-indigo-500 text-[10px]"></i>
+                                        Biens: <strong class="text-[var(--text-main)]">{{ plan.max_logements === -1 ? 'Illimité' : plan.max_logements }}</strong>
+                                    </span>
+                                    <span class="text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-group text-indigo-500 text-[10px]"></i>
+                                        Locataires: <strong class="text-[var(--text-main)]">{{ plan.max_locataires === -1 ? 'Illimité' : plan.max_locataires }}</strong>
+                                    </span>
+                                    <span class="text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-indigo-500 text-[10px]"></i>
+                                        Collab.: <strong class="text-[var(--text-main)]">{{ plan.max_employees === -1 ? 'Illimité' : plan.max_employees }}</strong>
+                                    </span>
+                                    <span class="text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-building text-indigo-500 text-[10px]"></i>
+                                        Bâtiments: <strong class="text-[var(--text-main)]">{{ plan.max_buildings === -1 ? 'Illimité' : plan.max_buildings }}</strong>
+                                    </span>
+                                    <span class="text-[10px] text-[var(--text-muted)] font-bold flex items-center gap-1.5 col-span-2">
+                                        <i class="fa-solid fa-robot text-indigo-500 text-[10px]"></i>
+                                        Intelligence Artificielle: <strong :class="plan.has_ai ? 'text-emerald-400' : 'text-rose-400'">{{ plan.has_ai ? 'Inclus' : 'Non Inclus' }}</strong>
+                                    </span>
                                 </div>
 
                                 <hr class="border-[var(--border-color)]/30 my-4" />

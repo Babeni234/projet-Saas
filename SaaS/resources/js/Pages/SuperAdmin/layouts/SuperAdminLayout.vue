@@ -165,6 +165,20 @@ const getInitials = (name) => {
                         <i class="fa-solid fa-user-plus text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Accounts/Create' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
                         <span>Créer un compte</span>
                     </Link>
+
+                    <Link 
+                        :href="route('superadmin.profile')" 
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
+                        :class="[
+                            $page.component === 'SuperAdmin/Profile/Index' 
+                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/15' 
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-btn-secondary)]'
+                        ]"
+                    >
+                        <div v-if="$page.component === 'SuperAdmin/Profile/Index'" class="absolute left-0 top-3.5 bottom-3.5 w-1 bg-white rounded-r-full"></div>
+                        <i class="fa-solid fa-user-gear text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Profile/Index' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
+                        <span>Mon Profil</span>
+                    </Link>
                 </nav>
             </div>
 
@@ -207,6 +221,7 @@ const getInitials = (name) => {
                             $page.component === 'SuperAdmin/Countries/Index' ? 'Pays Autorisés' :
                             $page.component === 'SuperAdmin/Plans/Index' ? 'Forfaits d\'abonnement' :
                             $page.component === 'SuperAdmin/Accounts/Create' ? 'Créer un Compte' :
+                            $page.component === 'SuperAdmin/Profile/Index' ? 'Mon Profil & Admins' :
                             'Répertoire des Utilisateurs' 
                         }}
                     </span>

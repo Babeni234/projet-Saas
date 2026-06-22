@@ -280,6 +280,12 @@ class SuperAdminController extends Controller
             'slug' => 'required|string|max:255|unique:subscription_plans,slug',
             'account_type' => 'required|in:company,individual',
             'price' => 'required|numeric|min:0',
+            'max_logements' => 'required|integer',
+            'max_locataires' => 'required|integer',
+            'max_employees' => 'required|integer',
+            'max_agencies' => 'required|integer',
+            'max_buildings' => 'required|integer',
+            'has_ai' => 'required|boolean',
             'billing_cycle' => 'required|in:monthly,yearly',
             'features' => 'nullable|array',
             'popular' => 'boolean',
@@ -499,7 +505,77 @@ class SuperAdminController extends Controller
             \Illuminate\Support\Facades\Log::error('SuperAdmin Account creation email failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('superadmin.users.index')->with('success', 'Compte créé avec succès et e-mail envoyé.');
+        return redirect()->route('superadmin.accounts.create')
+            ->with('success', 'Compte créé avec succès et e-mail envoyé.')
+            ->with('temp_password', $tempPassword)
+            ->with('created_email', $user->email)
+            ->with('created_name', $user->name);
+    }
+
+    /**
+     * Display Super Admin Profile page.
+     */
+    public function profile()
+    {
+        $currentAdmin = auth()->user();
+        $admins = User::whereIn('account_type', ['Super Admin', 'super_admin', 'superadmin', 'Super ADMIN'])
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return Inertia::render('SuperAdmin/Profile/Index', [
+            'currentAdmin' => $currentAdmin,
+            'admins' => $admins,
+        ]);
+    }
+
+    /**
+     * Update Super Admin credentials.
+     */
+    public function updateProfile(Request $request)
+    {
+        $admin = auth()->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $admin->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $updateData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+
+        $admin->update($updateData);
+
+        return back()->with('success', 'Votre profil a été mis à jour avec succès.');
+    }
+
+    /**
+     * Create a new Super Admin account.
+     */
+    public function storeSuperAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'account_type' => 'superadmin',
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+
+        return back()->with('success', 'Nouveau compte Super Admin créé avec succès.');
     }
 }
 

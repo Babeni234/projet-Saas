@@ -19,6 +19,7 @@ class ContractGenerationController extends Controller
      */
     public function generate(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('ai');
         $request->validate([
             'locataire' => 'nullable|string',
             'locataire_id' => 'nullable|integer',
@@ -236,6 +237,7 @@ class ContractGenerationController extends Controller
      */
     public function generateEngagement(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('ai');
         $request->validate([
             'partie' => 'required|string',
             'montant' => 'nullable',
@@ -381,6 +383,7 @@ class ContractGenerationController extends Controller
      */
     public function generateEtatDesLieux(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('ai');
         $request->validate([
             'locataire' => 'required|string',
             'logement' => 'required|string',
@@ -520,6 +523,7 @@ class ContractGenerationController extends Controller
      */
     public function assistantChat(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('ai');
         $request->validate([
             'message' => 'required|string',
             'context' => 'nullable|array',
@@ -997,6 +1001,7 @@ class ContractGenerationController extends Controller
      */
     public function generateRejectionMotif(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('ai');
         $request->validate([
             'locataire_name' => 'required|string',
             'reference_logement' => 'required|string',

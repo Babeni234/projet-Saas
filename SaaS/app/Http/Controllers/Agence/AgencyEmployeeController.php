@@ -50,6 +50,7 @@ class AgencyEmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('employees');
         $user = auth()->user();
         if (!$user->employee || $user->employee->agency_id === null) {
             return response()->json(['error' => 'Unauthorized'], 403);

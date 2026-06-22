@@ -39,6 +39,7 @@ class BatimentController extends Controller
      */
     public function store(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('buildings');
         $user = Auth::user();
 
         $validated = $request->validate([

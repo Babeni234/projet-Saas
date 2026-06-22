@@ -172,6 +172,7 @@ class RoleController extends Controller
      */
     public function storeEmployee(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('employees');
         $companyProfileId = auth()->user()->company_profile_id;
 
         $validated = $request->validate([

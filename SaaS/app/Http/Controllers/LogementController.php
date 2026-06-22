@@ -30,6 +30,7 @@ class LogementController extends Controller
 
     public function store(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('logements');
         $user = Auth::user();
         $companyProfileId = $user->company_profile_id;
 

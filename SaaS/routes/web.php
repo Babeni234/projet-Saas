@@ -81,6 +81,11 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmi
     // Account Creation
     Route::get('/accounts/create', [\App\Http\Controllers\SuperAdminController::class, 'createAccount'])->name('accounts.create');
     Route::post('/accounts', [\App\Http\Controllers\SuperAdminController::class, 'storeAccount'])->name('accounts.store');
+
+    // Profile & Admin Management
+    Route::get('/profile', [\App\Http\Controllers\SuperAdminController::class, 'profile'])->name('profile');
+    Route::post('/profile', [\App\Http\Controllers\SuperAdminController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/admins', [\App\Http\Controllers\SuperAdminController::class, 'storeSuperAdmin'])->name('admins.store');
 });
 
 Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {

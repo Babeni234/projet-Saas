@@ -44,6 +44,7 @@ class LocataireController extends Controller
      */
     public function store(Request $request)
     {
+        \App\Helpers\SubscriptionHelper::checkOrAbort('locataires');
         $currentUser = Auth::user();
         $companyProfileId = $currentUser->company_profile_id;
 
