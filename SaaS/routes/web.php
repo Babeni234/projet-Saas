@@ -5,19 +5,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Manual require for Nangue controllers to bypass autoloader issue
-require_once base_path('nangue/Http/Controllers/UserDashboardController.php');
-require_once base_path('nangue/Http/Controllers/LandlordDashboardController.php');
-require_once base_path('nangue/Http/Controllers/PropertyController.php');
-require_once base_path('nangue/Http/Controllers/MessageController.php');
-require_once base_path('nangue/Http/Controllers/FavoriteController.php');
-require_once base_path('nangue/Http/Controllers/ContractController.php');
-require_once base_path('nangue/Http/Controllers/ReceiptController.php');
-require_once base_path('nangue/Http/Controllers/VisitController.php');
-require_once base_path('nangue/Http/Controllers/AnalyticsController.php');
-require_once base_path('nangue/Http/Controllers/LandlordVerificationController.php');
-require_once base_path('nangue/Support/DemoData.php');
-
 app('router')->aliasMiddleware(
     'landlord.verified',
     \App\Http\Middleware\EnsureLandlordVerified::class
@@ -285,6 +272,77 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $controller = new \Nangue\Http\Controllers\AnalyticsController();
             return $controller->export(request());
         })->name('landlord.reports.export');
+
+        // Incidents
+        Route::get('/incidents', [\Nangue\Http\Controllers\IncidentController::class, 'index'])->name('landlord.incidents.index');
+        Route::get('/incidents/creer', [\Nangue\Http\Controllers\IncidentController::class, 'create'])->name('landlord.incidents.create');
+        Route::post('/incidents', [\Nangue\Http\Controllers\IncidentController::class, 'store'])->name('landlord.incidents.store');
+        Route::get('/incidents/{incident}', [\Nangue\Http\Controllers\IncidentController::class, 'show'])->name('landlord.incidents.show');
+        Route::patch('/incidents/{incident}', [\Nangue\Http\Controllers\IncidentController::class, 'update'])->name('landlord.incidents.update');
+        Route::delete('/incidents/{incident}', [\Nangue\Http\Controllers\IncidentController::class, 'destroy'])->name('landlord.incidents.destroy');
+
+        // États des lieux
+        Route::get('/etats-des-lieux', [\Nangue\Http\Controllers\InspectionController::class, 'index'])->name('landlord.inspections.index');
+        Route::get('/etats-des-lieux/creer', [\Nangue\Http\Controllers\InspectionController::class, 'create'])->name('landlord.inspections.create');
+        Route::post('/etats-des-lieux', [\Nangue\Http\Controllers\InspectionController::class, 'store'])->name('landlord.inspections.store');
+        Route::get('/etats-des-lieux/{inspection}', [\Nangue\Http\Controllers\InspectionController::class, 'show'])->name('landlord.inspections.show');
+        Route::patch('/etats-des-lieux/{inspection}', [\Nangue\Http\Controllers\InspectionController::class, 'update'])->name('landlord.inspections.update');
+        Route::delete('/etats-des-lieux/{inspection}', [\Nangue\Http\Controllers\InspectionController::class, 'destroy'])->name('landlord.inspections.destroy');
+
+        // Documents
+        Route::get('/documents', [\Nangue\Http\Controllers\DocumentController::class, 'index'])->name('landlord.documents.index');
+        Route::post('/documents', [\Nangue\Http\Controllers\DocumentController::class, 'store'])->name('landlord.documents.store');
+        Route::patch('/documents/{document}', [\Nangue\Http\Controllers\DocumentController::class, 'update'])->name('landlord.documents.update');
+        Route::delete('/documents/{document}', [\Nangue\Http\Controllers\DocumentController::class, 'destroy'])->name('landlord.documents.destroy');
+
+        // Révision des loyers
+        Route::get('/revisions-loyers', [\Nangue\Http\Controllers\RentRevisionController::class, 'index'])->name('landlord.rent-revisions.index');
+        Route::post('/revisions-loyers', [\Nangue\Http\Controllers\RentRevisionController::class, 'store'])->name('landlord.rent-revisions.store');
+        Route::post('/revisions-loyers/{revision}/appliquer', [\Nangue\Http\Controllers\RentRevisionController::class, 'apply'])->name('landlord.rent-revisions.apply');
+
+        // Cautions
+        Route::get('/cautions', [\Nangue\Http\Controllers\DepositController::class, 'index'])->name('landlord.deposits.index');
+        Route::post('/cautions', [\Nangue\Http\Controllers\DepositController::class, 'store'])->name('landlord.deposits.store');
+        Route::post('/cautions/{deposit}/restituer', [\Nangue\Http\Controllers\DepositController::class, 'returnDeposit'])->name('landlord.deposits.return');
+
+        // Garanties / Assurances
+        Route::get('/garanties', [\Nangue\Http\Controllers\InsuranceGuaranteeController::class, 'index'])->name('landlord.insurance-guarantees.index');
+        Route::post('/garanties', [\Nangue\Http\Controllers\InsuranceGuaranteeController::class, 'store'])->name('landlord.insurance-guarantees.store');
+        Route::patch('/garanties/{guarantee}', [\Nangue\Http\Controllers\InsuranceGuaranteeController::class, 'update'])->name('landlord.insurance-guarantees.update');
+
+        // Prélèvements automatiques
+        Route::get('/prelevements', [\Nangue\Http\Controllers\SubscriptionController::class, 'index'])->name('landlord.subscriptions.index');
+        Route::get('/prelevements/creer', [\Nangue\Http\Controllers\SubscriptionController::class, 'create'])->name('landlord.subscriptions.create');
+        Route::post('/prelevements', [\Nangue\Http\Controllers\SubscriptionController::class, 'store'])->name('landlord.subscriptions.store');
+        Route::post('/prelevements/{subscription}/annuler', [\Nangue\Http\Controllers\SubscriptionController::class, 'cancel'])->name('landlord.subscriptions.cancel');
+
+        // Moyens de paiement
+        Route::get('/moyens-paiement', [\Nangue\Http\Controllers\PaymentMethodController::class, 'index'])->name('landlord.payment-methods.index');
+        Route::post('/moyens-paiement', [\Nangue\Http\Controllers\PaymentMethodController::class, 'store'])->name('landlord.payment-methods.store');
+        Route::post('/moyens-paiement/{paymentMethod}/defaut', [\Nangue\Http\Controllers\PaymentMethodController::class, 'setDefault'])->name('landlord.payment-methods.default');
+        Route::delete('/moyens-paiement/{paymentMethod}', [\Nangue\Http\Controllers\PaymentMethodController::class, 'destroy'])->name('landlord.payment-methods.destroy');
+
+        // Notifications
+        Route::get('/notifications', [\Nangue\Http\Controllers\NotificationLogController::class, 'index'])->name('landlord.notifications.index');
+        Route::post('/notifications/{notificationLog}/renvoyer', [\Nangue\Http\Controllers\NotificationLogController::class, 'resend'])->name('landlord.notifications.resend');
+
+        // Créneaux de visites en ligne
+        Route::get('/creneaux-visites', [\Nangue\Http\Controllers\PublicVisitSlotController::class, 'index'])->name('landlord.visit-slots.index');
+        Route::post('/creneaux-visites', [\Nangue\Http\Controllers\PublicVisitSlotController::class, 'store'])->name('landlord.visit-slots.store');
+        Route::patch('/creneaux-visites/{slot}', [\Nangue\Http\Controllers\PublicVisitSlotController::class, 'update'])->name('landlord.visit-slots.update');
+        Route::delete('/creneaux-visites/{slot}', [\Nangue\Http\Controllers\PublicVisitSlotController::class, 'destroy'])->name('landlord.visit-slots.destroy');
+
+        // Encadrement des loyers
+        Route::get('/encadrement-loyers', [\Nangue\Http\Controllers\RentControlController::class, 'index'])->name('landlord.rent-control.index');
+        Route::post('/encadrement-loyers/zones', [\Nangue\Http\Controllers\RentControlController::class, 'storeZone'])->name('landlord.rent-control.zones.store');
+        Route::post('/encadrement-loyers/conformite', [\Nangue\Http\Controllers\RentControlController::class, 'checkCompliance'])->name('landlord.rent-control.compliance');
+
+        // Fiscal
+        Route::get('/fiscal', [\Nangue\Http\Controllers\FiscalController::class, 'index'])->name('landlord.fiscal.index');
+        Route::post('/fiscal', [\Nangue\Http\Controllers\FiscalController::class, 'store'])->name('landlord.fiscal.store');
+        Route::get('/fiscal/{fiscalYear}', [\Nangue\Http\Controllers\FiscalController::class, 'show'])->name('landlord.fiscal.show');
+        Route::post('/fiscal/{fiscalYear}/depenses', [\Nangue\Http\Controllers\FiscalController::class, 'addExpense'])->name('landlord.fiscal.expenses.store');
+        Route::post('/fiscal/{fiscalYear}/finaliser', [\Nangue\Http\Controllers\FiscalController::class, 'finalize'])->name('landlord.fiscal.finalize');
     }); // Fin du groupe réservé aux bailleurs vérifiés
 });
 

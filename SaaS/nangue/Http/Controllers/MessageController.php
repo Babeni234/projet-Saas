@@ -6,102 +6,62 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nangue\Models\Conversation;
+use Nangue\Models\Message;
 
 class MessageController extends Controller
 {
     public function index(): Response
     {
-        $conversations = [
-            [
-                'id' => 1,
-                'name' => 'Marie Dupont',
+        $conversations = Conversation::where('user_id', auth()->id())
+            ->orWhereHas('participants', fn ($q) => $q->where('user_id', auth()->id()))
+            ->with(['user', 'messages' => fn ($q) => $q->latest()->limit(1)])
+            ->orderBy('last_message_at', 'desc')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->user->name,
                 'avatar' => null,
-                'last_message' => 'Bonjour, je suis très intéressée par votre appartement. Serait-il possible de visiter samedi ?',
-                'time' => '14:30',
+                'last_message' => $c->messages->first()?->content ?? '',
+                'time' => $c->last_message_at?->diffForHumans() ?? $c->created_at->format('H:i'),
                 'type' => 'inquiry',
-                'property' => 'Appartement T3 centre-ville',
-                'property_url' => route('immo.property.show', 1),
-                'unread' => 2,
-                'online' => true,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Pierre Martin',
-                'avatar' => null,
-                'last_message' => 'Merci pour votre réponse rapide. Je vous envoie mes documents.',
-                'time' => 'Hier',
-                'type' => 'application',
-                'property' => 'Studio moderne',
-                'property_url' => route('immo.property.show', 2),
-                'unread' => 0,
+                'property' => $c->property?->title,
+                'property_url' => $c->property ? route('immo.property.show', $c->property_id) : null,
+                'unread' => $c->messages->whereNull('read_at')->where('user_id', '!=', auth()->id())->count(),
                 'online' => false,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Sophie Bernard',
-                'avatar' => null,
-                'last_message' => 'Le loyer est-il négociable ?',
-                'time' => '2 jours',
-                'type' => 'general',
-                'property' => null,
-                'property_url' => null,
-                'unread' => 0,
-                'online' => false,
-            ],
-            [
-                'id' => 4,
-                'name' => 'Lucas Petit',
-                'avatar' => null,
-                'last_message' => 'Je confirme ma venue pour la visite de demain à 10h.',
-                'time' => '3 jours',
-                'type' => 'inquiry',
-                'property' => 'Maison avec jardin',
-                'property_url' => route('immo.property.show', 3),
-                'unread' => 1,
-                'online' => true,
-            ],
-        ];
-
-        $selectedConversation = $conversations[0];
-
-        $messages = [
-            [
-                'id' => 1,
-                'content' => 'Bonjour, je suis très intéressée par votre appartement. Serait-il possible de visiter samedi ?',
-                'time' => '14:25',
-                'is_me' => false,
-                'read' => true,
-            ],
-            [
-                'id' => 2,
-                'content' => 'Bonjour Marie, oui bien sûr ! Samedi à 14h ça vous convient ?',
-                'time' => '14:28',
-                'is_me' => true,
-                'read' => true,
-            ],
-            [
-                'id' => 3,
-                'content' => 'Parfait, 14h samedi c\'est noté. À quelle adresse exactement ?',
-                'time' => '14:30',
-                'is_me' => false,
-                'read' => false,
-            ],
-        ];
+            ]);
 
         return Inertia::render('Nangue/User/Messages', [
             'conversations' => $conversations,
-            'selectedConversation' => $selectedConversation,
-            'messages' => $messages,
+            'selectedConversation' => $conversations->first(),
+            'messages' => [],
         ]);
     }
 
     public function show($id): Response
     {
-        // Logique pour afficher une conversation spécifique
+        $conversation = Conversation::with(['messages' => fn ($q) => $q->with('user')->oldest()])
+            ->findOrFail($id);
+
+        Message::where('conversation_id', $id)
+            ->where('user_id', '!=', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
         return Inertia::render('Nangue/User/Messages', [
             'conversations' => [],
-            'selectedConversation' => [],
-            'messages' => [],
+            'selectedConversation' => [
+                'id' => $conversation->id,
+                'name' => $conversation->user->name,
+                'property' => $conversation->property?->title,
+            ],
+            'messages' => $conversation->messages->map(fn ($m) => [
+                'id' => $m->id,
+                'content' => $m->content,
+                'time' => $m->created_at->format('H:i'),
+                'is_me' => $m->user_id === auth()->id(),
+                'read' => (bool) $m->read_at,
+            ]),
         ]);
     }
 
@@ -112,15 +72,24 @@ class MessageController extends Controller
             'content' => 'required|string|max:2000',
         ]);
 
-        // Logique d'envoi de message
-        // Message::create($validated);
+        $message = Message::create([
+            'conversation_id' => $validated['conversation_id'],
+            'user_id' => auth()->id(),
+            'content' => $validated['content'],
+        ]);
+
+        $message->conversation->update(['last_message_at' => now()]);
 
         return back();
     }
 
     public function markAsRead($id)
     {
-        // Logique pour marquer comme lu
+        Message::where('conversation_id', $id)
+            ->where('user_id', '!=', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
         return back();
     }
 }

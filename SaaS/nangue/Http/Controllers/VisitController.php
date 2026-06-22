@@ -6,88 +6,32 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nangue\Models\Visit;
+use Nangue\Models\Property;
 
 class VisitController extends Controller
 {
     public function index(): Response
     {
-        $todayVisits = [
-            [
-                'id' => 1,
-                'date' => '04/06/2024',
-                'time' => '14:00',
-                'property_name' => 'Appartement T3 centre-ville',
-                'property_address' => '15 Rue de la République, Lyon',
-                'visitor_name' => 'Jean Durand',
-                'visitor_phone' => '06 12 34 56 78',
+        $visits = Visit::where('landlord_id', auth()->id())
+            ->with('property')
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->get()
+            ->map(fn ($v) => [
+                'id' => $v->id,
+                'date' => $v->date->format('d/m/Y'),
+                'time' => $v->time,
+                'property_name' => $v->property->title,
+                'property_address' => $v->property->address . ', ' . $v->property->city,
+                'visitor_name' => $v->visitor_name,
+                'visitor_phone' => $v->visitor_phone,
                 'visitor_avatar' => null,
-                'status' => 'scheduled',
-                'notes' => 'Première visite',
-            ],
-            [
-                'id' => 2,
-                'date' => '04/06/2024',
-                'time' => '16:30',
-                'property_name' => 'Studio moderne',
-                'property_address' => '42 Avenue Jean Jaurès, Lyon',
-                'visitor_name' => 'Claire Petit',
-                'visitor_phone' => '06 98 76 54 32',
-                'visitor_avatar' => null,
-                'status' => 'scheduled',
-                'notes' => '',
-            ],
-        ];
+                'status' => $v->status,
+                'notes' => $v->notes ?? '',
+            ]);
 
-        $visits = [
-            [
-                'id' => 1,
-                'date' => '04/06/2024',
-                'time' => '14:00',
-                'property_name' => 'Appartement T3 centre-ville',
-                'property_address' => '15 Rue de la République, Lyon',
-                'visitor_name' => 'Jean Durand',
-                'visitor_phone' => '06 12 34 56 78',
-                'visitor_avatar' => null,
-                'status' => 'scheduled',
-                'notes' => 'Première visite',
-            ],
-            [
-                'id' => 2,
-                'date' => '04/06/2024',
-                'time' => '16:30',
-                'property_name' => 'Studio moderne',
-                'property_address' => '42 Avenue Jean Jaurès, Lyon',
-                'visitor_name' => 'Claire Petit',
-                'visitor_phone' => '06 98 76 54 32',
-                'visitor_avatar' => null,
-                'status' => 'scheduled',
-                'notes' => '',
-            ],
-            [
-                'id' => 3,
-                'date' => '03/06/2024',
-                'time' => '10:00',
-                'property_name' => 'Maison avec jardin',
-                'property_address' => '8 Rue des Fleurs, Villeurbanne',
-                'visitor_name' => 'Marc Leroy',
-                'visitor_phone' => '06 11 22 33 44',
-                'visitor_avatar' => null,
-                'status' => 'completed',
-                'notes' => 'Visite satisfaisante',
-            ],
-            [
-                'id' => 4,
-                'date' => '02/06/2024',
-                'time' => '15:00',
-                'property_name' => 'Appartement T3 centre-ville',
-                'property_address' => '15 Rue de la République, Lyon',
-                'visitor_name' => 'Laura Moreau',
-                'visitor_phone' => '06 55 66 77 88',
-                'visitor_avatar' => null,
-                'status' => 'cancelled',
-                'notes' => 'Annulée par le visiteur',
-            ],
-        ];
+        $todayVisits = $visits->filter(fn ($v) => $v['date'] === now()->format('d/m/Y'))->values();
 
         return Inertia::render('Nangue/Landlord/VisitsCalendar', [
             'visits' => $visits,
@@ -97,7 +41,11 @@ class VisitController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Nangue/Landlord/CreateVisit');
+        $properties = Property::forUser(auth()->id())->active()->get();
+
+        return Inertia::render('Nangue/Landlord/CreateVisit', [
+            'properties' => $properties,
+        ]);
     }
 
     public function store(Request $request)
@@ -112,39 +60,81 @@ class VisitController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // Logique de stockage de la visite
-        // Visit::create($validated);
+        $validated['landlord_id'] = auth()->id();
+        $validated['status'] = 'scheduled';
+
+        Visit::create($validated);
 
         return redirect()->route('landlord.calendar.index')->with('success', 'Visite planifiée avec succès');
     }
 
     public function show($id): Response
     {
+        $visit = Visit::where('landlord_id', auth()->id())
+            ->with('property')
+            ->findOrFail($id);
+
         return Inertia::render('Nangue/Landlord/VisitDetail', [
-            'visit' => [],
+            'visit' => [
+                'id' => $visit->id,
+                'property_name' => $visit->property->title,
+                'property_address' => $visit->property->address . ', ' . $visit->property->city,
+                'visitor_name' => $visit->visitor_name,
+                'visitor_phone' => $visit->visitor_phone,
+                'visitor_email' => $visit->visitor_email,
+                'date' => $visit->date->format('d/m/Y'),
+                'time' => $visit->time,
+                'status' => $visit->status,
+                'notes' => $visit->notes,
+            ],
         ]);
     }
 
     public function edit($id): Response
     {
+        $visit = Visit::where('landlord_id', auth()->id())
+            ->with('property')
+            ->findOrFail($id);
+
+        $properties = Property::forUser(auth()->id())->get();
+
         return Inertia::render('Nangue/Landlord/EditVisit', [
-            'visit' => [],
+            'visit' => $visit,
+            'properties' => $properties,
         ]);
     }
 
     public function update(Request $request, $id)
     {
+        $visit = Visit::where('landlord_id', auth()->id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'property_id' => 'required|exists:properties,id',
+            'visitor_name' => 'required|string',
+            'visitor_phone' => 'required|string',
+            'date' => 'required|date',
+            'time' => 'required|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        $visit->update($validated);
+
         return redirect()->route('landlord.calendar.index')->with('success', 'Visite mise à jour');
     }
 
     public function cancel($id)
     {
-        // Logique d'annulation
+        $visit = Visit::where('landlord_id', auth()->id())->findOrFail($id);
+        $visit->update(['status' => 'cancelled']);
+
         return redirect()->route('landlord.calendar.index')->with('success', 'Visite annulée');
     }
 
     public function destroy($id)
     {
+        $visit = Visit::where('landlord_id', auth()->id())->findOrFail($id);
+        $visit->delete();
+
         return redirect()->route('landlord.calendar.index')->with('success', 'Visite supprimée');
     }
 }

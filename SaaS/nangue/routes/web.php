@@ -5,20 +5,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Manual require for Nangue controllers to bypass autoloader issue
-require_once base_path('nangue/Http/Controllers/UserDashboardController.php');
-require_once base_path('nangue/Http/Controllers/LandlordDashboardController.php');
-require_once base_path('nangue/Http/Controllers/PropertyController.php');
-require_once base_path('nangue/Http/Controllers/MessageController.php');
-require_once base_path('nangue/Http/Controllers/FavoriteController.php');
-require_once base_path('nangue/Http/Controllers/ContractController.php');
-require_once base_path('nangue/Http/Controllers/ReceiptController.php');
-require_once base_path('nangue/Http/Controllers/VisitController.php');
-require_once base_path('nangue/Http/Controllers/AnalyticsController.php');
-require_once base_path('nangue/Http/Controllers/LandlordVerificationController.php');
-require_once base_path('nangue/Http/Middleware/EnsureLandlordVerified.php');
-require_once base_path('nangue/Support/DemoData.php');
-
 app('router')->aliasMiddleware(
     'landlord.verified',
     \App\Http\Middleware\EnsureLandlordVerified::class

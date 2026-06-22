@@ -1,0 +1,1 @@
+﻿<?php $pdo = new PDO("mysql:host=127.0.0.1;dbname=exam", "root", ""); $stmt = $pdo->query("SELECT migration, batch FROM migrations ORDER BY batch, migration"); while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { echo $row["migration"] . " (batch " . $row["batch"] . ")\n"; }

@@ -144,7 +144,7 @@ const metrics = [
                                     class="hover:bg-slate-50"
                                 >
                                     <td>
-                                        <p class="font-semibold text-slate-900">{{ property.name }}</p>
+                                        <p class="font-semibold text-slate-900">{{ property.title }}</p>
                                         <p class="text-xs text-slate-500">{{ property.address }}</p>
                                     </td>
                                     <td>

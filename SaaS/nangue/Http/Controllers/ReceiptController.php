@@ -6,70 +6,38 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nangue\Models\Receipt;
+use Nangue\Models\Contract;
 
 class ReceiptController extends Controller
 {
     public function index(): Response
     {
-        $receipts = [
-            [
-                'id' => 1,
-                'reference' => 'QUI-2024-001',
-                'tenant_name' => 'Marie Dupont',
-                'property_name' => 'Appartement T3 centre-ville',
-                'period' => 'Janvier 2024',
-                'rent' => 1200,
-                'charges' => 150,
-                'total' => 1350,
-                'status' => 'paid',
-                'payment_date' => '05/01/2024',
-            ],
-            [
-                'id' => 2,
-                'reference' => 'QUI-2024-002',
-                'tenant_name' => 'Marie Dupont',
-                'property_name' => 'Appartement T3 centre-ville',
-                'period' => 'Février 2024',
-                'rent' => 1200,
-                'charges' => 150,
-                'total' => 1350,
-                'status' => 'paid',
-                'payment_date' => '05/02/2024',
-            ],
-            [
-                'id' => 3,
-                'reference' => 'QUI-2024-003',
-                'tenant_name' => 'Marie Dupont',
-                'property_name' => 'Appartement T3 centre-ville',
-                'period' => 'Mars 2024',
-                'rent' => 1200,
-                'charges' => 150,
-                'total' => 1350,
-                'status' => 'pending',
-                'payment_date' => null,
-            ],
-            [
-                'id' => 4,
-                'reference' => 'QUI-2024-004',
-                'tenant_name' => 'Sophie Bernard',
-                'property_name' => 'Maison avec jardin',
-                'period' => 'Mars 2024',
-                'rent' => 1800,
-                'charges' => 200,
-                'total' => 2000,
-                'status' => 'overdue',
-                'payment_date' => null,
-            ],
-        ];
+        $receipts = Receipt::whereHas('contract', fn ($q) => $q->where('landlord_id', auth()->id()))
+            ->with('contract.tenant', 'contract.property')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'reference' => $r->reference,
+                'tenant_name' => $r->contract->tenant->name,
+                'property_name' => $r->contract->property->title,
+                'period' => $r->period,
+                'rent' => $r->rent,
+                'charges' => $r->charges,
+                'total' => $r->total,
+                'status' => $r->status,
+                'payment_date' => $r->payment_date?->format('d/m/Y'),
+            ]);
 
         $summary = [
-            'total_collected' => 2700,
+            'total_collected' => $receipts->where('status', 'paid')->sum('total'),
             'collected_change' => 12,
-            'pending' => 1350,
-            'pending_count' => 1,
-            'overdue' => 2000,
-            'overdue_count' => 1,
-            'payment_rate' => 87,
+            'pending' => $receipts->where('status', 'pending')->sum('total'),
+            'pending_count' => $receipts->where('status', 'pending')->count(),
+            'overdue' => $receipts->where('status', 'overdue')->sum('total'),
+            'overdue_count' => $receipts->where('status', 'overdue')->count(),
+            'payment_rate' => $receipts->count() > 0 ? round(($receipts->where('status', 'paid')->count() / $receipts->count()) * 100) : 0,
             'rate_change' => 5,
         ];
 
@@ -81,7 +49,18 @@ class ReceiptController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Nangue/Landlord/CreateReceipt');
+        $contracts = Contract::where('landlord_id', auth()->id())
+            ->where('status', 'active')
+            ->with('tenant', 'property')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'label' => $c->tenant->name . ' - ' . $c->property->title . ' (' . $c->rent . '€)',
+            ]);
+
+        return Inertia::render('Nangue/Landlord/CreateReceipt', [
+            'contracts' => $contracts,
+        ]);
     }
 
     public function store(Request $request)
@@ -94,34 +73,53 @@ class ReceiptController extends Controller
             'due_date' => 'required|date',
         ]);
 
-        // Logique de stockage de la quittance
-        // Receipt::create($validated);
+        $contract = Contract::findOrFail($validated['contract_id']);
+
+        $lastId = Receipt::max('id') + 1;
+        $validated['reference'] = 'QUI-' . date('Y') . '-' . str_pad($lastId, 3, '0', STR_PAD_LEFT);
+        $validated['total'] = $validated['rent'] + $validated['charges'];
+        $validated['status'] = 'pending';
+
+        Receipt::create($validated);
 
         return redirect()->route('landlord.payments.index')->with('success', 'Quittance créée avec succès');
     }
 
     public function show($id): Response
     {
+        $receipt = Receipt::whereHas('contract', fn ($q) => $q->where('landlord_id', auth()->id()))
+            ->with('contract.tenant', 'contract.property')
+            ->findOrFail($id);
+
         return Inertia::render('Nangue/Landlord/ReceiptDetail', [
-            'receipt' => [],
+            'receipt' => [
+                'id' => $receipt->id,
+                'reference' => $receipt->reference,
+                'tenant_name' => $receipt->contract->tenant->name,
+                'property_name' => $receipt->contract->property->title,
+                'period' => $receipt->period,
+                'rent' => $receipt->rent,
+                'charges' => $receipt->charges,
+                'total' => $receipt->total,
+                'status' => $receipt->status,
+                'due_date' => $receipt->due_date->format('d/m/Y'),
+                'payment_date' => $receipt->payment_date?->format('d/m/Y') ?? null,
+            ],
         ]);
     }
 
     public function download($id)
     {
-        // Logique de téléchargement PDF
         return back()->with('success', 'PDF téléchargé');
     }
 
     public function send($id)
     {
-        // Logique d'envoi par email
         return back()->with('success', 'Quittance envoyée par email');
     }
 
     public function export()
     {
-        // Logique d'export des quittances
         return back()->with('success', 'Liste des quittances exportée.');
     }
 }

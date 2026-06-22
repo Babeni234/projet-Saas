@@ -6,81 +6,67 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nangue\Models\Property;
 
 class PropertyController extends Controller
 {
-    protected function demoProperties(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'title' => 'Appartement T3 lumineux centre-ville',
-                'address' => '15 Rue de la République',
-                'city' => 'Lyon',
-                'price' => 1200,
-                'surface' => 75,
-                'rooms' => 3,
-                'bedrooms' => 2,
-                'bathrooms' => 1,
-                'property_type' => 'apartment',
-                'transaction_type' => 'rent',
-                'status' => 'active',
-                'image' => null,
-                'views' => 234,
-                'inquiries' => 12,
-                'created_at' => '15 mai 2024',
-            ],
-            [
-                'id' => 2,
-                'title' => 'Studio moderne proche métro',
-                'address' => '42 Avenue Jean Jaurès',
-                'city' => 'Lyon',
-                'price' => 850,
-                'surface' => 30,
-                'rooms' => 1,
-                'bedrooms' => 1,
-                'bathrooms' => 1,
-                'property_type' => 'studio',
-                'transaction_type' => 'rent',
-                'status' => 'rented',
-                'image' => null,
-                'views' => 456,
-                'inquiries' => 28,
-                'created_at' => '2 avril 2024',
-            ],
-            [
-                'id' => 3,
-                'title' => 'Maison avec jardin',
-                'address' => '8 Rue des Fleurs',
-                'city' => 'Villeurbanne',
-                'price' => 1800,
-                'surface' => 120,
-                'rooms' => 5,
-                'bedrooms' => 3,
-                'bathrooms' => 2,
-                'property_type' => 'house',
-                'transaction_type' => 'rent',
-                'status' => 'pending',
-                'image' => null,
-                'views' => 89,
-                'inquiries' => 5,
-                'created_at' => '1 juin 2024',
-            ],
-        ];
-    }
-
     public function index(): Response
     {
+        $properties = Property::forUser(auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'address' => $p->address,
+                'city' => $p->city,
+                'price' => $p->price,
+                'surface' => $p->surface,
+                'rooms' => $p->rooms,
+                'bedrooms' => $p->bedrooms,
+                'bathrooms' => $p->bathrooms,
+                'property_type' => $p->property_type,
+                'transaction_type' => $p->transaction_type,
+                'status' => $p->status,
+                'image' => $p->images[0] ?? null,
+                'views' => $p->views,
+                'inquiries' => $p->inquiries,
+                'created_at' => $p->created_at->format('d M Y'),
+            ]);
+
         return Inertia::render('Nangue/User/Properties', [
-            'properties' => $this->demoProperties(),
+            'properties' => $properties,
             'filters' => [],
         ]);
     }
 
     public function publications(): Response
     {
+        $properties = Property::forUser(auth()->id())
+            ->whereIn('status', ['active', 'pending'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'address' => $p->address,
+                'city' => $p->city,
+                'price' => $p->price,
+                'surface' => $p->surface,
+                'rooms' => $p->rooms,
+                'bedrooms' => $p->bedrooms,
+                'bathrooms' => $p->bathrooms,
+                'property_type' => $p->property_type,
+                'transaction_type' => $p->transaction_type,
+                'status' => $p->status,
+                'image' => $p->images[0] ?? null,
+                'views' => $p->views,
+                'inquiries' => $p->inquiries,
+                'created_at' => $p->created_at->format('d M Y'),
+            ]);
+
         return Inertia::render('Nangue/User/Publications', [
-            'properties' => $this->demoProperties(),
+            'properties' => $properties,
             'filters' => [],
         ]);
     }
@@ -114,37 +100,63 @@ class PropertyController extends Controller
             'min_lease_duration' => 'nullable|integer|min:1',
         ]);
 
-        // Logique de stockage du bien
-        // Property::create($validated);
+        $validated['user_id'] = auth()->id();
+        $validated['status'] = $validated['status'] ?? 'draft';
+        $validated['reference'] = 'ANN-' . date('Y') . '-' . str_pad(Property::max('id') + 1, 4, '0', STR_PAD_LEFT);
+        $validated['furnished'] = $request->boolean('furnished');
+        $validated['charges_included'] = $request->boolean('charges_included');
+
+        Property::create($validated);
 
         return redirect()->route('immo.properties')->with('success', 'Annonce créée avec succès');
     }
 
     public function show($id): Response
     {
-        // Logique pour afficher un bien spécifique
+        $property = Property::forUser(auth()->id())->findOrFail($id);
+
         return Inertia::render('Nangue/User/PropertyDetail', [
-            'property' => [],
+            'property' => $property,
         ]);
     }
 
     public function edit($id): Response
     {
-        // Logique pour éditer un bien
+        $property = Property::forUser(auth()->id())->findOrFail($id);
+
         return Inertia::render('Nangue/User/EditProperty', [
-            'property' => [],
+            'property' => $property,
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        // Logique de mise à jour
+        $property = Property::forUser(auth()->id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'property_type' => 'required|in:apartment,house,studio,loft,villa',
+            'transaction_type' => 'required|in:rent,sale,both',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'postal_code' => 'required|string|max:10',
+            'price' => 'required|numeric|min:0',
+            'surface' => 'required|numeric|min:0',
+            'rooms' => 'required|integer|min:1',
+            'status' => 'required|string',
+        ]);
+
+        $property->update($validated);
+
         return redirect()->route('immo.properties')->with('success', 'Bien mis à jour');
     }
 
     public function destroy($id)
     {
-        // Logique de suppression
+        $property = Property::forUser(auth()->id())->findOrFail($id);
+        $property->delete();
+
         return redirect()->route('immo.properties')->with('success', 'Bien supprimé');
     }
 }

@@ -1,0 +1,1 @@
+﻿<?php $p = new PDO("mysql:host=127.0.0.1;dbname=exam", "root", ""); $p->exec("DROP TABLE IF EXISTS public_visit_bookings, public_visit_slots, tenant_users"); $p->exec("DELETE FROM migrations WHERE migration LIKE \"2026_06_18_100008%\""); echo "OK";
