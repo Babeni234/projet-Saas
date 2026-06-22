@@ -8,11 +8,35 @@ const props = defineProps({
         type: String,
         default: 'individual',
     },
+    plans: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const locale = ref('fr');
 
 const plans = computed(() => {
+    if (props.plans && props.plans.length > 0) {
+        return props.plans.map(plan => {
+            let featuresList = [];
+            if (plan.features) {
+                featuresList = Array.isArray(plan.features) 
+                    ? plan.features 
+                    : (typeof plan.features === 'string' ? JSON.parse(plan.features) : []);
+            }
+            return {
+                id: plan.slug,
+                name: plan.name,
+                price: typeof plan.price === 'number' ? plan.price.toLocaleString('fr-FR') : plan.price,
+                period: plan.billing_cycle === 'monthly' ? 'mois' : 'an',
+                features: featuresList,
+                popular: !!plan.popular,
+                color: plan.color || 'from-indigo-500 to-indigo-650',
+            };
+        });
+    }
+
     if (props.accountType === 'company') {
         return [
             {

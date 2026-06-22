@@ -69,6 +69,18 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmi
     Route::get('/users', [\App\Http\Controllers\SuperAdminController::class, 'users'])->name('users.index');
     Route::post('/users/{user}/status', [\App\Http\Controllers\SuperAdminController::class, 'updateUserStatus'])->name('users.status');
     Route::delete('/users/{user}', [\App\Http\Controllers\SuperAdminController::class, 'deleteUser'])->name('users.delete');
+
+    // Countries
+    Route::get('/countries', [\App\Http\Controllers\SuperAdminController::class, 'countriesIndex'])->name('countries.index');
+    Route::post('/countries', [\App\Http\Controllers\SuperAdminController::class, 'countriesStore'])->name('countries.store');
+
+    // Plans
+    Route::get('/plans', [\App\Http\Controllers\SuperAdminController::class, 'plansIndex'])->name('plans.index');
+    Route::post('/plans', [\App\Http\Controllers\SuperAdminController::class, 'plansStore'])->name('plans.store');
+
+    // Account Creation
+    Route::get('/accounts/create', [\App\Http\Controllers\SuperAdminController::class, 'createAccount'])->name('accounts.create');
+    Route::post('/accounts', [\App\Http\Controllers\SuperAdminController::class, 'storeAccount'])->name('accounts.store');
 });
 
 Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {

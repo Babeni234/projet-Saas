@@ -53,17 +53,29 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('subscription', function () {
+        $user = auth()->user();
+        $plans = \App\Models\SubscriptionPlan::where('account_type', $user->account_type)->get();
+
         return inertia('Auth/Subscription', [
-            'accountType' => auth()->user()->account_type,
+            'accountType' => $user->account_type,
+            'plans' => $plans,
         ]);
     })->name('subscription');
 
     Route::post('subscription', function (\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        $planSlugs = \App\Models\SubscriptionPlan::where('account_type', $user->account_type)
+            ->pluck('slug')
+            ->toArray();
+
         $request->validate([
-            'plan' => 'required|string|in:starter,professional,enterprise,standard_particulier,premium_particulier,expert_particulier,pro_entreprise,business_entreprise,corporate',
+            'plan' => 'required|string|in:' . implode(',', array_merge($planSlugs, [
+                'starter', 'professional', 'enterprise',
+                'standard_particulier', 'premium_particulier', 'expert_particulier',
+                'pro_entreprise', 'business_entreprise', 'corporate'
+            ])),
         ]);
 
-        $user = auth()->user();
         $user->subscription_plan = $request->plan;
         $user->save();
 

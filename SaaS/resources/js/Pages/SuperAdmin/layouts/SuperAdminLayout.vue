@@ -123,6 +123,48 @@ const getInitials = (name) => {
                         <i class="fa-solid fa-users text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Users/Index' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
                         <span>Utilisateurs</span>
                     </Link>
+
+                    <Link 
+                        :href="route('superadmin.countries.index')" 
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
+                        :class="[
+                            $page.component === 'SuperAdmin/Countries/Index' 
+                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/15' 
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-btn-secondary)]'
+                        ]"
+                    >
+                        <div v-if="$page.component === 'SuperAdmin/Countries/Index'" class="absolute left-0 top-3.5 bottom-3.5 w-1 bg-white rounded-r-full"></div>
+                        <i class="fa-solid fa-earth-africa text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Countries/Index' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
+                        <span>Pays autorisés</span>
+                    </Link>
+
+                    <Link 
+                        :href="route('superadmin.plans.index')" 
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
+                        :class="[
+                            $page.component === 'SuperAdmin/Plans/Index' 
+                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/15' 
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-btn-secondary)]'
+                        ]"
+                    >
+                        <div v-if="$page.component === 'SuperAdmin/Plans/Index'" class="absolute left-0 top-3.5 bottom-3.5 w-1 bg-white rounded-r-full"></div>
+                        <i class="fa-solid fa-credit-card text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Plans/Index' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
+                        <span>Forfaits d'abonnement</span>
+                    </Link>
+
+                    <Link 
+                        :href="route('superadmin.accounts.create')" 
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
+                        :class="[
+                            $page.component === 'SuperAdmin/Accounts/Create' 
+                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/15' 
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-btn-secondary)]'
+                        ]"
+                    >
+                        <div v-if="$page.component === 'SuperAdmin/Accounts/Create'" class="absolute left-0 top-3.5 bottom-3.5 w-1 bg-white rounded-r-full"></div>
+                        <i class="fa-solid fa-user-plus text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Accounts/Create' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
+                        <span>Créer un compte</span>
+                    </Link>
                 </nav>
             </div>
 
@@ -161,7 +203,11 @@ const getInitials = (name) => {
                     <span class="text-xs font-bold text-[var(--text-muted)]">
                         {{ 
                             $page.component === 'SuperAdmin/Dashboard' ? 'Tableau de bord global' :
-                            $page.component === 'SuperAdmin/Companies/Index' ? 'Parc des Entreprises' : 'Répertoire des Utilisateurs' 
+                            $page.component === 'SuperAdmin/Companies/Index' ? 'Parc des Entreprises' :
+                            $page.component === 'SuperAdmin/Countries/Index' ? 'Pays Autorisés' :
+                            $page.component === 'SuperAdmin/Plans/Index' ? 'Forfaits d\'abonnement' :
+                            $page.component === 'SuperAdmin/Accounts/Create' ? 'Créer un Compte' :
+                            'Répertoire des Utilisateurs' 
                         }}
                     </span>
                 </div>

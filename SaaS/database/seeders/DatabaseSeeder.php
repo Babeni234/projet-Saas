@@ -16,5 +16,8 @@ class DatabaseSeeder extends Seeder
         
         // Call SuperAdminSeeder to seed default super administrator
         $this->call(SuperAdminSeeder::class);
+
+        // Call SubscriptionPlanSeeder to seed subscription plans
+        $this->call(SubscriptionPlanSeeder::class);
     }
 }

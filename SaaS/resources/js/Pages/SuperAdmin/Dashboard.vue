@@ -167,7 +167,7 @@ const getCityCoords = (city) => {
                     <div class="flex items-center justify-between">
                         <div class="space-y-1.5">
                             <span class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Entreprises</span>
-                            <p class="text-4xl font-black tracking-tight text-[var(--text-main)]">{{ stats.total_companies }}</p>
+                            <p class="text-4xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-950' : 'text-white'">{{ stats.total_companies }}</p>
                         </div>
                         <div class="h-12 w-12 bg-indigo-500/10 border border-indigo-500/25 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 duration-300" :class="theme === 'light' ? 'text-indigo-600' : 'text-indigo-400'">
                             <i class="fa-solid fa-building text-base"></i>
@@ -190,7 +190,7 @@ const getCityCoords = (city) => {
                     <div class="flex items-center justify-between">
                         <div class="space-y-1.5">
                             <span class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Utilisateurs</span>
-                            <p class="text-4xl font-black tracking-tight text-[var(--text-main)]">{{ stats.total_users }}</p>
+                            <p class="text-4xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-950' : 'text-white'">{{ stats.total_users }}</p>
                         </div>
                         <div class="h-12 w-12 bg-cyan-500/10 border border-cyan-500/25 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 duration-300" :class="theme === 'light' ? 'text-cyan-600' : 'text-cyan-400'">
                             <i class="fa-solid fa-users text-base"></i>
@@ -213,7 +213,7 @@ const getCityCoords = (city) => {
                     <div class="flex items-center justify-between">
                         <div class="space-y-1.5">
                             <span class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Agences</span>
-                            <p class="text-4xl font-black tracking-tight text-[var(--text-main)]">{{ stats.total_agencies }}</p>
+                            <p class="text-4xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-950' : 'text-white'">{{ stats.total_agencies }}</p>
                         </div>
                         <div class="h-12 w-12 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 duration-300" :class="theme === 'light' ? 'text-emerald-600' : 'text-emerald-400'">
                             <i class="fa-solid fa-house-chimney-window text-base"></i>
@@ -236,7 +236,7 @@ const getCityCoords = (city) => {
                     <div class="flex items-center justify-between">
                         <div class="space-y-1.5">
                             <span class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Locataires</span>
-                            <p class="text-4xl font-black tracking-tight text-[var(--text-main)]">{{ stats.total_tenants }}</p>
+                            <p class="text-4xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-950' : 'text-white'">{{ stats.total_tenants }}</p>
                         </div>
                         <div class="h-12 w-12 bg-amber-500/10 border border-amber-500/25 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 duration-300" :class="theme === 'light' ? 'text-amber-600' : 'text-amber-400'">
                             <i class="fa-solid fa-people-roof text-base"></i>
