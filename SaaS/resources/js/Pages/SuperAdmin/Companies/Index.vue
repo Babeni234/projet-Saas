@@ -40,15 +40,15 @@ const getInitials = (name) => {
 };
 
 const getGradient = (name) => {
-    if (!name) return 'from-indigo-550 to-cyan-500';
+    if (!name) return 'from-indigo-500 to-cyan-500';
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const colors = [
-        'from-blue-600 to-indigo-650',
-        'from-purple-650 to-pink-650',
-        'from-emerald-500 to-teal-650',
+        'from-blue-600 to-indigo-600',
+        'from-purple-600 to-pink-600',
+        'from-emerald-500 to-teal-600',
         'from-amber-500 to-orange-600',
         'from-rose-500 to-red-600',
         'from-cyan-500 to-blue-600'
@@ -61,7 +61,7 @@ const getPlanBadgeClass = (plan) => {
     switch (plan?.toLowerCase()) {
         case 'enterprise': return 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/25';
         case 'professional': return 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/25';
-        default: return 'bg-slate-500/10 text-slate-555 border border-slate-500/25';
+        default: return 'bg-slate-500/10 text-slate-600 border border-slate-500/25';
     }
 };
 
@@ -95,11 +95,11 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
     <Head title="Gestion des Entreprises" />
 
     <SuperAdminLayout>
-        <div class="space-y-8">
+        <div class="space-y-8 page-entrance">
             <!-- Header section -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">Parc des Entreprises</h2>
+                    <h2 class="text-2xl font-black tracking-tight text-[var(--text-main)]">Parc des Entreprises</h2>
                     <p class="text-sm text-[var(--text-muted)] mt-1">Supervisez les comptes d'entreprises partenaires, modifiez les abonnements et gérez les agréments.</p>
                 </div>
             </div>
@@ -112,8 +112,8 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                         <i class="fa-solid fa-building"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">Total Entreprises</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ totalCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">Total Entreprises</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ totalCount }}</span>
                     </div>
                 </div>
 
@@ -123,19 +123,18 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">Structures Agréées</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ approvedCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">Structures Agréées</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ approvedCount }}</span>
                     </div>
                 </div>
 
-                <!-- Pending -->
                 <div class="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 shadow-[var(--card-shadow)] flex items-center gap-4 relative overflow-hidden group">
-                    <div class="h-10 w-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 border border-amber-500/15">
+                    <div class="h-10 w-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 border border-amber-500/15">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">En Attente / Autres</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ pendingCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">En Attente / Autres</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ pendingCount }}</span>
                     </div>
                 </div>
             </div>
@@ -151,7 +150,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                         v-model="searchQuery"
                         type="text" 
                         placeholder="Rechercher par nom, ville ou e-mail..."
-                        class="w-full pl-10 pr-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] placeholder-slate-550 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                        class="w-full pl-10 pr-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-inner"
                     />
                 </div>
 
@@ -186,7 +185,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-[var(--border-color)] text-[10px] uppercase font-bold text-[var(--text-muted-darker)] tracking-wider">
+                            <tr class="border-b border-[var(--border-color)] text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">
                                 <th class="p-6">Entreprise</th>
                                 <th class="p-6">Contact / Propriétaire</th>
                                 <th class="p-6">Localisation</th>
@@ -215,7 +214,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                             {{ getInitials(company.legal_name) }}
                                         </div>
                                         <div>
-                                            <p class="font-extrabold text-sm leading-normal" :class="theme === 'light' ? 'text-slate-800' : 'text-slate-200'">{{ company.legal_name }}</p>
+                                            <p class="font-extrabold text-sm leading-normal text-[var(--text-main)]">{{ company.legal_name }}</p>
                                             <p class="text-[9px] text-indigo-500 uppercase tracking-widest font-black mt-1 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10 inline-block">{{ company.business_type }}</p>
                                         </div>
                                     </div>
@@ -223,8 +222,8 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
 
                                 <!-- Owner Details -->
                                 <td class="p-6">
-                                    <p class="font-bold leading-normal text-sm" :class="theme === 'light' ? 'text-slate-700' : 'text-slate-350'">{{ company.owner.name }}</p>
-                                    <a :href="`mailto:${company.owner.email}`" class="text-[10px] text-[var(--text-muted-darker)] hover:text-indigo-550 transition-colors font-semibold flex items-center gap-1 mt-1">
+                                    <p class="font-bold leading-normal text-sm text-[var(--text-main)]">{{ company.owner.name }}</p>
+                                    <a :href="`mailto:${company.owner.email}`" class="text-[10px] text-[var(--text-muted)] hover:text-indigo-600 transition-colors font-semibold flex items-center gap-1 mt-1">
                                         <i class="fa-regular fa-envelope"></i>
                                         <span>{{ company.owner.email }}</span>
                                     </a>
@@ -233,7 +232,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                 <!-- Location -->
                                 <td class="p-6 font-semibold text-[var(--text-muted)]">
                                     <div class="flex items-center gap-1.5">
-                                        <i class="fa-solid fa-location-dot text-indigo-550/60"></i>
+                                        <i class="fa-solid fa-location-dot text-indigo-500/60"></i>
                                         <span>{{ company.city }}, {{ company.country }}</span>
                                     </div>
                                 </td>
@@ -241,8 +240,8 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                 <!-- Stats Count in network -->
                                 <td class="p-6 text-center">
                                     <div class="inline-flex flex-col items-center bg-[var(--bg-input)] border border-[var(--border-color)] px-3 py-1.5 rounded-xl shadow-sm min-w-16">
-                                        <span class="font-black text-sm" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ company.agencies_count || 0 }}</span>
-                                        <span class="text-[8px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold mt-0.5">Agences</span>
+                                        <span class="font-black text-sm text-[var(--text-main)]">{{ company.agencies_count || 0 }}</span>
+                                        <span class="text-[8px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold mt-0.5">Agences</span>
                                     </div>
                                 </td>
 
@@ -277,7 +276,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                     <button 
                                         v-if="company.verification_status !== 'approved'"
                                         @click="updateVerificationStatus(company.id, 'approved')"
-                                        class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 rounded-xl font-black text-[10px] transition-all shadow-sm active:scale-95"
+                                        class="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white border border-emerald-500/20 rounded-xl font-black text-[10px] transition-all shadow-sm active:scale-95"
                                         title="Approuver l'agrément"
                                     >
                                         <i class="fa-solid fa-check mr-1.5"></i>
@@ -286,7 +285,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                     <button 
                                         v-if="company.verification_status !== 'suspended'"
                                         @click="updateVerificationStatus(company.id, 'suspended')"
-                                        class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-550 hover:text-white border border-rose-500/20 rounded-xl font-black text-[10px] transition-all shadow-sm active:scale-95"
+                                        class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white border border-rose-500/20 rounded-xl font-black text-[10px] transition-all shadow-sm active:scale-95"
                                         title="Suspendre l'entreprise"
                                     >
                                         <i class="fa-solid fa-ban mr-1.5"></i>
@@ -295,7 +294,7 @@ const updateSubscriptionPlan = (companyId, newPlan) => {
                                 </td>
                             </tr>
                             <tr v-if="filteredCompanies.length === 0">
-                                <td colspan="7" class="p-12 text-center text-[var(--text-muted-darker)] font-bold">Aucune entreprise trouvée dans les filtres actifs.</td>
+                                <td colspan="7" class="p-12 text-center text-[var(--text-muted)] font-bold">Aucune entreprise trouvée dans les filtres actifs.</td>
                             </tr>
                         </tbody>
                     </table>

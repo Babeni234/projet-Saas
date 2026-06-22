@@ -44,9 +44,9 @@ const getGradient = (name) => {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const colors = [
-        'from-blue-600 to-indigo-650',
-        'from-purple-650 to-pink-650',
-        'from-emerald-500 to-teal-650',
+        'from-blue-600 to-indigo-600',
+        'from-purple-600 to-pink-600',
+        'from-emerald-500 to-teal-600',
         'from-amber-500 to-orange-600',
         'from-rose-500 to-red-600',
         'from-cyan-500 to-blue-600'
@@ -57,9 +57,9 @@ const getGradient = (name) => {
 
 const getRoleBadgeClass = (role) => {
     switch (role?.toLowerCase()) {
-        case 'company': return 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20';
-        case 'locataire': return 'bg-amber-500/10 text-amber-550 border border-amber-500/20';
-        default: return 'bg-sky-500/10 text-sky-500 border border-sky-500/20';
+        case 'company': return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-500 border border-indigo-500/20';
+        case 'locataire': return 'bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20';
+        default: return 'bg-sky-500/10 text-sky-600 dark:text-sky-500 border border-sky-500/20';
     }
 };
 
@@ -73,9 +73,9 @@ const getRoleLabel = (role) => {
 
 const getStatusBadgeClass = (status) => {
     switch (status?.toLowerCase()) {
-        case 'active': return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25';
-        case 'suspended': return 'bg-rose-500/10 text-rose-550 border border-rose-500/25';
-        default: return 'bg-slate-500/10 text-slate-500 border border-slate-500/25';
+        case 'active': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/25';
+        case 'suspended': return 'bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/25';
+        default: return 'bg-slate-500/10 text-[var(--text-muted)] border border-[var(--border-color)]';
     }
 };
 
@@ -111,10 +111,10 @@ const toggleUserStatus = (user) => {
     <Head title="Gestion des Utilisateurs" />
 
     <SuperAdminLayout>
-        <div class="space-y-8">
+        <div class="space-y-8 page-entrance">
             <!-- Header section -->
             <div>
-                <h2 class="text-2xl font-black tracking-tight" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">Répertoire des Utilisateurs</h2>
+                <h2 class="text-2xl font-black tracking-tight text-[var(--text-main)]">Répertoire des Utilisateurs</h2>
                 <p class="text-sm text-[var(--text-muted)] mt-1">Gérez tous les comptes d'utilisateurs (locataires, gérants et employés) enregistrés sur la plateforme.</p>
             </div>
 
@@ -126,8 +126,8 @@ const toggleUserStatus = (user) => {
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">Utilisateurs Enregistrés</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ totalCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">Utilisateurs Enregistrés</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ totalCount }}</span>
                     </div>
                 </div>
 
@@ -137,19 +137,19 @@ const toggleUserStatus = (user) => {
                         <i class="fa-solid fa-user-check"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">Comptes Actifs</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ activeCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">Comptes Actifs</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ activeCount }}</span>
                     </div>
                 </div>
 
                 <!-- Sessions en ligne -->
                 <div class="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-5 shadow-[var(--card-shadow)] flex items-center gap-4 relative overflow-hidden group">
-                    <div class="h-10 w-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-550 border border-indigo-500/15">
+                    <div class="h-10 w-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-600 border border-indigo-500/15">
                         <i class="fa-solid fa-signal text-sm animate-pulse"></i>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-[var(--text-muted-darker)] uppercase tracking-wider font-extrabold">En Session Active</span>
-                        <span class="text-xl font-black" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">{{ onlineCount }}</span>
+                        <span class="block text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-extrabold">En Session Active</span>
+                        <span class="text-xl font-black text-[var(--text-main)]">{{ onlineCount }}</span>
                     </div>
                 </div>
             </div>
@@ -165,7 +165,7 @@ const toggleUserStatus = (user) => {
                         v-model="searchQuery"
                         type="text" 
                         placeholder="Rechercher par nom, e-mail ou structure..."
-                        class="w-full pl-10 pr-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] placeholder-slate-550 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                        class="w-full pl-10 pr-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-2xl text-xs text-[var(--text-main)] placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-inner"
                     />
                 </div>
 
@@ -176,7 +176,7 @@ const toggleUserStatus = (user) => {
                         class="px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95 shadow-sm"
                         :class="[
                             roleFilter === '' 
-                                ? 'bg-indigo-650 text-white border-indigo-650' 
+                                ? 'bg-indigo-600 text-white border-indigo-600' 
                                 : 'bg-[var(--bg-input)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
                         ]"
                     >
@@ -187,7 +187,7 @@ const toggleUserStatus = (user) => {
                         class="px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95 shadow-sm"
                         :class="[
                             roleFilter === 'company' 
-                                ? 'bg-indigo-650 text-white border-indigo-650' 
+                                ? 'bg-indigo-600 text-white border-indigo-600' 
                                 : 'bg-[var(--bg-input)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
                         ]"
                     >
@@ -198,7 +198,7 @@ const toggleUserStatus = (user) => {
                         class="px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95 shadow-sm"
                         :class="[
                             roleFilter === 'individual' 
-                                ? 'bg-indigo-650 text-white border-indigo-650' 
+                                ? 'bg-indigo-600 text-white border-indigo-600' 
                                 : 'bg-[var(--bg-input)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
                         ]"
                     >
@@ -209,7 +209,7 @@ const toggleUserStatus = (user) => {
                         class="px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95 shadow-sm"
                         :class="[
                             roleFilter === 'Locataire' 
-                                ? 'bg-indigo-650 text-white border-indigo-650' 
+                                ? 'bg-indigo-600 text-white border-indigo-600' 
                                 : 'bg-[var(--bg-input)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
                         ]"
                     >
@@ -223,7 +223,7 @@ const toggleUserStatus = (user) => {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-[var(--border-color)] text-[10px] uppercase font-bold text-[var(--text-muted-darker)] tracking-wider">
+                            <tr class="border-b border-[var(--border-color)] text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">
                                 <th class="p-6">Utilisateur</th>
                                 <th class="p-6">Type de compte</th>
                                 <th class="p-6">Structure Rattachée</th>
@@ -245,8 +245,8 @@ const toggleUserStatus = (user) => {
                                             {{ getInitials(user.name) }}
                                         </div>
                                         <div>
-                                            <p class="font-extrabold text-sm leading-normal" :class="theme === 'light' ? 'text-slate-800' : 'text-slate-200'">{{ user.name }}</p>
-                                            <a :href="`mailto:${user.email}`" class="text-[10px] text-[var(--text-muted-darker)] hover:text-indigo-550 transition-colors font-semibold leading-none mt-1.5 block">
+                                            <p class="font-extrabold text-sm leading-normal text-[var(--text-main)]">{{ user.name }}</p>
+                                            <a :href="`mailto:${user.email}`" class="text-[10px] text-[var(--text-muted)] hover:text-indigo-600 transition-colors font-semibold leading-none mt-1.5 block">
                                                 <i class="fa-regular fa-envelope mr-1"></i>{{ user.email }}
                                             </a>
                                         </div>
@@ -263,7 +263,7 @@ const toggleUserStatus = (user) => {
                                 <!-- Associated Structure -->
                                 <td class="p-6 text-[var(--text-muted)] font-extrabold">
                                     <div class="flex items-center gap-1.5">
-                                        <i class="fa-solid fa-briefcase text-indigo-550/40"></i>
+                                        <i class="fa-solid fa-briefcase text-indigo-500/40"></i>
                                         <span>{{ user.company_name }}</span>
                                     </div>
                                 </td>
@@ -271,8 +271,8 @@ const toggleUserStatus = (user) => {
                                 <!-- Online Status -->
                                 <td class="p-6 text-center">
                                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider"
-                                          :class="user.is_connected ? 'text-emerald-500 bg-emerald-500/5 border border-emerald-500/15' : 'text-[var(--text-muted-darker)] bg-slate-500/5 border border-[var(--border-color)]'">
-                                        <span class="w-1.5 h-1.5 rounded-full" :class="user.is_connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-450'"></span>
+                                          :class="user.is_connected ? 'text-emerald-500 bg-emerald-500/5 border border-emerald-500/15' : 'text-[var(--text-muted)] bg-slate-500/5 border border-[var(--border-color)]'">
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="user.is_connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
                                         {{ user.is_connected ? 'En ligne' : 'Hors ligne' }}
                                     </span>
                                 </td>
@@ -285,7 +285,7 @@ const toggleUserStatus = (user) => {
                                 </td>
 
                                 <!-- Registered date -->
-                                <td class="p-6 text-[var(--text-muted-darker)] font-bold">
+                                <td class="p-6 text-[var(--text-muted)] font-bold">
                                     {{ user.created_at }}
                                 </td>
 
@@ -296,8 +296,8 @@ const toggleUserStatus = (user) => {
                                         @click="toggleUserStatus(user)"
                                         class="px-3 py-2 border rounded-xl font-extrabold text-[10px] transition-all shadow-sm active:scale-95"
                                         :class="user.status === 'active' 
-                                            ? 'bg-rose-500/10 hover:bg-rose-550 border-rose-500/20 text-rose-550 hover:text-white' 
-                                            : 'bg-emerald-500/10 hover:bg-emerald-500 border-emerald-500/20 text-emerald-550 hover:text-white'"
+                                            ? 'bg-rose-500/10 hover:bg-rose-600 border-rose-500/20 text-rose-600 hover:text-white' 
+                                            : 'bg-emerald-500/10 hover:bg-emerald-600 border-emerald-500/20 text-emerald-600 hover:text-white'"
                                         :title="user.status === 'active' ? 'Suspendre le compte' : 'Réactiver le compte'"
                                     >
                                         <i class="fa-solid mr-1" :class="user.status === 'active' ? 'fa-user-slash' : 'fa-user-check'"></i>
@@ -307,7 +307,7 @@ const toggleUserStatus = (user) => {
                                     <!-- Delete button -->
                                     <button 
                                         @click="confirmDeleteUser(user)"
-                                        class="px-3 py-2 bg-red-500/10 hover:bg-red-500 text-red-550 hover:text-white border border-red-500/20 rounded-xl font-extrabold text-[10px] transition-all shadow-sm active:scale-95"
+                                        class="px-3 py-2 bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/20 rounded-xl font-extrabold text-[10px] transition-all shadow-sm active:scale-95"
                                         title="Supprimer définitivement"
                                     >
                                         <i class="fa-solid fa-trash-can"></i>
@@ -315,7 +315,7 @@ const toggleUserStatus = (user) => {
                                 </td>
                             </tr>
                             <tr v-if="filteredUsers.length === 0">
-                                <td colspan="7" class="p-12 text-center text-[var(--text-muted-darker)] font-bold">Aucun utilisateur ne correspond aux filtres.</td>
+                                <td colspan="7" class="p-12 text-center text-[var(--text-muted)] font-bold">Aucun utilisateur ne correspond aux filtres.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -341,7 +341,7 @@ const toggleUserStatus = (user) => {
                                 Annuler
                             </button>
                             <button 
-                                class="flex-1 py-3 bg-red-650 hover:bg-red-550 text-white font-bold rounded-2xl text-xs transition-colors shadow-lg shadow-red-650/15" 
+                                class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-2xl text-xs transition-colors shadow-lg shadow-red-600/15" 
                                 @click="performDeleteUser"
                             >
                                 Supprimer
@@ -355,19 +355,7 @@ const toggleUserStatus = (user) => {
 </template>
 
 <style scoped>
-@keyframes scaleUp {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-.animate-scale-up {
-    animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+/* Page-specific animation is loaded via .page-entrance class in layout */
 
 .fade-enter-active, .fade-leave-active {
     transition: opacity 0.2s ease;

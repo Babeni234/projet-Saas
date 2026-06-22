@@ -6,12 +6,10 @@ const page = usePage();
 const adminUser = page.props.auth?.user || { name: 'Super Admin', email: 'superadmin@propertyai.com' };
 
 const currentTime = ref('');
-const theme = ref('dark');
 
-const updateTime = () => {
-    const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Paris' };
-    currentTime.value = new Intl.DateTimeFormat('fr-FR', options).format(new Date());
-};
+// Load theme synchronously to prevent dark flash when navigating between pages
+const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('propertyai-superadmin-theme') : 'dark';
+const theme = ref(savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark');
 
 const applyTheme = () => {
     if (theme.value === 'light') {
@@ -19,6 +17,14 @@ const applyTheme = () => {
     } else {
         document.documentElement.classList.remove('theme-light');
     }
+};
+
+// Apply theme immediately on script setup execution
+applyTheme();
+
+const updateTime = () => {
+    const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Paris' };
+    currentTime.value = new Intl.DateTimeFormat('fr-FR', options).format(new Date());
 };
 
 const toggleTheme = () => {
@@ -30,12 +36,6 @@ const toggleTheme = () => {
 onMounted(() => {
     updateTime();
     setInterval(updateTime, 1000);
-    
-    const saved = localStorage.getItem('propertyai-superadmin-theme');
-    if (saved === 'light' || saved === 'dark') {
-        theme.value = saved;
-    }
-    applyTheme();
 });
 
 // Provide the theme state to child components
@@ -64,17 +64,19 @@ const getInitials = (name) => {
         <div v-if="theme === 'light'" class="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-sky-200/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
         <!-- Sidebar -->
-        <aside class="w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col justify-between p-6 shrink-0 relative z-10 shadow-xl backdrop-blur-lg">
+        <aside class="w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col justify-between p-6 shrink-0 z-20 shadow-2xl backdrop-blur-xl fixed h-full left-0 top-0">
             <div>
                 <!-- Brand logo with subtle glow -->
                 <div class="flex items-center gap-3.5 mb-12 px-2 pt-2">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-650 to-cyan-500 shadow-lg shadow-indigo-500/25 border border-white/10 relative group">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-cyan-500 shadow-lg shadow-indigo-500/25 border border-white/10 relative group">
                         <div class="absolute inset-0 bg-indigo-500 rounded-2xl blur-md opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
-                        <span class="text-base font-black text-white relative z-10 tracking-wider">PA</span>
+                        <i class="fa-solid fa-gauge-high text-base text-white relative z-10 transition-transform group-hover:rotate-12 duration-300"></i>
                     </div>
                     <div>
-                        <span class="text-base font-bold tracking-tight block" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">Property <span class="text-indigo-400 font-extrabold">AI</span></span>
-                        <span class="text-[9px] font-black text-indigo-500 uppercase tracking-widest block mt-0.5">Super Admin</span>
+                        <span class="text-[9px] font-black text-indigo-500 uppercase tracking-widest block leading-none">CPANEL</span>
+                        <span class="text-sm font-black tracking-tight block uppercase mt-1.5" :class="theme === 'light' ? 'text-slate-900' : 'text-white'">
+                            SUPER ADMIN
+                        </span>
                     </div>
                 </div>
 
@@ -131,8 +133,8 @@ const getInitials = (name) => {
                         {{ getInitials(adminUser.name) }}
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold truncate" :class="theme === 'light' ? 'text-slate-800' : 'text-slate-200'">{{ adminUser.name }}</p>
-                        <p class="text-[10px] text-[var(--text-muted-darker)] truncate font-semibold mt-0.5">{{ adminUser.email }}</p>
+                        <p class="text-xs font-bold truncate text-[var(--text-main)]">{{ adminUser.name }}</p>
+                        <p class="text-[10px] text-[var(--text-muted)] truncate font-semibold mt-0.5">{{ adminUser.email }}</p>
                     </div>
                 </div>
 
@@ -140,7 +142,7 @@ const getInitials = (name) => {
                     :href="route('logout')" 
                     method="post" 
                     as="button" 
-                    class="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-red-500/5 hover:bg-red-650 text-red-550 hover:text-white rounded-2xl text-xs font-bold border border-red-500/15 hover:border-red-600 shadow-sm transition-all duration-300 active:scale-95"
+                    class="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-red-500/5 hover:bg-red-600 text-red-600 hover:text-white rounded-2xl text-xs font-bold border border-red-500/15 hover:border-red-600 shadow-sm transition-all duration-300 active:scale-95"
                 >
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     <span>Déconnexion</span>
@@ -149,9 +151,9 @@ const getInitials = (name) => {
         </aside>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden relative z-10">
+        <div class="flex-1 flex flex-col overflow-hidden relative z-10 ml-72">
             <!-- Top Header -->
-            <header class="h-20 bg-[var(--bg-header)] border-b border-[var(--border-color)] flex items-center justify-between px-8 shadow-sm backdrop-blur-md">
+            <header class="h-20 bg-[var(--bg-header)] border-b border-[var(--border-color)] flex items-center justify-between px-8 shadow-sm backdrop-blur-md fixed w-full top-0 right-0 z-30">
                 <!-- Left path/indicator -->
                 <div class="flex items-center gap-2.5">
                     <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/5 px-2.5 py-1.5 rounded-lg border border-indigo-500/10">Supervision</span>
@@ -188,7 +190,7 @@ const getInitials = (name) => {
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 overflow-y-auto p-8 bg-[var(--bg-app)]">
+            <main class="flex-1 overflow-y-auto p-8 bg-[var(--bg-app)] mt-20">
                 <slot />
             </main>
         </div>
@@ -197,56 +199,99 @@ const getInitials = (name) => {
 
 <style>
 :root {
-  --bg-app: #060913; /* Deep midnight */
-  --bg-sidebar: #02040a; /* True pitch dark */
-  --bg-header: rgba(6, 9, 19, 0.7);
-  --bg-card: rgba(13, 20, 38, 0.45);
-  --bg-input: #0b1122;
-  --border-color: rgba(99, 102, 241, 0.15); /* Sleek visible dark indigo border */
+  --bg-app: #0a0e1a; /* Deep midnight blue */
+  --bg-sidebar: #050812; /* True pitch dark */
+  --bg-header: rgba(10, 14, 26, 0.85);
+  --bg-card: rgba(20, 30, 50, 0.6);
+  --bg-input: #0f1623;
+  --border-color: rgba(99, 102, 241, 0.2); /* Sleek visible dark indigo border */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-muted-darker: #475569;
-  --bg-table-hover: rgba(99, 102, 241, 0.03);
-  --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-  --bg-btn-secondary: rgba(15, 23, 42, 0.6);
+  --bg-table-hover: rgba(99, 102, 241, 0.05);
+  --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --bg-btn-secondary: rgba(20, 30, 50, 0.7);
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
 .theme-light {
-  --bg-app: #faf9f6; /* Off-white (warm alabaster) background */
-  --bg-sidebar: #f4f3ef; /* Slightly darker warm off-white sidebar */
-  --bg-header: rgba(250, 249, 246, 0.85);
-  --bg-card: #ffffff; /* Solid white card for maximum contrast against off-white bg */
-  --bg-input: #f4f3ef;
-  --border-color: rgba(180, 175, 160, 0.25); /* Elegant warm stone border tint */
-  --text-main: #1c1917; /* Warm dark stone text */
-  --text-muted: #57534e;
-  --text-muted-darker: #8c857b;
-  --bg-table-hover: rgba(180, 175, 160, 0.05);
-  --card-shadow: 0 10px 30px -5px rgba(120, 110, 95, 0.06), 0 4px 12px -2px rgba(120, 110, 95, 0.03);
-  --bg-btn-secondary: #eae8e3;
+  --bg-app: #f8fafc; /* Premium off-white */
+  --bg-sidebar: #ffffff; /* Pure white sidebar */
+  --bg-header: rgba(255, 255, 255, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-input: #f1f5f9;
+  --border-color: rgba(148, 163, 184, 0.25); /* Elegant border tint */
+  --text-main: #0f172a; /* Premium dark text */
+  --text-muted: #475569; /* Slate 600 - highly readable */
+  --text-muted-darker: #1e293b; /* Slate 800 - dark charcoal for headings/tables */
+  --bg-table-hover: rgba(148, 163, 184, 0.08);
+  --card-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08), 0 8px 16px -8px rgba(0, 0, 0, 0.04);
+  --bg-btn-secondary: #e2e8f0;
 }
 
 .theme-transition * {
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium Glassmorphism Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-light .glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Custom Scrollbar for premium feel */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.15);
-  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+  border-radius: 12px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5));
+}
+
+/* Premium Glow Effects */
+.premium-glow {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.15), 0 0 80px rgba(139, 92, 246, 0.1);
+}
+
+.theme-light .premium-glow {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.1), 0 0 80px rgba(139, 92, 246, 0.05);
+}
+
+/* Page entrance animation */
+@keyframes pageFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-entrance {
+  animation: pageFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
