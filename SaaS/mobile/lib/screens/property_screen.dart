@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -7,6 +9,68 @@ class PropertyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = context.watch<ApiService>();
+    final contracts = apiService.contracts;
+
+    if (contracts.isEmpty) {
+      return SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Logement', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1)),
+              Text('Détails de votre bail actif', style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 32),
+              GlassContainer(
+                padding: const EdgeInsets.all(32),
+                borderRadius: 24,
+                child: Column(
+                  children: [
+                    Icon(Icons.home_work_rounded, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                    const SizedBox(height: 16),
+                    const Text('Aucun contrat actif', style: TextStyle(color: AppColors.textSecondary, fontSize: 18, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    const Text('Vous n\'avez pas de bail en cours.', style: TextStyle(color: AppColors.textTertiary, fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final contract = contracts[0];
+    final property = contract['property'] as Map<String, dynamic>?;
+    final propertyName = property?['name'] ?? 'Logement';
+    final propertyAddress = property?['address'] ?? 'Adresse non renseignée';
+    final specs = property?['specs'] as List<dynamic>?;
+    final equipment = property?['equipment'] as List<dynamic>?;
+
+    // Extract spec values
+    String surface = '—';
+    String floor = '—';
+    String reference = '—';
+    String building = '—';
+    String city = '—';
+
+    if (specs != null) {
+      for (var spec in specs) {
+        final label = spec['label'] as String?;
+        final value = spec['value'] as String?;
+        if (label != null && value != null) {
+          if (label.contains('Surface')) surface = value;
+          if (label.contains('Étage')) floor = value;
+          if (label.contains('Référence')) reference = value;
+          if (label.contains('Bâtiment')) building = value;
+          if (label.contains('Ville')) city = value;
+        }
+      }
+    }
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -55,9 +119,9 @@ class PropertyScreen extends StatelessWidget {
                       child: const Text('BAIL ACTIF', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
                     ),
                     const SizedBox(height: 12),
-                    const Text('Appartement T3 - Les Lilas', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                    Text(propertyName, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                     const SizedBox(height: 4),
-                    const Text('14 Rue des fleurs, 75000 Paris', style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.w500)),
+                    Text(propertyAddress, style: const TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
@@ -68,19 +132,29 @@ class PropertyScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildSpecItem(Icons.square_foot_rounded, 'Surface', '65 m²')),
+                Expanded(child: _buildSpecItem(Icons.square_foot_rounded, 'Surface', surface)),
                 const SizedBox(width: 16),
-                Expanded(child: _buildSpecItem(Icons.bed_rounded, 'Chambres', '2')),
+                Expanded(child: _buildSpecItem(Icons.layers_rounded, 'Étage', floor)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildSpecItem(Icons.bathtub_rounded, 'Bains', '1')),
+                Expanded(child: _buildSpecItem(Icons.tag_rounded, 'Référence', reference)),
                 const SizedBox(width: 16),
-                Expanded(child: _buildSpecItem(Icons.balcony_rounded, 'Balcon', 'Oui')),
+                Expanded(child: _buildSpecItem(Icons.apartment_rounded, 'Bâtiment', building)),
               ],
             ),
+            if (equipment != null && equipment.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildSectionHeader('ÉQUIPEMENTS'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: equipment.map((eq) => _buildEquipmentChip(eq.toString())).toList(),
+              ),
+            ],
             const SizedBox(height: 32),
 
             _buildSectionHeader('DÉTAILS DU CONTRAT'),
@@ -90,11 +164,12 @@ class PropertyScreen extends StatelessWidget {
               borderRadius: 32,
               child: Column(
                 children: [
-                  _buildBailRow(Icons.payments_outlined, 'Loyer mensuel', '850,00 €', true),
-                  _buildBailRow(Icons.receipt_long_outlined, 'Charges', '120,00 €', true),
-                  _buildBailRow(Icons.calendar_today_outlined, 'Début du bail', '01 Mar 2024', true),
-                  _buildBailRow(Icons.calendar_month_outlined, 'Fin du bail', '28 Fév 2026', true),
-                  _buildBailRow(Icons.corporate_fare_rounded, 'Bailleur', 'SCI Habitatum', false),
+                  _buildBailRow(Icons.payments_outlined, 'Loyer mensuel', '${(contract['rent'] as num?)?.toStringAsFixed(2) ?? '0'} €', true),
+                  _buildBailRow(Icons.receipt_long_outlined, 'Caution', '${(contract['deposit'] as num?)?.toStringAsFixed(2) ?? '0'} €', true),
+                  _buildBailRow(Icons.calendar_today_outlined, 'Début du bail', contract['start_date'] ?? '—', true),
+                  _buildBailRow(Icons.calendar_month_outlined, 'Fin du bail', contract['end_date'] ?? '—', true),
+                  _buildBailRow(Icons.description_rounded, 'Type', contract['type'] ?? '—', true),
+                  _buildBailRow(Icons.numbers_rounded, 'Référence', contract['contrat_numero'] ?? '—', false),
                 ],
               ),
             ),
@@ -102,12 +177,39 @@ class PropertyScreen extends StatelessWidget {
 
             _buildSectionHeader('DOCUMENTS OFFICIELS'),
             const SizedBox(height: 12),
-            _buildDocItem(context, 'Contrat de bail', 'PDF • 2.4 Mo', Icons.description_rounded, AppColors.primary),
-            const SizedBox(height: 12),
-            _buildDocItem(context, 'État des lieux', 'PDF • 1.8 Mo', Icons.assignment_rounded, AppColors.success),
-            const SizedBox(height: 12),
-            _buildDocItem(context, 'Règlement', 'PDF • 0.5 Mo', Icons.gavel_rounded, AppColors.warning),
+            final documents = contract['documents'] as List<dynamic>?;
+            if (documents != null && documents.isNotEmpty) {
+              ...documents.map((doc) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildDocItem(context, doc['name'] ?? 'Document', doc['filename'] ?? '', Icons.description_rounded, AppColors.primary),
+              )),
+            } else {
+              _buildDocItem(context, 'Contrat de bail', 'PDF • 2.4 Mo', Icons.description_rounded, AppColors.primary),
+              const SizedBox(height: 12),
+              _buildDocItem(context, 'État des lieux', 'PDF • 1.8 Mo', Icons.assignment_rounded, AppColors.success),
+              const SizedBox(height: 12),
+              _buildDocItem(context, 'Règlement', 'PDF • 0.5 Mo', Icons.gavel_rounded, AppColors.warning),
+            }
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEquipmentChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
         ),
       ),
     );

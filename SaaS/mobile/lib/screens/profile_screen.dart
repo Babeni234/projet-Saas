@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/locale_provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -22,8 +23,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
+    final apiService = context.watch<ApiService>();
     final isDark = themeProvider.isDark;
     final language = localeProvider.isFrench ? 'fr' : 'en';
+
+    final userName = apiService.user?['name'] ?? 'Utilisateur';
+    final userEmail = apiService.user?['email'] ?? '';
+    final userPhone = apiService.locataireData?['telephone'] ?? 'Non renseigné';
+    final locataireData = apiService.locataireData;
 
     return SafeArea(
       bottom: false,
@@ -95,9 +102,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Thomas Dubois', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                  Text(userName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                   const SizedBox(height: 4),
-                  const Text('thomas.dubois@email.com', style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500)),
+                  Text(userEmail, style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -119,10 +126,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: 24,
               child: Column(
                 children: [
-                  _buildListTile(Icons.person_outline_rounded, 'Nom', 'Thomas Dubois', showDivider: true),
-                  _buildListTile(Icons.phone_iphone_rounded, 'Téléphone', '06 12 34 56 78', showDivider: true),
-                  _buildListTile(Icons.mail_outline_rounded, 'Email', 'thomas.dubois@email.com', showDivider: true),
-                  _buildListTile(Icons.location_on_outlined, 'Adresse', '14 Rue des fleurs, 75000 Paris'),
+                  _buildListTile(Icons.person_outline_rounded, 'Nom', userName, showDivider: true),
+                  _buildListTile(Icons.phone_iphone_rounded, 'Téléphone', userPhone, showDivider: true),
+                  _buildListTile(Icons.mail_outline_rounded, 'Email', userEmail, showDivider: true),
+                  _buildListTile(Icons.location_on_outlined, 'Adresse', 'Non renseigné'),
                 ],
               ),
             ),
@@ -202,7 +209,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               height: 64,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () async {
+                  final apiService = context.read<ApiService>();
+                  await apiService.logout();
+                  if (mounted) {
+                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.error.withValues(alpha: 0.1),
                   foregroundColor: AppColors.error,

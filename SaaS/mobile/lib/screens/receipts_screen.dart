@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -14,6 +16,21 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = context.watch<ApiService>();
+    final receipts = apiService.receipts;
+
+    // Filter receipts based on selected filter
+    List<dynamic> filteredReceipts = receipts;
+    if (_filter != 'all') {
+      filteredReceipts = receipts.where((r) {
+        final type = r['type'] as String? ?? '';
+        if (_filter == 'rent') return type == 'rent';
+        if (_filter == 'invoice') return type == 'water' || type == 'electricity';
+        if (_filter == 'contract') return type == 'contract_fee';
+        return true;
+      }).toList();
+    }
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -45,48 +62,37 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
 
             _buildSectionHeader('RÉCENTS'),
             const SizedBox(height: 12),
-            _buildReceiptCard(
-              context,
-              type: 'Quittance de loyer',
-              period: 'Mai 2026',
-              amount: '850,00 €',
-              date: '05 Mai 2026',
-              reference: 'QUIT-2026-05-001',
-              isRent: true,
-            ),
-            const SizedBox(height: 16),
-            _buildReceiptCard(
-              context,
-              type: 'Facture Électricité',
-              period: 'Mai 2026',
-              amount: '89,00 €',
-              date: '02 Mai 2026',
-              reference: 'FAC-2026-05-E-001',
-              isRent: false,
-            ),
-            const SizedBox(height: 16),
-            _buildReceiptCard(
-              context,
-              type: 'Quittance de loyer',
-              period: 'Avril 2026',
-              amount: '850,00 €',
-              date: '02 Avril 2026',
-              reference: 'QUIT-2026-04-001',
-              isRent: true,
-            ),
+            if (filteredReceipts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Aucun document disponible', style: TextStyle(color: AppColors.textSecondary)),
+              )
+            else
+              ...filteredReceipts.map((receipt) {
+                final type = receipt['type'] as String? ?? 'rent';
+                final isRent = type == 'rent';
+                final isUtility = type == 'water' || type == 'electricity';
+                final isContract = type == 'contract_fee';
+                
+                String displayType;
+                if (isRent) displayType = 'Quittance de loyer';
+                else if (isUtility) displayType = type == 'water' ? 'Facture Eau' : 'Facture Électricité';
+                else if (isContract) displayType = 'Frais de contrat';
+                else displayType = receipt['title'] ?? 'Document';
 
-            const SizedBox(height: 32),
-            _buildSectionHeader('ARCHIVES 2025'),
-            const SizedBox(height: 12),
-            _buildReceiptCard(
-              context,
-              type: 'Quittance de loyer',
-              period: 'Décembre 2025',
-              amount: '850,00 €',
-              date: '02 Déc 2025',
-              reference: 'QUIT-2025-12-001',
-              isRent: true,
-            ),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildReceiptCard(
+                    context,
+                    type: displayType,
+                    period: receipt['period'] ?? '---',
+                    amount: '${(receipt['amount'] as num?)?.toStringAsFixed(2) ?? '0'} €',
+                    date: receipt['paid_at'] ?? receipt['date'] ?? '---',
+                    reference: receipt['reference'] ?? '---',
+                    isRent: isRent,
+                  ),
+                );
+              }).toList(),
           ],
         ),
       ),

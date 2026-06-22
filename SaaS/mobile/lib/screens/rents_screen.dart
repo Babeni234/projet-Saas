@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -99,6 +101,11 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final apiService = context.watch<ApiService>();
+    final walletBalance = apiService.walletBalance ?? 0;
+    final invoices = apiService.invoices;
+    final receipts = apiService.receipts;
+
     return SafeArea(
       bottom: false,
       child: Stack(
@@ -140,13 +147,13 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
                       children: [
                         const Text('Solde Portefeuille', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 8),
-                        const Text('1 450,00 €', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -1)),
+                        Text('${walletBalance.toStringAsFixed(2)} €', style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -1)),
                         const SizedBox(height: 24),
                         Row(
                           children: [
-                            _buildMiniSummary('Payé (An)', '10 200 €'),
+                            _buildMiniSummary('Factures', '${invoices.length}'),
                             const SizedBox(width: 24),
-                            _buildMiniSummary('Mois réglés', '11/12'),
+                            _buildMiniSummary('Reçus', '${receipts.length}'),
                           ],
                         ),
                       ],
@@ -218,13 +225,25 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 16),
                   Column(
-                    children: [
-                      _buildInvoiceRow('QUIT-2026-05', 'Mai 2026', '850,00 €', 'paid'),
-                      const SizedBox(height: 12),
-                      _buildInvoiceRow('QUIT-2026-04', 'Avril 2026', '850,00 €', 'paid'),
-                      const SizedBox(height: 12),
-                      _buildInvoiceRow('QUIT-2026-03', 'Mars 2026', '970,00 €', 'late'),
-                    ],
+                    children: invoices.isEmpty
+                        ? [
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text('Aucune facture disponible', style: TextStyle(color: AppColors.textSecondary)),
+                            )
+                          ]
+                        : invoices.take(5).map((invoice) {
+                            final status = invoice['status'] as String? ?? 'pending';
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildInvoiceRow(
+                                invoice['reference'] as String? ?? '---',
+                                invoice['period'] as String? ?? '---',
+                                '${(invoice['amount'] as num?)?.toStringAsFixed(2) ?? '0'} €',
+                                status,
+                              ),
+                            );
+                          }).toList(),
                   ),
                 ],
               ),

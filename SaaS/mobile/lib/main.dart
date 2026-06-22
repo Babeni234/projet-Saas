@@ -6,6 +6,7 @@ import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
+    final apiService = context.watch<ApiService>();
+    
     return MaterialApp(
       title: 'Habitatum',
       debugShowCheckedModeBanner: false,
@@ -41,7 +44,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const HomeScreen(),
+      home: apiService.isAuthenticated ? const HomeScreen() : const LoginScreen(),
     );
   }
 }
