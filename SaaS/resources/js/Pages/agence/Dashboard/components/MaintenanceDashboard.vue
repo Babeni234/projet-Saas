@@ -118,6 +118,77 @@
             </div>
         </div>
 
+        <!-- Real-time Maintenance Assets -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Buildings under Maintenance -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping"></span>
+                        <h3 class="text-lg font-bold text-slate-800">Bâtiments en Maintenance Actuelle</h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">{{ realMaintenanceBuildings.length }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-bold">
+                                <th class="p-3">Bâtiment</th>
+                                <th class="p-3">Référence</th>
+                                <th class="p-3">Propriétaire</th>
+                                <th class="p-3">Localisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="b in realMaintenanceBuildings" :key="b.id" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                <td class="p-3 font-bold text-slate-700">{{ b.nom }}</td>
+                                <td class="p-3 text-slate-500">{{ b.reference }}</td>
+                                <td class="p-3 text-slate-600">{{ b.proprietaire_nom || 'Sans propriétaire' }}</td>
+                                <td class="p-3 text-slate-500">{{ b.ville }}</td>
+                            </tr>
+                            <tr v-if="realMaintenanceBuildings.length === 0">
+                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun bâtiment en cours de maintenance.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lodgings under Maintenance -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping"></span>
+                        <h3 class="text-lg font-bold text-slate-800">Logements en Maintenance Actuelle</h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">{{ realMaintenanceLogements.length }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-bold">
+                                <th class="p-3">Logement</th>
+                                <th class="p-3">Catégorie</th>
+                                <th class="p-3">Bâtiment</th>
+                                <th class="p-3">Loyer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="l in realMaintenanceLogements" :key="l.id" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                <td class="p-3 font-bold text-slate-700">{{ l.reference }}</td>
+                                <td class="p-3 text-slate-500"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold">{{ l.categorie }}</span></td>
+                                <td class="p-3 text-slate-600">{{ l.batiment || 'Indépendant' }}</td>
+                                <td class="p-3 text-slate-700 font-semibold">{{ l.loyer }} €</td>
+                            </tr>
+                            <tr v-if="realMaintenanceLogements.length === 0">
+                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun logement en cours de maintenance.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Tickets -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
@@ -236,6 +307,12 @@ let ticketsCategoryChartInstance = null;
 let resolutionTimeChartInstance = null;
 
 const renderCharts = () => {
+    if (ticketsCategoryChartInstance) {
+        ticketsCategoryChartInstance.destroy();
+    }
+    if (resolutionTimeChartInstance) {
+        resolutionTimeChartInstance.destroy();
+    }
     // 1. Calculate categories from scoped tickets
     const categoriesCount = { Plomberie: 0, Electricite: 0, CVC: 0, Autres: 0 };
     scopedTickets.value.forEach(t => {
@@ -327,7 +404,68 @@ const renderCharts = () => {
     }
 };
 
-onMounted(() => {
+const realMaintenanceBuildings = ref([]);
+const realMaintenanceLogements = ref([]);
+const loadingReal = ref(false);
+
+const fetchRealMaintenanceData = async () => {
+    loadingReal.value = true;
+    try {
+        const [resBats, resLogs] = await Promise.all([
+            fetch('/api/batiments'),
+            fetch('/api/logements')
+        ]);
+        if (resBats.ok) {
+            const bats = await resBats.json();
+            realMaintenanceBuildings.value = bats.filter(b => b.statut === 'Maintenance');
+        }
+        if (resLogs.ok) {
+            const logs = await resLogs.json();
+            realMaintenanceLogements.value = logs.filter(l => l.statut === 'Maintenance');
+        }
+
+        // Dynamically add to tickets.value
+        tickets.value = tickets.value.filter(t => !t.isReal);
+
+        // Add real buildings in maintenance
+        realMaintenanceBuildings.value.forEach(b => {
+            tickets.value.unshift({
+                id: `MNT-BAT-${b.id}`,
+                description: `Bâtiment complet sous travaux / maintenance`,
+                lieu: b.nom,
+                batiment: b.nom,
+                priorite: 'Critique',
+                statut: 'En cours',
+                categorie: 'CVC',
+                isReal: true
+            });
+        });
+
+        // Add real lodgings in maintenance
+        realMaintenanceLogements.value.forEach(l => {
+            tickets.value.unshift({
+                id: `MNT-LOG-${l.id}`,
+                description: `Logement sous maintenance : ${l.reference} (${l.categorie || 'Appartement'})`,
+                lieu: l.reference,
+                batiment: l.batiment || 'Indépendant',
+                priorite: 'Haute',
+                statut: 'En cours',
+                categorie: 'Plomberie',
+                isReal: true
+            });
+        });
+
+        // Re-render charts with updated tickets
+        renderCharts();
+
+    } catch (e) {
+        console.error("Error fetching real maintenance data:", e);
+    } finally {
+        loadingReal.value = false;
+    }
+};
+
+onMounted(async () => {
     const storedTickets = localStorage.getItem('immobilier_tickets');
     if (storedTickets) {
         tickets.value = JSON.parse(storedTickets);
@@ -345,6 +483,7 @@ onMounted(() => {
     }
 
     renderCharts();
+    await fetchRealMaintenanceData();
 });
 
 onUnmounted(() => {
