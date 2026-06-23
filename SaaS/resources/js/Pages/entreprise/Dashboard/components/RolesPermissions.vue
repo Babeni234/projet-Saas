@@ -627,6 +627,63 @@
             </div>
         </div>
 
+        <!-- Types de Maintenance Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Types de Maintenance</h3>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Définissez les différents types de pannes et de travaux (ex: Plomberie, Électricité, CVC, Ascenseur) pour vos opérations de maintenance.</p>
+                </div>
+                <button
+                    @click="openCreateTypeMaintenanceModal"
+                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02]"
+                >
+                    Ajouter un Type de Maintenance
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="type in typeMaintenances"
+                    :key="type.id"
+                    class="p-5 rounded-2xl border border-slate-150 transition-all duration-300 hover:shadow-md relative overflow-hidden bg-slate-50/50 flex flex-col min-h-[160px]"
+                >
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="font-extrabold text-slate-800 text-base mb-1">{{ type.nom }}</div>
+                    <div class="text-xs text-slate-500 mb-4 flex-1">{{ type.description || 'Aucune description.' }}</div>
+                    
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200/50 mt-auto">
+                        <button
+                            @click="openEditTypeMaintenanceModal(type)"
+                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                            Modifier
+                        </button>
+                        <button
+                            @click="deleteTypeMaintenance(type)"
+                            class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="typeMaintenances.length === 0" class="col-span-full p-8 text-center bg-slate-50/50 rounded-2xl text-slate-400 border-2 border-dashed border-slate-200">
+                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-semibold text-slate-500 text-sm">Aucun type de maintenance configuré pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Règles de gestion loyer / pénalités Section -->
         <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div class="flex items-center justify-between mb-6">
@@ -1354,6 +1411,62 @@
             </form>
         </ModalPremium>
 
+        <!-- Add/Edit TypeMaintenance Modal -->
+        <ModalPremium
+            :show="showTypeMaintenanceModal"
+            :title="isEditingTypeMaintenance ? 'Modifier le Type de Maintenance' : 'Ajouter un Type de Maintenance'"
+            :subtitle="isEditingTypeMaintenance ? 'Modifiez les détails de ce type de maintenance' : 'Créez un nouveau type de maintenance pour votre entreprise'"
+            size="md"
+            type="default"
+            @close="showTypeMaintenanceModal = false"
+        >
+            <form @submit.prevent="submitTypeMaintenanceForm" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nom du Type de Maintenance <span class="text-red-500">*</span></label>
+                        <input
+                            v-model="typeMaintenanceForm.nom"
+                            type="text"
+                            required
+                            placeholder="Ex: Plomberie, Electricité, CVC, Ascenseur..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-707 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                        />
+                        <span v-if="typeMaintenanceErrors.nom" class="text-red-500 text-xs mt-1 block">{{ typeMaintenanceErrors.nom[0] }}</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                        <textarea
+                            v-model="typeMaintenanceForm.description"
+                            rows="3"
+                            placeholder="Décrivez ce type de maintenance..."
+                            class="w-full px-5 py-3.5 bg-slate-55 border-2 border-slate-200 rounded-2xl text-slate-707 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                        ></textarea>
+                        <span v-if="typeMaintenanceErrors.description" class="text-red-500 text-xs mt-1 block">{{ typeMaintenanceErrors.description[0] }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 justify-end pt-4 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showTypeMaintenanceModal = false"
+                        class="px-6 py-3.5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all transform hover:scale-[1.02]"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="isTypeMaintenanceSubmitting"
+                        class="px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    >
+                        <span v-if="isTypeMaintenanceSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span>{{ isEditingTypeMaintenance ? 'Mettre à Jour' : 'Créer le Type' }}</span>
+                    </button>
+                </div>
+            </form>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -1376,6 +1489,18 @@ const page = usePage();
 const roles = ref(page.props.roles || []);
 const users = ref(page.props.users || []);
 const pendingUsers = ref(page.props.pendingUsers || []);
+
+// TypeMaintenances state
+const typeMaintenances = ref([]);
+const showTypeMaintenanceModal = ref(false);
+const isEditingTypeMaintenance = ref(false);
+const editingTypeMaintenanceId = ref(null);
+const isTypeMaintenanceSubmitting = ref(false);
+const typeMaintenanceErrors = ref({});
+const typeMaintenanceForm = ref({
+    nom: '',
+    description: ''
+});
 
 // Categories state
 const categories = ref([]);
@@ -1602,6 +1727,7 @@ onMounted(() => {
     fetchTypeFactures();
     fetchTypeDepenses();
     fetchRegleLoyers();
+    fetchTypeMaintenances();
 });
 
 const loadData = () => {
@@ -2690,6 +2816,106 @@ const deleteRegleLoyer = async (rule) => {
     } catch (error) {
         console.error(error);
         showNotification('error', 'Erreur', 'Impossible de supprimer la règle.');
+    }
+};
+
+// TypeMaintenance CRUD methods
+const fetchTypeMaintenances = async () => {
+    try {
+        const response = await fetch('/api/type-maintenances', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+            typeMaintenances.value = await response.json();
+        }
+    } catch (error) {
+        console.error("Erreur récupération type maintenances:", error);
+    }
+};
+
+const openCreateTypeMaintenanceModal = () => {
+    isEditingTypeMaintenance.value = false;
+    editingTypeMaintenanceId.value = null;
+    typeMaintenanceForm.value = { nom: '', description: '' };
+    typeMaintenanceErrors.value = {};
+    showTypeMaintenanceModal.value = true;
+};
+
+const openEditTypeMaintenanceModal = (type) => {
+    isEditingTypeMaintenance.value = true;
+    editingTypeMaintenanceId.value = type.id;
+    typeMaintenanceForm.value = {
+        nom: type.nom,
+        description: type.description || ''
+    };
+    typeMaintenanceErrors.value = {};
+    showTypeMaintenanceModal.value = true;
+};
+
+const submitTypeMaintenanceForm = async () => {
+    isTypeMaintenanceSubmitting.value = true;
+    typeMaintenanceErrors.value = {};
+    try {
+        const url = isEditingTypeMaintenance.value
+            ? `/api/type-maintenances/${editingTypeMaintenanceId.value}`
+            : '/api/type-maintenances';
+        const method = isEditingTypeMaintenance.value ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify(typeMaintenanceForm.value)
+        });
+
+        if (response.ok) {
+            showNotification(
+                'success',
+                'Succès',
+                isEditingTypeMaintenance.value ? 'Le type de maintenance a été mis à jour.' : 'Le type de maintenance a été créé.'
+            );
+            showTypeMaintenanceModal.value = false;
+            fetchTypeMaintenances();
+        } else {
+            const data = await response.json();
+            if (response.status === 422 && data.errors) {
+                typeMaintenanceErrors.value = data.errors;
+            } else {
+                showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de contacter le serveur.');
+    } finally {
+        isTypeMaintenanceSubmitting.value = false;
+    }
+};
+
+const deleteTypeMaintenance = async (type) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le type de maintenance "${type.nom}" ?`)) return;
+    try {
+        const response = await fetch(`/api/type-maintenances/${type.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Le type de maintenance a été supprimé.');
+            fetchTypeMaintenances();
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible de supprimer le type de maintenance.');
     }
 };
 

@@ -5,8 +5,8 @@ import { ref, computed, inject } from 'vue';
 
 const props = defineProps({
     users: {
-        type: Array,
-        default: () => [],
+        type: Object,
+        default: () => ({ data: [] }),
     },
 });
 
@@ -16,8 +16,10 @@ const theme = inject('theme');
 const searchQuery = ref('');
 const roleFilter = ref('');
 
+const usersList = computed(() => props.users.data || []);
+
 const filteredUsers = computed(() => {
-    return props.users.filter(u => {
+    return usersList.value.filter(u => {
         const matchesSearch = u.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                               u.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                               u.company_name.toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -28,9 +30,9 @@ const filteredUsers = computed(() => {
 });
 
 // Summary counters
-const totalCount = computed(() => props.users.length);
-const activeCount = computed(() => props.users.filter(u => u.status === 'active').length);
-const onlineCount = computed(() => props.users.filter(u => u.is_connected).length);
+const totalCount = computed(() => props.users.total || usersList.value.length);
+const activeCount = computed(() => usersList.value.filter(u => u.status === 'active').length);
+const onlineCount = computed(() => usersList.value.filter(u => u.is_connected).length);
 
 const getInitials = (name) => {
     if (!name) return 'US';

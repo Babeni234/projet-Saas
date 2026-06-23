@@ -5,8 +5,8 @@ import { ref, computed, inject } from 'vue';
 
 const props = defineProps({
     companies: {
-        type: Array,
-        default: () => [],
+        type: Object,
+        default: () => ({ data: [] }),
     },
 });
 
@@ -17,8 +17,10 @@ const searchQuery = ref('');
 const statusFilter = ref('');
 const planFilter = ref('');
 
+const companiesList = computed(() => props.companies.data || []);
+
 const filteredCompanies = computed(() => {
-    return props.companies.filter(c => {
+    return companiesList.value.filter(c => {
         const matchesSearch = c.legal_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                               c.city.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                               c.owner.email.toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -30,9 +32,9 @@ const filteredCompanies = computed(() => {
 });
 
 // Summary counters
-const totalCount = computed(() => props.companies.length);
-const approvedCount = computed(() => props.companies.filter(c => c.verification_status === 'approved').length);
-const pendingCount = computed(() => props.companies.filter(c => c.verification_status === 'pending' || !c.verification_status || c.verification_status === 'waiting').length);
+const totalCount = computed(() => props.companies.total || companiesList.value.length);
+const approvedCount = computed(() => companiesList.value.filter(c => c.verification_status === 'approved').length);
+const pendingCount = computed(() => companiesList.value.filter(c => c.verification_status === 'pending' || !c.verification_status || c.verification_status === 'waiting').length);
 
 const getInitials = (name) => {
     if (!name) return 'CO';

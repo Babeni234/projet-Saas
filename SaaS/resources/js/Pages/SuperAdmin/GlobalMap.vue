@@ -40,6 +40,11 @@
       
       <!-- Controls -->
       <div class="controls">
+        <Link :href="route('superadmin.dashboard')" class="control-btn home-btn" title="Retour au Dashboard">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </Link>
         <button @click="resetView" class="control-btn" title="Réinitialiser la vue">
           <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
             <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
@@ -62,17 +67,23 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Link } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+
+const page = usePage()
+const stats = page.props.stats || {}
+const userLocation = page.props.userLocation || { lat: 48.8566, lng: 2.3522 }
 
 const globeContainer = ref(null)
 const globeCanvas = ref(null)
 const autoRotate = ref(true)
 const showMarkers = ref(true)
-const userPosition = ref({ lat: 48.8566, lng: 2.3522 }) // Paris par défaut
-const activeUsers = ref(1247)
-const countriesCount = ref(45)
-const companiesCount = ref(89)
+const userPosition = ref(userLocation)
+const activeUsers = ref(stats.active_users || 0)
+const countriesCount = ref(stats.countries_count || 0)
+const companiesCount = ref(stats.companies_count || 0)
 
 let scene, camera, renderer, globe, controls, animationId
 let markers = []
@@ -104,7 +115,7 @@ function initGlobe() {
   
   // Camera
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-  camera.position.z = 3
+  camera.position.z = 2.2
   
   // Renderer
   renderer = new THREE.WebGLRenderer({ 
@@ -115,8 +126,8 @@ function initGlobe() {
   renderer.setSize(width, height)
   renderer.setPixelRatio(window.devicePixelRatio)
   
-  // Globe geometry
-  const geometry = new THREE.SphereGeometry(1, 64, 64)
+  // Globe geometry - larger size
+  const geometry = new THREE.SphereGeometry(1.5, 64, 64)
   
   // Hologram material
   const material = new THREE.MeshPhongMaterial({
@@ -185,6 +196,9 @@ function initGlobe() {
     globe.add(lngLine)
   }
   
+  // Add continent outlines
+  addContinentOutlines()
+  
   // Lighting
   const ambientLight = new THREE.AmbientLight(0x004466, 0.5)
   scene.add(ambientLight)
@@ -202,8 +216,8 @@ function initGlobe() {
   controls.enableDamping = true
   controls.dampingFactor = 0.05
   controls.enableZoom = true
-  controls.minDistance = 1.5
-  controls.maxDistance = 5
+  controls.minDistance = 2
+  controls.maxDistance = 4
   controls.autoRotate = autoRotate.value
   controls.autoRotateSpeed = 0.5
   
@@ -216,7 +230,7 @@ function initGlobe() {
 
 function addUserMarker() {
   const { lat, lng } = userPosition.value
-  const position = latLngToVector3(lat, lng, 1.02)
+  const position = latLngToVector3(lat, lng, 1.53)
   
   const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16)
   const markerMaterial = new THREE.MeshBasicMaterial({
@@ -257,7 +271,7 @@ function addRandomMarkers() {
   ]
   
   cities.forEach(city => {
-    const position = latLngToVector3(city.lat, city.lng, 1.02)
+    const position = latLngToVector3(city.lat, city.lng, 1.53)
     
     const markerGeometry = new THREE.SphereGeometry(0.015, 16, 16)
     const markerMaterial = new THREE.MeshBasicMaterial({
@@ -269,6 +283,82 @@ function addRandomMarkers() {
     marker.position.copy(position)
     globe.add(marker)
     markers.push(marker)
+  })
+}
+
+function addContinentOutlines() {
+  const continentMaterial = new THREE.LineBasicMaterial({
+    color: 0x00ffaa,
+    transparent: true,
+    opacity: 0.4,
+    linewidth: 2
+  })
+  
+  // Approximate continent outlines (simplified coordinates)
+  const continents = {
+    // North America
+    northAmerica: [
+      { lat: 70, lng: -170 }, { lat: 70, lng: -60 }, { lat: 50, lng: -55 },
+      { lat: 25, lng: -80 }, { lat: 15, lng: -90 }, { lat: 20, lng: -105 },
+      { lat: 30, lng: -115 }, { lat: 50, lng: -125 }, { lat: 60, lng: -140 },
+      { lat: 70, lng: -170 }
+    ],
+    // South America
+    southAmerica: [
+      { lat: 12, lng: -75 }, { lat: 5, lng: -35 }, { lat: -5, lng: -35 },
+      { lat: -25, lng: -45 }, { lat: -55, lng: -70 }, { lat: -55, lng: -75 },
+      { lat: -20, lng: -70 }, { lat: 0, lng: -80 }, { lat: 12, lng: -75 }
+    ],
+    // Europe
+    europe: [
+      { lat: 70, lng: -10 }, { lat: 70, lng: 40 }, { lat: 45, lng: 40 },
+      { lat: 35, lng: 25 }, { lat: 38, lng: -10 }, { lat: 45, lng: -10 },
+      { lat: 55, lng: -5 }, { lat: 70, lng: -10 }
+    ],
+    // Africa
+    africa: [
+      { lat: 35, lng: -10 }, { lat: 35, lng: 40 }, { lat: 10, lng: 50 },
+      { lat: -35, lng: 25 }, { lat: -35, lng: 15 }, { lat: -5, lng: 10 },
+      { lat: 5, lng: -15 }, { lat: 35, lng: -10 }
+    ],
+    // Asia
+    asia: [
+      { lat: 70, lng: 40 }, { lat: 70, lng: 180 }, { lat: 35, lng: 140 },
+      { lat: 5, lng: 100 }, { lat: 10, lng: 70 }, { lat: 25, lng: 65 },
+      { lat: 40, lng: 40 }, { lat: 70, lng: 40 }
+    ],
+    // Australia
+    australia: [
+      { lat: -10, lng: 115 }, { lat: -10, lng: 150 }, { lat: -25, lng: 155 },
+      { lat: -40, lng: 145 }, { lat: -35, lng: 115 }, { lat: -20, lng: 115 },
+      { lat: -10, lng: 115 }
+    ],
+    // Antarctica
+    antarctica: [
+      { lat: -65, lng: -180 }, { lat: -65, lng: -90 }, { lat: -65, lng: 0 },
+      { lat: -65, lng: 90 }, { lat: -65, lng: 180 }, { lat: -75, lng: 180 },
+      { lat: -75, lng: -180 }, { lat: -65, lng: -180 }
+    ]
+  }
+  
+  Object.values(continents).forEach(continent => {
+    const geometry = new THREE.BufferGeometry()
+    const points = []
+    
+    continent.forEach(coord => {
+      const position = latLngToVector3(coord.lat, coord.lng, 1.5)
+      points.push(position)
+    })
+    
+    // Close the loop
+    if (continent.length > 0) {
+      const first = latLngToVector3(continent[0].lat, continent[0].lng, 1.5)
+      points.push(first)
+    }
+    
+    geometry.setFromPoints(points)
+    const line = new THREE.Line(geometry, continentMaterial)
+    globe.add(line)
   })
 }
 
@@ -320,7 +410,7 @@ function onWindowResize() {
 
 function resetView() {
   if (camera && controls) {
-    camera.position.set(0, 0, 3)
+    camera.position.set(0, 0, 2.2)
     controls.reset()
   }
 }
@@ -374,7 +464,7 @@ function toggleMarkers() {
 .globe-wrapper {
   position: relative;
   width: 100%;
-  height: 70vh;
+  height: 85vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -536,6 +626,17 @@ function toggleMarkers() {
   justify-content: center;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+}
+
+.control-btn.home-btn {
+  background: rgba(0, 170, 255, 0.2);
+  border-color: #00aaff;
+}
+
+.control-btn.home-btn:hover {
+  background: rgba(0, 170, 255, 0.4);
+  border-color: #00ff88;
+  color: #00ff88;
 }
 
 .control-btn:hover {

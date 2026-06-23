@@ -1009,6 +1009,13 @@ const initGlobe = () => {
     }
 
     const container = globeContainer.value;
+    
+    // Ensure container has explicit dimensions
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.minHeight = '600px';
+    container.style.minWidth = '100%';
+    
     const width = container.clientWidth || container.offsetWidth || 800;
     const height = container.clientHeight || container.offsetHeight || 600;
 
@@ -1040,7 +1047,11 @@ const initGlobe = () => {
             .bumpImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-topology.png')
             .backgroundImageUrl('https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/night-sky.png')
             .backgroundColor(settings.value.nightMode ? '#020617' : '#ffffff')
-            .pointOfView({ lat: 20, lng: 0, altitude: 2.8 });
+            .pointOfView({ lat: 20, lng: 0, altitude: 2.8 })
+            .onGlobeReady(() => {
+                console.log('Globe is ready');
+                loading.value = false;
+            });
 
         // Configure OrbitControls directly for autoRotate
         const controls = globeInstance.controls();
@@ -1056,7 +1067,14 @@ const initGlobe = () => {
 
         // Load data
         updateGlobeData();
-        loading.value = false;
+        
+        // Fallback timeout in case onGlobeReady doesn't fire
+        setTimeout(() => {
+            if (loading.value) {
+                console.log('Globe ready timeout, forcing loading false');
+                loading.value = false;
+            }
+        }, 3000);
 
     } catch (error) {
         console.error('Error initializing Globe.gl:', error);

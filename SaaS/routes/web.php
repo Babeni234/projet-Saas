@@ -373,6 +373,21 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/type-depenses/{typeDepense}', [\App\Http\Controllers\TypeDepenseController::class, 'update'])->name('type-depenses.update');
     Route::delete('/api/type-depenses/{typeDepense}', [\App\Http\Controllers\TypeDepenseController::class, 'destroy'])->name('type-depenses.destroy');
 
+    // TypeMaintenances API routes
+    Route::get('/api/type-maintenances', [\App\Http\Controllers\TypeMaintenanceController::class, 'index'])->name('type-maintenances.json');
+    Route::post('/api/type-maintenances', [\App\Http\Controllers\TypeMaintenanceController::class, 'store'])->name('type-maintenances.store');
+    Route::put('/api/type-maintenances/{id}', [\App\Http\Controllers\TypeMaintenanceController::class, 'update'])->name('type-maintenances.update');
+    Route::delete('/api/type-maintenances/{id}', [\App\Http\Controllers\TypeMaintenanceController::class, 'destroy'])->name('type-maintenances.destroy');
+
+    // Maintenances API routes
+    Route::get('/api/maintenances', [\App\Http\Controllers\MaintenanceController::class, 'index'])->name('maintenances.json');
+    Route::get('/api/maintenances/targets', [\App\Http\Controllers\MaintenanceController::class, 'getTargets'])->name('maintenances.targets');
+    Route::get('/api/maintenances/maintenanciers', [\App\Http\Controllers\MaintenanceController::class, 'getMaintenanciers'])->name('maintenances.maintenanciers');
+    Route::post('/api/maintenances', [\App\Http\Controllers\MaintenanceController::class, 'store'])->name('maintenances.store');
+    Route::post('/api/maintenances/{id}/start', [\App\Http\Controllers\MaintenanceController::class, 'startExecution'])->name('maintenances.start');
+    Route::post('/api/maintenances/{id}/end', [\App\Http\Controllers\MaintenanceController::class, 'endExecution'])->name('maintenances.end');
+    Route::delete('/api/maintenances/{id}', [\App\Http\Controllers\MaintenanceController::class, 'destroy'])->name('maintenances.destroy');
+
     // Factures API routes
     Route::get('/api/factures', [\App\Http\Controllers\FactureController::class, 'index'])->name('factures.json');
     Route::post('/api/factures', [\App\Http\Controllers\FactureController::class, 'store'])->name('factures.store');
