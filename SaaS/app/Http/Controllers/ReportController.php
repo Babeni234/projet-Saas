@@ -59,6 +59,7 @@ class ReportController extends Controller
                 'file_size' => $r->file_size ?? '0 KB',
                 'file_path' => $r->file_path,
                 'ai_analysis' => json_decode($r->ai_analysis, true) ?? $r->ai_analysis,
+                'report_data' => json_decode($r->report_data, true) ?? $r->report_data,
                 'agency_id' => $r->agency_id,
             ];
         });
@@ -130,6 +131,7 @@ class ReportController extends Controller
             'file_path' => $filePath,
             'file_size' => 'Calcul en cours...',
             'ai_analysis' => json_encode($aiAnalysis),
+            'report_data' => json_encode($reportData),
             'created_by' => $user->id,
         ]);
 
@@ -283,8 +285,74 @@ class ReportController extends Controller
 
     // ─── COMPILATION DES DONNÉES DE RAPPORTS ───────────────────────────────
 
+    private function parsePeriodToDbFormat($periode)
+    {
+        $periode = trim($periode);
+        if (preg_match('/^\d{4}-\d{2}$/', $periode)) {
+            return $periode;
+        }
+
+        $parts = explode(' ', $periode);
+        if (count($parts) === 2) {
+            $monthStr = mb_strtolower($parts[0], 'UTF-8');
+            $year = $parts[1];
+
+            $months = [
+                'janvier' => '01', 'jan' => '01', 'janv' => '01',
+                'février' => '02', 'fevrier' => '02', 'fév' => '02', 'fev' => '02',
+                'mars' => '03', 'mar' => '03',
+                'avril' => '04', 'avr' => '04',
+                'mai' => '05',
+                'juin' => '06', 'jui' => '06',
+                'juillet' => '07', 'juil' => '07',
+                'août' => '08', 'aout' => '08',
+                'septembre' => '09', 'sept' => '09', 'sep' => '09',
+                'octobre' => '10', 'oct' => '10',
+                'novembre' => '11', 'nov' => '11',
+                'décembre' => '12', 'decembre' => '12', 'déc' => '12', 'dec' => '12',
+            ];
+
+            if (isset($months[$monthStr])) {
+                return $year . '-' . $months[$monthStr];
+            }
+        }
+
+        return $periode;
+    }
+
+    private function getPeriodDates($periode)
+    {
+        $dbFormat = $this->parsePeriodToDbFormat($periode);
+        if (preg_match('/^(\d{4})-(\d{2})$/', $dbFormat, $matches)) {
+            return [
+                'year' => (int) $matches[1],
+                'month' => (int) $matches[2],
+            ];
+        } elseif (preg_match('/^(\d{4})$/', $dbFormat, $matches)) {
+            return [
+                'year' => (int) $matches[1],
+                'month' => null,
+            ];
+        }
+        return null;
+    }
+
+    private function applyPeriodFilter($query, $dateColumn, $periode)
+    {
+        $parsed = $this->getPeriodDates($periode);
+        if ($parsed) {
+            $query->whereYear($dateColumn, $parsed['year']);
+            if ($parsed['month']) {
+                $query->whereMonth($dateColumn, $parsed['month']);
+            }
+        }
+        return $query;
+    }
+
     private function compileLoyerReportData($companyId, $agencyId, $periode)
     {
+        $dbPeriod = $this->parsePeriodToDbFormat($periode);
+
         // 1. Fetch active contracts in this period
         $query = Contrat::where('company_profile_id', $companyId)
             ->where('statut', 'Actif')
@@ -309,18 +377,14 @@ class ReportController extends Controller
             $agency = $contrat->agency;
 
             $agencyName = $agency?->name ?? 'Siège Social';
-            $agencyIdVal = $agency?->id ?? 0;
             
             $propName = $proprietaire ? $proprietaire->nom_complet : 'Sans propriétaire';
-            $propIdVal = $proprietaire ? $proprietaire->id : 0;
-
             $batName = $batiment ? $batiment->nom : 'Sans bâtiment';
-            $batIdVal = $batiment ? $batiment->id : 0;
 
             // Fetch payment status for this period
             $moisPaye = MoisPaye::whereHas('paiementLoyer', function ($q) use ($contrat) {
                 $q->where('contrat_id', $contrat->id)->where('deleted', false);
-            })->where('periode', $periode)->first();
+            })->where('periode', $dbPeriod)->first();
 
             $loyerBase = (float) $contrat->loyer;
             $montantRegle = 0.0;
@@ -334,7 +398,7 @@ class ReportController extends Controller
             } else {
                 // Check if there is a paid rent invoice for this period
                 $facture = Facture::where('contrat_id', $contrat->id)
-                    ->where('periode', $periode)
+                    ->where('periode', $dbPeriod)
                     ->where('deleted', false)
                     ->first();
                 if ($facture) {
@@ -381,8 +445,6 @@ class ReportController extends Controller
 
     private function compileFinancierReportData($companyId, $agencyId, $periode)
     {
-        // Simply sum revenue and expenses for the selected period
-        // For simplicity, we can extract year/month or parse period string
         $revenuesQuery = Tresorerie::where('company_profile_id', $companyId)
             ->where('deleted', false)
             ->where('montant', '>', 0);
@@ -396,55 +458,203 @@ class ReportController extends Controller
             $expensesQuery->where('agency_id', $agencyId);
         }
 
-        $revenues = (float) $revenuesQuery->sum('montant');
-        $expenses = (float) $expensesQuery->sum('montant');
+        $this->applyPeriodFilter($revenuesQuery, 'date_transaction', $periode);
+        $this->applyPeriodFilter($expensesQuery, 'date_depense', $periode);
+
+        $revenuesList = $revenuesQuery->get()->map(function ($r) {
+            $typeLabel = 'Entrée de fonds';
+            if ($r->source_type === 'App\Models\PaiementLoyer') {
+                $typeLabel = 'Paiement Loyer';
+            } elseif ($r->source_type === 'App\Models\Facture') {
+                $typeLabel = 'Facture';
+            }
+            return [
+                'motif' => $r->motif,
+                'montant' => (float) $r->montant,
+                'date' => $r->date_transaction ? $r->date_transaction->toDateString() : '',
+                'type' => $typeLabel,
+            ];
+        })->toArray();
+
+        $expensesList = $expensesQuery->get()->map(function ($e) {
+            return [
+                'motif' => $e->titre,
+                'montant' => (float) $e->montant,
+                'date' => $e->date_depense ? $e->date_depense->toDateString() : '',
+                'type' => $e->categorie ?? 'Dépense',
+            ];
+        })->toArray();
+
+        $totalRevenue = array_reduce($revenuesList, fn($sum, $r) => $sum + $r['montant'], 0.0);
+        $totalExpenses = array_reduce($expensesList, fn($sum, $e) => $sum + $e['montant'], 0.0);
 
         return [
-            'total_revenue' => $revenues,
-            'total_expenses' => $expenses,
-            'net_profit' => $revenues - $expenses,
-            'profit_margin' => $revenues > 0 ? round((($revenues - $expenses) / $revenues) * 100, 1) : 0,
+            'total_revenue' => $totalRevenue,
+            'total_expenses' => $totalExpenses,
+            'net_profit' => $totalRevenue - $totalExpenses,
+            'profit_margin' => $totalRevenue > 0 ? round((($totalRevenue - $totalExpenses) / $totalRevenue) * 100, 1) : 0,
+            'revenues_detail' => $revenuesList,
+            'expenses_detail' => $expensesList,
         ];
     }
 
     private function compileOccupationReportData($companyId, $agencyId, $periode)
     {
-        $logementsQuery = Logement::where('company_profile_id', $companyId)->where('deleted', false);
+        $buildingsQuery = Batiment::where('company_profile_id', $companyId)
+            ->where('deleted', false)
+            ->with(['logements' => function($q) {
+                $q->where('deleted', false);
+            }]);
+
         if ($agencyId) {
-            $logementsQuery->where('agency_id', $agencyId);
+            $buildingsQuery->where('agency_id', $agencyId);
         }
 
-        $total = $logementsQuery->count();
-        $occupied = $logementsQuery->where('statut', 'Occupé')->count();
-        $vacant = $total - $occupied;
+        $buildings = $buildingsQuery->get();
+
+        $buildingsBreakdown = [];
+        $totalUnits = 0;
+        $occupiedUnits = 0;
+        $vacantUnits = 0;
+
+        foreach ($buildings as $b) {
+            $bUnits = $b->logements->count();
+            $bOccupied = $b->logements->where('statut', 'Occupé')->count();
+            $bVacant = $bUnits - $bOccupied;
+
+            $totalUnits += $bUnits;
+            $occupiedUnits += $bOccupied;
+            $vacantUnits += $bVacant;
+
+            $buildingsBreakdown[] = [
+                'nom' => $b->nom,
+                'reference' => $b->reference ?? 'BAT-' . $b->id,
+                'total_units' => $bUnits,
+                'occupied_units' => $bOccupied,
+                'vacant_units' => $bVacant,
+                'occupancy_rate' => $bUnits > 0 ? round(($bOccupied / $bUnits) * 100, 1) : 0,
+            ];
+        }
+
+        // Also handle independent lodgings (no building)
+        $independentQuery = Logement::where('company_profile_id', $companyId)
+            ->whereNull('batiment_id')
+            ->where('deleted', false);
+
+        if ($agencyId) {
+            $independentQuery->where('agency_id', $agencyId);
+        }
+
+        $independentLogements = $independentQuery->get();
+        $indCount = $independentLogements->count();
+        $indOccupied = $independentLogements->where('statut', 'Occupé')->count();
+        $indVacant = $indCount - $indOccupied;
+
+        if ($indCount > 0) {
+            $totalUnits += $indCount;
+            $occupiedUnits += $indOccupied;
+            $vacantUnits += $indVacant;
+
+            $buildingsBreakdown[] = [
+                'nom' => 'Logements indépendants',
+                'reference' => 'N/A',
+                'total_units' => $indCount,
+                'occupied_units' => $indOccupied,
+                'vacant_units' => $indVacant,
+                'occupancy_rate' => $indCount > 0 ? round(($indOccupied / $indCount) * 100, 1) : 0,
+            ];
+        }
 
         return [
-            'total_units' => $total,
-            'occupied_units' => $occupied,
-            'vacant_units' => $vacant,
-            'occupancy_rate' => $total > 0 ? round(($occupied / $total) * 100, 1) : 0,
+            'total_units' => $totalUnits,
+            'occupied_units' => $occupiedUnits,
+            'vacant_units' => $vacantUnits,
+            'occupancy_rate' => $totalUnits > 0 ? round(($occupiedUnits / $totalUnits) * 100, 1) : 0,
+            'buildings_breakdown' => $buildingsBreakdown,
         ];
     }
 
     private function compileMaintenanceReportData($companyId, $agencyId, $periode)
     {
-        // Search for expenses categorized as maintenance
-        $query = Depense::where('company_profile_id', $companyId)
+        // 1. Fetch buildings in maintenance
+        $buildingsQuery = Batiment::where('company_profile_id', $companyId)
+            ->where('statut', 'Maintenance')
             ->where('deleted', false)
-            ->where('statut', 'Payé');
-
+            ->with(['proprietaire', 'agency']);
+            
         if ($agencyId) {
-            $query->where('agency_id', $agencyId);
+            $buildingsQuery->where('agency_id', $agencyId);
         }
+        $buildingsInMaintenance = $buildingsQuery->get()->map(function($b) {
+            return [
+                'nom' => $b->nom,
+                'reference' => $b->reference ?? 'BAT-' . $b->id,
+                'proprietaire' => $b->proprietaire?->nom_complet ?? 'Sans propriétaire',
+                'agency' => $b->agency?->name ?? 'Siège Social',
+                'ville' => $b->ville,
+                'quartier' => $b->quartier,
+            ];
+        })->toArray();
 
-        // We can filter by date/period or type
-        $totalExpenses = (float) $query->sum('montant');
-        $maintenanceCount = $query->count();
+        // 2. Fetch lodging units in maintenance
+        $logementsQuery = Logement::where('company_profile_id', $companyId)
+            ->whereIn('statut', ['Maintenance', 'En maintenance'])
+            ->where('deleted', false)
+            ->with(['batiment.proprietaire', 'agency', 'categorie']);
+            
+        if ($agencyId) {
+            $logementsQuery->where('agency_id', $agencyId);
+        }
+        $logementsInMaintenance = $logementsQuery->get()->map(function($l) {
+            return [
+                'reference' => $l->reference,
+                'type' => $l->categorie?->nom ?? 'Logement',
+                'batiment' => $l->batiment?->nom ?? 'Indépendant',
+                'proprietaire' => $l->batiment?->proprietaire?->nom_complet ?? 'Sans propriétaire',
+                'agency' => $l->agency?->name ?? 'Siège Social',
+                'loyer' => (float) $l->loyer,
+            ];
+        })->toArray();
+
+        // 3. Fetch maintenance expenses for the period
+        $expensesQuery = Depense::where('company_profile_id', $companyId)
+            ->where('deleted', false)
+            ->where('statut', 'Payé')
+            ->where(function($q) {
+                $q->where('categorie', 'like', '%maintenance%')
+                  ->orWhere('categorie', 'like', '%travaux%')
+                  ->orWhere('titre', 'like', '%maintenance%')
+                  ->orWhere('titre', 'like', '%travaux%')
+                  ->orWhere('description', 'like', '%maintenance%')
+                  ->orWhere('description', 'like', '%travaux%');
+            });
+            
+        if ($agencyId) {
+            $expensesQuery->where('agency_id', $agencyId);
+        }
+        
+        $this->applyPeriodFilter($expensesQuery, 'date_depense', $periode);
+        
+        $expensesList = $expensesQuery->get()->map(function($e) {
+            return [
+                'titre' => $e->titre,
+                'categorie' => $e->categorie ?? 'Maintenance',
+                'montant' => (float) $e->montant,
+                'date' => $e->date_depense ? $e->date_depense->toDateString() : '',
+                'description' => $e->description,
+            ];
+        })->toArray();
+
+        $totalExpenses = array_reduce($expensesList, fn($sum, $e) => $sum + $e['montant'], 0.0);
+        $maintenanceCount = count($expensesList);
 
         return [
             'total_expenses' => $totalExpenses,
             'interventions_count' => $maintenanceCount,
             'average_cost' => $maintenanceCount > 0 ? round($totalExpenses / $maintenanceCount, 2) : 0,
+            'buildings_in_maintenance' => $buildingsInMaintenance,
+            'logements_in_maintenance' => $logementsInMaintenance,
+            'expenses_detail' => $expensesList,
         ];
     }
 
@@ -610,6 +820,20 @@ PROMPT;
         $companyName = $company?->legal_name ?? 'PropertyAI';
         $agencyName = $rapport->agency?->name ?? 'Siège';
 
+        $title = 'Rapport Analytique - État des Loyers';
+        $subtitle = 'Situation mensuelle détaillée des paiements et des encours';
+
+        if ($rapport->type === 'Financier') {
+            $title = 'Rapport Financier - Recettes & Dépenses';
+            $subtitle = 'Situation détaillée des revenus et charges d\'exploitation';
+        } elseif ($rapport->type === 'Occupation') {
+            $title = 'Rapport d\'Occupation - Statut du Parc';
+            $subtitle = 'Statistiques et suivi d\'occupation du parc immobilier';
+        } elseif ($rapport->type === 'Maintenance') {
+            $title = 'Rapport de Maintenance - Entretien & Travaux';
+            $subtitle = 'État des biens sous maintenance et dépenses associées';
+        }
+
         $html = '<!DOCTYPE html>
         <html>
         <head>
@@ -642,6 +866,7 @@ PROMPT;
                 .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: bold; text-transform: uppercase; }
                 .badge-paid { background-color: #d1fae5; color: #065f46; }
                 .badge-unpaid { background-color: #fee2e2; color: #991b1b; }
+                .badge-maintenance { background-color: #fef3c7; color: #92400e; }
 
                 .ai-card { background-color: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 15px; margin-top: 35px; }
                 .ai-card h3 { font-size: 11px; color: #0f766e; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold; }
@@ -663,12 +888,12 @@ PROMPT;
             </table>
 
             <div class="report-title-section">
-                <h1>Rapport Analytique - État des Loyers</h1>
-                <p>Situation mensuelle détaillée des paiements et des encours</p>
+                <h1>' . $title . '</h1>
+                <p>' . $subtitle . '</p>
             </div>';
 
-        // Add Summary KPIs
-        if (isset($data['summary'])) {
+        // Add KPIs depending on report type
+        if ($rapport->type === 'Loyer' && isset($data['summary'])) {
             $sum = $data['summary'];
             $html .= '<table class="kpi-table" style="width: 100%;">
                 <tr>
@@ -678,34 +903,225 @@ PROMPT;
                     <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Taux d\'Impayés</div><div class="val">' . $sum['unpaid_rate'] . ' %</div></div></td>
                 </tr>
             </table>';
+        } elseif ($rapport->type === 'Financier') {
+            $html .= '<table class="kpi-table" style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Total Recettes</div><div class="val">' . number_format($data['total_revenue'] ?? 0, 2, ',', ' ') . ' €</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Total Dépenses</div><div class="val">' . number_format($data['total_expenses'] ?? 0, 2, ',', ' ') . ' €</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Bénéfice Net</div><div class="val">' . number_format($data['net_profit'] ?? 0, 2, ',', ' ') . ' €</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Marge Bénéficiaire</div><div class="val">' . ($data['profit_margin'] ?? 0) . ' %</div></div></td>
+                </tr>
+            </table>';
+        } elseif ($rapport->type === 'Occupation') {
+            $html .= '<table class="kpi-table" style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Total Logements</div><div class="val">' . ($data['total_units'] ?? 0) . '</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Unités Occupées</div><div class="val">' . ($data['occupied_units'] ?? 0) . '</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Unités Vacantes</div><div class="val">' . ($data['vacant_units'] ?? 0) . '</div></div></td>
+                    <td style="width: 25%;"><div class="kpi-card"><div class="lbl">Taux d\'Occupation</div><div class="val">' . ($data['occupancy_rate'] ?? 0) . ' %</div></div></td>
+                </tr>
+            </table>';
+        } elseif ($rapport->type === 'Maintenance') {
+            $html .= '<table class="kpi-table" style="width: 100%;">
+                <tr>
+                    <td style="width: 33.3%;"><div class="kpi-card"><div class="lbl">Dépenses Travaux</div><div class="val">' . number_format($data['total_expenses'] ?? 0, 2, ',', ' ') . ' €</div></div></td>
+                    <td style="width: 33.3%;"><div class="kpi-card"><div class="lbl">Interventions</div><div class="val">' . ($data['interventions_count'] ?? 0) . '</div></div></td>
+                    <td style="width: 33.3%;"><div class="kpi-card"><div class="lbl">Coût Moyen</div><div class="val">' . number_format($data['average_cost'] ?? 0, 2, ',', ' ') . ' €</div></div></td>
+                </tr>
+            </table>';
         }
 
-        // Render sections based on company vs agency
-        if (isset($data['hierarchy'])) {
-            $hierarchy = $data['hierarchy'];
-            
-            if ($rapport->agency_id) {
-                // Agency side: starts from Owners directly
-                foreach ($hierarchy as $ownerName => $ownerData) {
-                    $html .= '<div class="section-title">Propriétaire : ' . $ownerName . '</div>';
-                    foreach ($ownerData['buildings'] as $buildingName => $rows) {
-                        $html .= '<div class="subsection-title">Bâtiment : ' . $buildingName . '</div>';
-                        $html .= $this->buildHtmlTableForRows($rows);
-                    }
-                }
-            } else {
-                // Company side: starts from Agency section
-                foreach ($hierarchy as $agencyName => $agencyData) {
-                    $html .= '<div class="section-title">Agence : ' . $agencyName . '</div>';
-                    foreach ($agencyData['owners'] as $ownerName => $ownerData) {
-                        $html .= '<div class="subsection-title">Propriétaire / Bailleur : ' . $ownerName . '</div>';
+        // Render report sections depending on the type
+        if ($rapport->type === 'Loyer') {
+            if (isset($data['hierarchy'])) {
+                $hierarchy = $data['hierarchy'];
+                if ($rapport->agency_id) {
+                    foreach ($hierarchy as $ownerName => $ownerData) {
+                        $html .= '<div class="section-title">Propriétaire : ' . $ownerName . '</div>';
                         foreach ($ownerData['buildings'] as $buildingName => $rows) {
-                            $html .= '<div class="building-title">Bâtiment : ' . $buildingName . '</div>';
+                            $html .= '<div class="subsection-title">Bâtiment : ' . $buildingName . '</div>';
                             $html .= $this->buildHtmlTableForRows($rows);
+                        }
+                    }
+                } else {
+                    foreach ($hierarchy as $agencyName => $agencyData) {
+                        $html .= '<div class="section-title">Agence : ' . $agencyName . '</div>';
+                        foreach ($agencyData['owners'] as $ownerName => $ownerData) {
+                            $html .= '<div class="subsection-title">Propriétaire : ' . $ownerName . '</div>';
+                            foreach ($ownerData['buildings'] as $buildingName => $rows) {
+                                $html .= '<div class="building-title">Bâtiment : ' . $buildingName . '</div>';
+                                $html .= $this->buildHtmlTableForRows($rows);
+                            }
                         }
                     }
                 }
             }
+        } elseif ($rapport->type === 'Financier') {
+            // Revenues detailed
+            $html .= '<div class="section-title">Détail des Recettes (Entrées de fonds)</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 25%;">Catégorie</th>
+                        <th style="width: 45%;">Désignation / Motif</th>
+                        <th style="width: 15%; text-align: right;">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['revenues_detail'])) {
+                $html .= '<tr><td colspan="4" style="text-align: center; color: #64748b;">Aucune recette enregistrée pour cette période.</td></tr>';
+            } else {
+                foreach ($data['revenues_detail'] as $rev) {
+                    $html .= '<tr>
+                        <td>' . ($rev['date'] ? date('d/m/Y', strtotime($rev['date'])) : '') . '</td>
+                        <td><span class="badge badge-paid">' . $rev['type'] . '</span></td>
+                        <td>' . $rev['motif'] . '</td>
+                        <td class="text-right">' . number_format($rev['montant'], 2, ',', ' ') . ' €</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
+
+            // Expenses detailed
+            $html .= '<div class="section-title">Détail des Dépenses réglées</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 25%;">Catégorie</th>
+                        <th style="width: 45%;">Libellé / Titre</th>
+                        <th style="width: 15%; text-align: right;">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['expenses_detail'])) {
+                $html .= '<tr><td colspan="4" style="text-align: center; color: #64748b;">Aucune dépense enregistrée pour cette période.</td></tr>';
+            } else {
+                foreach ($data['expenses_detail'] as $exp) {
+                    $html .= '<tr>
+                        <td>' . ($exp['date'] ? date('d/m/Y', strtotime($exp['date'])) : '') . '</td>
+                        <td><span class="badge badge-unpaid">' . $exp['type'] . '</span></td>
+                        <td>' . $exp['motif'] . '</td>
+                        <td class="text-right">' . number_format($exp['montant'], 2, ',', ' ') . ' €</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
+
+        } elseif ($rapport->type === 'Occupation') {
+            $html .= '<div class="section-title">Détail d\'Occupation par Bâtiment</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Immeuble / Bâtiment</th>
+                        <th>Référence</th>
+                        <th style="text-align: center;">Total Unités</th>
+                        <th style="text-align: center;">Unités Occupées</th>
+                        <th style="text-align: center;">Unités Vacantes</th>
+                        <th style="text-align: right;">Taux d\'Occupation</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['buildings_breakdown'])) {
+                $html .= '<tr><td colspan="6" style="text-align: center; color: #64748b;">Aucun bâtiment enregistré.</td></tr>';
+            } else {
+                foreach ($data['buildings_breakdown'] as $b) {
+                    $html .= '<tr>
+                        <td style="font-weight: bold;">' . $b['nom'] . '</td>
+                        <td>' . $b['reference'] . '</td>
+                        <td style="text-align: center;">' . $b['total_units'] . '</td>
+                        <td style="text-align: center; color: #0284c7;">' . $b['occupied_units'] . '</td>
+                        <td style="text-align: center; color: #d97706;">' . $b['vacant_units'] . '</td>
+                        <td class="text-right" style="font-weight: bold;">' . $b['occupancy_rate'] . ' %</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
+
+        } elseif ($rapport->type === 'Maintenance') {
+            // Section 1: Buildings in maintenance
+            $html .= '<div class="section-title">Bâtiments en cours de Maintenance</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nom du Bâtiment</th>
+                        <th>Référence</th>
+                        <th>Propriétaire</th>
+                        <th>Localisation</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['buildings_in_maintenance'])) {
+                $html .= '<tr><td colspan="4" style="text-align: center; color: #64748b;">Aucun bâtiment sous maintenance pour le moment.</td></tr>';
+            } else {
+                foreach ($data['buildings_in_maintenance'] as $b) {
+                    $html .= '<tr>
+                        <td style="font-weight: bold;">' . $b['nom'] . '</td>
+                        <td>' . $b['reference'] . '</td>
+                        <td>' . $b['proprietaire'] . '</td>
+                        <td>' . $b['ville'] . ($b['quartier'] ? ' (' . $b['quartier'] . ')' : '') . '</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
+
+            // Section 2: Logements in maintenance
+            $html .= '<div class="section-title">Logements en cours de Maintenance</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Référence Logement</th>
+                        <th>Catégorie</th>
+                        <th>Bâtiment</th>
+                        <th>Propriétaire</th>
+                        <th style="text-align: right;">Loyer</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['logements_in_maintenance'])) {
+                $html .= '<tr><td colspan="5" style="text-align: center; color: #64748b;">Aucune unité sous maintenance pour le moment.</td></tr>';
+            } else {
+                foreach ($data['logements_in_maintenance'] as $l) {
+                    $html .= '<tr>
+                        <td style="font-weight: bold;">' . $l['reference'] . '</td>
+                        <td>' . $l['type'] . '</td>
+                        <td>' . $l['batiment'] . '</td>
+                        <td>' . $l['proprietaire'] . '</td>
+                        <td class="text-right">' . number_format($l['loyer'], 2, ',', ' ') . ' €</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
+
+            // Section 3: Detailed Expenses
+            $html .= '<div class="section-title">Détail des charges & Dépenses de travaux</div>';
+            $html .= '<table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 25%;">Catégorie</th>
+                        <th style="width: 45%;">Titre / Description</th>
+                        <th style="width: 15%; text-align: right;">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            if (empty($data['expenses_detail'])) {
+                $html .= '<tr><td colspan="4" style="text-align: center; color: #64748b;">Aucune dépense de travaux enregistrée pour cette période.</td></tr>';
+            } else {
+                foreach ($data['expenses_detail'] as $exp) {
+                    $html .= '<tr>
+                        <td>' . ($exp['date'] ? date('d/m/Y', strtotime($exp['date'])) : '') . '</td>
+                        <td><span class="badge badge-maintenance">' . $exp['categorie'] . '</span></td>
+                        <td>
+                            <strong>' . $exp['titre'] . '</strong>
+                            ' . ($exp['description'] ? '<br><span style="color: #64748b; font-size: 8px;">' . $exp['description'] . '</span>' : '') . '
+                        </td>
+                        <td class="text-right">' . number_format($exp['montant'], 2, ',', ' ') . ' €</td>
+                    </tr>';
+                }
+            }
+            $html .= '</tbody></table>';
         }
 
         // Add AI card

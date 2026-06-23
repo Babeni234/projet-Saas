@@ -40,7 +40,7 @@ class LogementController extends Controller
             'etage'        => 'nullable|integer',
             'surface'      => 'nullable|integer',
             'loyer'        => 'required|numeric|min:0',
-            'statut'       => 'nullable|string|in:Libre,Occupé,Réservé',
+            'statut'       => 'nullable|string|in:Libre,Occupé,Réservé,Maintenance',
         ]);
 
         // Auto-assign company_profile_id
@@ -80,7 +80,7 @@ class LogementController extends Controller
             'etage'        => 'nullable|integer',
             'surface'      => 'nullable|integer',
             'loyer'        => 'sometimes|required|numeric|min:0',
-            'statut'       => 'nullable|string|in:Libre,Occupé,Réservé',
+            'statut'       => 'nullable|string|in:Libre,Occupé,Réservé,Maintenance',
         ]);
 
         if (array_key_exists('batiment_id', $validated)) {

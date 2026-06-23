@@ -44,9 +44,9 @@ class PropertyScreen extends StatelessWidget {
     }
 
     final contract = contracts[0];
-    final property = contract['property'] as Map<String, dynamic>?;
-    final propertyName = property?['name'] ?? 'Logement';
-    final propertyAddress = property?['address'] ?? 'Adresse non renseignée';
+    final property = contract['logement'] as Map<String, dynamic>?;
+    final propertyName = property?['name']?.toString() ?? 'Logement';
+    final propertyAddress = property?['address']?.toString() ?? property?['adresse']?.toString() ?? 'Adresse non renseignée';
     final specs = property?['specs'] as List<dynamic>?;
     final equipment = property?['equipment'] as List<dynamic>?;
     final documents = contract['documents'] as List<dynamic>?;
@@ -60,8 +60,8 @@ class PropertyScreen extends StatelessWidget {
 
     if (specs != null) {
       for (var spec in specs) {
-        final label = spec['label'] as String?;
-        final value = spec['value'] as String?;
+        final label = spec['label']?.toString();
+        final value = spec['value']?.toString();
         if (label != null && value != null) {
           if (label.contains('Surface')) surface = value;
           if (label.contains('Étage')) floor = value;
@@ -71,6 +71,14 @@ class PropertyScreen extends StatelessWidget {
         }
       }
     }
+
+    // Extract contract details safely
+    final contractNumber = contract['contrat_numero']?.toString() ?? contract['numero']?.toString() ?? '—';
+    final contractType = contract['type']?.toString() ?? 'Bail d\'habitation';
+    final startDate = contract['start_date']?.toString() ?? contract['debut']?.toString() ?? '—';
+    final endDate = contract['end_date']?.toString() ?? contract['fin']?.toString() ?? '—';
+    final rent = contract['loyer'] is num ? (contract['loyer'] as num).toDouble() : 0.0;
+    final deposit = contract['caution'] is num ? (contract['caution'] as num).toDouble() : 0.0;
 
     return SafeArea(
       bottom: false,

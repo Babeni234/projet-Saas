@@ -160,7 +160,12 @@ class DashboardView extends StatelessWidget {
     // Calculate current rent from first contract
     double currentRent = 0;
     if (contracts.isNotEmpty) {
-      currentRent = (contracts[0]['loyer'] as num?)?.toDouble() ?? 0;
+      final rentValue = contracts[0]['loyer'];
+      if (rentValue is num) {
+        currentRent = rentValue.toDouble();
+      } else if (rentValue is String) {
+        currentRent = double.tryParse(rentValue) ?? 0;
+      }
     }
 
     return SafeArea(

@@ -320,58 +320,236 @@
                         </div>
 
                         <!-- Financial report preview -->
-                        <div v-else-if="selectedReport.type === 'Financier' && selectedReport.report_data" class="grid grid-cols-2 gap-4">
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Revenus de l'Agence</span>
-                                <div class="text-lg font-bold text-emerald-600 mt-1">{{ formatMoney(selectedReport.report_data.total_revenue) }} €</div>
+                        <div v-else-if="selectedReport.type === 'Financier' && selectedReport.report_data" class="flex flex-col gap-6 w-full">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Revenus Globaux</span>
+                                    <div class="text-base font-bold text-emerald-600 mt-1">{{ formatMoney(selectedReport.report_data.total_revenue) }} €</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Dépenses Exploitation</span>
+                                    <div class="text-base font-bold text-rose-600 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Bénéfice Net</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.net_profit) }} €</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Marge Opérationnelle</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ selectedReport.report_data.profit_margin }} %</div>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Charges d'Agence</span>
-                                <div class="text-lg font-bold text-rose-600 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                            
+                            <!-- Revenues Detail -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Détail des Recettes (Entrées)</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Date</th>
+                                                <th class="p-2.5">Catégorie</th>
+                                                <th class="p-2.5">Désignation</th>
+                                                <th class="p-2.5 text-right">Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(rev, idx) in selectedReport.report_data.revenues_detail" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5">{{ rev.date ? formatDate(rev.date) : 'N/A' }}</td>
+                                                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">{{ rev.type }}</span></td>
+                                                <td class="p-2.5 text-slate-700 font-medium">{{ rev.motif }}</td>
+                                                <td class="p-2.5 text-right font-semibold text-emerald-600">{{ formatMoney(rev.montant) }} €</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.revenues_detail || selectedReport.report_data.revenues_detail.length === 0">
+                                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune recette enregistrée.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Résultat Net</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.net_profit) }} €</div>
-                            </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Marge brute</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.profit_margin }} %</div>
+
+                            <!-- Expenses Detail -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Détail des Dépenses</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Date</th>
+                                                <th class="p-2.5">Catégorie</th>
+                                                <th class="p-2.5">Libellé</th>
+                                                <th class="p-2.5 text-right">Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(exp, idx) in selectedReport.report_data.expenses_detail" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5">{{ exp.date ? formatDate(exp.date) : 'N/A' }}</td>
+                                                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[10px] font-bold">{{ exp.type }}</span></td>
+                                                <td class="p-2.5 text-slate-700 font-medium">{{ exp.motif }}</td>
+                                                <td class="p-2.5 text-right font-semibold text-rose-600">{{ formatMoney(exp.montant) }} €</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.expenses_detail || selectedReport.report_data.expenses_detail.length === 0">
+                                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune dépense enregistrée.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Occupancy report preview -->
-                        <div v-else-if="selectedReport.type === 'Occupation' && selectedReport.report_data" class="grid grid-cols-2 gap-4">
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Logements gérés</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.total_units }}</div>
+                        <div v-else-if="selectedReport.type === 'Occupation' && selectedReport.report_data" class="flex flex-col gap-6 w-full">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Logements gérés</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ selectedReport.report_data.total_units }}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Logements occupés</span>
+                                    <div class="text-base font-bold text-emerald-600 mt-1">{{ selectedReport.report_data.occupied_units }}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Logements vacants</span>
+                                    <div class="text-base font-bold text-amber-600 mt-1">{{ selectedReport.report_data.vacant_units }}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Taux d'occupation</span>
+                                    <div class="text-base font-bold text-blue-600 mt-1">{{ selectedReport.report_data.occupancy_rate }} %</div>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Logements occupés</span>
-                                <div class="text-lg font-bold text-emerald-600 mt-1">{{ selectedReport.report_data.occupied_units }}</div>
-                            </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Logements vacants</span>
-                                <div class="text-lg font-bold text-amber-600 mt-1">{{ selectedReport.report_data.vacant_units }}</div>
-                            </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Taux d'occupation</span>
-                                <div class="text-lg font-bold text-blue-600 mt-1">{{ selectedReport.report_data.occupancy_rate }} %</div>
+
+                            <!-- Buildings Breakdown -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Taux d'occupation par immeuble</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Bâtiment / Immeuble</th>
+                                                <th class="p-2.5">Référence</th>
+                                                <th class="p-2.5 text-center">Unités</th>
+                                                <th class="p-2.5 text-center">Occupés</th>
+                                                <th class="p-2.5 text-center">Vacants</th>
+                                                <th class="p-2.5 text-right">Taux</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(b, idx) in selectedReport.report_data.buildings_breakdown" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5 font-bold text-slate-800">{{ b.nom }}</td>
+                                                <td class="p-2.5 text-slate-500">{{ b.reference }}</td>
+                                                <td class="p-2.5 text-center">{{ b.total_units }}</td>
+                                                <td class="p-2.5 text-center text-blue-600 font-semibold">{{ b.occupied_units }}</td>
+                                                <td class="p-2.5 text-center text-amber-600 font-semibold">{{ b.vacant_units }}</td>
+                                                <td class="p-2.5 text-right font-bold text-slate-800">{{ b.occupancy_rate }} %</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.buildings_breakdown || selectedReport.report_data.buildings_breakdown.length === 0">
+                                                <td colspan="6" class="p-4 text-center text-slate-400 italic">Aucun bâtiment.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Maintenance report preview -->
-                        <div v-else-if="selectedReport.report_data" class="grid grid-cols-3 gap-4">
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Dépenses d'interventions</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                        <div v-else-if="selectedReport.type === 'Maintenance' && selectedReport.report_data" class="flex flex-col gap-6 w-full">
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Dépenses travaux</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Interventions</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ selectedReport.report_data.interventions_count }}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase">Coût moyen</span>
+                                    <div class="text-base font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.average_cost) }} €</div>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Interventions</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.interventions_count }}</div>
+
+                            <!-- Buildings under Maintenance -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bâtiments sous Maintenance</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Bâtiment</th>
+                                                <th class="p-2.5">Référence</th>
+                                                <th class="p-2.5">Propriétaire</th>
+                                                <th class="p-2.5">Localisation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(b, idx) in selectedReport.report_data.buildings_in_maintenance" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5 font-bold text-slate-800">{{ b.nom }}</td>
+                                                <td class="p-2.5">{{ b.reference }}</td>
+                                                <td class="p-2.5 text-slate-600">{{ b.proprietaire }}</td>
+                                                <td class="p-2.5 text-slate-500">{{ b.ville }}</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.buildings_in_maintenance || selectedReport.report_data.buildings_in_maintenance.length === 0">
+                                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun bâtiment sous maintenance.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <span class="text-xs text-slate-500 font-bold uppercase">Coût moyen d'intervention</span>
-                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.average_cost) }} €</div>
+
+                            <!-- Logements under Maintenance -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Logements sous Maintenance</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Logement</th>
+                                                <th class="p-2.5">Catégorie</th>
+                                                <th class="p-2.5">Bâtiment</th>
+                                                <th class="p-2.5">Propriétaire</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(l, idx) in selectedReport.report_data.logements_in_maintenance" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5 font-bold text-slate-800">{{ l.reference }}</td>
+                                                <td class="p-2.5">{{ l.type }}</td>
+                                                <td class="p-2.5 text-slate-600">{{ l.batiment }}</td>
+                                                <td class="p-2.5 text-slate-500">{{ l.proprietaire }}</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.logements_in_maintenance || selectedReport.report_data.logements_in_maintenance.length === 0">
+                                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun logement sous maintenance.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Expenses detail -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Détail des Travaux & Dépenses</h4>
+                                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-slate-50 text-slate-500">
+                                            <tr>
+                                                <th class="p-2.5">Date</th>
+                                                <th class="p-2.5">Type/Catégorie</th>
+                                                <th class="p-2.5">Description</th>
+                                                <th class="p-2.5 text-right">Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(exp, idx) in selectedReport.report_data.expenses_detail" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                <td class="p-2.5">{{ exp.date ? formatDate(exp.date) : 'N/A' }}</td>
+                                                <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">{{ exp.categorie }}</span></td>
+                                                <td class="p-2.5 text-slate-700 font-medium">{{ exp.titre }}</td>
+                                                <td class="p-2.5 text-right font-semibold text-rose-600">{{ formatMoney(exp.montant) }} €</td>
+                                            </tr>
+                                            <tr v-if="!selectedReport.report_data.expenses_detail || selectedReport.report_data.expenses_detail.length === 0">
+                                                <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune dépense de maintenance enregistrée.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -470,6 +648,66 @@
                 </div>
             </div>
         </div>
+        <!-- Premium Custom Confirm Modal -->
+        <div v-if="showConfirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 transform transition-all duration-300 scale-100">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0" :class="confirmTheme === 'rose' ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'">
+                        <svg v-if="confirmTheme === 'rose'" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <svg v-else width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-slate-800">{{ confirmTitle }}</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Confirmation requise</p>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed mb-6">{{ confirmMessage }}</p>
+                <div class="flex gap-3">
+                    <button @click="showConfirmModal = false" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors">
+                        Annuler
+                    </button>
+                    <button @click="() => { showConfirmModal = false; confirmAction(); }" class="flex-1 px-4 py-2.5 text-white text-sm font-semibold rounded-xl transition-all shadow-md" :class="confirmTheme === 'rose' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'">
+                        Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Custom Toast Notification -->
+        <div v-if="showNotification" class="fixed bottom-5 right-5 z-[70] transform transition-all duration-300 max-w-sm">
+            <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-800 flex items-start gap-3.5 backdrop-blur-md bg-opacity-95">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5" :class="{
+                    'bg-emerald-500/20 text-emerald-400': notificationType === 'success',
+                    'bg-rose-500/20 text-rose-400': notificationType === 'error',
+                    'bg-blue-500/20 text-blue-400': notificationType === 'info',
+                    'bg-amber-500/20 text-amber-400': notificationType === 'loading'
+                }">
+                    <svg v-if="notificationType === 'success'" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else-if="notificationType === 'error'" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <svg v-else-if="notificationType === 'info'" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div v-else-if="notificationType === 'loading'" class="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-sm font-bold text-white leading-none">{{ notificationTitle }}</h5>
+                    <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">{{ notificationMessage }}</p>
+                </div>
+                <button @click="showNotification = false" class="text-slate-400 hover:text-white transition-colors shrink-0">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -485,6 +723,38 @@ const selectedReport = ref({});
 const activeTab = ref('data');
 const searchQuery = ref('');
 const typeFilter = ref('all');
+
+// Premium Dialog/Notification System
+const showConfirmModal = ref(false);
+const confirmTitle = ref('');
+const confirmMessage = ref('');
+const confirmAction = ref(null);
+const confirmTheme = ref('emerald'); // 'emerald' or 'rose'
+
+const showNotification = ref(false);
+const notificationTitle = ref('');
+const notificationMessage = ref('');
+const notificationType = ref('success'); // 'success', 'error', 'info', 'loading'
+
+const triggerConfirm = (title, message, theme, action) => {
+    confirmTitle.value = title;
+    confirmMessage.value = message;
+    confirmTheme.value = theme;
+    confirmAction.value = action;
+    showConfirmModal.value = true;
+};
+
+const triggerNotification = (title, msg, type = 'success') => {
+    notificationTitle.value = title;
+    notificationMessage.value = msg;
+    notificationType.value = type;
+    showNotification.value = true;
+    if (type !== 'loading') {
+        setTimeout(() => {
+            showNotification.value = false;
+        }, 4000);
+    }
+};
 
 const form = ref({
     type: 'Loyer',
@@ -536,11 +806,15 @@ const openGenerateModal = () => {
 
 const submitGenerate = async () => {
     generating.value = true;
+    triggerNotification('Génération', 'Génération du rapport en cours...', 'loading');
     try {
         const periodeStr = `${form.value.month} ${form.value.year}`;
         const res = await fetch('/api/rapports/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
             body: JSON.stringify({
                 type: form.value.type,
                 periode: periodeStr,
@@ -550,62 +824,88 @@ const submitGenerate = async () => {
 
         if (res.ok) {
             showGenModal.value = false;
+            triggerNotification('Succès', 'Rapport généré avec succès !', 'success');
             fetchReports();
         } else {
             const err = await res.json();
-            alert(err.error || 'Erreur lors de la génération.');
+            triggerNotification('Erreur', err.error || 'Erreur lors de la génération.', 'error');
         }
     } catch (e) {
         console.error(e);
+        triggerNotification('Erreur', 'Erreur de connexion au serveur.', 'error');
     } finally {
         generating.value = false;
     }
 };
 
 const quickGenerate = async (type) => {
-    if (confirm(`Générer le rapport ${type} pour votre agence ?`)) {
-        generating.value = true;
-        try {
-            const d = new Date();
-            const currentMonthFr = monthsList[d.getMonth()];
-            const periodStr = `${currentMonthFr} 2026`;
-            
-            const res = await fetch('/api/rapports/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: type,
-                    periode: periodStr,
-                    use_ai: true,
-                })
-            });
+    triggerConfirm(
+        'Génération rapide',
+        `Voulez-vous générer immédiatement le rapport ${type} pour votre agence ?`,
+        'emerald',
+        async () => {
+            generating.value = true;
+            triggerNotification('Génération', 'Génération du rapport en cours...', 'loading');
+            try {
+                const d = new Date();
+                const currentMonthFr = monthsList[d.getMonth()];
+                const periodStr = `${currentMonthFr} 2026`;
+                
+                const res = await fetch('/api/rapports/generate', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        periode: periodStr,
+                        use_ai: true,
+                    })
+                });
 
-            if (res.ok) {
-                fetchReports();
-            } else {
-                alert('Erreur lors de la génération rapide.');
+                if (res.ok) {
+                    triggerNotification('Succès', 'Rapport généré avec succès !', 'success');
+                    fetchReports();
+                } else {
+                    const err = await res.json();
+                    triggerNotification('Erreur', err.error || 'Erreur lors de la génération.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                triggerNotification('Erreur', 'Erreur de connexion au serveur.', 'error');
+            } finally {
+                generating.value = false;
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            generating.value = false;
         }
-    }
+    );
 };
 
 const deleteReport = async (id) => {
-    if (confirm('Voulez-vous vraiment supprimer ce rapport ?')) {
-        try {
-            const res = await fetch(`/api/rapports/${id}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                fetchReports();
+    triggerConfirm(
+        'Suppression du rapport',
+        'Voulez-vous vraiment supprimer définitivement ce rapport ? Cette action est irréversible.',
+        'rose',
+        async () => {
+            try {
+                const res = await fetch(`/api/rapports/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                });
+                if (res.ok) {
+                    triggerNotification('Suppression', 'Rapport supprimé avec succès.', 'success');
+                    fetchReports();
+                } else {
+                    triggerNotification('Erreur', 'Erreur lors de la suppression.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                triggerNotification('Erreur', 'Erreur de connexion au serveur.', 'error');
             }
-        } catch (e) {
-            console.error(e);
         }
-    }
+    );
 };
 
 const showReportDetail = async (r) => {
@@ -631,7 +931,10 @@ const sendChatMessage = async () => {
     try {
         const res = await fetch(`/api/rapports/${selectedReport.value.id}/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
             body: JSON.stringify({ message: userText })
         });
         if (res.ok) {
@@ -648,6 +951,17 @@ const sendChatMessage = async () => {
 // Utils
 const formatMoney = (val) => {
     return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(val);
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return new Intl.DateTimeFormat('fr-FR').format(d);
+    } catch (e) {
+        return dateStr;
+    }
 };
 
 const isObject = (val) => {

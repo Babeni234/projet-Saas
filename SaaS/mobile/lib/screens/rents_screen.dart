@@ -44,13 +44,19 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
 
   List<Map<String, dynamic>> get _rentMonths {
     final apiService = context.watch<ApiService>();
-    return apiService.rentMonths.map((m) => {
-      'key': m['key'],
-      'label': m['label'],
-      'amount': (m['amount'] as num).toDouble(),
-      'status': m['status'] == 'paid' ? 'paid' : (m['penalty_rate'] > 0 ? 'late' : 'pending'),
-      'penalty': (m['penalty_amount'] as num).toDouble(),
-      'penalty_rate': m['penalty_rate'],
+    return apiService.rentMonths.map((m) {
+      final amount = m['amount'];
+      final penaltyAmount = m['penalty_amount'];
+      final penaltyRate = m['penalty_rate'];
+      
+      return {
+        'key': m['key']?.toString() ?? '',
+        'label': m['label']?.toString() ?? '',
+        'amount': amount is num ? amount.toDouble() : 0.0,
+        'status': m['status']?.toString() == 'paid' ? 'paid' : (penaltyRate is num && penaltyRate > 0 ? 'late' : 'pending'),
+        'penalty': penaltyAmount is num ? penaltyAmount.toDouble() : 0.0,
+        'penalty_rate': penaltyRate is num ? penaltyRate : 0,
+      };
     }).toList();
   }
 

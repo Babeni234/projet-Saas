@@ -23,6 +23,7 @@ class Rapport extends Model
         'file_path',
         'file_size',
         'ai_analysis',
+        'report_data',
         'created_by',
         'deleted',
     ];

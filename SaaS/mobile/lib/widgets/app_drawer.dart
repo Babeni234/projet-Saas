@@ -18,11 +18,11 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final apiService = context.watch<ApiService>();
-    final userName = apiService.tenantFullName;
+    final userName = apiService.tenantFullName.isNotEmpty ? apiService.tenantFullName : (apiService.user?['name'] ?? 'Locataire');
     final userEmail = apiService.user?['email'] ?? '';
     final company = apiService.company;
-    final companyName = company?['name'] ?? company?['nom'] ?? 'Habitatum';
-    final companyLogo = company?['logo_url'];
+    final companyName = (company?['name'] as String?) ?? (company?['nom'] as String?) ?? 'Habitatum';
+    final companyLogo = company?['logo_url'] as String?;
 
     return Drawer(
       width: 300,

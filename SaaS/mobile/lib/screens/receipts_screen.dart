@@ -23,7 +23,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     List<dynamic> filteredReceipts = receipts;
     if (_filter != 'all') {
       filteredReceipts = receipts.where((r) {
-        final type = r['type'] as String? ?? '';
+        final type = r['type']?.toString() ?? '';
         if (_filter == 'rent') return type == 'rent';
         if (_filter == 'invoice') return type == 'water' || type == 'electricity';
         if (_filter == 'contract') return type == 'contract_fee';

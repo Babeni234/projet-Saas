@@ -104,6 +104,7 @@
                     <option value="Libre">Libre</option>
                     <option value="Occupé">Occupé</option>
                     <option value="Réservé">Réservé</option>
+                    <option value="Maintenance">En Maintenance</option>
                 </select>
             </div>
         </div>
@@ -158,15 +159,17 @@
                                     'px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 shadow-sm',
                                     logement.statut === 'Libre' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                     logement.statut === 'Occupé' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    'bg-amber-50 text-amber-700 border-amber-200'
+                                    logement.statut === 'Maintenance' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    'bg-slate-50 text-slate-700 border-slate-200'
                                 ]">
                                     <span :class="[
                                         'w-1.5 h-1.5 rounded-full',
                                         logement.statut === 'Libre' ? 'bg-emerald-500' :
                                         logement.statut === 'Occupé' ? 'bg-blue-500' :
-                                        'bg-amber-500'
+                                        logement.statut === 'Maintenance' ? 'bg-amber-500' :
+                                        'bg-slate-500'
                                     ]"></span>
-                                    {{ logement.statut }}
+                                    {{ logement.statut === 'Maintenance' ? 'En Maintenance' : logement.statut }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
@@ -315,6 +318,7 @@
                                 <option value="Libre">Libre / Disponible</option>
                                 <option value="Occupé">Occupé</option>
                                 <option value="Réservé">Réservé (Bail en attente)</option>
+                                <option value="Maintenance">En Maintenance / Travaux</option>
                             </select>
                         </div>
                     </div>
