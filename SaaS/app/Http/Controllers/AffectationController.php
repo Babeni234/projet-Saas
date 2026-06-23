@@ -140,6 +140,18 @@ class AffectationController extends Controller
                 'date_fin' => now()->toDateString(),
             ]);
 
+            // Trouver et expirer le contrat de bail associé
+            $contrat = $affectation->contrat;
+            if (!$contrat) {
+                $contrat = \App\Models\Contrat::where('locataire_id', $affectation->locataire_id)
+                                             ->where('logement_id', $affectation->logement_id)
+                                             ->where('statut', 'Actif')
+                                             ->first();
+            }
+            if ($contrat) {
+                $contrat->update(['statut' => 'Expiré']);
+            }
+
             // Remettre le logement en statut 'Libre'
             if ($affectation->logement) {
                 $affectation->logement->update(['statut' => 'Libre']);
@@ -153,6 +165,16 @@ class AffectationController extends Controller
         });
 
         $affectation->load(['locataire.user', 'logement.batiment']);
+
+        // Envoyer le mail de résiliation au locataire
+        if ($affectation->locataire && $affectation->locataire->user && $affectation->locataire->user->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($affectation->locataire->user->email)
+                    ->send(new \App\Mail\LeaseTerminatedMail($affectation));
+            } catch (\Exception $e) {
+                logger()->error("Erreur lors de l'envoi de mail de résiliation de bail : " . $e->getMessage());
+            }
+        }
 
         return response()->json($this->formatAffectation($affectation));
     }

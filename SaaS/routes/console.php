@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Envoyer les notifications push toutes les 30 minutes
 Schedule::command('app:send-push-notifications')->everyThirtyMinutes();
+
+// Gérer le cycle de vie des baux quotidiennement
+Schedule::command('app:manage-lease-lifecycle')->daily();

@@ -360,30 +360,45 @@ class SuperAdminController extends Controller
             ]);
 
             if ($accountType !== 'company') {
-                return $user;
-            }
+                $profile = \App\Models\CompanyProfile::create([
+                    'user_id' => $user->id,
+                    'business_type' => 'individual',
+                    'legal_name' => $validated['name'],
+                    'registration_number' => 'N/A',
+                    'tax_id' => 'N/A',
+                    'country' => 'CM',
+                    'address' => 'N/A',
+                    'city' => 'N/A',
+                    'postal_code' => 'N/A',
+                    'legal_representative_name' => $validated['name'],
+                    'legal_representative_id_number' => 'N/A',
+                    'phone' => $validated['phone'] ?? 'N/A',
+                    'logo_path' => null,
+                    'verification_status' => 'approved',
+                ]);
+            } else {
+                $logoPath = null;
+                if ($request->hasFile('company_logo')) {
+                    $logoPath = $request->file('company_logo')->store('company-logos', 'local');
+                }
 
-            $logoPath = null;
-            if ($request->hasFile('company_logo')) {
-                $logoPath = $request->file('company_logo')->store('company-logos', 'local');
+                $profile = \App\Models\CompanyProfile::create([
+                    'user_id' => $user->id,
+                    'business_type' => $validated['business_type'],
+                    'legal_name' => $validated['legal_name'],
+                    'registration_number' => $validated['registration_number'],
+                    'tax_id' => $validated['tax_id'],
+                    'country' => strtoupper($validated['country']),
+                    'address' => $validated['address'],
+                    'city' => $validated['city'],
+                    'postal_code' => $validated['postal_code'],
+                    'legal_representative_name' => $validated['legal_representative_name'],
+                    'legal_representative_id_number' => $validated['legal_representative_id_number'],
+                    'phone' => $validated['phone'],
+                    'logo_path' => $logoPath,
+                    'verification_status' => 'approved', // Auto approved when created by super admin
+                ]);
             }
-
-            $profile = \App\Models\CompanyProfile::create([
-                'user_id' => $user->id,
-                'business_type' => $validated['business_type'],
-                'legal_name' => $validated['legal_name'],
-                'registration_number' => $validated['registration_number'],
-                'tax_id' => $validated['tax_id'],
-                'country' => strtoupper($validated['country']),
-                'address' => $validated['address'],
-                'city' => $validated['city'],
-                'postal_code' => $validated['postal_code'],
-                'legal_representative_name' => $validated['legal_representative_name'],
-                'legal_representative_id_number' => $validated['legal_representative_id_number'],
-                'phone' => $validated['phone'],
-                'logo_path' => $logoPath,
-                'verification_status' => 'approved', // Auto approved when created by super admin
-            ]);
 
             // Seed default roles for this new company
             $roles = [
@@ -468,31 +483,33 @@ class SuperAdminController extends Controller
                 'role_id' => $adminRole ? $adminRole->id : null,
             ]);
 
-            $documentTypes = [
-                'certificate_of_incorporation',
-                'tax_registration_document',
-                'representative_id_document',
-                'proof_of_address',
-            ];
+            if ($accountType === 'company') {
+                $documentTypes = [
+                    'certificate_of_incorporation',
+                    'tax_registration_document',
+                    'representative_id_document',
+                    'proof_of_address',
+                ];
 
-            foreach ($documentTypes as $documentType) {
-                if (! $request->hasFile($documentType)) {
-                    continue;
+                foreach ($documentTypes as $documentType) {
+                    if (! $request->hasFile($documentType)) {
+                        continue;
+                    }
+
+                    $file = $request->file($documentType);
+                    $path = $file->store("legal-documents/{$profile->id}", 'local');
+
+                    \App\Models\CompanyLegalDocument::create([
+                        'company_profile_id' => $profile->id,
+                        'document_type' => $documentType,
+                        'disk' => 'local',
+                        'file_path' => $path,
+                        'original_filename' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
+                        'file_size' => $file->getSize(),
+                        'ai_status' => 'approved', // Auto approved by Super Admin
+                    ]);
                 }
-
-                $file = $request->file($documentType);
-                $path = $file->store("legal-documents/{$profile->id}", 'local');
-
-                \App\Models\CompanyLegalDocument::create([
-                    'company_profile_id' => $profile->id,
-                    'document_type' => $documentType,
-                    'disk' => 'local',
-                    'file_path' => $path,
-                    'original_filename' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
-                    'file_size' => $file->getSize(),
-                    'ai_status' => 'approved', // Auto approved by Super Admin
-                ]);
             }
 
             return $user;

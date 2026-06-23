@@ -427,6 +427,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/affectations/{affectation}/terminate', [AffectationController::class, 'terminate'])->name('affectations.terminate');
     Route::delete('/api/affectations/{affectation}', [AffectationController::class, 'destroy'])->name('affectations.destroy');
 
+    // Rapports API routes
+    Route::get('/api/rapports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+    Route::post('/api/rapports/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('reports.generate');
+    Route::get('/api/rapports/{id}/download', [\App\Http\Controllers\ReportController::class, 'download'])->name('reports.download');
+    Route::delete('/api/rapports/{id}', [\App\Http\Controllers\ReportController::class, 'destroy'])->name('reports.destroy');
+    Route::post('/api/rapports/{id}/chat', [\App\Http\Controllers\ReportController::class, 'chat'])->name('reports.chat');
+
     // Page Proprietaires
     Route::get('/immobilier/proprietaires', function () {
         return Inertia::render('entreprise/Dashboard/Dashboard', [

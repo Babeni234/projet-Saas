@@ -86,30 +86,45 @@ class RegisteredUserController extends Controller
             ]);
 
             if ($accountType !== 'company') {
-                return $user;
-            }
+                $profile = CompanyProfile::create([
+                    'user_id' => $user->id,
+                    'business_type' => 'individual',
+                    'legal_name' => $validated['name'],
+                    'registration_number' => 'N/A',
+                    'tax_id' => 'N/A',
+                    'country' => 'CM',
+                    'address' => 'N/A',
+                    'city' => 'N/A',
+                    'postal_code' => 'N/A',
+                    'legal_representative_name' => $validated['name'],
+                    'legal_representative_id_number' => 'N/A',
+                    'phone' => 'N/A',
+                    'logo_path' => null,
+                    'verification_status' => 'approved',
+                ]);
+            } else {
+                $logoPath = null;
+                if ($request->hasFile('company_logo')) {
+                    $logoPath = $request->file('company_logo')->store('company-logos', 'local');
+                }
 
-            $logoPath = null;
-            if ($request->hasFile('company_logo')) {
-                $logoPath = $request->file('company_logo')->store('company-logos', 'local');
+                $profile = CompanyProfile::create([
+                    'user_id' => $user->id,
+                    'business_type' => $validated['business_type'],
+                    'legal_name' => $validated['legal_name'],
+                    'registration_number' => $validated['registration_number'],
+                    'tax_id' => $validated['tax_id'],
+                    'country' => strtoupper($validated['country']),
+                    'address' => $validated['address'],
+                    'city' => $validated['city'],
+                    'postal_code' => $validated['postal_code'],
+                    'legal_representative_name' => $validated['legal_representative_name'],
+                    'legal_representative_id_number' => $validated['legal_representative_id_number'],
+                    'phone' => $validated['phone'],
+                    'logo_path' => $logoPath,
+                    'verification_status' => 'pending',
+                ]);
             }
-
-            $profile = CompanyProfile::create([
-                'user_id' => $user->id,
-                'business_type' => $validated['business_type'],
-                'legal_name' => $validated['legal_name'],
-                'registration_number' => $validated['registration_number'],
-                'tax_id' => $validated['tax_id'],
-                'country' => strtoupper($validated['country']),
-                'address' => $validated['address'],
-                'city' => $validated['city'],
-                'postal_code' => $validated['postal_code'],
-                'legal_representative_name' => $validated['legal_representative_name'],
-                'legal_representative_id_number' => $validated['legal_representative_id_number'],
-                'phone' => $validated['phone'],
-                'logo_path' => $logoPath,
-                'verification_status' => 'pending',
-            ]);
 
             // Seed default roles for this new company
             $roles = [
@@ -194,24 +209,26 @@ class RegisteredUserController extends Controller
                 'role_id' => $adminRole ? $adminRole->id : null,
             ]);
 
-            foreach (self::DOCUMENT_TYPES as $documentType) {
-                if (! $request->hasFile($documentType)) {
-                    continue;
+            if ($accountType === 'company') {
+                foreach (self::DOCUMENT_TYPES as $documentType) {
+                    if (! $request->hasFile($documentType)) {
+                        continue;
+                    }
+
+                    $file = $request->file($documentType);
+                    $path = $file->store("legal-documents/{$profile->id}", 'local');
+
+                    CompanyLegalDocument::create([
+                        'company_profile_id' => $profile->id,
+                        'document_type' => $documentType,
+                        'disk' => 'local',
+                        'file_path' => $path,
+                        'original_filename' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
+                        'file_size' => $file->getSize(),
+                        'ai_status' => 'pending',
+                    ]);
                 }
-
-                $file = $request->file($documentType);
-                $path = $file->store("legal-documents/{$profile->id}", 'local');
-
-                CompanyLegalDocument::create([
-                    'company_profile_id' => $profile->id,
-                    'document_type' => $documentType,
-                    'disk' => 'local',
-                    'file_path' => $path,
-                    'original_filename' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType() ?? 'application/octet-stream',
-                    'file_size' => $file->getSize(),
-                    'ai_status' => 'pending',
-                ]);
             }
 
             return $user;

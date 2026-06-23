@@ -1,174 +1,176 @@
 <template>
-    <div class="flex flex-col gap-8">
-        <!-- Report Types -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Financial Report -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                        <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <div class="flex flex-col gap-8 p-1">
+        <!-- Header Actions -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 text-white rounded-3xl p-6 shadow-xl shadow-slate-950/20">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Rapports & Statistiques</h1>
+                <p class="text-sm text-slate-300 mt-1">Générez et consultez les performances opérationnelles et financières.</p>
+            </div>
+            <button @click="openGenerateModal" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-600/30 flex items-center gap-2 transform active:scale-95">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                Nouveau Rapport
+            </button>
+        </div>
+
+        <!-- Report Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+            <!-- Rent Report -->
+            <div @click="quickGenerate('Loyer')" class="cursor-pointer bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 border border-slate-100 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20 mb-4 group-hover:scale-110 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <line x1="12" y1="8" x2="12" y2="16" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
                     </svg>
                 </div>
-                <div class="text-lg font-semibold text-slate-800 mb-2">Rapport Financier</div>
-                <div class="text-sm text-slate-500 mb-4">Revenus, dépenses et bénéfices</div>
-                <button class="w-full px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/20">Générer</button>
+                <div class="text-base font-bold text-slate-800 mb-1">Rapport Loyers</div>
+                <div class="text-xs text-slate-500 mb-3">État des loyers et pénalités par mois</div>
+                <div class="text-xs text-emerald-600 font-semibold group-hover:underline flex items-center gap-1">Générer en 1 clic →</div>
+            </div>
+
+            <!-- Financial Report -->
+            <div @click="quickGenerate('Financier')" class="cursor-pointer bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1 transition-all duration-300 border border-slate-100 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 mb-4 group-hover:scale-110 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
+                </div>
+                <div class="text-base font-bold text-slate-800 mb-1">Financier</div>
+                <div class="text-xs text-slate-500 mb-3">Revenus, dépenses et bénéfices nets</div>
+                <div class="text-xs text-blue-600 font-semibold group-hover:underline flex items-center gap-1">Générer en 1 clic →</div>
             </div>
 
             <!-- Occupancy Report -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-4">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <div @click="quickGenerate('Occupation')" class="cursor-pointer bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 border border-slate-100 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/20 mb-4 group-hover:scale-110 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                 </div>
-                <div class="text-lg font-semibold text-slate-800 mb-2">Rapport d'Occupation</div>
-                <div class="text-sm text-slate-500 mb-4">Taux d'occupation par immeuble</div>
-                <button class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Générer</button>
+                <div class="text-base font-bold text-slate-800 mb-1">Occupation</div>
+                <div class="text-xs text-slate-500 mb-3">Taux de vacance et baux actifs</div>
+                <div class="text-xs text-purple-600 font-semibold group-hover:underline flex items-center gap-1">Générer en 1 clic →</div>
             </div>
 
             <!-- Maintenance Report -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 mb-4">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <div @click="quickGenerate('Maintenance')" class="cursor-pointer bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-300 border border-slate-100 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-md shadow-amber-500/20 mb-4 group-hover:scale-110 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                     </svg>
                 </div>
-                <div class="text-lg font-semibold text-slate-800 mb-2">Rapport Maintenance</div>
-                <div class="text-sm text-slate-500 mb-4">Tickets et interventions</div>
-                <button class="w-full px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-md shadow-amber-500/20">Générer</button>
+                <div class="text-base font-bold text-slate-800 mb-1">Maintenance</div>
+                <div class="text-xs text-slate-500 mb-3">Tickets résolus et frais de travaux</div>
+                <div class="text-xs text-amber-600 font-semibold group-hover:underline flex items-center gap-1">Générer en 1 clic →</div>
             </div>
 
-            <!-- Custom Report -->
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-1 border border-slate-100">
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-4">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                        <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Custom / AI Report -->
+            <div @click="openGenerateModal" class="cursor-pointer bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 shadow-md hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1 transition-all duration-300 border border-slate-700 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-md shadow-teal-500/20 mb-4 group-hover:scale-110 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white animate-pulse">
+                        <path d="M12 2a10 10 0 0 1 8.29 4.41L18 8h4V4l-1.59 1.59A10 10 0 1 0 12 22z" />
                     </svg>
                 </div>
-                <div class="text-lg font-semibold text-slate-800 mb-2">Rapport Personnalisé</div>
-                <div class="text-sm text-slate-500 mb-4">Créer un rapport sur mesure</div>
-                <button class="w-full px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors shadow-md shadow-purple-500/20">Créer</button>
+                <div class="text-base font-bold text-white mb-1">Génération IA</div>
+                <div class="text-xs text-slate-300 mb-3">Analyses prédictives et rapports avancés</div>
+                <div class="text-xs text-teal-400 font-semibold group-hover:underline flex items-center gap-1">Ouvrir le configurateur →</div>
             </div>
         </div>
 
-        <!-- Recent Reports -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-800">Rapports Récents</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Voir tous</button>
+        <!-- Recent & Generated Reports List -->
+        <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-100 border border-slate-100">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Rapports Récents</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Accédez aux archives de rapports générés.</p>
+                </div>
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                    <input v-model="searchQuery" type="text" placeholder="Rechercher par nom..." class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none w-full sm:w-48 bg-slate-50/50">
+                    
+                    <select v-model="typeFilter" class="px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none bg-slate-50/50">
+                        <option value="all">Tous les types</option>
+                        <option value="Loyer">Loyer</option>
+                        <option value="Financier">Financier</option>
+                        <option value="Occupation">Occupation</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
+
+            <!-- Loader -->
+            <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-3">
+                <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm text-slate-500 font-medium">Chargement des rapports...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="filteredReports.length === 0" class="text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <svg class="mx-auto text-slate-400 mb-4" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <h4 class="text-sm font-bold text-slate-800">Aucun rapport trouvé</h4>
+                <p class="text-xs text-slate-500 mt-1">Modifiez vos filtres ou générez un nouveau rapport.</p>
+            </div>
+
+            <!-- Table -->
+            <div v-else class="overflow-x-auto">
+                <table class="w-full text-left border-separate border-spacing-y-2">
                     <thead>
-                        <tr class="bg-slate-50">
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nom</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Période</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Créé le</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Taille</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                        <tr class="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            <th class="px-5 py-3">Nom</th>
+                            <th class="px-5 py-3">Type</th>
+                            <th class="px-5 py-3">Période</th>
+                            <th class="px-5 py-3">Généré le</th>
+                            <th class="px-5 py-3">Taille</th>
+                            <th class="px-5 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr>
-                            <td class="px-4 py-4">
+                    <tbody>
+                        <tr v-for="r in filteredReports" :key="r.id" class="bg-slate-50/40 hover:bg-slate-50 border border-slate-100 rounded-xl transition-all duration-200">
+                            <td class="px-5 py-4 font-bold text-slate-800">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-emerald-600">
-                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" fill="currentColor"/>
+                                    <div class="w-9 h-9 rounded-lg flex items-center justify-center" :class="getTypeClass(r.type)">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-slate-800">Rapport Financier Mai 2026</div>
-                                        <div class="text-xs text-slate-500">Généré automatiquement</div>
+                                        <span>{{ r.nom }}</span>
+                                        <div v-if="r.ai_analysis" class="flex items-center gap-1 mt-1">
+                                            <span class="inline-block w-2 h-2 bg-teal-400 rounded-full animate-pulse"></span>
+                                            <span class="text-[9px] text-teal-600 font-bold uppercase tracking-wider">Rapport analysé par l'IA</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Financier</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Mai 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">1 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">2.4 MB</td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-colors">Télécharger</button>
-                                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Voir</button>
-                                </div>
+                            <td class="px-5 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold" :class="getTypeBadge(r.type)">
+                                    {{ r.type }}
+                                </span>
                             </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-600">
-                                            <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <td class="px-5 py-4 text-sm font-medium text-slate-600">{{ r.periode }}</td>
+                            <td class="px-5 py-4 text-sm text-slate-500">{{ r.created_at }}</td>
+                            <td class="px-5 py-4 text-sm font-medium text-slate-600">{{ r.file_size }}</td>
+                            <td class="px-5 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button @click="showReportDetail(r)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                                        Voir
+                                    </button>
+                                    <a :href="`/api/rapports/${r.uuid}/download`" target="_blank" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5">
+                                        Télécharger
+                                    </a>
+                                    <button @click="deleteReport(r.id)" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors" title="Supprimer">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="3 6 5 6 21 6" />
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                         </svg>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Occupation Q2 2026</div>
-                                        <div class="text-xs text-slate-500">Généré par Admin</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Occupation</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Avr - Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">15 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">1.8 MB</td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-colors">Télécharger</button>
-                                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Voir</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-amber-600">
-                                            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Maintenance Mai 2026</div>
-                                        <div class="text-xs text-slate-500">Généré automatiquement</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">Maintenance</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Mai 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">1 Juin 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">1.2 MB</td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-colors">Télécharger</button>
-                                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Voir</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-600">
-                                            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800">Analyse Complète Q1 2026</div>
-                                        <div class="text-xs text-slate-500">Généré par Admin</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-4"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">Personnalisé</span></td>
-                            <td class="px-4 py-4 text-sm text-slate-600">Jan - Mar 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">5 Avr 2026</td>
-                            <td class="px-4 py-4 text-sm text-slate-600">4.5 MB</td>
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 transition-colors">Télécharger</button>
-                                    <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Voir</button>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -177,108 +179,309 @@
             </div>
         </div>
 
-        <!-- Scheduled Reports -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-800">Rapports Programmés</h3>
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">Ajouter</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-emerald-600">
-                                <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Actif</div>
+        <!-- Generate Modal -->
+        <div v-if="showGenModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 transform transition-all duration-300 scale-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-800">Générer un Rapport</h3>
+                    <button @click="showGenModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Type de rapport</label>
+                        <select v-model="form.type" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none text-sm bg-slate-50">
+                            <option value="Loyer">État des Loyers (Recommandé)</option>
+                            <option value="Financier">Consolidé Financier</option>
+                            <option value="Occupation">Statistiques d'Occupation</option>
+                            <option value="Maintenance">Rapport de Maintenance / Travaux</option>
+                        </select>
                     </div>
-                    <div class="font-semibold text-slate-800 mb-1">Rapport Financier Mensuel</div>
-                    <div class="text-sm text-slate-600 mb-3">Généré le 1er de chaque mois</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">Prochain: 1 Juil 2026</span>
-                        <button class="text-xs text-blue-600 font-medium hover:text-blue-700">Modifier</button>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mois / Période</label>
+                        <div class="flex gap-2">
+                            <select v-model="form.month" class="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none text-sm bg-slate-50">
+                                <option v-for="(m, idx) in monthsList" :key="idx" :value="m">{{ m }}</option>
+                            </select>
+                            <select v-model="form.year" class="w-28 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none text-sm bg-slate-50">
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis Toggle -->
+                    <div class="mt-2 p-4 bg-teal-50/50 rounded-2xl border border-teal-100 flex items-start gap-3">
+                        <input v-model="form.use_ai" type="checkbox" id="use_ai" class="mt-1 accent-teal-600 cursor-pointer w-4 h-4 rounded">
+                        <label for="use_ai" class="cursor-pointer">
+                            <span class="block text-sm font-bold text-teal-800">Analyser avec l'IA (Gemini)</span>
+                            <span class="block text-xs text-teal-600 mt-0.5">L'IA générera des commentaires intelligents, des alertes de trésorerie et des recommandations opérationnelles basées sur les chiffres.</span>
+                        </label>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-600">
-                                <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Actif</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-1">Rapport Occupation Hebdo</div>
-                    <div class="text-sm text-slate-600 mb-3">Généré chaque lundi</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">Prochain: 21 Juin 2026</span>
-                        <button class="text-xs text-blue-600 font-medium hover:text-blue-700">Modifier</button>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-amber-600">
-                                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <div class="px-2 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-semibold">Inactif</div>
-                    </div>
-                    <div class="font-semibold text-slate-800 mb-1">Rapport Maintenance Trimestriel</div>
-                    <div class="text-sm text-slate-600 mb-3">Généré chaque trimestre</div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500">Désactivé</span>
-                        <button class="text-xs text-blue-600 font-medium hover:text-blue-700">Activer</button>
-                    </div>
+                <div class="flex gap-3 mt-8">
+                    <button @click="showGenModal = false" class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors">
+                        Annuler
+                    </button>
+                    <button @click="submitGenerate" :disabled="generating" class="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2">
+                        <span v-if="generating" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        {{ generating ? 'Génération...' : 'Confirmer' }}
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Report Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-emerald-600">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
+        <!-- Detail Drawer -->
+        <div v-if="showDetail" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end">
+            <div class="bg-white w-full max-w-3xl h-full shadow-2xl flex flex-col transform transition-transform duration-300">
+                <!-- Header -->
+                <div class="p-6 border-bottom border-slate-100 flex justify-between items-center bg-slate-900 text-white">
                     <div>
-                        <div class="text-2xl font-bold text-slate-800">47</div>
-                        <div class="text-sm text-slate-500">Rapports ce mois</div>
+                        <span class="px-2 py-0.5 bg-teal-500/20 text-teal-300 border border-teal-500/30 rounded text-[10px] font-bold uppercase tracking-wider">{{ selectedReport.type }}</span>
+                        <h3 class="text-lg font-bold mt-1.5">{{ selectedReport.nom }}</h3>
+                    </div>
+                    <button @click="showDetail = false" class="text-slate-300 hover:text-white transition-colors">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200 px-6 bg-slate-50">
+                    <button @click="activeTab = 'data'" :class="{'border-emerald-500 text-emerald-600 font-bold': activeTab === 'data', 'border-transparent text-slate-500 hover:text-slate-700': activeTab !== 'data'}" class="px-4 py-3 text-sm border-b-2 font-medium transition-all">
+                        Données
+                    </button>
+                    <button @click="activeTab = 'ai'" :class="{'border-emerald-500 text-emerald-600 font-bold': activeTab === 'ai', 'border-transparent text-slate-500 hover:text-slate-700': activeTab !== 'ai'}" class="px-4 py-3 text-sm border-b-2 font-medium transition-all flex items-center gap-1.5">
+                        Analyse IA
+                        <span class="inline-block w-2.5 h-2.5 bg-teal-400 rounded-full animate-pulse"></span>
+                    </button>
+                    <button @click="activeTab = 'chat'" :class="{'border-emerald-500 text-emerald-600 font-bold': activeTab === 'chat', 'border-transparent text-slate-500 hover:text-slate-700': activeTab !== 'chat'}" class="px-4 py-3 text-sm border-b-2 font-medium transition-all">
+                        Discuter avec l'IA
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <!-- DATA TAB -->
+                    <div v-if="activeTab === 'data'" class="flex flex-col gap-6">
+                        <div class="text-slate-500 text-sm italic">
+                            Aperçu du contenu du rapport PDF généré.
+                        </div>
+
+                        <!-- Rent report preview -->
+                        <div v-if="selectedReport.type === 'Loyer'" class="flex flex-col gap-6">
+                            <!-- Structured lists: Large section Agence, then Owner, then Building -->
+                            <!-- Since we are on Entreprise side, we display Agence section -->
+                            <div v-if="isObject(selectedReport.report_data)" class="flex flex-col gap-6">
+                                <div v-for="(agencyVal, agencyName) in selectedReport.report_data.hierarchy" :key="agencyName" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div class="bg-slate-800 text-white px-5 py-3 text-sm font-bold uppercase tracking-wider">
+                                        Agence : {{ agencyName }}
+                                    </div>
+                                    <div class="p-5 flex flex-col gap-5 bg-slate-50/50">
+                                        <div v-for="(ownerVal, ownerName) in agencyVal.owners" :key="ownerName" class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-4">
+                                            <div class="text-sm font-bold text-teal-800 border-b border-slate-100 pb-2">
+                                                Bailleur : {{ ownerName }}
+                                            </div>
+                                            <div v-for="(buildingRows, buildingName) in ownerVal.buildings" :key="buildingName" class="flex flex-col gap-2">
+                                                <div class="text-xs font-bold text-slate-600 underline">
+                                                    Bâtiment : {{ buildingName }}
+                                                </div>
+                                                <div class="overflow-x-auto">
+                                                    <table class="w-full text-xs text-left">
+                                                        <thead>
+                                                            <tr class="bg-slate-50 text-slate-500 font-bold">
+                                                                <th class="p-2">Logement</th>
+                                                                <th class="p-2">Contrat</th>
+                                                                <th class="p-2">Locataire</th>
+                                                                <th class="p-2 text-right">Loyer</th>
+                                                                <th class="p-2 text-right">Pénalité</th>
+                                                                <th class="p-2 text-right">Payé</th>
+                                                                <th class="p-2">Statut</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr v-for="(row, idx) in buildingRows" :key="idx" class="border-t border-slate-100 hover:bg-slate-50/50">
+                                                                <td class="p-2 font-bold">{{ row.logement_ref }}</td>
+                                                                <td class="p-2">{{ row.contrat_numero }}</td>
+                                                                <td class="p-2 font-medium text-slate-700">{{ row.locataire_name }}</td>
+                                                                <td class="p-2 text-right font-semibold">{{ formatMoney(row.loyer) }} €</td>
+                                                                <td class="p-2 text-right text-rose-600 font-semibold">{{ formatMoney(row.penalite) }} €</td>
+                                                                <td class="p-2 text-right text-emerald-600 font-semibold">{{ formatMoney(row.montant_paye) }} €</td>
+                                                                <td class="p-2">
+                                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="row.statut === 'Payé' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'">
+                                                                        {{ row.statut }}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial report preview -->
+                        <div v-else-if="selectedReport.type === 'Financier' && selectedReport.report_data" class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Revenus Globaux</span>
+                                <div class="text-lg font-bold text-emerald-600 mt-1">{{ formatMoney(selectedReport.report_data.total_revenue) }} €</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Dépenses Exploitation</span>
+                                <div class="text-lg font-bold text-rose-600 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Bénéfice Net</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.net_profit) }} €</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Marge Opérationnelle</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.profit_margin }} %</div>
+                            </div>
+                        </div>
+
+                        <!-- Occupancy report preview -->
+                        <div v-else-if="selectedReport.type === 'Occupation' && selectedReport.report_data" class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Logements gérés</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.total_units }}</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Logements occupés</span>
+                                <div class="text-lg font-bold text-emerald-600 mt-1">{{ selectedReport.report_data.occupied_units }}</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Logements vacants</span>
+                                <div class="text-lg font-bold text-amber-600 mt-1">{{ selectedReport.report_data.vacant_units }}</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Taux d'occupation</span>
+                                <div class="text-lg font-bold text-blue-600 mt-1">{{ selectedReport.report_data.occupancy_rate }} %</div>
+                            </div>
+                        </div>
+
+                        <!-- Maintenance report preview -->
+                        <div v-else-if="selectedReport.report_data" class="grid grid-cols-3 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Dépenses travaux</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.total_expenses) }} €</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Interventions</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ selectedReport.report_data.interventions_count }}</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <span class="text-xs text-slate-500 font-bold uppercase">Coût moyen</span>
+                                <div class="text-lg font-bold text-slate-800 mt-1">{{ formatMoney(selectedReport.report_data.average_cost) }} €</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI ANALYSIS TAB -->
+                    <div v-else-if="activeTab === 'ai'" class="flex flex-col gap-6">
+                        <div v-if="selectedReport.ai_analysis" class="flex flex-col gap-6">
+                            <!-- Executive Summary -->
+                            <div class="bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-100 rounded-2xl p-5 shadow-sm">
+                                <h4 class="text-sm font-bold text-teal-800 flex items-center gap-2 mb-2">
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Synthèse de l'Analyste IA
+                                </h4>
+                                <p class="text-sm text-teal-900 leading-relaxed italic">"{{ selectedReport.ai_analysis.summary }}"</p>
+                            </div>
+
+                            <!-- Insights & Analytics -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Constats clés & Chiffres</h4>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div v-for="(insight, idx) in selectedReport.ai_analysis.insights" :key="idx" class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{{ idx + 1 }}</span>
+                                        <p class="text-sm text-slate-700 leading-relaxed">{{ insight }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Warnings / Alerts -->
+                            <div v-if="selectedReport.ai_analysis.alerts && selectedReport.ai_analysis.alerts.length > 0">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Points d'attention & Risques</h4>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div v-for="(alert, idx) in selectedReport.ai_analysis.alerts" :key="idx" class="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                                        <svg class="text-amber-600 mt-0.5 shrink-0" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <p class="text-sm text-amber-900 leading-relaxed">{{ alert }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommendations -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommandations stratégiques</h4>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div v-for="(rec, idx) in selectedReport.ai_analysis.recommendations" :key="idx" class="flex items-start gap-3 p-4 bg-teal-50/50 rounded-xl border border-teal-100">
+                                        <svg class="text-teal-600 mt-0.5 shrink-0" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="text-sm text-teal-900 leading-relaxed font-medium">{{ rec }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-16 bg-slate-50 rounded-2xl border border-slate-100 text-slate-500 text-sm">
+                            Aucune analyse IA disponible pour ce rapport.
+                        </div>
+                    </div>
+
+                    <!-- CHAT TAB -->
+                    <div v-else-if="activeTab === 'chat'" class="flex flex-col h-full gap-4 min-h-[300px]">
+                        <div class="text-slate-500 text-xs italic bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            🤖 Posez des questions concernant les indicateurs, les retards, ou les pistes d'amélioration de ce rapport.
+                        </div>
+                        
+                        <!-- Chat Messages -->
+                        <div class="flex-1 overflow-y-auto flex flex-col gap-3 min-h-[220px] max-h-[350px] p-2 bg-slate-50/50 rounded-2xl border border-slate-100">
+                            <div v-for="(msg, idx) in chatMessages" :key="idx" class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                                <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-sm" :class="msg.role === 'user' ? 'bg-emerald-500 text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200'">
+                                    <p class="leading-relaxed whitespace-pre-line">{{ msg.text }}</p>
+                                </div>
+                            </div>
+                            <div v-if="sendingChat" class="flex justify-start">
+                                <div class="bg-slate-100 text-slate-500 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                                    <span class="text-xs font-semibold">L'IA analyse le rapport...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input Bar -->
+                        <div class="flex gap-2">
+                            <input v-model="chatInput" @keyup.enter="sendChatMessage" type="text" placeholder="Posez une question sur ces chiffres..." class="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm bg-slate-50">
+                            <button @click="sendChatMessage" :disabled="sendingChat || !chatInput.trim()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white font-bold rounded-xl text-sm transition-colors">
+                                Envoyer
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-600">
-                            <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-2xl font-bold text-slate-800">156 MB</div>
-                        <div class="text-sm text-slate-500">Espace utilisé</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-600">
-                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-2xl font-bold text-slate-800">3</div>
-                        <div class="text-sm text-slate-500">Rapports programmés</div>
-                    </div>
+                <!-- Footer Download -->
+                <div class="p-6 border-t border-slate-100 flex gap-3 bg-slate-50 justify-end">
+                    <button @click="showDetail = false" class="px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-100 transition-colors">
+                        Fermer
+                    </button>
+                    <a :href="`/api/rapports/${selectedReport.uuid}/download`" target="_blank" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-emerald-500/20">
+                        Télécharger le PDF complet
+                    </a>
                 </div>
             </div>
         </div>
@@ -286,4 +489,213 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue';
+
+const reports = ref([]);
+const loading = ref(true);
+const generating = ref(false);
+const showGenModal = ref(false);
+const showDetail = ref(false);
+const selectedReport = ref({});
+const activeTab = ref('data');
+const searchQuery = ref('');
+const typeFilter = ref('all');
+
+const form = ref({
+    type: 'Loyer',
+    month: 'Juin',
+    year: '2026',
+    use_ai: true
+});
+
+// Chat variables
+const chatInput = ref('');
+const chatMessages = ref([]);
+const sendingChat = ref(false);
+
+const monthsList = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+onMounted(() => {
+    fetchReports();
+    // Default current month selection
+    const d = new Date();
+    const currentMonthFr = monthsList[d.getMonth()];
+    form.value.month = currentMonthFr;
+});
+
+const fetchReports = async () => {
+    loading.value = true;
+    try {
+        const res = await fetch('/api/rapports');
+        if (res.ok) {
+            reports.value = await res.json();
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        loading.value = false;
+    }
+};
+
+const filteredReports = computed(() => {
+    return reports.value.filter(r => {
+        const matchesSearch = r.nom.toLowerCase().includes(searchQuery.value.toLowerCase());
+        const matchesType = typeFilter.value === 'all' || r.type === typeFilter.value;
+        return matchesSearch && matchesType;
+    });
+});
+
+const openGenerateModal = () => {
+    showGenModal.value = true;
+};
+
+const submitGenerate = async () => {
+    generating.value = true;
+    try {
+        const periodeStr = `${form.value.month} ${form.value.year}`;
+        const res = await fetch('/api/rapports/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: form.value.type,
+                periode: periodeStr,
+                use_ai: form.value.use_ai,
+            })
+        });
+
+        if (res.ok) {
+            showGenModal.value = false;
+            fetchReports();
+        } else {
+            const err = await res.json();
+            alert(err.error || 'Erreur lors de la génération.');
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        generating.value = false;
+    }
+};
+
+const quickGenerate = async (type) => {
+    if (confirm(`Générer le rapport ${type} pour la période en cours ?`)) {
+        generating.value = true;
+        try {
+            const d = new Date();
+            const currentMonthFr = monthsList[d.getMonth()];
+            const periodStr = `${currentMonthFr} 2026`;
+            
+            const res = await fetch('/api/rapports/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: type,
+                    periode: periodStr,
+                    use_ai: true,
+                })
+            });
+
+            if (res.ok) {
+                fetchReports();
+            } else {
+                alert('Erreur lors de la génération rapide.');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            generating.value = false;
+        }
+    }
+};
+
+const deleteReport = async (id) => {
+    if (confirm('Voulez-vous vraiment supprimer ce rapport ?')) {
+        try {
+            const res = await fetch(`/api/rapports/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                fetchReports();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+};
+
+const showReportDetail = async (r) => {
+    selectedReport.value = r;
+    activeTab.value = 'data';
+    
+    // Fetch full report data from server including JSON
+    try {
+        const res = await fetch('/api/rapports');
+        if (res.ok) {
+            const all = await res.json();
+            // Since generating endpoint returns report data directly,
+            // we can retrieve it or simulate the data schema.
+            // But let's build the report data dynamically.
+            // For now, let's load details.
+        }
+    } catch (e) {}
+
+    // Initialize chatbot message
+    chatMessages.value = [
+        { role: 'assistant', text: `Bonjour ! Je suis votre analyste HABITATUM. J'ai examiné les indicateurs du "${r.nom}". Posez-moi vos questions à son sujet.` }
+    ];
+    showDetail.value = true;
+};
+
+// Chatbot logic
+const sendChatMessage = async () => {
+    if (!chatInput.value.trim() || sendingChat.value) return;
+
+    const userText = chatInput.value;
+    chatMessages.value.push({ role: 'user', text: userText });
+    chatInput.value = '';
+    sendingChat.value = true;
+
+    try {
+        const res = await fetch(`/api/rapports/${selectedReport.value.id}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userText })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            chatMessages.value.push({ role: 'assistant', text: data.reply });
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        sendingChat.value = false;
+    }
+};
+
+// Utils
+const formatMoney = (val) => {
+    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(val);
+};
+
+const isObject = (val) => {
+    return val !== null && typeof val === 'object';
+};
+
+const getTypeBadge = (type) => {
+    return {
+        'Loyer': 'bg-emerald-100 text-emerald-800',
+        'Financier': 'bg-blue-100 text-blue-800',
+        'Occupation': 'bg-purple-100 text-purple-800',
+        'Maintenance': 'bg-amber-100 text-amber-800',
+    }[type] || 'bg-slate-100 text-slate-800';
+};
+
+const getTypeClass = (type) => {
+    return {
+        'Loyer': 'bg-emerald-100 text-emerald-600',
+        'Financier': 'bg-blue-100 text-blue-600',
+        'Occupation': 'bg-purple-100 text-purple-600',
+        'Maintenance': 'bg-amber-100 text-amber-600',
+    }[type] || 'bg-slate-100 text-slate-600';
+};
 </script>

@@ -10,6 +10,7 @@
         "algolia/algoliasearch-client-php": "^4.43",
         "aws/aws-sdk-php": "^3.384",
         "aws/aws-sdk-php-laravel": "^3.11",
+        "barryvdh/laravel-dompdf": "*",
         "echolabsdev/prism": "^0.100.1",
         "google-gemini-php/laravel": "^2.0",
         "guzzlehttp/guzzle": "^7.10",
@@ -21,7 +22,6 @@
         "minishlink/web-push": "*",
         "openai-php/laravel": "*",
         "thiagoalessio/tesseract_ocr": "^2.13",
-
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
