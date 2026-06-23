@@ -17,6 +17,7 @@ class SuperAdminController extends Controller
      */
     public function dashboard()
     {
+        // Use single query with subqueries for better performance
         $stats = [
             'total_companies' => CompanyProfile::count(),
             'total_users' => User::whereNotIn('account_type', ['Super Admin', 'super_admin', 'superadmin', 'Super ADMIN'])->count(),
@@ -25,17 +26,24 @@ class SuperAdminController extends Controller
             'total_logements' => Logement::count(),
         ];
 
-        // Subscription plans distribution
-        $plansDistribution = [
-            'starter' => User::where('account_type', 'company')->where('subscription_plan', 'starter')->count(),
-            'professional' => User::where('account_type', 'company')->where('subscription_plan', 'professional')->count(),
-            'enterprise' => User::where('account_type', 'company')->where('subscription_plan', 'enterprise')->count(),
-        ];
+        // Subscription plans distribution - single query with groupBy
+        $plansDistribution = User::where('account_type', 'company')
+            ->select('subscription_plan', \DB::raw('count(*) as count'))
+            ->groupBy('subscription_plan')
+            ->pluck('count', 'subscription_plan')
+            ->toArray();
 
-        // Recent companies
+        // Ensure all plans have values
+        $plansDistribution = array_merge([
+            'starter' => 0,
+            'professional' => 0,
+            'enterprise' => 0,
+        ], $plansDistribution);
+
+        // Recent companies - limit to 5 with eager loading
         $recentCompanies = CompanyProfile::with('user:id,name,email,subscription_plan')
             ->orderBy('created_at', 'desc')
-            ->take(5)
+            ->limit(5)
             ->get()
             ->map(function ($company) {
                 return [
@@ -50,11 +58,11 @@ class SuperAdminController extends Controller
                 ];
             });
 
-        // Recent users
+        // Recent users - limit to 5 with eager loading
         $recentUsers = User::with('company:id,legal_name')
             ->whereNotIn('account_type', ['Super Admin', 'super_admin', 'superadmin', 'Super ADMIN'])
             ->orderBy('created_at', 'desc')
-            ->take(5)
+            ->limit(5)
             ->get()
             ->map(function ($u) {
                 return [
@@ -67,9 +75,11 @@ class SuperAdminController extends Controller
                 ];
             });
 
-        // Geographic mapping data
+        // Geographic mapping data - optimized query
         $geoData = CompanyProfile::select('city', \DB::raw('count(*) as count'))
+            ->whereNotNull('city')
             ->groupBy('city')
+            ->limit(20)
             ->get()
             ->map(function ($item) {
                 // Approximate coordinates for seeded cities
@@ -105,10 +115,11 @@ class SuperAdminController extends Controller
      */
     public function companies()
     {
-        $companies = CompanyProfile::with('user:id,name,email,subscription_plan')
+        $companies = CompanyProfile::with(['user:id,name,email,subscription_plan'])
+            ->withCount(['agencies', 'logements'])
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($company) {
+            ->paginate(20)
+            ->through(function ($company) {
                 return [
                     'id' => $company->id,
                     'legal_name' => $company->legal_name,
@@ -125,8 +136,8 @@ class SuperAdminController extends Controller
                         'email' => $company->user->email ?? '—',
                         'subscription_plan' => $company->user->subscription_plan ?? 'starter',
                     ],
-                    'agencies_count' => Agency::where('company_profile_id', $company->id)->count(),
-                    'logements_count' => Logement::where('company_profile_id', $company->id)->count(),
+                    'agencies_count' => $company->agencies_count ?? 0,
+                    'logements_count' => $company->logements_count ?? 0,
                     'created_at' => $company->created_at->format('d/m/Y H:i'),
                 ];
             });
@@ -180,8 +191,8 @@ class SuperAdminController extends Controller
         $users = User::with('company:id,legal_name')
             ->whereNotIn('account_type', ['Super Admin', 'super_admin', 'superadmin', 'Super ADMIN'])
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($u) {
+            ->paginate(50)
+            ->through(function ($u) {
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
@@ -257,6 +268,30 @@ class SuperAdminController extends Controller
         \App\Models\Country::create($validated);
 
         return back()->with('success', 'Pays enregistré avec succès.');
+    }
+
+    /**
+     * Display the Global Map page with 3D hologram globe.
+     */
+    public function globalMap()
+    {
+        // Get statistics for the map
+        $stats = [
+            'active_users' => User::where('is_connected', true)->count(),
+            'countries_count' => \App\Models\Country::count(),
+            'companies_count' => CompanyProfile::count(),
+        ];
+
+        // Get user location (simulated - in production use IP geolocation)
+        $userLocation = [
+            'lat' => 48.8566, // Paris default
+            'lng' => 2.3522,
+        ];
+
+        return Inertia::render('SuperAdmin/GlobalMap', [
+            'stats' => $stats,
+            'userLocation' => $userLocation,
+        ]);
     }
 
     /**

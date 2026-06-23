@@ -74,6 +74,9 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmi
     Route::get('/countries', [\App\Http\Controllers\SuperAdminController::class, 'countriesIndex'])->name('countries.index');
     Route::post('/countries', [\App\Http\Controllers\SuperAdminController::class, 'countriesStore'])->name('countries.store');
 
+    // Global Map
+    Route::get('/globalmap', [\App\Http\Controllers\SuperAdminController::class, 'globalMap'])->name('globalmap');
+
     // Plans
     Route::get('/plans', [\App\Http\Controllers\SuperAdminController::class, 'plansIndex'])->name('plans.index');
     Route::post('/plans', [\App\Http\Controllers\SuperAdminController::class, 'plansStore'])->name('plans.store');
