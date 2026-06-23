@@ -23,20 +23,6 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
   bool _pinError = false;
 
   final List<String> _selectedMonths = [];
-  final List<Map<String, dynamic>> _rentMonths = [
-    {'key': '2026-06', 'label': 'Juin', 'amount': 850.0, 'status': 'pending', 'penalty': 0},
-    {'key': '2026-05', 'label': 'Mai', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2026-04', 'label': 'Avril', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2026-03', 'label': 'Mars', 'amount': 970.0, 'status': 'late', 'penalty': 120},
-    {'key': '2026-02', 'label': 'Février', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2026-01', 'label': 'Janvier', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-12', 'label': 'Décembre', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-11', 'label': 'Novembre', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-10', 'label': 'Octobre', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-09', 'label': 'Septembre', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-08', 'label': 'Août', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-    {'key': '2025-07', 'label': 'Juillet', 'amount': 850.0, 'status': 'paid', 'penalty': 0},
-  ];
 
   @override
   void initState() {
@@ -49,6 +35,23 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
     _animationController.forward();
+    
+    // Load data from API
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ApiService>().fetchLocataireData();
+    });
+  }
+
+  List<Map<String, dynamic>> get _rentMonths {
+    final apiService = context.watch<ApiService>();
+    return apiService.rentMonths.map((m) => {
+      'key': m['key'],
+      'label': m['label'],
+      'amount': (m['amount'] as num).toDouble(),
+      'status': m['status'] == 'paid' ? 'paid' : (m['penalty_rate'] > 0 ? 'late' : 'pending'),
+      'penalty': (m['penalty_amount'] as num).toDouble(),
+      'penalty_rate': m['penalty_rate'],
+    }).toList();
   }
 
   @override
@@ -85,15 +88,24 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
     setState(() => _paymentFlowStep = 'pin');
   }
 
-  void _submitPin() {
+  void _submitPin() async {
     if (_pinInput.length == 4) {
-      setState(() => _paymentFlowStep = 'success');
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) { setState(() {
-          _showPaymentModal = false;
-          _selectedMonths.clear();
-        }); }
-      });
+      final apiService = context.read<ApiService>();
+      final success = await apiService.payRent(_totalPaymentAmount);
+      
+      setState(() => _paymentFlowStep = success ? 'success' : 'pin');
+      if (!success) {
+        setState(() => _pinError = true);
+      }
+      
+      if (success) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) { setState(() {
+            _showPaymentModal = false;
+            _selectedMonths.clear();
+          }); }
+        });
+      }
     } else {
       setState(() => _pinError = true);
     }

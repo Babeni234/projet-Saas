@@ -4,9 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService extends ChangeNotifier {
-  // Use 10.0.2.2 for Android emulator to access localhost, or your computer's IP for physical device.
-  // Replace with your actual API URL in production
-  final String baseUrl = 'http://127.0.0.1:8000/api';
+  // Use localhost for Flutter Web/Chrome testing
+  // Use 10.0.2.2 for Android emulator
+  // Use your computer's IP for physical device
+  final String baseUrl = 'http://localhost:8000/api';
   final _storage = const FlutterSecureStorage();
 
   bool _isAuthenticated = false;
@@ -18,6 +19,10 @@ class ApiService extends ChangeNotifier {
   // Locataire data
   Map<String, dynamic>? _locataireData;
   Map<String, dynamic>? get locataireData => _locataireData;
+
+  // Error message storage
+  String? _lastError;
+  String? get lastError => _lastError;
 
   ApiService() {
     _checkAuth();
@@ -42,6 +47,8 @@ class ApiService extends ChangeNotifier {
 
   Future<bool> login(String email, String password) async {
     try {
+      _lastError = null; // Clear previous error
+      
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
@@ -52,6 +59,9 @@ class ApiService extends ChangeNotifier {
         }),
       );
 
+      debugPrint('Login response status: ${response.statusCode}');
+      debugPrint('Login response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await _storage.write(key: 'token', value: data['token']);
@@ -60,9 +70,17 @@ class ApiService extends ChangeNotifier {
         await fetchLocataireData();
         notifyListeners();
         return true;
+      } else {
+        // Parse error message from backend
+        final data = jsonDecode(response.body);
+        _lastError = data['message'] ?? 
+                     (data['errors'] != null ? data['errors']['email']?.join(', ') : null) ?? 
+                     'Erreur de connexion';
+        debugPrint('Login error: $_lastError');
+        return false;
       }
-      return false;
     } catch (e) {
+      _lastError = 'Erreur de connexion: $e';
       debugPrint('Login Error: $e');
       return false;
     }
@@ -218,6 +236,94 @@ class ApiService extends ChangeNotifier {
     }
   }
 
+  Future<bool> createTicket(String title, String category, String description) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/locataire/ticket/create'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: jsonEncode({
+          'title': title,
+          'category': category,
+          'description': description,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchLocataireData();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Create Ticket Error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> transferFunds(double amount, String? memo) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/locataire/wallet/transfer'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: jsonEncode({
+          'amount': amount,
+          'memo': memo,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchLocataireData();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Transfer Funds Error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> payContractFee(int feeId, double amount) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/locataire/contract-fee/pay'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: jsonEncode({
+          'fee_id': feeId,
+          'amount': amount,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchLocataireData();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Pay Contract Fee Error: $e');
+      return false;
+    }
+  }
+
   // Getters for locataire data
   double? get walletBalance {
     if (_locataireData == null || _locataireData!['wallet'] == null) return null;
@@ -236,8 +342,55 @@ class ApiService extends ChangeNotifier {
     return _locataireData?['receipts'] ?? [];
   }
 
+  List<dynamic> get tickets {
+    return _locataireData?['tickets'] ?? [];
+  }
+
+  List<dynamic> get contractFees {
+    return _locataireData?['contract_fees'] ?? [];
+  }
+
+  Map<String, dynamic>? get summary {
+    return _locataireData?['summary'];
+  }
+
+  double? get totalDue {
+    return summary?['total_due']?.toDouble();
+  }
+
+  int get openTicketsCount {
+    return summary?['open_tickets_count'] ?? 0;
+  }
+
   List<dynamic> get transactions {
     if (_locataireData == null || _locataireData!['wallet'] == null) return [];
     return _locataireData!['wallet']['transactions'] ?? [];
+  }
+
+  List<dynamic> get rentMonths {
+    return _locataireData?['rent_months'] ?? [];
+  }
+
+  Map<String, dynamic>? get company {
+    return _locataireData?['company'];
+  }
+
+  Map<String, dynamic>? get agency {
+    return _locataireData?['agency'];
+  }
+
+  String get tenantFirstName {
+    return _locataireData?['user']?['first_name'] ?? '';
+  }
+
+  String get tenantLastName {
+    return _locataireData?['user']?['last_name'] ?? _user?['name'] ?? '';
+  }
+
+  String get tenantFullName {
+    if (tenantFirstName.isNotEmpty && tenantLastName.isNotEmpty) {
+      return '$tenantFirstName $tenantLastName';
+    }
+    return _user?['name'] ?? '';
   }
 }

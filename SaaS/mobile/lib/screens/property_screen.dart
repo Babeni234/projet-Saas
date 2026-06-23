@@ -49,6 +49,7 @@ class PropertyScreen extends StatelessWidget {
     final propertyAddress = property?['address'] ?? 'Adresse non renseignée';
     final specs = property?['specs'] as List<dynamic>?;
     final equipment = property?['equipment'] as List<dynamic>?;
+    final documents = contract['documents'] as List<dynamic>?;
 
     // Extract spec values
     String surface = '—';
@@ -177,19 +178,18 @@ class PropertyScreen extends StatelessWidget {
 
             _buildSectionHeader('DOCUMENTS OFFICIELS'),
             const SizedBox(height: 12),
-            final documents = contract['documents'] as List<dynamic>?;
-            if (documents != null && documents.isNotEmpty) {
+            if (documents != null && documents.isNotEmpty)
               ...documents.map((doc) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildDocItem(context, doc['name'] ?? 'Document', doc['filename'] ?? '', Icons.description_rounded, AppColors.primary),
-              )),
-            } else {
+              ))
+            else ...[
               _buildDocItem(context, 'Contrat de bail', 'PDF • 2.4 Mo', Icons.description_rounded, AppColors.primary),
               const SizedBox(height: 12),
               _buildDocItem(context, 'État des lieux', 'PDF • 1.8 Mo', Icons.assignment_rounded, AppColors.success),
               const SizedBox(height: 12),
               _buildDocItem(context, 'Règlement', 'PDF • 0.5 Mo', Icons.gavel_rounded, AppColors.warning),
-            }
+            ]
           ],
         ),
       ),

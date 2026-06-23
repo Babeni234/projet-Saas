@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Identifiants incorrects. Veuillez réessayer.'),
+          content: Text(apiService.lastError ?? 'Identifiants incorrects. Veuillez réessayer.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -13,34 +15,24 @@ class _SupportScreenState extends State<SupportScreen> {
   int? _selectedTicketIndex;
   final _messageController = TextEditingController();
 
-  final List<TicketData> _tickets = [
-    TicketData(
-      id: 1, title: 'Fuite d\'eau salle de bain', category: 'Plomberie',
-      status: 'in_progress', date: '12 Juin 2026',
-      messages: [
-        MsgData(text: 'Bonjour, j\'ai une fuite d\'eau sous le lavabo.', sender: 'tenant', time: '10:32'),
-        MsgData(text: 'Nous avons reçu votre signalement. Un plombier passera demain.', sender: 'manager', time: '11:15'),
-        MsgData(text: 'Merci. À quelle heure ?', sender: 'tenant', time: '11:20'),
-        MsgData(text: 'Entre 8h et 10h. Notification de confirmation.', sender: 'manager', time: '14:00'),
-      ],
-    ),
-    TicketData(
-      id: 2, title: 'Problème chauffage', category: 'Chauffage',
-      status: 'closed', date: '28 Mai 2026',
-      messages: [
-        MsgData(text: 'Le chauffage ne fonctionne plus.', sender: 'tenant', time: '09:00'),
-        MsgData(text: 'Technicien intervenu. Problème résolu.', sender: 'manager', time: '16:30'),
-      ],
-    ),
-  ];
-
-  TicketData? get _selectedTicket => _selectedTicketIndex != null ? _tickets[_selectedTicketIndex!] : null;
+  @override
+  void initState() {
+    super.initState();
+    // Load tickets from API
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ApiService>().fetchLocataireData();
+    });
+  }
 
   @override
   void dispose() {
     _messageController.dispose();
     super.dispose();
   }
+
+  List<dynamic> get _tickets => context.watch<ApiService>().tickets;
+
+  TicketData? get _selectedTicket => _selectedTicketIndex != null ? _tickets[_selectedTicketIndex!] : null;
 
   @override
   Widget build(BuildContext context) {

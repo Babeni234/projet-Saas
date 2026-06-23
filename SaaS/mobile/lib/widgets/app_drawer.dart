@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../services/api_service.dart';
 
 class AppDrawer extends StatelessWidget {
   final int activeIndex;
   final Function(int) onItemTap;
-  final String userName;
-  final String userEmail;
-  final String avatarUrl;
   final bool isDark;
 
   const AppDrawer({
     super.key,
     required this.activeIndex,
     required this.onItemTap,
-    this.userName = 'Thomas Dubois',
-    this.userEmail = 'thomas.dubois@email.com',
-    this.avatarUrl = '',
     this.isDark = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final apiService = context.watch<ApiService>();
+    final userName = apiService.tenantFullName;
+    final userEmail = apiService.user?['email'] ?? '';
+    final company = apiService.company;
+    final companyName = company?['name'] ?? company?['nom'] ?? 'Habitatum';
+    final companyLogo = company?['logo_url'];
+
     return Drawer(
       width: 300,
       backgroundColor: isDark ? const Color(0xFF090D16) : const Color(0xFFF8FAFC),
@@ -43,13 +46,8 @@ class AppDrawer extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
-                          image: avatarUrl.isNotEmpty
-                              ? DecorationImage(image: NetworkImage(avatarUrl), fit: BoxFit.cover)
-                              : null,
                         ),
-                        child: avatarUrl.isEmpty
-                            ? const Icon(Icons.person_rounded, color: Colors.white, size: 28)
-                            : null,
+                        child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -71,18 +69,59 @@ class AppDrawer extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.verified_rounded, color: AppColors.success, size: 14),
-                        SizedBox(width: 6),
-                        Text('Locataire vérifié', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 6),
+                        const Text('Locataire vérifié', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
+
+            // Company info section
+            if (company != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                      ),
+                      child: companyLogo != null && companyLogo.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                companyLogo,
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(Icons.business_rounded, color: AppColors.primary, size: 16);
+                                },
+                              ),
+                            )
+                          : Icon(Icons.business_rounded, color: AppColors.primary, size: 16),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(companyName, style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+                          Text('Gestionnaire', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             Expanded(
               child: ListView(

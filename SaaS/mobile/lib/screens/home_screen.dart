@@ -160,7 +160,7 @@ class DashboardView extends StatelessWidget {
     // Calculate current rent from first contract
     double currentRent = 0;
     if (contracts.isNotEmpty) {
-      currentRent = (contracts[0]['rent'] as num?)?.toDouble() ?? 0;
+      currentRent = (contracts[0]['loyer'] as num?)?.toDouble() ?? 0;
     }
 
     return SafeArea(
@@ -234,14 +234,24 @@ class DashboardView extends StatelessWidget {
                           Text(walletBalance != null ? 'Actif' : 'Non activé', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                         ],
                       ),
-                      GestureDetector(
-                        onTap: () => _showRechargeModal(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                          child: const Text('Recharger', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13)),
+                      if (walletBalance == null)
+                        GestureDetector(
+                          onTap: () => _showCreateWalletModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                            child: const Text('Créer', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13)),
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: () => _showRechargeModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                            child: const Text('Recharger', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13)),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ],
@@ -255,15 +265,15 @@ class DashboardView extends StatelessWidget {
               children: [
                 Expanded(child: _buildKpiCard(context, 'Loyer Mensuel', '${currentRent.toStringAsFixed(0)} €', Icons.house_rounded, AppColors.primary)),
                 const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard(context, 'Factures', '${apiService.invoices.length}', Icons.receipt_long_rounded, AppColors.warning)),
+                Expanded(child: _buildKpiCard(context, 'Solde Wallet', walletBalance != null ? '${walletBalance!.toStringAsFixed(0)} €' : 'Non activé', Icons.account_balance_wallet_rounded, walletBalance != null ? AppColors.success : AppColors.textSecondary)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildKpiCard(context, 'Reçus', '${apiService.receipts.length}', Icons.description_rounded, AppColors.success)),
+                Expanded(child: _buildKpiCard(context, 'Solde Dû', '${(apiService.totalDue ?? 0).toStringAsFixed(0)} €', Icons.warning_rounded, AppColors.warning)),
                 const SizedBox(width: 16),
-                Expanded(child: _buildKpiCard(context, 'Contrats', '${contracts.length}', Icons.assignment_rounded, AppColors.primaryLight)),
+                Expanded(child: _buildKpiCard(context, 'Tickets', '${apiService.openTicketsCount}', Icons.support_agent_rounded, AppColors.error)),
               ],
             ),
             const SizedBox(height: 32),
@@ -405,6 +415,75 @@ class DashboardView extends StatelessWidget {
           ),
           Text(amount, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: color)),
         ],
+      ),
+    );
+  }
+
+  void _showCreateWalletModal(BuildContext context) {
+    final _pinController = TextEditingController();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text('Créer votre portefeuille', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20)),
+            const SizedBox(height: 8),
+            const Text('Définissez un code PIN pour sécuriser vos paiements.', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Code PIN',
+                hintText: 'Entrez un code à 4-6 chiffres',
+                prefixIcon: Icon(Icons.lock_rounded),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_pinController.text.length >= 4) {
+                    final apiService = context.read<ApiService>();
+                    final success = await apiService.createWallet(_pinController.text);
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success ? 'Portefeuille créé avec succès' : 'Erreur lors de la création'),
+                          backgroundColor: success ? AppColors.success : AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Créer le portefeuille'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

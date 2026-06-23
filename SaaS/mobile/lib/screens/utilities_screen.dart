@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
@@ -11,6 +13,22 @@ class UtilitiesScreen extends StatefulWidget {
 
 class _UtilitiesScreenState extends State<UtilitiesScreen> {
   String _filter = 'all';
+
+  Future<void> _payUtility(String type, double amount) async {
+    final apiService = context.read<ApiService>();
+    final success = await apiService.payUtility(amount, type);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'Paiement effectué avec succès' : 'Erreur lors du paiement'),
+          backgroundColor: success ? AppColors.success : AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,17 +295,36 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
                       Text('• $conso', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                     ],
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: isPaid ? AppColors.success.withValues(alpha: 0.12) : AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                    if (isPaid)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text('Payé', style: TextStyle(
+                          color: AppColors.success,
+                          fontSize: 11, fontWeight: FontWeight.w600,
+                        )),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: () {
+                          final amountValue = double.tryParse(amount.replaceAll('€', '').replaceAll(',', '.').trim()) ?? 0;
+                          _payUtility(type.toLowerCase(), amountValue);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text('Payer', style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11, fontWeight: FontWeight.w700,
+                          )),
+                        ),
                       ),
-                      child: Text(isPaid ? 'Payé' : 'En attente', style: TextStyle(
-                        color: isPaid ? AppColors.success : AppColors.warning,
-                        fontSize: 11, fontWeight: FontWeight.w600,
-                      )),
-                    ),
                   ],
                 ),
               ],
