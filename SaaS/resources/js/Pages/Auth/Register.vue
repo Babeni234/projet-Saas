@@ -26,6 +26,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    countries: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { locale } = useLocale();
@@ -129,12 +133,18 @@ const form = useForm({
 
 const isCompany = computed(() => accountType.value === 'company');
 
-const countries = computed(() =>
-    countryOptions.map((c) => ({
+const countries = computed(() => {
+    if (props.countries && props.countries.length > 0) {
+        return props.countries.map((c) => ({
+            code: c.code,
+            label: c.name,
+        }));
+    }
+    return countryOptions.map((c) => ({
         code: c.code,
         label: c[locale.value] ?? c.en,
-    })),
-);
+    }));
+});
 
 const documentFields = [
     { key: 'certificate_of_incorporation', labelKey: 'docCertificate', required: true },

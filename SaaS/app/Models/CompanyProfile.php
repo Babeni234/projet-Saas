@@ -33,6 +33,11 @@ class CompanyProfile extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function countryRelation(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country', 'code');
+    }
+
     public function legalDocuments(): HasMany
     {
         return $this->hasMany(CompanyLegalDocument::class);

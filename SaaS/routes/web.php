@@ -170,6 +170,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/agent/clear', [\App\Http\Controllers\Api\AiAgentController::class, 'clear']);
         Route::get('/agent/notifications', [\App\Http\Controllers\Api\AiAgentController::class, 'notifications']);
         Route::get('/agent/state', [\App\Http\Controllers\Api\AiAgentController::class, 'state']);
+
+        // Subscription routes
+        Route::get('/subscription/plans', [\App\Http\Controllers\SubscriptionController::class, 'getPlans'])->name('api.subscription.plans');
+        Route::post('/subscription/upgrade', [\App\Http\Controllers\SubscriptionController::class, 'upgradePlan'])->name('api.subscription.upgrade');
     });
 });
 

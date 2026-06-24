@@ -2,7 +2,7 @@
   <div class="global-map-container">
     <div class="header-section">
       <h1 class="title">Carte Mondiale</h1>
-      <p class="subtitle">Visualisation en temps réel des utilisateurs actifs</p>
+      <p class="subtitle">Visualisation en temps réel des entreprises partenaires</p>
     </div>
     
     <div ref="globeContainer" class="globe-wrapper">
@@ -11,6 +11,70 @@
       <div class="platform-glow"></div>
       <canvas ref="globeCanvas"></canvas>
       
+      <!-- Company Detail Popup Card -->
+      <Transition name="slide-fade">
+        <div v-if="showPopup && selectedCompany" class="company-detail-card">
+          <button @click="showPopup = false" class="close-popup-btn" title="Fermer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <div class="card-header">
+            <div class="logo-wrapper">
+              <img v-if="selectedCompany.logo" :src="selectedCompany.logo" alt="Logo" class="company-logo" />
+              <div v-else class="logo-fallback">
+                {{ selectedCompany.name.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div class="header-text">
+              <h2 class="company-name">{{ selectedCompany.name }}</h2>
+              <span class="company-country-badge">
+                {{ selectedCompany.country_name }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-item">
+              <div class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div class="info-content">
+                <div class="info-label">Promoteur</div>
+                <div class="info-value">{{ selectedCompany.promoter }}</div>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div class="info-content">
+                <div class="info-label">Emplacement</div>
+                <div class="info-value">{{ selectedCompany.address }}, {{ selectedCompany.city }}</div>
+              </div>
+            </div>
+            
+            <div class="stats-row">
+              <div class="mini-stat">
+                <div class="mini-stat-value">{{ selectedCompany.agencies_count }}</div>
+                <div class="mini-stat-label">Agences</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-value">{{ selectedCompany.employees_count }}</div>
+                <div class="mini-stat-label">Employés</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- User position marker -->
       <div class="user-marker" v-if="userPosition">
         <div class="marker-pulse"></div>
@@ -66,15 +130,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import { usePage } from '@inertiajs/vue3'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
+const props = defineProps({
+  stats: {
+    type: Object,
+    default: () => ({})
+  },
+  userLocation: {
+    type: Object,
+    default: () => ({ lat: 48.8566, lng: 2.3522 })
+  },
+  companies: {
+    type: Array,
+    default: () => []
+  }
+})
+
 const page = usePage()
-const stats = page.props.stats || {}
-const userLocation = page.props.userLocation || { lat: 48.8566, lng: 2.3522 }
+const stats = props.stats || page.props.stats || {}
+const userLocation = props.userLocation || page.props.userLocation || { lat: 48.8566, lng: 2.3522 }
 
 const globeContainer = ref(null)
 const globeCanvas = ref(null)
@@ -87,6 +166,13 @@ const companiesCount = ref(stats.companies_count || 0)
 
 let scene, camera, renderer, globe, controls, animationId
 let markers = []
+let companyMarkers = []
+
+// Raycasting & Interaction
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+const selectedCompany = ref(null)
+const showPopup = ref(false)
 
 onMounted(() => {
   initGlobe()
@@ -97,6 +183,12 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', onWindowResize)
+  
+  if (globeCanvas.value) {
+    globeCanvas.value.removeEventListener('click', onCanvasClick)
+    globeCanvas.value.removeEventListener('mousemove', onCanvasMouseMove)
+  }
+  
   if (renderer) {
     renderer.dispose()
     globeContainer.value?.removeChild(globeCanvas.value)
@@ -224,8 +316,12 @@ function initGlobe() {
   // Add user marker
   addUserMarker()
   
-  // Add random markers for other users
-  addRandomMarkers()
+  // Add company markers from database
+  addCompanyMarkers()
+
+  // Add click & hover event listeners to the canvas
+  canvas.addEventListener('click', onCanvasClick)
+  canvas.addEventListener('mousemove', onCanvasMouseMove)
 }
 
 function addUserMarker() {
@@ -258,32 +354,83 @@ function addUserMarker() {
   markers.push(ring)
 }
 
-function addRandomMarkers() {
-  const cities = [
-    { lat: 40.7128, lng: -74.0060 }, // New York
-    { lat: 35.6762, lng: 139.6503 }, // Tokyo
-    { lat: 51.5074, lng: -0.1278 }, // London
-    { lat: -33.8688, lng: 151.2093 }, // Sydney
-    { lat: 55.7558, lng: 37.6173 }, // Moscow
-    { lat: -23.5505, lng: -46.6333 }, // São Paulo
-    { lat: 1.3521, lng: 103.8198 }, // Singapore
-    { lat: 25.2048, lng: 55.2708 }, // Dubai
-  ]
-  
-  cities.forEach(city => {
-    const position = latLngToVector3(city.lat, city.lng, 1.53)
+function addCompanyMarkers() {
+  const companyList = props.companies || page.props.companies || []
+  companyList.forEach(company => {
+    const position = latLngToVector3(company.latitude, company.longitude, 1.53)
     
-    const markerGeometry = new THREE.SphereGeometry(0.015, 16, 16)
+    // Create interactive sphere marker
+    const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16)
     const markerMaterial = new THREE.MeshBasicMaterial({
       color: 0x00ff88,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.8
     })
     const marker = new THREE.Mesh(markerGeometry, markerMaterial)
     marker.position.copy(position)
+    marker.userData = { company }
+    
     globe.add(marker)
     markers.push(marker)
+    companyMarkers.push(marker)
+    
+    // Add pulsing ring for company marker
+    const ringGeometry = new THREE.RingGeometry(0.025, 0.04, 32)
+    const ringMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff88,
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide
+    })
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial)
+    ring.position.copy(position)
+    ring.lookAt(new THREE.Vector3(0, 0, 0))
+    globe.add(ring)
+    markers.push(ring)
   })
+}
+
+function onCanvasClick(event) {
+  if (!renderer) return
+  const rect = renderer.domElement.getBoundingClientRect()
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  
+  raycaster.setFromCamera(mouse, camera)
+  const intersects = raycaster.intersectObjects(companyMarkers)
+  
+  if (intersects.length > 0) {
+    const clickedMarker = intersects[0].object
+    selectedCompany.value = clickedMarker.userData.company
+    showPopup.value = true
+    
+    autoRotate.value = false
+    if (controls) {
+      controls.autoRotate = false
+    }
+  } else {
+    // Clicked elsewhere on canvas
+    const intersectsGlobe = raycaster.intersectObject(globe)
+    if (intersectsGlobe.length === 0) {
+      showPopup.value = false
+    }
+  }
+}
+
+function onCanvasMouseMove(event) {
+  if (!renderer) return
+  const rect = renderer.domElement.getBoundingClientRect()
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  
+  raycaster.setFromCamera(mouse, camera)
+  const intersects = raycaster.intersectObjects(companyMarkers)
+  
+  if (intersects.length > 0) {
+    renderer.domElement.style.cursor = 'pointer'
+  } else {
+    renderer.domElement.style.cursor = 'default'
+  }
 }
 
 function addContinentOutlines() {
@@ -294,46 +441,38 @@ function addContinentOutlines() {
     linewidth: 2
   })
   
-  // Approximate continent outlines (simplified coordinates)
   const continents = {
-    // North America
     northAmerica: [
       { lat: 70, lng: -170 }, { lat: 70, lng: -60 }, { lat: 50, lng: -55 },
       { lat: 25, lng: -80 }, { lat: 15, lng: -90 }, { lat: 20, lng: -105 },
       { lat: 30, lng: -115 }, { lat: 50, lng: -125 }, { lat: 60, lng: -140 },
       { lat: 70, lng: -170 }
     ],
-    // South America
     southAmerica: [
       { lat: 12, lng: -75 }, { lat: 5, lng: -35 }, { lat: -5, lng: -35 },
       { lat: -25, lng: -45 }, { lat: -55, lng: -70 }, { lat: -55, lng: -75 },
       { lat: -20, lng: -70 }, { lat: 0, lng: -80 }, { lat: 12, lng: -75 }
     ],
-    // Europe
     europe: [
       { lat: 70, lng: -10 }, { lat: 70, lng: 40 }, { lat: 45, lng: 40 },
       { lat: 35, lng: 25 }, { lat: 38, lng: -10 }, { lat: 45, lng: -10 },
       { lat: 55, lng: -5 }, { lat: 70, lng: -10 }
     ],
-    // Africa
     africa: [
       { lat: 35, lng: -10 }, { lat: 35, lng: 40 }, { lat: 10, lng: 50 },
       { lat: -35, lng: 25 }, { lat: -35, lng: 15 }, { lat: -5, lng: 10 },
       { lat: 5, lng: -15 }, { lat: 35, lng: -10 }
     ],
-    // Asia
     asia: [
       { lat: 70, lng: 40 }, { lat: 70, lng: 180 }, { lat: 35, lng: 140 },
       { lat: 5, lng: 100 }, { lat: 10, lng: 70 }, { lat: 25, lng: 65 },
       { lat: 40, lng: 40 }, { lat: 70, lng: 40 }
     ],
-    // Australia
     australia: [
       { lat: -10, lng: 115 }, { lat: -10, lng: 150 }, { lat: -25, lng: 155 },
       { lat: -40, lng: 145 }, { lat: -35, lng: 115 }, { lat: -20, lng: 115 },
       { lat: -10, lng: 115 }
     ],
-    // Antarctica
     antarctica: [
       { lat: -65, lng: -180 }, { lat: -65, lng: -90 }, { lat: -65, lng: 0 },
       { lat: -65, lng: 90 }, { lat: -65, lng: 180 }, { lat: -75, lng: 180 },
@@ -350,7 +489,6 @@ function addContinentOutlines() {
       points.push(position)
     })
     
-    // Close the loop
     if (continent.length > 0) {
       const first = latLngToVector3(continent[0].lat, continent[0].lng, 1.5)
       points.push(first)
@@ -380,15 +518,13 @@ function animate() {
     controls.update()
   }
   
-  // Pulse effect for markers
   const time = Date.now() * 0.001
   markers.forEach((marker, index) => {
-    if (marker.material.opacity !== undefined) {
+    if (marker.material && marker.material.opacity !== undefined) {
       marker.material.opacity = 0.5 + Math.sin(time * 2 + index) * 0.3
     }
   })
   
-  // Hologram flicker effect
   if (globe && globe.material) {
     globe.material.opacity = 0.25 + Math.sin(time * 3) * 0.05
   }
@@ -692,5 +828,199 @@ function toggleMarkers() {
     transform: scale(1.5);
     opacity: 0;
   }
+}
+
+/* Company popup card styling */
+.company-detail-card {
+  position: absolute;
+  top: 100px;
+  left: 30px;
+  width: 380px;
+  background: rgba(10, 15, 30, 0.75);
+  border: 1px solid rgba(0, 170, 255, 0.35);
+  border-radius: 24px;
+  padding: 1.75rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 170, 255, 0.15);
+  z-index: 50;
+  color: #fff;
+  text-align: left;
+}
+
+.close-popup-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-popup-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.close-popup-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1.25rem;
+}
+
+.logo-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.company-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.logo-fallback {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #00aaff;
+  text-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+}
+
+.header-text {
+  flex: 1;
+}
+
+.company-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #fff, #a2d6ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.company-country-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  padding: 2px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.info-item {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(0, 170, 255, 0.1);
+  border: 1px solid rgba(0, 170, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00aaff;
+  flex-shrink: 0;
+}
+
+.info-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stats-row {
+  display: grid;
+  grid-template-cols: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.mini-stat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.mini-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #00aaff;
+  margin-bottom: 4px;
+}
+
+.mini-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Animations */
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-fade-enter-from, .slide-fade-leave-to {
+  transform: translateX(-40px);
+  opacity: 0;
 }
 </style>

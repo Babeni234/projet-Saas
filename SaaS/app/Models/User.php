@@ -83,4 +83,19 @@ class User extends Authenticatable
     {
         return $this->hasOne(Locataire::class);
     }
+
+    public function planRelation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan', 'slug');
+    }
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function activeSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserSubscription::class)->where('status', 'active');
+    }
 }

@@ -12,6 +12,12 @@ export const navigation = [
                 icon: 'layout-dashboard',
                 badge: null,
             },
+            {
+                name: 'dashboard.company.upgrade',
+                label: 'Abonnement',
+                icon: 'credit-card',
+                badge: null,
+            },
         ],
     },
     {
@@ -90,6 +96,7 @@ export const navigation = [
 
 export const routeTitles = {
     'dashboard.master': 'Tableau de bord',
+    'dashboard.company.upgrade': 'Changer de forfait',
     'immobilier.index': 'Gestion immobilière',
     'immobilier.factures': 'Facturation/quittances',
     'immobilier.paiements': 'Paiements de loyer',

@@ -35,7 +35,7 @@ class HandleInertiaRequests extends Middleware
         $companyLogo = asset('icons/property-ai-logo.svg');
 
         if ($user) {
-            $user->load(['company', 'role', 'employee.agency']);
+            $user->load(['company', 'role', 'employee.agency', 'planRelation']);
             if ($user->company_profile_id) {
                 $agencies = \App\Models\Agency::where('company_profile_id', $user->company_profile_id)->get();
             }

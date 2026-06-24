@@ -20,7 +20,7 @@ class CompanyProfileController extends Controller
             'business_type' => 'required|string|max:255',
             'registration_number' => 'required|string|max:255',
             'tax_id' => 'required|string|max:255',
-            'country' => 'required|string|size:2',
+            'country' => 'required|string|size:2|exists:countries,code',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',

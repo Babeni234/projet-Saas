@@ -76,6 +76,26 @@ Route::middleware('auth')->group(function () {
             ])),
         ]);
 
+        $plan = \App\Models\SubscriptionPlan::where('slug', $request->plan)->first();
+
+        // Deactivate previous active subscriptions for this user
+        \App\Models\UserSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->update([
+                'status' => 'inactive',
+                'ends_at' => now(),
+            ]);
+
+        // Create new active subscription record
+        \App\Models\UserSubscription::create([
+            'user_id' => $user->id,
+            'plan_slug' => $request->plan,
+            'price' => $plan ? $plan->price : 0.0,
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth(), // Assuming monthly billing
+            'status' => 'active',
+        ]);
+
         $user->subscription_plan = $request->plan;
         $user->save();
 

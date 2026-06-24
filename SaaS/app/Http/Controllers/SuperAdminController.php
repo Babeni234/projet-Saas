@@ -27,18 +27,24 @@ class SuperAdminController extends Controller
         ];
 
         // Subscription plans distribution - single query with groupBy
-        $plansDistribution = User::where('account_type', 'company')
+        $plansDistributionRaw = User::where('account_type', 'company')
             ->select('subscription_plan', \DB::raw('count(*) as count'))
             ->groupBy('subscription_plan')
             ->pluck('count', 'subscription_plan')
             ->toArray();
 
-        // Ensure all plans have values
-        $plansDistribution = array_merge([
-            'starter' => 0,
-            'professional' => 0,
-            'enterprise' => 0,
-        ], $plansDistribution);
+        // Map type-specific slugs to the dashboard summary categories
+        $plansDistribution = [
+            'starter' => ($plansDistributionRaw['starter'] ?? 0) 
+                + ($plansDistributionRaw['pro_entreprise'] ?? 0) 
+                + ($plansDistributionRaw['standard_particulier'] ?? 0),
+            'professional' => ($plansDistributionRaw['professional'] ?? 0) 
+                + ($plansDistributionRaw['business_entreprise'] ?? 0) 
+                + ($plansDistributionRaw['premium_particulier'] ?? 0),
+            'enterprise' => ($plansDistributionRaw['enterprise'] ?? 0) 
+                + ($plansDistributionRaw['corporate'] ?? 0) 
+                + ($plansDistributionRaw['expert_particulier'] ?? 0),
+        ];
 
         // Recent companies - limit to 5 with eager loading
         $recentCompanies = CompanyProfile::with('user:id,name,email,subscription_plan')
@@ -270,15 +276,12 @@ class SuperAdminController extends Controller
         return back()->with('success', 'Pays enregistré avec succès.');
     }
 
-    /**
-     * Display the Global Map page with 3D hologram globe.
-     */
     public function globalMap()
     {
         // Get statistics for the map
         $stats = [
             'active_users' => User::where('is_connected', true)->count(),
-            'countries_count' => \App\Models\Country::count(),
+            'countries_count' => CompanyProfile::whereNotNull('country')->distinct('country')->count('country'),
             'companies_count' => CompanyProfile::count(),
         ];
 
@@ -288,9 +291,48 @@ class SuperAdminController extends Controller
             'lng' => 2.3522,
         ];
 
+        // Fetch real companies with coordinates and metrics
+        $coordsCount = [];
+        $companies = CompanyProfile::with(['user', 'agencies', 'employees', 'countryRelation'])
+            ->get()
+            ->map(function ($company) use (&$coordsCount) {
+                $lat = $company->countryRelation->latitude ?? 48.8566;
+                $lng = $company->countryRelation->longitude ?? 2.3522;
+                
+                // Coordinate key to count matches
+                $key = round($lat, 2) . '_' . round($lng, 2);
+                if (!isset($coordsCount[$key])) {
+                    $coordsCount[$key] = 0;
+                } else {
+                    $coordsCount[$key]++;
+                }
+                
+                // Apply a small random offset if coordinates overlap
+                if ($coordsCount[$key] > 0) {
+                    $lat += (mt_rand(-100, 100) / 100) * 0.8;
+                    $lng += (mt_rand(-100, 100) / 100) * 0.8;
+                }
+
+                return [
+                    'id' => $company->id,
+                    'name' => $company->legal_name,
+                    'promoter' => $company->legal_representative_name ?? ($company->user->name ?? '—'),
+                    'logo' => $company->logo_path ? asset('storage/' . $company->logo_path) : null,
+                    'address' => $company->address,
+                    'city' => $company->city,
+                    'country_name' => $company->countryRelation->name ?? $company->country,
+                    'country_code' => $company->country,
+                    'agencies_count' => $company->agencies->count(),
+                    'employees_count' => $company->employees->count(),
+                    'latitude' => (float)$lat,
+                    'longitude' => (float)$lng,
+                ];
+            });
+
         return Inertia::render('SuperAdmin/GlobalMap', [
             'stats' => $stats,
             'userLocation' => $userLocation,
+            'companies' => $companies,
         ]);
     }
 

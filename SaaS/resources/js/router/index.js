@@ -464,6 +464,18 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/company/upgrade',
+        name: 'dashboard.company.upgrade',
+        component: () => import('../Pages/entreprise/Dashboard/pages/UpgradePlan.vue'),
+        meta: {
+            title: 'Changer de forfait',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Abonnement', to: { name: 'dashboard.company.upgrade' } },
+            ],
+        },
+    },
+    {
         path: '/agence/dashboard',
         redirect: '/agence/dashboard/master',
     },

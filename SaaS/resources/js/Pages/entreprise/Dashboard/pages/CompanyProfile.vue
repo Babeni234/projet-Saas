@@ -48,6 +48,23 @@
                         </p>
                     </div>
                 </div>
+
+                <!-- Plan Actif Badge -->
+                <div class="shrink-0 flex flex-col items-center md:items-end gap-2 bg-white/5 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 shadow-lg text-center md:text-right mt-4 md:mt-0">
+                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Abonnement Actif</p>
+                    <span class="inline-flex items-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3.5 py-1 text-xs font-black text-white shadow-sm">
+                        {{ currentPlanName }}
+                    </span>
+                    <RouterLink
+                        :to="{ name: 'dashboard.company.upgrade' }"
+                        class="text-xs font-bold text-indigo-300 hover:text-white transition-colors flex items-center gap-1 mt-1"
+                    >
+                        <span>Gérer l'abonnement</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </RouterLink>
+                </div>
             </div>
         </div>
 
@@ -312,6 +329,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
+import { RouterLink } from 'vue-router';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user || {});
@@ -320,6 +338,7 @@ const company = computed(() => user.value?.company || {});
 const companyName = computed(() => company.value?.legal_name || '');
 const companyType = computed(() => company.value?.business_type || '');
 const promoterName = computed(() => user.value?.name || '');
+const currentPlanName = computed(() => user.value?.plan_relation?.name || 'Starter / Gratuit');
 
 const form = ref({
     legal_name: '',

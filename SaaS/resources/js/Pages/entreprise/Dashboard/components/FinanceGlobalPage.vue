@@ -186,7 +186,7 @@
                             </td>
                             <td class="px-6 py-4 text-right font-medium text-slate-700">{{ formatCurrency(entite.loyers) }}</td>
                             <td class="px-6 py-4 text-right font-medium text-slate-700">{{ formatCurrency(entite.divers) }}</td>
-                            <td class="px-6 py-4 text-right font-medium text-slate-700 text-rose-600">-{{ formatCurrency(entite.depenses) }}</td>
+                            <td class="px-6 py-4 text-right font-medium text-slate-700 text-rose-600">- {{ formatCurrency(entite.depenses) }}</td>
                             <td class="px-6 py-4 text-right font-bold" :class="entite.solde >= 0 ? 'text-emerald-600' : 'text-rose-600'">
                                 {{ formatCurrency(entite.solde) }}
                             </td>

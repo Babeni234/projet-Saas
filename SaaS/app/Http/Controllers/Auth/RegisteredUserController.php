@@ -31,8 +31,10 @@ class RegisteredUserController extends Controller
      */
     public function create(Request $request): Response
     {
+        $countries = \App\Models\Country::orderBy('name', 'asc')->get();
         return Inertia::render('Auth/Register', [
             'plan' => $request->query('plan'),
+            'countries' => $countries,
         ]);
     }
 
@@ -59,7 +61,7 @@ class RegisteredUserController extends Controller
                 'legal_name' => 'required|string|max:255',
                 'registration_number' => 'required|string|max:100',
                 'tax_id' => 'required|string|max:100',
-                'country' => 'required|string|size:2',
+                'country' => 'required|string|size:2|exists:countries,code',
                 'address' => 'required|string|max:255',
                 'city' => 'required|string|max:100',
                 'postal_code' => 'required|string|max:20',

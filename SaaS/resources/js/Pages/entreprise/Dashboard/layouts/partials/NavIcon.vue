@@ -17,6 +17,7 @@
         <path v-else-if="name === 'chart'" d="M4 19V5M10 19V9M16 19v-6M22 19V3" />
         <path v-else-if="name === 'map'" d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15" />
         <path v-else-if="name === 'shield'" d="M12 3l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4z" />
+        <path v-else-if="name === 'credit-card'" d="M2 5h20a2 2 0 012 2v10a2 2 0 01-2 2H2a2 2 0 01-2-2V7a2 2 0 012-2z M2 10h20" />
         <path v-else d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 </template>
