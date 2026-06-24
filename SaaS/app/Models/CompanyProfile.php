@@ -57,4 +57,9 @@ class CompanyProfile extends Model
     {
         return $this->hasMany(Logement::class);
     }
+
+    public function locataires(): HasMany
+    {
+        return $this->hasMany(Locataire::class);
+    }
 }

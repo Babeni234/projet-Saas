@@ -5,10 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
+use App\Models\Transaction;
+use App\Services\OrangeMoneyService;
 use Illuminate\Support\Facades\DB;
 
 class SubscriptionController extends Controller
 {
+    protected $orangeMoneyService;
+
+    public function __construct(OrangeMoneyService $orangeMoneyService)
+    {
+        $this->orangeMoneyService = $orangeMoneyService;
+    }
+
     /**
      * Get all company subscription plans.
      */
@@ -22,7 +31,145 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Upgrade the user's subscription plan.
+     * Initiate Orange Money Payment.
+     */
+    public function initiatePayment(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'Non autorisé.'], 401);
+        }
+
+        $request->validate([
+            'plan' => 'required|string|exists:subscription_plans,slug',
+            'billing_cycle' => 'required|string|in:monthly,yearly',
+            'payment_method' => 'required|string|in:orange_money,mtn_money,paypal,visa',
+            'phone_number' => 'required_if:payment_method,orange_money,mtn_money|string',
+        ]);
+
+        $plan = SubscriptionPlan::where('slug', $request->plan)->first();
+        if (!$plan || $plan->account_type !== 'company') {
+            return response()->json(['error' => 'Plan de souscription invalide.'], 400);
+        }
+
+        // Determine price based on billing cycle
+        $amount = $plan->price;
+        if ($request->billing_cycle === 'yearly') {
+            $amount = $plan->price_yearly ?? ($plan->price * 12 * 0.8);
+        }
+
+        $orderId = 'OM_SUB_' . time() . '_' . $user->id;
+        $description = 'Abonnement Property AI - ' . $plan->name . ' (' . ($request->billing_cycle === 'yearly' ? 'Annuel' : 'Mensuel') . ')';
+
+        // Execute payment initiation (simulation fallback is embedded inside service)
+        $paymentResult = $this->orangeMoneyService->initiatePayment(
+            $request->phone_number,
+            $amount,
+            $orderId,
+            $description
+        );
+
+        if (!$paymentResult['success']) {
+            return response()->json(['error' => $paymentResult['error']], 400);
+        }
+
+        // Record the transaction as pending in the database
+        $transaction = Transaction::create([
+            'user_id' => $user->id,
+            'company_profile_id' => $user->company_profile_id,
+            'plan_slug' => $plan->slug,
+            'amount' => $amount,
+            'billing_cycle' => $request->billing_cycle,
+            'payment_method' => $request->payment_method,
+            'payment_ref' => $paymentResult['pay_token'],
+            'phone_number' => $request->phone_number,
+            'status' => 'pending',
+            'metadata' => $paymentResult,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'transaction_id' => $transaction->id,
+            'pay_token' => $paymentResult['pay_token'],
+            'is_simulation' => $paymentResult['is_simulation'] ?? false,
+            'message' => 'Paiement initié. Veuillez valider le paiement sur votre mobile.',
+        ]);
+    }
+
+    /**
+     * Check payment transaction status and activate subscription upon success.
+     */
+    public function checkPaymentStatus($id)
+    {
+        $user = auth()->user();
+        $transaction = Transaction::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$transaction) {
+            return response()->json(['error' => 'Transaction introuvable.'], 404);
+        }
+
+        if ($transaction->status === 'success') {
+            return response()->json([
+                'success' => true,
+                'status' => 'success',
+                'message' => 'Abonnement déjà validé et actif.',
+            ]);
+        }
+
+        // In simulation mode or dev env, we automatically validate when checked
+        $isSimulation = str_starts_with($transaction->payment_ref, 'SIM_') || config('app.env') !== 'production';
+
+        if ($isSimulation) {
+            DB::transaction(function () use ($user, $transaction) {
+                // Update transaction status
+                $transaction->status = 'success';
+                $transaction->save();
+
+                // Deactivate previous active subscriptions for this user
+                UserSubscription::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->update([
+                        'status' => 'inactive',
+                        'ends_at' => now(),
+                    ]);
+
+                // Create new active subscription record
+                UserSubscription::create([
+                    'user_id' => $user->id,
+                    'plan_slug' => $transaction->plan_slug,
+                    'price' => $transaction->amount,
+                    'starts_at' => now(),
+                    'ends_at' => $transaction->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth(),
+                    'status' => 'active',
+                ]);
+
+                // Update user subscription plan
+                $user->subscription_plan = $transaction->plan_slug;
+                // Extend/clear trial restrictions
+                $user->trial_ends_at = null; 
+                $user->save();
+            });
+
+            return response()->json([
+                'success' => true,
+                'status' => 'success',
+                'message' => 'Félicitations ! Votre paiement simulé a été validé et votre abonnement est actif.',
+            ]);
+        }
+
+        // Otherwise (production real payment checks), Orange Money API callback would handle it, 
+        // but let's provide a simulation trigger if they call it to make testing easier.
+        return response()->json([
+            'success' => false,
+            'status' => 'pending',
+            'message' => 'Paiement en attente de validation sur votre téléphone. Veuillez patienter.',
+        ]);
+    }
+
+    /**
+     * Upgrade the user's subscription plan (Legacy Direct Upgrade - no payment).
      */
     public function upgradePlan(Request $request)
     {
@@ -68,12 +215,13 @@ class SubscriptionController extends Controller
                 'plan_slug' => $newPlan->slug,
                 'price' => $newPlan->price,
                 'starts_at' => now(),
-                'ends_at' => now()->addMonth(), // Assuming monthly billing
+                'ends_at' => now()->addMonth(),
                 'status' => 'active',
             ]);
 
             // Update user subscription_plan
             $user->subscription_plan = $newPlan->slug;
+            $user->trial_ends_at = null;
             $user->save();
         });
 

@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
+import { usePage } from '@inertiajs/vue3';
 
 const routes = [
     {
@@ -736,12 +737,47 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.path.startsWith('/dashboard/hotel')) {
+    // Access Inertia shared props
+    let user = null;
+    try {
+        const page = usePage();
+        user = page.props?.auth?.user;
+    } catch (e) {
+        // Suppress reference error if page is not yet rendered
+    }
+
+    if (user && user.blocked_modules && Array.isArray(user.blocked_modules) && user.blocked_modules.length > 0) {
+        const path = to.path.toLowerCase();
+        
+        const checks = [
+            { key: 'hotel', path: '/hotel', name: 'Hôtellerie' },
+            { key: 'accounting', path: '/comptabilite', name: 'Comptabilité' },
+            { key: 'maintenance', path: '/maintenance', name: 'Maintenance' },
+            { key: 'reports', path: '/rapports', name: 'Rapports' },
+            { key: 'agencies', path: '/agencies', name: 'Multi-Agences' },
+        ];
+
+        for (const check of checks) {
+            if (user.blocked_modules.includes(check.key) && path.includes(check.path)) {
+                alert(`🔒 Accès interdit : Le module ${check.name} est verrouillé. Votre période d'essai a expiré. Veuillez mettre à niveau votre forfait.`);
+                if (from.name) {
+                    next(false);
+                } else {
+                    next({ name: 'dashboard.master' });
+                }
+                return;
+            }
+        }
+    }
+
+    // Legacy fallback check for hotel
+    if (to.path.startsWith('/dashboard/hotel') && (!user || (user && user.blocked_modules && user.blocked_modules.includes('hotel')))) {
         alert("🔒 Accès interdit : Le module Hôtellerie est bloqué pour votre entreprise.");
         next({ name: 'dashboard.master' });
-    } else {
-        next();
+        return;
     }
+
+    next();
 });
 
 export default router;

@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
 
         if ($user) {
             $user->load(['company', 'role', 'employee.agency', 'planRelation']);
+
             if ($user->company_profile_id) {
                 $agencies = \App\Models\Agency::where('company_profile_id', $user->company_profile_id)->get();
             }

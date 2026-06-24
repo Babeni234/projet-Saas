@@ -34,6 +34,8 @@ class User extends Authenticatable
         'company_profile_id',
         'is_connected',
         'must_logout',
+        'trial_ends_at',
+        'trial_started_at',
     ];
 
     /**
@@ -56,8 +58,22 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'trial_ends_at' => 'datetime',
+            'trial_started_at' => 'datetime',
         ];
     }
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'is_trial_active',
+        'is_trial_expired',
+        'trial_days_left',
+        'blocked_modules',
+    ];
 
     public function companyProfile(): HasOne
     {
@@ -97,5 +113,69 @@ class User extends Authenticatable
     public function activeSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(UserSubscription::class)->where('status', 'active');
+    }
+
+    public function isTrialActive(): bool
+    {
+        return $this->trial_ends_at !== null && now()->lt($this->trial_ends_at);
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    public function isTrialExpired(): bool
+    {
+        if ($this->trial_ends_at === null) {
+            return false;
+        }
+        return now()->gt($this->trial_ends_at) && !$this->hasActiveSubscription();
+    }
+
+    public function blockedModules(): array
+    {
+        if (!$this->isTrialExpired()) {
+            return [];
+        }
+        
+        return \App\Models\TrialSetting::getValue('blocked_features', ['hotel', 'accounting', 'maintenance']);
+    }
+
+    /**
+     * Accessor for is_trial_active.
+     */
+    public function getIsTrialActiveAttribute(): bool
+    {
+        return $this->isTrialActive();
+    }
+
+    /**
+     * Accessor for is_trial_expired.
+     */
+    public function getIsTrialExpiredAttribute(): bool
+    {
+        return $this->isTrialExpired();
+    }
+
+    /**
+     * Accessor for trial_days_left.
+     */
+    public function getTrialDaysLeftAttribute(): int
+    {
+        if ($this->trial_ends_at) {
+            $diff = now()->diffInDays($this->trial_ends_at, false);
+            $trialDaysLeft = (int) ceil($diff);
+            return $trialDaysLeft < 0 ? 0 : $trialDaysLeft;
+        }
+        return 0;
+    }
+
+    /**
+     * Accessor for blocked_modules.
+     */
+    public function getBlockedModulesAttribute(): array
+    {
+        return $this->blockedModules();
     }
 }

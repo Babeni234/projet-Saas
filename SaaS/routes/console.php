@@ -13,3 +13,6 @@ Schedule::command('app:send-push-notifications')->everyThirtyMinutes();
 
 // Gérer le cycle de vie des baux quotidiennement
 Schedule::command('app:manage-lease-lifecycle')->daily();
+
+// Envoyer les rappels d'abonnement quotidiennement
+Schedule::command('app:send-subscription-reminders')->daily();

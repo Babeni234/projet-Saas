@@ -89,6 +89,11 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmi
     Route::get('/profile', [\App\Http\Controllers\SuperAdminController::class, 'profile'])->name('profile');
     Route::post('/profile', [\App\Http\Controllers\SuperAdminController::class, 'updateProfile'])->name('profile.update');
     Route::post('/admins', [\App\Http\Controllers\SuperAdminController::class, 'storeSuperAdmin'])->name('admins.store');
+
+    // Payments and Trial Settings Control Panel
+    Route::get('/transactions', [\App\Http\Controllers\SuperAdminController::class, 'transactionsIndex'])->name('transactions.index');
+    Route::post('/transactions/{transaction}/validate', [\App\Http\Controllers\SuperAdminController::class, 'manualValidateTransaction'])->name('transactions.validate');
+    Route::post('/trial-settings', [\App\Http\Controllers\SuperAdminController::class, 'saveTrialSettings'])->name('trial-settings.save');
 });
 
 Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {
@@ -174,6 +179,8 @@ Route::middleware('auth')->group(function () {
         // Subscription routes
         Route::get('/subscription/plans', [\App\Http\Controllers\SubscriptionController::class, 'getPlans'])->name('api.subscription.plans');
         Route::post('/subscription/upgrade', [\App\Http\Controllers\SubscriptionController::class, 'upgradePlan'])->name('api.subscription.upgrade');
+        Route::post('/subscription/payment/initiate', [\App\Http\Controllers\SubscriptionController::class, 'initiatePayment'])->name('api.subscription.payment.initiate');
+        Route::get('/subscription/payment/status/{id}', [\App\Http\Controllers\SubscriptionController::class, 'checkPaymentStatus'])->name('api.subscription.payment.status');
     });
 });
 

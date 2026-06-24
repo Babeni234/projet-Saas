@@ -1,11 +1,25 @@
 <script setup>
-import { Link, Head, usePage } from '@inertiajs/vue3';
+import { Link, Head, usePage, router } from '@inertiajs/vue3';
 import { ref, onMounted, provide } from 'vue';
 
 const page = usePage();
 const adminUser = page.props.auth?.user || { name: 'Super Admin', email: 'superadmin@propertyai.com' };
 
 const currentTime = ref('');
+const showLogoutModal = ref(false);
+const isLoggingOutState = ref(false);
+
+const handleLogout = () => {
+    isLoggingOutState.value = true;
+    setTimeout(() => {
+        router.post(route('logout'), {}, {
+            onFinish: () => {
+                showLogoutModal.value = false;
+                isLoggingOutState.value = false;
+            }
+        });
+    }, 1200); // 1.2s delay for a premium closing animation
+};
 
 // Load theme synchronously to prevent dark flash when navigating between pages
 const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('propertyai-superadmin-theme') : 'dark';
@@ -51,9 +65,10 @@ const getInitials = (name) => {
     <Head title="Super Administration | Property AI" />
 
     <div 
-        class="h-screen w-screen flex overflow-hidden font-sans selection:bg-indigo-500 selection:text-white theme-transition relative"
+        class="h-screen w-screen flex overflow-hidden font-sans selection:bg-indigo-500 selection:text-white theme-transition relative transition-all duration-500"
         :class="[
-            theme === 'light' ? 'theme-light bg-[var(--bg-app)] text-[var(--text-main)]' : 'bg-[var(--bg-app)] text-[var(--text-main)]'
+            theme === 'light' ? 'theme-light bg-[var(--bg-app)] text-[var(--text-main)]' : 'bg-[var(--bg-app)] text-[var(--text-main)]',
+            { 'opacity-40 scale-[0.985] pointer-events-none': isLoggingOutState }
         ]"
     >
         <!-- Background decorative ambient lights -->
@@ -64,7 +79,7 @@ const getInitials = (name) => {
         <div v-if="theme === 'light'" class="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-sky-200/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
         <!-- Sidebar -->
-        <aside class="w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col justify-between p-6 shrink-0 z-20 shadow-2xl backdrop-blur-xl fixed h-full left-0 top-0">
+        <aside class="w-72 bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col justify-between p-6 shrink-0 z-20 shadow-2xl backdrop-blur-xl fixed h-full left-0 top-0 overflow-y-auto no-scrollbar">
             <div>
                 <!-- Brand logo with subtle glow -->
                 <div class="flex items-center gap-3.5 mb-12 px-2 pt-2">
@@ -167,6 +182,20 @@ const getInitials = (name) => {
                     </Link>
 
                     <Link 
+                        :href="route('superadmin.transactions.index')" 
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
+                        :class="[
+                            $page.component === 'SuperAdmin/PaymentControl' 
+                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/15' 
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-btn-secondary)]'
+                        ]"
+                    >
+                        <div v-if="$page.component === 'SuperAdmin/PaymentControl'" class="absolute left-0 top-3.5 bottom-3.5 w-1 bg-white rounded-r-full"></div>
+                        <i class="fa-solid fa-receipt text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/PaymentControl' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
+                        <span>Contrôle Paiements</span>
+                    </Link>
+
+                    <Link 
                         :href="route('superadmin.accounts.create')" 
                         class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden"
                         :class="[
@@ -208,15 +237,13 @@ const getInitials = (name) => {
                     </div>
                 </div>
 
-                <Link 
-                    :href="route('logout')" 
-                    method="post" 
-                    as="button" 
+                <button 
+                    @click="showLogoutModal = true"
                     class="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-red-500/5 hover:bg-red-600 text-red-600 hover:text-white rounded-2xl text-xs font-bold border border-red-500/15 hover:border-red-600 shadow-sm transition-all duration-300 active:scale-95"
                 >
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     <span>Déconnexion</span>
-                </Link>
+                </button>
             </div>
         </aside>
 
@@ -235,6 +262,7 @@ const getInitials = (name) => {
                             $page.component === 'SuperAdmin/Countries/Index' ? 'Pays Autorisés' :
                             $page.component === 'SuperAdmin/GlobalMap' ? 'Carte Mondiale Interactive' :
                             $page.component === 'SuperAdmin/Plans/Index' ? 'Forfaits d\'abonnement' :
+                            $page.component === 'SuperAdmin/PaymentControl' ? 'Contrôle des Paiements & Essai' :
                             $page.component === 'SuperAdmin/Accounts/Create' ? 'Créer un Compte' :
                             $page.component === 'SuperAdmin/Profile/Index' ? 'Mon Profil & Admins' :
                             'Répertoire des Utilisateurs' 
@@ -267,10 +295,80 @@ const getInitials = (name) => {
 
             <!-- Page content -->
             <main class="flex-1 overflow-y-auto p-8 bg-[var(--bg-app)] mt-20">
-                <slot />
+                <Transition name="fade-page" mode="out-in">
+                    <div :key="$page.url" class="page-entrance">
+                        <slot />
+                    </div>
+                </Transition>
             </main>
         </div>
     </div>
+
+    <!-- Professional Logout Confirmation Modal -->
+    <Transition name="modal-fade">
+        <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" @click="!isLoggingOutState && (showLogoutModal = false)"></div>
+            
+            <!-- Modal Container -->
+            <div class="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 p-6 text-center premium-glow glass-effect">
+                <!-- Close Button -->
+                <button 
+                    v-if="!isLoggingOutState"
+                    @click="showLogoutModal = false" 
+                    class="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors h-8 w-8 rounded-full flex items-center justify-center hover:bg-[var(--bg-btn-secondary)]"
+                >
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+                
+                <!-- Modal Content -->
+                <div class="flex flex-col items-center pt-2">
+                    <!-- Animated Icon -->
+                    <div class="mb-5 relative">
+                        <div class="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center relative">
+                            <div class="absolute inset-0 rounded-2xl bg-red-500/5 animate-ping opacity-60"></div>
+                            <i class="fa-solid fa-power-off text-2xl text-red-500 animate-pulse"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-black mb-2 tracking-tight">
+                        {{ isLoggingOutState ? 'Déconnexion en cours' : 'Confirmer la déconnexion' }}
+                    </h3>
+                    
+                    <p class="text-xs text-[var(--text-muted)] mb-6 max-w-xs leading-relaxed">
+                        {{ isLoggingOutState ? 'Veuillez patienter pendant la fermeture de votre session...' : 'Êtes-vous sûr de vouloir vous déconnecter du tableau de bord Super Admin ?' }}
+                    </p>
+                    
+                    <!-- Normal Buttons State -->
+                    <div v-if="!isLoggingOutState" class="flex gap-3 w-full">
+                         <button 
+                             @click="showLogoutModal = false" 
+                             class="flex-1 px-4 py-3 bg-[var(--bg-btn-secondary)] hover:bg-[var(--border-color)] text-[var(--text-main)] rounded-xl text-xs font-bold transition-all border border-[var(--border-color)] active:scale-95"
+                         >
+                             Annuler
+                         </button>
+                         <button 
+                             @click="handleLogout" 
+                             class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-red-500/10 active:scale-95 flex items-center justify-center gap-1.5"
+                         >
+                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                             Se déconnecter
+                         </button>
+                    </div>
+                    
+                    <!-- Logging Out State / Animation -->
+                    <div v-else class="w-full flex flex-col items-center mt-2">
+                        <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mb-3">
+                            <div class="h-full bg-red-500 rounded-full animate-logout-progress"></div>
+                        </div>
+                        <span class="text-[9px] text-red-500 font-black uppercase tracking-widest animate-pulse">
+                            Fermeture sécurisée...
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Transition>
 </template>
 
 <style>
@@ -307,12 +405,89 @@ const getInitials = (name) => {
   --bg-btn-secondary: #e2e8f0;
 }
 
-.theme-transition * {
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.theme-transition,
+.theme-transition aside,
+.theme-transition header,
+.theme-transition main,
+.theme-transition .bg-card,
+.theme-transition .glass-effect,
+.theme-transition button,
+.theme-transition input,
+.theme-transition a {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Page transitions */
+.fade-page-enter-active,
+.fade-page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.fade-page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.fade-page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Modal Transition */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-fade-enter-active .glass-effect {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-fade-leave-active .glass-effect {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-fade-enter-from {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .glass-effect {
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+}
+
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-leave-to .glass-effect {
+  opacity: 0;
+  transform: scale(0.98) translateY(4px);
+}
+
+/* Logout progress animation */
+@keyframes logoutProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-logout-progress {
+  animation: logoutProgress 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
 
 /* Premium Glassmorphism Effect */

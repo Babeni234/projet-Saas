@@ -70,6 +70,10 @@
                 <div class="mini-stat-value">{{ selectedCompany.employees_count }}</div>
                 <div class="mini-stat-label">Employés</div>
               </div>
+              <div class="mini-stat">
+                <div class="mini-stat-value">{{ selectedCompany.locataires_count || 0 }}</div>
+                <div class="mini-stat-label">Locataires</div>
+              </div>
             </div>
           </div>
         </div>
@@ -987,8 +991,8 @@ function toggleMarkers() {
 
 .stats-row {
   display: grid;
-  grid-template-cols: 1fr 1fr;
-  gap: 1rem;
+  grid-template-cols: repeat(3, 1fr);
+  gap: 0.75rem;
   margin-top: 0.5rem;
 }
 

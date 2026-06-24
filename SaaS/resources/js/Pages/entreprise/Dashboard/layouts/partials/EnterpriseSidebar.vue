@@ -37,7 +37,7 @@
 
         <!-- Nav -->
         <nav class="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin">
-            <div v-for="section in navigation" :key="section.id" class="mb-6">
+            <div v-for="section in dynamicNavigation" :key="section.id" class="mb-6">
                 <p
                     v-show="!sidebarCollapsed"
                     class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700"
@@ -55,7 +55,7 @@
                                 groupActive(item) ? `nav-item-active nav-accent-${item.accent}` : '',
                                 item.blocked ? 'opacity-65 cursor-not-allowed hover:bg-transparent' : ''
                             ]"
-                            @click="item.blocked ? showBlockedModal = true : toggleGroup(item.id)"
+                            @click="item.blocked ? handleBlockedClick(item.blockedName || t(item.label)) : toggleGroup(item.id)"
                         >
                             <NavIcon :name="item.icon" />
                             <span v-show="!sidebarCollapsed" class="flex-1 truncate text-left text-sm font-medium">{{ t(item.label) }}</span>
@@ -105,12 +105,24 @@
                                 </span>
                                 <RouterLink
                                     v-else
-                                    :to="{ name: child.name, params: child.params }"
-                                    class="nav-subitem"
+                                    :to="child.blocked ? '#' : { name: child.name, params: child.params }"
+                                    class="nav-subitem flex items-center justify-between"
+                                    :class="{ 'opacity-65 cursor-not-allowed': child.blocked }"
                                     active-class="nav-subitem-active"
-                                    @click="closeMobileSidebar"
+                                    @click="child.blocked ? handleBlockedClick('Multi-Agences') : closeMobileSidebar"
                                 >
-                                    {{ t(child.label) }}
+                                    <span>{{ t(child.label) }}</span>
+                                    <svg
+                                        v-if="child.blocked"
+                                        class="h-3 w-3 text-slate-500 shrink-0 ml-1.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                                    </svg>
                                 </RouterLink>
                             </template>
                         </div>
@@ -119,15 +131,31 @@
                     <!-- Simple link -->
                     <RouterLink
                         v-else
-                        :to="{ name: item.name }"
-                        class="nav-item"
-                        :class="route.name === item.name ? `nav-item-active nav-accent-${item.accent || 'indigo'}` : ''"
-                        @click="closeMobileSidebar"
+                        :to="item.blocked ? '#' : { name: item.name }"
+                        class="nav-item flex items-center justify-between"
+                        :class="[
+                            route.name === item.name ? `nav-item-active nav-accent-${item.accent || 'indigo'}` : '',
+                            item.blocked ? 'opacity-65 cursor-not-allowed hover:bg-transparent' : ''
+                        ]"
+                        @click="item.blocked ? handleBlockedClick(item.blockedName || t(item.label)) : closeMobileSidebar"
                     >
-                        <NavIcon :name="item.icon" />
-                        <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ t(item.label) }}</span>
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <NavIcon :name="item.icon" />
+                            <span v-show="!sidebarCollapsed" class="flex-1 truncate text-sm font-medium">{{ t(item.label) }}</span>
+                        </div>
+                        <svg
+                            v-if="item.blocked && !sidebarCollapsed"
+                            class="h-4 w-4 text-slate-500 shrink-0 ml-1.5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                        </svg>
                         <span
-                            v-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
+                            v-else-if="!sidebarCollapsed && badgeCount(item.badgeKey)"
                             class="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white"
                         >{{ badgeCount(item.badgeKey) }}</span>
                     </RouterLink>
@@ -171,7 +199,7 @@
                 </div>
                 <h3 class="text-xl font-extrabold text-slate-800 mb-2">{{ t('Module Bloque') }}</h3>
                 <p class="text-slate-650 text-sm mb-6 leading-relaxed">
-                    {{ locale === 'fr' ? "L'accès au module Hôtellerie est restreint. Cette fonctionnalité n'est pas incluse dans votre abonnement actuel ou a été désactivée par votre administrateur." : "Access to the Hospitality module is restricted. This feature is not included in your current subscription or has been disabled by your administrator." }}
+                    {{ locale === 'fr' ? `L'accès au module ${blockedModuleName} est restreint. Cette fonctionnalité n'est pas incluse dans votre abonnement actuel ou a été désactivée par votre administrateur.` : `Access to the ${blockedModuleName} module is restricted. This feature is not included in your current subscription or has been disabled by your administrator.` }}
                 </p>
                 <div class="flex gap-4">
                     <button 
@@ -180,12 +208,13 @@
                     >
                         {{ t('Fermer') }}
                     </button>
-                    <button 
-                        @click="showBlockedModal = false" 
-                        class="flex-1 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all text-xs"
+                    <RouterLink 
+                        :to="{ name: 'dashboard.company.upgrade' }"
+                        @click="showBlockedModal = false"
+                        class="flex-1 px-5 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-center rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all text-xs flex items-center justify-center"
                     >
-                        {{ t('Contacter l Administration') }}
-                    </button>
+                        {{ locale === 'fr' ? 'S\'abonner' : 'Upgrade Plan' }}
+                    </RouterLink>
                 </div>
             </div>
         </div>
@@ -207,6 +236,63 @@ const { sidebarCollapsed, mobileSidebarOpen, toggleSidebar, closeMobileSidebar }
 const { locale, t } = useLocale();
 
 const showBlockedModal = ref(false);
+const blockedModuleName = ref('');
+
+const handleBlockedClick = (name) => {
+    blockedModuleName.value = name;
+    showBlockedModal.value = true;
+};
+
+const userBlockedModules = computed(() => page.props.auth?.user?.blocked_modules || []);
+
+// Compute dynamic navigation list with blocked flags added dynamically based on user subscription
+const dynamicNavigation = computed(() => {
+    return navigation.map(section => {
+        return {
+            ...section,
+            items: section.items.map(item => {
+                let isBlocked = false;
+                let blockedName = '';
+
+                if (item.id === 'hotel' && userBlockedModules.value.includes('hotel')) {
+                    isBlocked = true;
+                    blockedName = 'Hôtellerie';
+                } else if (item.id === 'accounting' && userBlockedModules.value.includes('accounting')) {
+                    isBlocked = true;
+                    blockedName = 'Comptabilité';
+                } else if (item.name === 'dashboard.maintenance' && userBlockedModules.value.includes('maintenance')) {
+                    isBlocked = true;
+                    blockedName = 'Maintenance';
+                } else if (item.name === 'dashboard.reports' && userBlockedModules.value.includes('reports')) {
+                    isBlocked = true;
+                    blockedName = 'Rapports';
+                }
+
+                // Sub-items
+                let children = item.children;
+                if (children) {
+                    children = children.map(child => {
+                        let childBlocked = false;
+                        if (child.name === 'dashboard.agencies' && userBlockedModules.value.includes('agencies')) {
+                            childBlocked = true;
+                        }
+                        return {
+                            ...child,
+                            blocked: childBlocked
+                        };
+                    });
+                }
+
+                return {
+                    ...item,
+                    blocked: isBlocked || (item.id === 'hotel' && !item.children), // Keep static hotel block fallback
+                    blockedName: blockedName || (item.id === 'hotel' ? 'Hôtellerie' : ''),
+                    children: children
+                };
+            })
+        };
+    });
+});
 
 const alerts = reactive({
     immobilier: 3,

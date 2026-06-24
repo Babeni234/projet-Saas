@@ -293,7 +293,7 @@ class SuperAdminController extends Controller
 
         // Fetch real companies with coordinates and metrics
         $coordsCount = [];
-        $companies = CompanyProfile::with(['user', 'agencies', 'employees', 'countryRelation'])
+        $companies = CompanyProfile::with(['user', 'agencies', 'employees', 'countryRelation', 'locataires'])
             ->get()
             ->map(function ($company) use (&$coordsCount) {
                 $lat = $company->countryRelation->latitude ?? 48.8566;
@@ -324,6 +324,7 @@ class SuperAdminController extends Controller
                     'country_code' => $company->country,
                     'agencies_count' => $company->agencies->count(),
                     'employees_count' => $company->employees->count(),
+                    'locataires_count' => $company->locataires->count(),
                     'latitude' => (float)$lat,
                     'longitude' => (float)$lng,
                 ];
@@ -670,6 +671,102 @@ class SuperAdminController extends Controller
         ]);
 
         return back()->with('success', 'Nouveau compte Super Admin créé avec succès.');
+    }
+
+    /**
+     * Display transactions and trial settings panel.
+     */
+    public function transactionsIndex()
+    {
+        $transactions = \App\Models\Transaction::with(['user', 'company', 'plan'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->through(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'user_name' => $t->user->name ?? '—',
+                    'user_email' => $t->user->email ?? '—',
+                    'company_name' => $t->company->legal_name ?? '—',
+                    'plan_name' => $t->plan->name ?? $t->plan_slug,
+                    'amount' => $t->amount,
+                    'billing_cycle' => $t->billing_cycle,
+                    'payment_method' => $t->payment_method,
+                    'payment_ref' => $t->payment_ref,
+                    'phone_number' => $t->phone_number,
+                    'status' => $t->status,
+                    'created_at' => $t->created_at->format('d/m/Y H:i'),
+                ];
+            });
+
+        $blockedFeatures = \App\Models\TrialSetting::getValue('blocked_features', ['hotel', 'accounting', 'maintenance']);
+
+        return Inertia::render('SuperAdmin/PaymentControl', [
+            'transactions' => $transactions,
+            'blockedFeatures' => $blockedFeatures,
+        ]);
+    }
+
+    /**
+     * Manually validate a pending transaction and activate user's subscription.
+     */
+    public function manualValidateTransaction(Request $request, \App\Models\Transaction $transaction)
+    {
+        if ($transaction->status === 'success') {
+            return back()->with('success', 'Cette transaction est déjà validée.');
+        }
+
+        $user = $transaction->user;
+        if (!$user) {
+            return back()->withErrors(['error' => 'Utilisateur associé à la transaction introuvable.']);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $transaction) {
+            // Update transaction status
+            $transaction->status = 'success';
+            $transaction->save();
+
+            // Deactivate previous active subscriptions for this user
+            \App\Models\UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'inactive',
+                    'ends_at' => now(),
+                ]);
+
+            // Create new active subscription record
+            \App\Models\UserSubscription::create([
+                'user_id' => $user->id,
+                'plan_slug' => $transaction->plan_slug,
+                'price' => $transaction->amount,
+                'starts_at' => now(),
+                'ends_at' => $transaction->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth(),
+                'status' => 'active',
+            ]);
+
+            // Update user subscription plan
+            $user->subscription_plan = $transaction->plan_slug;
+            $user->trial_ends_at = null; // Clear trial expiration if active
+            $user->save();
+        });
+
+        return back()->with('success', 'La transaction a été validée manuellement et l\'abonnement activé.');
+    }
+
+    /**
+     * Save trial setting (blocked modules).
+     */
+    public function saveTrialSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'blocked_features' => 'required|array',
+        ]);
+
+        \App\Models\TrialSetting::updateOrCreate(
+            ['key' => 'blocked_features'],
+            ['value' => $validated['blocked_features']]
+        );
+
+        return back()->with('success', 'Paramètres de la période d\'essai mis à jour avec succès.');
     }
 }
 
