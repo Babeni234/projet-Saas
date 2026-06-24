@@ -360,13 +360,32 @@ function addUserMarker() {
 
 function addCompanyMarkers() {
   const companyList = props.companies || page.props.companies || []
-  companyList.forEach(company => {
-    const position = latLngToVector3(company.latitude, company.longitude, 1.53)
+  
+  // Generate unique colors for each company
+  const colors = [
+    0x00ff88, 0x00aaff, 0xff6b6b, 0xffd93d, 0x6bcb77, 
+    0x4d96ff, 0xff6f91, 0xffc75f, 0x845ec2, 0xffc4ff,
+    0x00d2fc, 0x7de2d1, 0xffa07a, 0x98fb98, 0xdda0dd
+  ]
+  
+  companyList.forEach((company, index) => {
+    // Add offset to prevent overlapping - larger spacing
+    const offsetLat = (Math.random() - 0.5) * 0.3 // Larger random offset in latitude
+    const offsetLng = (Math.random() - 0.5) * 0.3 // Larger random offset in longitude
+    
+    const position = latLngToVector3(
+      company.latitude + offsetLat, 
+      company.longitude + offsetLng, 
+      1.53
+    )
+    
+    // Assign unique color based on index
+    const uniqueColor = colors[index % colors.length]
     
     // Create interactive sphere marker
     const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16)
     const markerMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff88,
+      color: uniqueColor,
       transparent: true,
       opacity: 0.8
     })
@@ -378,10 +397,10 @@ function addCompanyMarkers() {
     markers.push(marker)
     companyMarkers.push(marker)
     
-    // Add pulsing ring for company marker
+    // Add pulsing ring for company marker with same color
     const ringGeometry = new THREE.RingGeometry(0.025, 0.04, 32)
     const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff88,
+      color: uniqueColor,
       transparent: true,
       opacity: 0.4,
       side: THREE.DoubleSide

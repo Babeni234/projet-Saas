@@ -18,8 +18,15 @@
                         <i class="fa-solid fa-hourglass-half text-sm"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-black text-slate-900">Période d'essai active — {{ user.trial_days_left }} jours restants</p>
-                        <p class="text-[10px] text-slate-600 mt-0.5">Explorez toutes les fonctionnalités. Après 14 jours, l'accès à certains modules sera restreint.</p>
+                        <p class="text-xs font-black text-slate-900 flex flex-wrap items-center gap-2">
+                            <span>Période d'essai active —</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-800 border border-amber-500/30 font-mono text-[10px] font-black tracking-wide animate-pulse">
+                                <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                                {{ trialCountdownText || (user.trial_days_left + ' jours') }}
+                            </span>
+                            <span>restants</span>
+                        </p>
+                        <p class="text-[10px] text-slate-600 mt-1">Explorez toutes les fonctionnalités. Après 14 jours, l'accès à certains modules sera restreint.</p>
                     </div>
                 </div>
                 <RouterLink 
@@ -72,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { RouterView, RouterLink } from 'vue-router';
 import { usePage } from '@inertiajs/vue3';
 import EnterpriseSidebar from './partials/EnterpriseSidebar.vue';
@@ -86,6 +93,46 @@ provideEnterpriseProps();
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+
+const trialCountdownText = ref('');
+let timer = null;
+
+const updateTrialCountdown = () => {
+    if (!user.value?.trial_ends_at || !user.value?.is_trial_active) {
+        trialCountdownText.value = '';
+        return;
+    }
+    const end = new Date(user.value.trial_ends_at).getTime();
+    const nowTime = new Date().getTime();
+    const diff = end - nowTime;
+
+    if (diff <= 0) {
+        trialCountdownText.value = 'Expiré';
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    let parts = [];
+    if (days > 0) parts.push(`${days}j`);
+    if (hours > 0 || days > 0) parts.push(`${hours}h`);
+    parts.push(`${minutes}m`);
+    parts.push(`${seconds}s`);
+
+    trialCountdownText.value = parts.join(' ');
+};
+
+onMounted(() => {
+    updateTrialCountdown();
+    timer = setInterval(updateTrialCountdown, 1000);
+});
+
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 const refreshing = ref(false);
 

@@ -31,14 +31,27 @@
                     </div>
 
                     <!-- Current Plan Badge Widget -->
-                    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg shrink-0 min-w-[220px] transition-all hover:bg-white/10">
-                        <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider mb-1">Votre forfait actuel</p>
+                    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-lg shrink-0 min-w-[240px] transition-all hover:bg-white/10">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">
+                                {{ user.is_trial_active ? "Période d'essai active" : 'Votre forfait actuel' }}
+                            </p>
+                            <span v-if="user.is_trial_active" class="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        </div>
                         <h2 class="text-xl font-black text-white mb-2">
                             {{ currentPlanName }}
                         </h2>
                         <div class="flex items-baseline gap-1 text-amber-400 font-extrabold">
                             <span class="text-2xl">{{ formatPrice(currentPlanPrice) }}</span>
                             <span class="text-[10px] text-slate-400 font-bold">FCFA / mois</span>
+                        </div>
+                        <!-- Trial Countdown Timer -->
+                        <div v-if="user.is_trial_active && trialCountdownText" class="mt-3 pt-2.5 border-t border-white/10 text-left">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Temps d'essai restant</p>
+                            <p class="text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
+                                <i class="fa-solid fa-clock animate-spin-slow"></i>
+                                <span>{{ trialCountdownText }}</span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -267,11 +280,19 @@
                         <!-- CTA Action Button -->
                         <div class="mt-8">
                             <button
-                                v-if="plan.slug === currentPlanSlug"
+                                v-if="plan.slug === currentPlanSlug && !user.is_trial_active"
                                 disabled
                                 class="w-full py-3.5 px-4 rounded-2xl bg-indigo-50 text-indigo-650 font-extrabold text-xs shadow-sm border border-indigo-200/50 cursor-not-allowed text-center transition-colors"
                             >
                                 Votre Plan Actuel
+                            </button>
+                            <button
+                                v-else-if="plan.slug === currentPlanSlug && user.is_trial_active"
+                                @click="askUpgradeConfirm(plan)"
+                                class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-650 text-white font-extrabold text-xs shadow-lg shadow-orange-500/20 text-center transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5"
+                            >
+                                <i class="fa-solid fa-credit-card"></i>
+                                <span>Payer / Activer ce plan</span>
                             </button>
                             <button
                                 v-else-if="plan.price > currentPlanPrice"
@@ -393,9 +414,9 @@
                             <!-- Actions -->
                             <div class="flex gap-4 pt-2">
                                 <button
-                                    @click="confirmModalOpen = false"
+                                    @click="closeConfirmModal"
                                     :disabled="submittingUpgrade"
-                                    class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs disabled:opacity-50"
+                                    class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs disabled:opacity-50"
                                 >
                                     Annuler
                                 </button>
@@ -428,7 +449,7 @@
                                 <div class="space-y-2">
                                     <p class="text-xs text-slate-700 font-bold">Demande envoyée au +237 {{ phoneNumber }}</p>
                                     <p class="text-[10px] text-slate-500 leading-normal max-w-sm mx-auto">
-                                        Veuillez valider la transaction sur votre mobile. Une fois la transaction confirmée, cliquez sur le bouton ci-dessous pour activer votre abonnement.
+                                        Veuillez valider la transaction sur votre mobile. Une fois la transaction confirmée, le système l'activera automatiquement. Vous pouvez également cliquer sur le bouton ci-dessous.
                                     </p>
                                 </div>
                             </div>
@@ -441,9 +462,9 @@
                             <!-- Actions -->
                             <div class="flex gap-4">
                                 <button
-                                    @click="modalStep = 'confirm'"
+                                    @click="goBackToConfirmStep"
                                     :disabled="checkingStatus"
-                                    class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs disabled:opacity-50"
+                                    class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-650 rounded-xl font-bold hover:bg-slate-200 transition-all text-xs disabled:opacity-50"
                                 >
                                     Retour
                                 </button>
@@ -468,7 +489,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -544,6 +565,33 @@ const askUpgradeConfirm = (plan) => {
     confirmModalOpen.value = true;
 };
 
+const statusPollingInterval = ref(null);
+
+const startStatusPolling = () => {
+    stopStatusPolling();
+    // Poll every 3 seconds
+    statusPollingInterval.value = setInterval(async () => {
+        await checkStatus();
+    }, 3000);
+};
+
+const stopStatusPolling = () => {
+    if (statusPollingInterval.value) {
+        clearInterval(statusPollingInterval.value);
+        statusPollingInterval.value = null;
+    }
+};
+
+const closeConfirmModal = () => {
+    confirmModalOpen.value = false;
+    stopStatusPolling();
+};
+
+const goBackToConfirmStep = () => {
+    modalStep.value = 'confirm';
+    stopStatusPolling();
+};
+
 const startPayment = async () => {
     if (!targetPlan.value) return;
     submittingUpgrade.value = true;
@@ -560,6 +608,7 @@ const startPayment = async () => {
         if (response.data.success) {
             transactionId.value = response.data.transaction_id;
             modalStep.value = 'payment_pending';
+            startStatusPolling(); // Start polling automatically
         } else {
             modalError.value = response.data.error || 'Erreur lors de l\'initiation du paiement.';
         }
@@ -572,14 +621,14 @@ const startPayment = async () => {
 };
 
 const checkStatus = async () => {
-    if (!transactionId.value) return;
+    if (!transactionId.value || checkingStatus.value) return;
     checkingStatus.value = true;
-    modalError.value = '';
     
     try {
         const response = await axios.get(`/api/subscription/payment/status/${transactionId.value}`);
         
         if (response.data.success && response.data.status === 'success') {
+            stopStatusPolling();
             confirmModalOpen.value = false;
             successToastMessage.value = response.data.message;
             successToast.value = true;
@@ -593,6 +642,9 @@ const checkStatus = async () => {
                     }
                 });
             }, 3000);
+        } else if (response.data.status === 'failed') {
+            stopStatusPolling();
+            modalError.value = response.data.message || 'Le paiement a échoué ou a été rejeté par l\'opérateur.';
         } else {
             modalError.value = response.data.message || 'Le paiement est toujours en attente sur votre téléphone.';
         }
@@ -604,8 +656,46 @@ const checkStatus = async () => {
     }
 };
 
+const trialCountdownText = ref('');
+let timer = null;
+
+const updateTrialCountdown = () => {
+    if (!user.value?.trial_ends_at || !user.value?.is_trial_active) {
+        trialCountdownText.value = '';
+        return;
+    }
+    const end = new Date(user.value.trial_ends_at).getTime();
+    const nowTime = new Date().getTime();
+    const diff = end - nowTime;
+
+    if (diff <= 0) {
+        trialCountdownText.value = 'Expiré';
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    let parts = [];
+    if (days > 0) parts.push(`${days}j`);
+    if (hours > 0 || days > 0) parts.push(`${hours}h`);
+    parts.push(`${minutes}m`);
+    parts.push(`${seconds}s`);
+
+    trialCountdownText.value = parts.join(' ');
+};
+
 onMounted(() => {
     loadPlans();
+    updateTrialCountdown();
+    timer = setInterval(updateTrialCountdown, 1000);
+});
+
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+    stopStatusPolling();
 });
 </script>
 

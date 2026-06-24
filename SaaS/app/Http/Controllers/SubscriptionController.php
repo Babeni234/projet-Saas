@@ -58,7 +58,7 @@ class SubscriptionController extends Controller
             $amount = $plan->price_yearly ?? ($plan->price * 12 * 0.8);
         }
 
-        $orderId = 'OM_SUB_' . time() . '_' . $user->id;
+        $orderId = 'OM_' . time() . '_' . $user->id;
         $description = 'Abonnement Property AI - ' . $plan->name . ' (' . ($request->billing_cycle === 'yearly' ? 'Annuel' : 'Mensuel') . ')';
 
         // Execute payment initiation (simulation fallback is embedded inside service)
@@ -118,39 +118,11 @@ class SubscriptionController extends Controller
             ]);
         }
 
-        // In simulation mode or dev env, we automatically validate when checked
-        $isSimulation = str_starts_with($transaction->payment_ref, 'SIM_') || config('app.env') !== 'production';
+        // Check if transaction is a simulation
+        $isSimulation = str_starts_with($transaction->payment_ref, 'SIM_') || env('ORANGE_MONEY_SIMULATION', false);
 
         if ($isSimulation) {
-            DB::transaction(function () use ($user, $transaction) {
-                // Update transaction status
-                $transaction->status = 'success';
-                $transaction->save();
-
-                // Deactivate previous active subscriptions for this user
-                UserSubscription::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->update([
-                        'status' => 'inactive',
-                        'ends_at' => now(),
-                    ]);
-
-                // Create new active subscription record
-                UserSubscription::create([
-                    'user_id' => $user->id,
-                    'plan_slug' => $transaction->plan_slug,
-                    'price' => $transaction->amount,
-                    'starts_at' => now(),
-                    'ends_at' => $transaction->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth(),
-                    'status' => 'active',
-                ]);
-
-                // Update user subscription plan
-                $user->subscription_plan = $transaction->plan_slug;
-                // Extend/clear trial restrictions
-                $user->trial_ends_at = null; 
-                $user->save();
-            });
+            $this->activateUserSubscription($user, $transaction);
 
             return response()->json([
                 'success' => true,
@@ -159,13 +131,69 @@ class SubscriptionController extends Controller
             ]);
         }
 
-        // Otherwise (production real payment checks), Orange Money API callback would handle it, 
-        // but let's provide a simulation trigger if they call it to make testing easier.
+        // Query status from real Orange Money API
+        $verifyResult = $this->orangeMoneyService->verifyPaymentStatus($transaction->payment_ref);
+
+        if ($verifyResult['success'] && $verifyResult['status'] === 'success') {
+            $this->activateUserSubscription($user, $transaction);
+
+            return response()->json([
+                'success' => true,
+                'status' => 'success',
+                'message' => 'Félicitations ! Votre paiement a été validé et votre abonnement est actif.',
+            ]);
+        } elseif ($verifyResult['success'] && $verifyResult['status'] === 'failed') {
+            $transaction->status = 'failed';
+            $transaction->save();
+
+            return response()->json([
+                'success' => false,
+                'status' => 'failed',
+                'message' => 'Le paiement a échoué ou a été rejeté par l\'opérateur.',
+            ]);
+        }
+
         return response()->json([
             'success' => false,
             'status' => 'pending',
-            'message' => 'Paiement en attente de validation sur votre téléphone. Veuillez patienter.',
+            'message' => $verifyResult['error'] ?? 'Paiement en attente de validation sur votre téléphone. Veuillez patienter.',
         ]);
+    }
+
+    /**
+     * Activate the user subscription in a database transaction.
+     */
+    private function activateUserSubscription($user, $transaction)
+    {
+        DB::transaction(function () use ($user, $transaction) {
+            // Update transaction status
+            $transaction->status = 'success';
+            $transaction->save();
+
+            // Deactivate previous active subscriptions for this user
+            UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'inactive',
+                    'ends_at' => now(),
+                ]);
+
+            // Create new active subscription record
+            UserSubscription::create([
+                'user_id' => $user->id,
+                'plan_slug' => $transaction->plan_slug,
+                'price' => $transaction->amount,
+                'starts_at' => now(),
+                'ends_at' => $transaction->billing_cycle === 'yearly' ? now()->addYear() : now()->addMonth(),
+                'status' => 'active',
+            ]);
+
+            // Update user subscription plan
+            $user->subscription_plan = $transaction->plan_slug;
+            // Extend/clear trial restrictions
+            $user->trial_ends_at = null; 
+            $user->save();
+        });
     }
 
     /**

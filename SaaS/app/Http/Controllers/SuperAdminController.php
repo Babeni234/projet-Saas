@@ -7,6 +7,7 @@ use App\Models\CompanyProfile;
 use App\Models\Agency;
 use App\Models\Locataire;
 use App\Models\Logement;
+use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,6 +16,26 @@ class SuperAdminController extends Controller
     /**
      * Display the Super Admin Dashboard with metrics and dynamic maps.
      */
+    /**
+     * Get country name from country code
+     */
+    private function getCountryName($code)
+    {
+        $countries = [
+            'FR' => 'France',
+            'US' => 'États-Unis',
+            'GB' => 'Royaume-Uni',
+            'DE' => 'Allemagne',
+            'ES' => 'Espagne',
+            'IT' => 'Italie',
+            'CA' => 'Canada',
+            'CH' => 'Suisse',
+            'BE' => 'Belgique',
+            'NL' => 'Pays-Bas',
+        ];
+        return $countries[strtoupper($code)] ?? $code;
+    }
+
     public function dashboard()
     {
         // Use single query with subqueries for better performance
@@ -26,25 +47,37 @@ class SuperAdminController extends Controller
             'total_logements' => Logement::count(),
         ];
 
-        // Subscription plans distribution - single query with groupBy
-        $plansDistributionRaw = User::where('account_type', 'company')
-            ->select('subscription_plan', \DB::raw('count(*) as count'))
+        // Subscription plans from database grouped by account_type
+        $subscriptionPlans = SubscriptionPlan::all()->groupBy('account_type');
+        
+        // Get user counts per plan
+        $planCounts = User::select('subscription_plan', \DB::raw('count(*) as count'))
+            ->whereNotNull('subscription_plan')
             ->groupBy('subscription_plan')
             ->pluck('count', 'subscription_plan')
             ->toArray();
-
-        // Map type-specific slugs to the dashboard summary categories
-        $plansDistribution = [
-            'starter' => ($plansDistributionRaw['starter'] ?? 0) 
-                + ($plansDistributionRaw['pro_entreprise'] ?? 0) 
-                + ($plansDistributionRaw['standard_particulier'] ?? 0),
-            'professional' => ($plansDistributionRaw['professional'] ?? 0) 
-                + ($plansDistributionRaw['business_entreprise'] ?? 0) 
-                + ($plansDistributionRaw['premium_particulier'] ?? 0),
-            'enterprise' => ($plansDistributionRaw['enterprise'] ?? 0) 
-                + ($plansDistributionRaw['corporate'] ?? 0) 
-                + ($plansDistributionRaw['expert_particulier'] ?? 0),
+        
+        // Format plans with counts
+        $formattedPlans = [
+            'individual' => [],
+            'company' => []
         ];
+        
+        foreach ($subscriptionPlans as $accountType => $plans) {
+            foreach ($plans as $plan) {
+                $formattedPlans[$accountType][] = [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'slug' => $plan->slug,
+                    'price' => $plan->price,
+                    'account_type' => $plan->account_type,
+                    'color' => $plan->color,
+                    'popular' => $plan->popular,
+                    'user_count' => $planCounts[$plan->slug] ?? 0,
+                    'features' => $plan->features,
+                ];
+            }
+        }
 
         // Recent companies - limit to 5 with eager loading
         $recentCompanies = CompanyProfile::with('user:id,name,email,subscription_plan')
@@ -81,35 +114,64 @@ class SuperAdminController extends Controller
                 ];
             });
 
-        // Geographic mapping data - optimized query
-        $geoData = CompanyProfile::select('city', \DB::raw('count(*) as count'))
-            ->whereNotNull('city')
-            ->groupBy('city')
-            ->limit(20)
+        // Geographic mapping data - grouped by country with companies
+        $geoData = CompanyProfile::select('country', \DB::raw('count(*) as count'))
+            ->whereNotNull('country')
+            ->groupBy('country')
             ->get()
             ->map(function ($item) {
-                // Approximate coordinates for seeded cities
+                // Get companies for this country
+                $countryCompanies = CompanyProfile::where('country', $item->country)
+                    ->with(['user:id,name,email,subscription_plan'])
+                    ->withCount(['agencies', 'logements'])
+                    ->get()
+                    ->map(function ($company) {
+                        return [
+                            'id' => $company->id,
+                            'legal_name' => $company->legal_name,
+                            'city' => $company->city,
+                            'country' => $company->country,
+                            'verification_status' => $company->verification_status,
+                            'owner' => [
+                                'name' => $company->user->name ?? '—',
+                                'email' => $company->user->email ?? '—',
+                                'subscription_plan' => $company->user->subscription_plan ?? 'starter',
+                            ],
+                            'agencies_count' => $company->agencies_count ?? 0,
+                            'employees_count' => $company->employees_count ?? 0,
+                            'locataires_count' => $company->locataires_count ?? 0,
+                        ];
+                    });
+
+                // Approximate coordinates for countries
                 $coordinates = [
-                    'paris' => ['lat' => 48.8566, 'lng' => 2.3522],
-                    'lyon' => ['lat' => 45.7640, 'lng' => 4.8357],
-                    'marseille' => ['lat' => 43.2965, 'lng' => 5.3698],
-                    'cannes' => ['lat' => 43.5528, 'lng' => 7.0174],
-                    'bordeaux' => ['lat' => 44.8378, 'lng' => -0.5792],
+                    'FR' => ['lat' => 46.2276, 'lng' => 2.2137],
+                    'US' => ['lat' => 37.0902, 'lng' => -95.7129],
+                    'GB' => ['lat' => 55.3781, 'lng' => -3.4360],
+                    'DE' => ['lat' => 51.1657, 'lng' => 10.4515],
+                    'ES' => ['lat' => 40.4637, 'lng' => -3.7492],
+                    'IT' => ['lat' => 41.8719, 'lng' => 12.5674],
+                    'CA' => ['lat' => 56.1304, 'lng' => -106.3468],
+                    'CH' => ['lat' => 46.8182, 'lng' => 8.2275],
+                    'BE' => ['lat' => 50.5039, 'lng' => 4.4699],
+                    'NL' => ['lat' => 52.1326, 'lng' => 5.2913],
                 ];
-                $cityKey = strtolower($item->city);
-                $coords = $coordinates[$cityKey] ?? ['lat' => 46.2276, 'lng' => 2.2137]; // fallback center of France
+                $countryKey = strtoupper($item->country);
+                $coords = $coordinates[$countryKey] ?? ['lat' => 46.2276, 'lng' => 2.2137]; // fallback
 
                 return [
-                    'city' => $item->city,
+                    'country' => $item->country,
+                    'country_name' => $this->getCountryName($item->country),
                     'count' => $item->count,
                     'lat' => $coords['lat'],
                     'lng' => $coords['lng'],
+                    'companies' => $countryCompanies,
                 ];
             });
 
         return Inertia::render('SuperAdmin/Dashboard', [
             'stats' => $stats,
-            'plansDistribution' => $plansDistribution,
+            'subscriptionPlans' => $formattedPlans,
             'recentCompanies' => $recentCompanies,
             'recentUsers' => $recentUsers,
             'geoData' => $geoData,
