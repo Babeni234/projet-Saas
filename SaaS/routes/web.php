@@ -94,6 +94,10 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmi
     Route::get('/transactions', [\App\Http\Controllers\SuperAdminController::class, 'transactionsIndex'])->name('transactions.index');
     Route::post('/transactions/{transaction}/validate', [\App\Http\Controllers\SuperAdminController::class, 'manualValidateTransaction'])->name('transactions.validate');
     Route::post('/trial-settings', [\App\Http\Controllers\SuperAdminController::class, 'saveTrialSettings'])->name('trial-settings.save');
+
+    // Finance management routes
+    Route::get('/finance', [\App\Http\Controllers\SuperAdminController::class, 'financeIndex'])->name('finance.index');
+    Route::post('/finance/{user}/record-payment', [\App\Http\Controllers\SuperAdminController::class, 'recordUserPayment'])->name('finance.record-payment');
 });
 
 Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->group(function () {

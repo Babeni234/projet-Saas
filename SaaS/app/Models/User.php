@@ -17,6 +17,21 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasCustomUuid, HasApiTokens;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (in_array($user->account_type, ['company', 'individual'])) {
+                if (empty($user->trial_ends_at)) {
+                    $duration = (int) \App\Models\TrialSetting::getValue('trial_duration_days', 14);
+                    $user->trial_started_at = now();
+                    $user->trial_ends_at = now()->addDays($duration);
+                }
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -127,10 +142,28 @@ class User extends Authenticatable
 
     public function isTrialExpired(): bool
     {
-        if ($this->trial_ends_at === null) {
+        if (in_array(strtolower(str_replace([' ', '_'], '', $this->account_type)), ['superadmin', 'super_admin'])) {
             return false;
         }
-        return now()->gt($this->trial_ends_at) && !$this->hasActiveSubscription();
+
+        if ($this->company_profile_id && $this->account_type !== 'company') {
+            $owner = self::where('company_profile_id', $this->company_profile_id)
+                ->where('account_type', 'company')
+                ->first();
+            if ($owner) {
+                return $owner->isTrialExpired();
+            }
+        }
+
+        if ($this->hasActiveSubscription()) {
+            return false;
+        }
+
+        if ($this->trial_ends_at !== null && now()->lt($this->trial_ends_at)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function blockedModules(): array

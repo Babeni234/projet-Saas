@@ -143,28 +143,39 @@ class SuperAdminController extends Controller
                         ];
                     });
 
-                // Approximate coordinates for countries
-                $coordinates = [
-                    'FR' => ['lat' => 46.2276, 'lng' => 2.2137],
-                    'US' => ['lat' => 37.0902, 'lng' => -95.7129],
-                    'GB' => ['lat' => 55.3781, 'lng' => -3.4360],
-                    'DE' => ['lat' => 51.1657, 'lng' => 10.4515],
-                    'ES' => ['lat' => 40.4637, 'lng' => -3.7492],
-                    'IT' => ['lat' => 41.8719, 'lng' => 12.5674],
-                    'CA' => ['lat' => 56.1304, 'lng' => -106.3468],
-                    'CH' => ['lat' => 46.8182, 'lng' => 8.2275],
-                    'BE' => ['lat' => 50.5039, 'lng' => 4.4699],
-                    'NL' => ['lat' => 52.1326, 'lng' => 5.2913],
-                ];
-                $countryKey = strtoupper($item->country);
-                $coords = $coordinates[$countryKey] ?? ['lat' => 46.2276, 'lng' => 2.2137]; // fallback
+                // Retrieve from database table via code
+                $countryRecord = \App\Models\Country::where('code', strtoupper($item->country))->first();
+                if ($countryRecord) {
+                    $lat = (float) $countryRecord->latitude;
+                    $lng = (float) $countryRecord->longitude;
+                    $countryName = $countryRecord->name;
+                } else {
+                    // Approximate coordinates for countries fallback
+                    $coordinates = [
+                        'FR' => ['lat' => 46.2276, 'lng' => 2.2137, 'name' => 'France'],
+                        'US' => ['lat' => 37.0902, 'lng' => -95.7129, 'name' => 'États-Unis'],
+                        'GB' => ['lat' => 55.3781, 'lng' => -3.4360, 'name' => 'Royaume-Uni'],
+                        'DE' => ['lat' => 51.1657, 'lng' => 10.4515, 'name' => 'Allemagne'],
+                        'ES' => ['lat' => 40.4637, 'lng' => -3.7492, 'name' => 'Espagne'],
+                        'IT' => ['lat' => 41.8719, 'lng' => 12.5674, 'name' => 'Italie'],
+                        'CA' => ['lat' => 56.1304, 'lng' => -106.3468, 'name' => 'Canada'],
+                        'CH' => ['lat' => 46.8182, 'lng' => 8.2275, 'name' => 'Suisse'],
+                        'BE' => ['lat' => 50.5039, 'lng' => 4.4699, 'name' => 'Belgique'],
+                        'NL' => ['lat' => 52.1326, 'lng' => 5.2913, 'name' => 'Pays-Bas'],
+                    ];
+                    $countryKey = strtoupper($item->country);
+                    $fallback = $coordinates[$countryKey] ?? ['lat' => 46.2276, 'lng' => 2.2137, 'name' => $this->getCountryName($item->country)];
+                    $lat = $fallback['lat'];
+                    $lng = $fallback['lng'];
+                    $countryName = $fallback['name'];
+                }
 
                 return [
                     'country' => $item->country,
-                    'country_name' => $this->getCountryName($item->country),
+                    'country_name' => $countryName,
                     'count' => $item->count,
-                    'lat' => $coords['lat'],
-                    'lng' => $coords['lng'],
+                    'lat' => $lat,
+                    'lng' => $lng,
                     'companies' => $countryCompanies,
                 ];
             });
@@ -761,10 +772,12 @@ class SuperAdminController extends Controller
             });
 
         $blockedFeatures = \App\Models\TrialSetting::getValue('blocked_features', ['hotel', 'accounting', 'maintenance']);
+        $trialDurationDays = (int) \App\Models\TrialSetting::getValue('trial_duration_days', 14);
 
         return Inertia::render('SuperAdmin/PaymentControl', [
             'transactions' => $transactions,
             'blockedFeatures' => $blockedFeatures,
+            'trialDurationDays' => $trialDurationDays,
         ]);
     }
 
@@ -821,6 +834,7 @@ class SuperAdminController extends Controller
     {
         $validated = $request->validate([
             'blocked_features' => 'required|array',
+            'trial_duration_days' => 'required|integer|min:1|max:365',
         ]);
 
         \App\Models\TrialSetting::updateOrCreate(
@@ -828,7 +842,178 @@ class SuperAdminController extends Controller
             ['value' => $validated['blocked_features']]
         );
 
+        \App\Models\TrialSetting::updateOrCreate(
+            ['key' => 'trial_duration_days'],
+            ['value' => (int) $validated['trial_duration_days']]
+        );
+
         return back()->with('success', 'Paramètres de la période d\'essai mis à jour avec succès.');
+    }
+
+    /**
+     * Display the Finance management page with KPIs and year filtering.
+     */
+    public function financeIndex(Request $request)
+    {
+        $year = $request->input('year', date('Y'));
+
+        $users = \App\Models\User::whereNotNull('subscription_plan')
+            ->whereIn('account_type', ['company', 'individual'])
+            ->with(['company', 'planRelation', 'activeSubscription'])
+            ->get()
+            ->map(function ($u) use ($year) {
+                // Find last successful transaction for billing cycle
+                $lastTx = \App\Models\Transaction::where('user_id', $u->id)
+                    ->where('status', 'success')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                $billingCycle = $lastTx ? $lastTx->billing_cycle : 'monthly';
+
+                // Get plan prices
+                $plan = $u->planRelation;
+                $monthlyPrice = $plan ? $plan->price : 0.0;
+                $yearlyPrice = $plan ? ($plan->price_yearly ?? ($monthlyPrice * 12 * 0.8)) : 0.0;
+
+                $priceToPay = $billingCycle === 'yearly' ? $yearlyPrice : $monthlyPrice;
+                $annualTarget = $billingCycle === 'yearly' ? $yearlyPrice : ($monthlyPrice * 12);
+
+                // Amount paid this year
+                $paidThisYear = \App\Models\Transaction::where('user_id', $u->id)
+                    ->where('status', 'success')
+                    ->whereYear('created_at', $year)
+                    ->sum('amount');
+
+                // Determine status and next due date
+                $status = 'unpaid'; // trial, paid, unpaid
+                $dueDate = null;
+                $paidInSelectedYear = \App\Models\Transaction::where('user_id', $u->id)
+                    ->where('status', 'success')
+                    ->whereYear('created_at', $year)
+                    ->exists();
+
+                if ($year == date('Y')) {
+                    if ($u->isTrialActive()) {
+                        $status = 'trial';
+                        $dueDate = $u->trial_ends_at;
+                    } elseif ($u->hasActiveSubscription()) {
+                        $status = 'paid';
+                        $dueDate = $u->activeSubscription->ends_at;
+                    } else {
+                        $status = 'unpaid';
+                        $dueDate = $u->trial_ends_at ?? $u->created_at;
+                    }
+                } else {
+                    if ($paidInSelectedYear) {
+                        $status = 'paid';
+                        $lastTxInYear = \App\Models\Transaction::where('user_id', $u->id)
+                            ->where('status', 'success')
+                            ->whereYear('created_at', $year)
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                        $dueDate = $lastTxInYear ? $lastTxInYear->created_at->addMonth() : null;
+                    } else {
+                        $status = 'unpaid';
+                        $dueDate = null;
+                    }
+                }
+
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'account_type' => $u->account_type,
+                    'company_name' => $u->company->legal_name ?? '—',
+                    'plan_name' => $plan ? $plan->name : 'starter',
+                    'plan_slug' => $u->subscription_plan,
+                    'price' => $priceToPay,
+                    'billing_cycle' => $billingCycle,
+                    'due_date' => $dueDate ? $dueDate->format('d/m/Y') : '—',
+                    'status' => $status,
+                    'is_blocked' => $u->isTrialExpired(),
+                    'paid_this_year' => $paidThisYear,
+                    'annual_target' => $annualTarget,
+                ];
+            });
+
+        // Calculate KPIs
+        $totalCollected = (double) \App\Models\Transaction::where('status', 'success')
+            ->whereYear('created_at', $year)
+            ->sum('amount');
+
+        $totalToReceive = 0.0;
+        foreach ($users as $u) {
+            $outstanding = $u['annual_target'] - $u['paid_this_year'];
+            if ($outstanding > 0) {
+                $totalToReceive += $outstanding;
+            }
+        }
+
+        // Available years
+        $txYears = \App\Models\Transaction::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->pluck('year')
+            ->toArray();
+        $availableYears = array_unique(array_merge([date('Y') - 1, date('Y'), date('Y') + 1], $txYears));
+        sort($availableYears);
+
+        return Inertia::render('SuperAdmin/Finance', [
+            'users' => $users,
+            'totalCollected' => $totalCollected,
+            'totalToReceive' => $totalToReceive,
+            'selectedYear' => (int) $year,
+            'availableYears' => array_values($availableYears),
+        ]);
+    }
+
+    /**
+     * Record a manual payment for a user and renew/activate subscription.
+     */
+    public function recordUserPayment(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'billing_cycle' => 'required|in:monthly,yearly',
+            'payment_method' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $validated) {
+            // Create successful transaction
+            \App\Models\Transaction::create([
+                'user_id' => $user->id,
+                'company_profile_id' => $user->company_profile_id ?? 0,
+                'plan_slug' => $user->subscription_plan ?? 'starter',
+                'amount' => $validated['amount'],
+                'billing_cycle' => $validated['billing_cycle'],
+                'payment_method' => $validated['payment_method'],
+                'payment_ref' => 'MANUAL_' . time() . '_' . rand(100, 999),
+                'status' => 'success',
+            ]);
+
+            // Deactivate previous active subscriptions for this user
+            \App\Models\UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'inactive',
+                    'ends_at' => now(),
+                ]);
+
+            // Create new active subscription record
+            \App\Models\UserSubscription::create([
+                'user_id' => $user->id,
+                'plan_slug' => $user->subscription_plan ?? 'starter',
+                'price' => $validated['amount'],
+                'starts_at' => now(),
+                'ends_at' => $validated['billing_cycle'] === 'yearly' ? now()->addYear() : now()->addMonth(),
+                'status' => 'active',
+            ]);
+
+            // Clear trial expiration
+            $user->trial_ends_at = null;
+            $user->save();
+        });
+
+        return back()->with('success', 'Le paiement a été enregistré avec succès et l\'accès réactivé.');
     }
 }
 

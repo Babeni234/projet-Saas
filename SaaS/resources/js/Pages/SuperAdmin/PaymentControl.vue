@@ -12,6 +12,10 @@ const props = defineProps({
         type: Array,
         default: () => ['hotel', 'accounting', 'maintenance'],
     },
+    trialDurationDays: {
+        type: Number,
+        default: 14,
+    },
 });
 
 const theme = inject('theme');
@@ -20,6 +24,7 @@ const activeTab = ref('transactions');
 // Form for saving settings
 const settingsForm = useForm({
     blocked_features: [...props.blockedFeatures],
+    trial_duration_days: props.trialDurationDays,
 });
 
 const featuresList = [
@@ -219,11 +224,29 @@ const formatAmount = (amount) => {
             <div v-if="activeTab === 'settings'" class="max-w-2xl">
                 <div class="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-3xl p-6 shadow-[var(--card-shadow)] space-y-6">
                     <div>
-                        <h3 class="text-base font-extrabold text-[var(--text-main)]">Restrictions Post-Essai</h3>
-                        <p class="text-xs text-[var(--text-muted)] mt-1">Sélectionnez les modules fonctionnels qui doivent être bloqués pour les entreprises une fois que les 14 jours d'essai gratuit ont expiré sans souscription active.</p>
+                        <h3 class="text-base font-extrabold text-[var(--text-main)]">Configuration de la Période d'Essai</h3>
+                        <p class="text-xs text-[var(--text-muted)] mt-1">Configurez la période d'essai et sélectionnez les modules fonctionnels qui doivent être bloqués pour les entreprises une fois l'essai expiré sans souscription active.</p>
                     </div>
 
                     <form @submit.prevent="saveSettings" class="space-y-6">
+                        <!-- Trial Duration Days -->
+                        <div class="bg-[var(--bg-input)]/25 border border-[var(--border-color)] rounded-2xl p-5 space-y-2">
+                            <label class="block text-xs font-black uppercase tracking-wider text-[var(--text-main)]">
+                                Durée de la Période d'Essai (jours)
+                            </label>
+                            <input 
+                                type="number" 
+                                v-model="settingsForm.trial_duration_days"
+                                min="1" 
+                                max="365"
+                                class="w-full max-w-xs px-4 py-3 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-xl text-xs text-[var(--text-main)] outline-none focus:border-indigo-500 transition-all font-mono"
+                                required
+                            />
+                            <p class="text-[10px] text-[var(--text-muted)] leading-relaxed">
+                                Le nombre de jours pendant lequel une nouvelle entreprise peut tester le système gratuitement avant d'être bloquée.
+                            </p>
+                        </div>
+
                         <div class="space-y-3">
                             <div 
                                 v-for="feat in featuresList" 

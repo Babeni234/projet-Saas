@@ -25,7 +25,16 @@ export default defineConfig({
         cssMinify: false,
     },
     server: {
-        cors: true,
-        host: '127.0.0.1',
+        host: 'localhost',
+        strictPort: true,
+        cors: {
+            origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
+            credentials: true,
+        },
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': '*',
+        },
     },
 });
