@@ -10,13 +10,13 @@ const user = page.props.auth.user;
 const sidebarOpen = ref(false);
 
 const navigation = [
-    { name: 'Tableau de bord', href: route('dashboard'), icon: 'dashboard' },
-    { name: 'Mes biens', href: '#', icon: 'building' },
-    { name: 'Locataires', href: '#', icon: 'users' },
-    { name: 'Contrats', href: '#', icon: 'document' },
-    { name: 'Visites', href: '#', icon: 'calendar' },
-    { name: 'Quittances', href: '#', icon: 'receipt' },
-    { name: 'Messages', href: '#', icon: 'chat' },
+    { name: 'Tableau de bord', href: route('dashboard'), icon: 'dashboard', pattern: 'dashboard' },
+    { name: 'Mes biens', href: route('landlord.properties.index'), icon: 'building', pattern: 'landlord.properties*' },
+    { name: 'Locataires', href: '#', icon: 'users', pattern: null },
+    { name: 'Contrats', href: '#', icon: 'document', pattern: null },
+    { name: 'Visites', href: '#', icon: 'calendar', pattern: null },
+    { name: 'Quittances', href: '#', icon: 'receipt', pattern: null },
+    { name: 'Messages', href: '#', icon: 'chat', pattern: null },
 ];
 </script>
 
@@ -34,7 +34,7 @@ const navigation = [
         >
             <div class="flex h-16 items-center gap-2 border-b border-gray-100 px-6">
                 <ApplicationLogo class="h-8 w-8" />
-                <span class="text-lg font-bold text-gray-900">ImmoGest</span>
+                <span class="text-lg font-bold text-gray-900">ImmoSaas</span>
             </div>
 
             <nav class="flex-1 space-y-1 px-3 py-4">
@@ -43,7 +43,7 @@ const navigation = [
                     :key="item.name"
                     :href="item.href"
                     class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
-                    :class="$page.component === 'Dashboard' && item.name === 'Tableau de bord'
+                    :class="item.pattern && route().current(item.pattern)
                         ? 'bg-indigo-50 text-indigo-700'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
                 >
