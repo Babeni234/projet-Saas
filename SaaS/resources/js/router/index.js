@@ -477,6 +477,18 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/regles-vigueur',
+        name: 'dashboard.regles',
+        component: () => import('../Pages/entreprise/Dashboard/components/ReglesVigueurPage.vue'),
+        meta: {
+            title: 'Lois & Réglementations',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Lois & Réglementations', to: { name: 'dashboard.regles' } },
+            ],
+        },
+    },
+    {
         path: '/agence/dashboard',
         redirect: '/agence/dashboard/master',
     },

@@ -460,6 +460,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/affectations/{affectation}/terminate', [AffectationController::class, 'terminate'])->name('affectations.terminate');
     Route::delete('/api/affectations/{affectation}', [AffectationController::class, 'destroy'])->name('affectations.destroy');
 
+    // Rules API routes
+    Route::get('/api/regles-vigueur', [\App\Http\Controllers\ReglesVigueurController::class, 'getRegles'])->name('api.regles');
+
     // Rapports API routes
     Route::get('/api/rapports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::post('/api/rapports/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('reports.generate');

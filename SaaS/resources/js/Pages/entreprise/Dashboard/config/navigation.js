@@ -18,6 +18,12 @@ export const navigation = [
                 icon: 'credit-card',
                 badge: null,
             },
+            {
+                name: 'dashboard.regles',
+                label: 'Lois & Réglementations',
+                icon: 'book',
+                badge: null,
+            },
         ],
     },
     {
@@ -97,6 +103,7 @@ export const navigation = [
 export const routeTitles = {
     'dashboard.master': 'Tableau de bord',
     'dashboard.company.upgrade': 'Changer de forfait',
+    'dashboard.regles': 'Lois & Réglementations',
     'immobilier.index': 'Gestion immobilière',
     'immobilier.factures': 'Facturation/quittances',
     'immobilier.paiements': 'Paiements de loyer',

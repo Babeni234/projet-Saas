@@ -943,6 +943,9 @@ class SuperAdminController extends Controller
 
         $totalToReceive = 0.0;
         foreach ($users as $u) {
+            if ($u['status'] === 'trial') {
+                continue;
+            }
             $outstanding = $u['annual_target'] - $u['paid_this_year'];
             if ($outstanding > 0) {
                 $totalToReceive += $outstanding;
