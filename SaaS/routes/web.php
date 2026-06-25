@@ -56,4 +56,22 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+Route::prefix('locataire')->name('tenant.')->group(function () {
+    Route::get('login', [\App\Http\Controllers\Tenant\AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [\App\Http\Controllers\Tenant\AuthController::class, 'login'])->name('login.submit');
+    Route::post('logout', [\App\Http\Controllers\Tenant\AuthController::class, 'logout'])->name('logout');
+
+    Route::middleware('auth:tenant')->group(function () {
+        Route::get('dashboard', [\App\Http\Controllers\Tenant\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('receipts', [\App\Http\Controllers\Tenant\ReceiptController::class, 'index'])->name('receipts.index');
+        Route::get('receipts/{receipt}/pdf', [\App\Http\Controllers\Tenant\ReceiptPdfController::class, 'download'])->name('receipts.pdf');
+        Route::resource('incidents', \App\Http\Controllers\Tenant\IncidentController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('incidents/{incident}/comment', [\App\Http\Controllers\Tenant\IncidentController::class, 'comment'])->name('incidents.comment');
+        Route::get('documents', [\App\Http\Controllers\Tenant\DocumentController::class, 'index'])->name('documents.index');
+        Route::get('messages', [\App\Http\Controllers\Tenant\MessageController::class, 'index'])->name('messages.index');
+        Route::get('messages/{conversation}', [\App\Http\Controllers\Tenant\MessageController::class, 'show'])->name('messages.show');
+        Route::post('messages/{conversation}/reply', [\App\Http\Controllers\Tenant\MessageController::class, 'reply'])->name('messages.reply');
+    });
+});
+
 require __DIR__.'/auth.php';

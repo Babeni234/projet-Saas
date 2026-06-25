@@ -17,4 +17,19 @@ class Tenant extends Model
     {
         return $this->hasMany(Contract::class);
     }
+
+    public function tenantUser()
+    {
+        return $this->hasOne(TenantUser::class);
+    }
+
+    public function receipts()
+    {
+        return $this->hasManyThrough(Receipt::class, Contract::class);
+    }
+
+    public function incidents()
+    {
+        return $this->hasMany(Incident::class);
+    }
 }
