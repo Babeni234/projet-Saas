@@ -1,1 +1,0 @@
-﻿<?php $pdo = new PDO("mysql:host=127.0.0.1;dbname=exam", "root", ""); $pdo->exec("DROP TABLE IF EXISTS receipts, saved_searches, visits"); $pdo->exec("DELETE FROM migrations WHERE batch IN (3,4)"); echo "OK";
