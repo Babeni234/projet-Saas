@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Gemini\Laravel\Facades\Gemini;
 use Gemini\Data\Blob;
+use Gemini\Enums\MimeType;
 
 class IllustrationController extends Controller
 {
@@ -345,6 +346,8 @@ class IllustrationController extends Controller
         }
 
         try {
+            $geminiMime = MimeType::tryFrom($mimeType) ?? ($isImage ? MimeType::IMAGE_JPEG : MimeType::VIDEO_MP4);
+
             $prompt = "Tu es un expert en gestion immobilière et marketing. Rédige une description très courte (maximum 2 phrases, environ 15-25 mots), attractive, professionnelle et précise en français pour cette image/vidéo d'un bien immobilier ou d'un bâtiment (par exemple : 'Salon lumineux avec parquet et grandes fenêtres', ou 'Façade moderne d'un immeuble résidentiel'). Décris ce que tu vois de manière valorisante. Réponds DIRECTEMENT avec la description, sans formule de politesse ni introduction.";
 
             if ($isImage) {
@@ -352,7 +355,7 @@ class IllustrationController extends Controller
                     ->generateContent([
                         $prompt,
                         new Blob(
-                            mimeType: $mimeType,
+                            mimeType: $geminiMime,
                             data: base64_encode($fileContent),
                         )
                     ]);
@@ -363,7 +366,7 @@ class IllustrationController extends Controller
                         ->generateContent([
                             $prompt,
                             new Blob(
-                                mimeType: $mimeType,
+                                mimeType: $geminiMime,
                                 data: base64_encode($fileContent),
                             )
                         ]);
