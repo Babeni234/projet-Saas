@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('bailleur')->name('landlord.')->group(function () {
         Route::resource('properties', \App\Http\Controllers\Landlord\PropertyController::class);
         Route::resource('tenants', \App\Http\Controllers\Landlord\TenantController::class);
+        Route::resource('contracts', \App\Http\Controllers\Landlord\ContractController::class);
     });
 });
 

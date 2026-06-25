@@ -13,7 +13,7 @@ const navigation = [
     { name: 'Tableau de bord', href: route('dashboard'), icon: 'dashboard', pattern: 'dashboard' },
     { name: 'Mes biens', href: route('landlord.properties.index'), icon: 'building', pattern: 'landlord.properties*' },
     { name: 'Locataires', href: route('landlord.tenants.index'), icon: 'users', pattern: 'landlord.tenants*' },
-    { name: 'Contrats', href: '#', icon: 'document', pattern: null },
+    { name: 'Contrats', href: route('landlord.contracts.index'), icon: 'document', pattern: 'landlord.contracts*' },
     { name: 'Visites', href: '#', icon: 'calendar', pattern: null },
     { name: 'Quittances', href: '#', icon: 'receipt', pattern: null },
     { name: 'Messages', href: '#', icon: 'chat', pattern: null },
