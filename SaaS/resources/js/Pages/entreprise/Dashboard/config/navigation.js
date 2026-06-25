@@ -54,6 +54,18 @@ export const navigation = [
                     { name: 'immobilier.historique', label: 'Historique' },
                 ],
             },
+            {
+                name: 'immobilier.immotok.interactions',
+                label: 'Interactions ImmoTok',
+                icon: 'message-square',
+                accent: 'rose',
+            },
+            {
+                name: 'immobilier.immotok.messages',
+                label: 'Messages ImmoTok',
+                icon: 'message-circle',
+                accent: 'rose',
+            },
             // { BLOCAGE TEMPORAIE DE CE MODULE
             //     id: 'hotel',
             //     label: 'Hôtellerie',
@@ -115,6 +127,8 @@ export const routeTitles = {
     'immobilier.proprietaires': 'Gestion des propriétaires',
     'immobilier.logements': 'Gestion des biens immobiliers',
     'immobilier.illustrations': 'Gestion des illustrations',
+    'immobilier.immotok.interactions': 'Interactions ImmoTok',
+    'immobilier.immotok.messages': 'Messagerie ImmoTok',
     'immobilier.affectations': 'Affectation des biens immobiliers',
     'immobilier.contrats': 'Contrats de bail',
     'immobilier.locataires': 'Gestion des locataires',

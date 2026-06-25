@@ -3251,6 +3251,7 @@ const navItems = computed(() => [
   { id: 'old-contracts', label: t('nav.oldContracts'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', badge: null },
   { id: 'support', label: t('nav.support'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>', badge: null },
   { id: 'profile', label: t('nav.profile'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', badge: null },
+  { id: 'immotok', label: 'ImmoTok', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>', badge: null },
 ])
 
 const rechargeTabs = [
@@ -4075,6 +4076,10 @@ function handleAiAction(actionId) {
 }
 
 function switchTab(id) {
+  if (id === 'immotok') {
+    window.open('/immotok', '_blank')
+    return
+  }
   if (id === 'support' || id === 'messagerie') {
     showSupportSoonModal.value = true
     mobileSidebarOpen.value = false

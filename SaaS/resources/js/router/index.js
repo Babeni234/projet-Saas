@@ -80,6 +80,32 @@ const routes = [
         },
     },
     {
+        path: '/dashboard/immobilier/immotok/interactions',
+        name: 'immobilier.immotok.interactions',
+        component: () => import('../Pages/entreprise/Dashboard/components/ImmotokInteractions.vue'),
+        meta: {
+            title: 'Interactions ImmoTok',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Interactions ImmoTok', to: { name: 'immobilier.immotok.interactions' } },
+            ],
+        },
+    },
+    {
+        path: '/dashboard/immobilier/immotok/messages',
+        name: 'immobilier.immotok.messages',
+        component: () => import('../Pages/entreprise/Dashboard/components/ImmotokMessages.vue'),
+        meta: {
+            title: 'Messagerie ImmoTok',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'dashboard.master' } },
+                { label: 'Immobilier', to: { name: 'immobilier.index' } },
+                { label: 'Messagerie ImmoTok', to: { name: 'immobilier.immotok.messages' } },
+            ],
+        },
+    },
+    {
         path: '/dashboard/immobilier/affectations',
         name: 'immobilier.affectations',
         component: () => import('../Pages/entreprise/Dashboard/components/AffectationPage.vue'),
@@ -549,6 +575,32 @@ const routes = [
                 { label: 'Accueil', to: { name: 'agence.master' } },
                 { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
                 { label: 'Illustrations', to: { name: 'agence.immobilier.illustrations' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/immotok/interactions',
+        name: 'agence.immobilier.immotok.interactions',
+        component: () => import('../Pages/entreprise/Dashboard/components/ImmotokInteractions.vue'),
+        meta: {
+            title: 'Interactions ImmoTok',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Interactions ImmoTok', to: { name: 'agence.immobilier.immotok.interactions' } },
+            ],
+        },
+    },
+    {
+        path: '/agence/dashboard/immobilier/immotok/messages',
+        name: 'agence.immobilier.immotok.messages',
+        component: () => import('../Pages/entreprise/Dashboard/components/ImmotokMessages.vue'),
+        meta: {
+            title: 'Messagerie ImmoTok',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Immobilier', to: { name: 'agence.immobilier.index' } },
+                { label: 'Messagerie ImmoTok', to: { name: 'agence.immobilier.immotok.messages' } },
             ],
         },
     },

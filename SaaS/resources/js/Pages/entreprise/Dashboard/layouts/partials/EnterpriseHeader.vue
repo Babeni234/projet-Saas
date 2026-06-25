@@ -30,6 +30,16 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+                <!-- ImmoTok Shortcut -->
+                <a
+                    href="/immotok"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-650 hover:to-pink-650 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-red-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                    <i class="fab fa-tiktok text-white"></i>
+                    <span class="hidden md:inline">ImmoTok</span>
+                </a>
+
                 <div class="hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:flex">
                     <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" />

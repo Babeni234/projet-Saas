@@ -40,6 +40,18 @@ export const navigation = [
                     { name: 'agence.immobilier.historique', label: 'Historique' },
                 ],
             },
+            {
+                name: 'agence.immobilier.immotok.interactions',
+                label: 'Interactions ImmoTok',
+                icon: 'message-square',
+                accent: 'rose',
+            },
+            {
+                name: 'agence.immobilier.immotok.messages',
+                label: 'Messages ImmoTok',
+                icon: 'message-circle',
+                accent: 'rose',
+            },
         ],
     },
     {
@@ -72,6 +84,8 @@ export const routeTitles = {
     'agence.immobilier.batiments': 'Gestion des bâtiments',
     'agence.immobilier.logements': 'Gestion des biens immobiliers',
     'agence.immobilier.illustrations': 'Gestion des illustrations',
+    'agence.immobilier.immotok.interactions': 'Interactions ImmoTok',
+    'agence.immobilier.immotok.messages': 'Messagerie ImmoTok',
     'agence.immobilier.affectations': 'Affectation des biens immobiliers',
     'agence.immobilier.contrats': 'Contrats de bail',
     'agence.immobilier.locataires': 'Gestion des locataires',

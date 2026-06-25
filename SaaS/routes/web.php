@@ -161,6 +161,12 @@ Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->grou
     Route::get('/employees', function () {
         return redirect()->route('agence.dashboard', ['route' => 'employees']);
     })->name('employees');
+    Route::get('/immobilier/immotok/interactions', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/immotok/interactions']);
+    })->name('agence.immobilier.immotok.interactions');
+    Route::get('/immobilier/immotok/messages', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/immotok/messages']);
+    })->name('agence.immobilier.immotok.messages');
 });
 
 Route::middleware('auth')->group(function () {
@@ -488,6 +494,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/paiement-loyers', [\App\Http\Controllers\PaiementLoyerController::class, 'index'])->name('paiement-loyers.json');
     Route::post('/api/paiement-loyers', [\App\Http\Controllers\PaiementLoyerController::class, 'store'])->name('paiement-loyers.store');
     Route::delete('/api/paiement-loyers/{paiementLoyer}', [\App\Http\Controllers\PaiementLoyerController::class, 'destroy'])->name('paiement-loyers.destroy');
+
+    // Dashboard ImmoTok Espace Enterprise/Agence
+    Route::get('/api/dashboard/immotok/interactions', [\App\Http\Controllers\ImmotokDashboardController::class, 'getInteractions']);
+    Route::post('/api/dashboard/immotok/comments/{id}/reply', [\App\Http\Controllers\ImmotokDashboardController::class, 'replyComment']);
+    Route::get('/api/dashboard/immotok/chats', [\App\Http\Controllers\ImmotokDashboardController::class, 'getChats']);
+    Route::get('/api/dashboard/immotok/chats/{client_id}', [\App\Http\Controllers\ImmotokDashboardController::class, 'getChatMessages']);
+    Route::post('/api/dashboard/immotok/chats/{client_id}/reply', [\App\Http\Controllers\ImmotokDashboardController::class, 'replyMessage']);
+    Route::post('/api/dashboard/immotok/chat-settings/toggle-ai', [\App\Http\Controllers\ImmotokDashboardController::class, 'toggleAi']);
+
+    // Enterprise sub-navigation redirects for ImmoTok Vue pages
+    Route::get('/immobilier/immotok/interactions', function () {
+        return Inertia::render('entreprise/Dashboard/Dashboard', [
+            'initialRoute' => 'immobilier/immotok/interactions'
+        ]);
+    })->name('entreprise.immobilier.immotok.interactions');
+    Route::get('/immobilier/immotok/messages', function () {
+        return Inertia::render('entreprise/Dashboard/Dashboard', [
+            'initialRoute' => 'immobilier/immotok/messages'
+        ]);
+    })->name('entreprise.immobilier.immotok.messages');
 });
 
 
@@ -512,5 +538,25 @@ Route::middleware(['auth', 'locataire'])->prefix('api/locataire')->group(functio
 });
 
 
+// ─── ImmoTok Public Platform ───────────────────────────────────────────────
+Route::get('/immotok', function () {
+    return Inertia::render('immoTok/Index');
+})->name('immotok.feed');
+
+Route::get('/api/immotok/feed', [\App\Http\Controllers\ImmotokFeedController::class, 'getFeed']);
+Route::post('/api/immotok/auth/register', [\App\Http\Controllers\ImmotokAuthController::class, 'register']);
+Route::post('/api/immotok/auth/login', [\App\Http\Controllers\ImmotokAuthController::class, 'login']);
+Route::post('/api/immotok/auth/logout', [\App\Http\Controllers\ImmotokAuthController::class, 'logout']);
+Route::get('/api/immotok/auth/me', [\App\Http\Controllers\ImmotokAuthController::class, 'me']);
+Route::post('/api/immotok/illustrations/{id}/like', [\App\Http\Controllers\ImmotokFeedController::class, 'like']);
+Route::post('/api/immotok/illustrations/{id}/favorite', [\App\Http\Controllers\ImmotokFeedController::class, 'favorite']);
+Route::get('/api/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'getComments']);
+Route::post('/api/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'comment']);
+Route::post('/api/immotok/reserve-visit', [\App\Http\Controllers\ImmotokFeedController::class, 'reserveVisit']);
+Route::get('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'getMessages']);
+Route::post('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'sendMessage']);
+
+
 require __DIR__.'/auth.php';
+
 

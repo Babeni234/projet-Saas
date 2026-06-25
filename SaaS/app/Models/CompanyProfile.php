@@ -26,6 +26,7 @@ class CompanyProfile extends Model
         'phone',
         'logo_path',
         'verification_status',
+        'immotok_ai_enabled',
     ];
 
     public function user(): BelongsTo

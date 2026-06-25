@@ -49,6 +49,7 @@ class Agency extends Model
         'metadata',
         'company_profile_id',
         'chef_id',
+        'immotok_ai_enabled',
     ];
 
     public function companyProfile(): \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -236,6 +236,16 @@ const getInitials = (name) => {
                         <i class="fa-solid fa-user-gear text-base transition-transform group-hover:scale-110 duration-300" :class="[$page.component === 'SuperAdmin/Profile/Index' ? 'text-white' : 'text-indigo-500/70 group-hover:text-indigo-500']"></i>
                         <span>Mon Profil</span>
                     </Link>
+
+                    <!-- ImmoTok Shortcut -->
+                    <a 
+                        href="/immotok" 
+                        target="_blank"
+                        class="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 relative overflow-hidden text-red-500 hover:text-red-650 hover:bg-red-50/10"
+                    >
+                        <i class="fab fa-tiktok text-base transition-transform group-hover:scale-110 duration-300"></i>
+                        <span>Accéder à ImmoTok</span>
+                    </a>
                 </nav>
             </div>
 

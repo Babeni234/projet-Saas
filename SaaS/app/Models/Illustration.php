@@ -36,4 +36,19 @@ class Illustration extends Model
     {
         return $this->belongsTo(Agency::class);
     }
+
+    public function immotokLikes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ImmotokLike::class, 'illustration_id');
+    }
+
+    public function immotokFavorites(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ImmotokFavorite::class, 'illustration_id');
+    }
+
+    public function immotokComments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ImmotokComment::class, 'illustration_id');
+    }
 }

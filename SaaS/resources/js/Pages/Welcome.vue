@@ -574,6 +574,10 @@ watch(locale, (val) => {
                     <a href="#audiences" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.industries }}</a>
                     <a href="#ai" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.aiEngine }}</a>
                     <a href="#results" class="text-sm text-slate-500 transition-colors duration-200 hover:text-slate-900">{{ t.nav.results }}</a>
+                    <Link :href="route('immotok.feed')" class="text-sm font-bold text-red-500 hover:text-red-700 transition-colors duration-200 flex items-center gap-1.5">
+                        <i class="fab fa-tiktok"></i>
+                        <span>ImmoTok</span>
+                    </Link>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -651,6 +655,10 @@ watch(locale, (val) => {
                     <a href="#audiences" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.industries }}</a>
                     <a href="#ai" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.aiEngine }}</a>
                     <a href="#results" class="text-sm text-slate-600" @click="mobileMenuOpen = false">{{ t.nav.results }}</a>
+                    <Link :href="route('immotok.feed')" class="text-sm font-bold text-red-550 flex items-center gap-2" @click="mobileMenuOpen = false">
+                        <i class="fab fa-tiktok"></i>
+                        <span>ImmoTok Feed</span>
+                    </Link>
                     <div v-if="canLogin" class="flex flex-col gap-3 border-t border-slate-200 pt-4">
                         <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="text-sm font-medium">{{ t.nav.dashboard }}</Link>
                         <template v-else>
@@ -719,6 +727,13 @@ watch(locale, (val) => {
                             </svg>
                             {{ t.hero.ctaSecondary }}
                         </a>
+                        <Link
+                            :href="route('immotok.feed')"
+                            class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-650 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-red-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/35 active:scale-95 cursor-pointer"
+                        >
+                            <i class="fab fa-tiktok"></i>
+                            <span>Découvrir ImmoTok</span>
+                        </Link>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
