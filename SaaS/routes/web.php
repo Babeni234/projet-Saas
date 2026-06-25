@@ -206,6 +206,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/ai/generate-etat-des-lieux', [\App\Http\Controllers\ContractGenerationController::class, 'generateEtatDesLieux'])->name('ai.generate-etat-des-lieux');
     Route::post('/api/ai/generate-rejection-motif', [\App\Http\Controllers\ContractGenerationController::class, 'generateRejectionMotif'])->name('ai.generate-rejection-motif');
     Route::post('/api/ai/assistant', [\App\Http\Controllers\ContractGenerationController::class, 'assistantChat'])->name('ai.assistant');
+    Route::post('/api/ai/describe-media', [\App\Http\Controllers\IllustrationController::class, 'describeMedia'])->name('ai.describe-media');
 
     // Agencies routes
     Route::prefix('agencies')->name('agencies.')->group(function () {

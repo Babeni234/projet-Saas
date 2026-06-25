@@ -381,7 +381,24 @@
 
                     <!-- Description -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description (Facultatif)</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Description (Facultatif)</label>
+                            <button
+                                type="button"
+                                @click="generateAiDescriptionForNew"
+                                :disabled="generatingDescription || (selectedPhotos.length === 0 && selectedVideos.length === 0)"
+                                class="text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition"
+                            >
+                                <svg v-if="generatingDescription" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                {{ generatingDescription ? 'Génération...' : 'Générer avec l\'IA' }}
+                            </button>
+                        </div>
                         <textarea
                             v-model="newForm.description"
                             rows="2"
@@ -391,6 +408,43 @@
                                 isAgency ? 'focus:ring-amber-500' : 'focus:ring-indigo-500'
                             ]"
                         ></textarea>
+                    </div>
+
+                    <!-- Audio upload field -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Musique / Son d'ambiance (Facultatif)</label>
+                        <div
+                            @click="triggerAudioInput"
+                            :class="[
+                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
+                            ]"
+                        >
+                            <input
+                                type="file"
+                                ref="audioInput"
+                                @change="handleAudioChange"
+                                class="hidden"
+                                accept="audio/*"
+                            >
+                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                            </svg>
+                            <p class="text-xs font-bold text-slate-700">Sélectionner une Musique</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Fichier audio (MP3, WAV, M4A, etc.) - Max 10 Mo</p>
+                        </div>
+                        <!-- Audio Selected listing -->
+                        <div v-if="selectedAudio" class="mt-2 text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium flex items-center justify-between animate-scale-up">
+                            <span class="truncate text-slate-700 max-w-[280px]">{{ selectedAudio.name }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(selectedAudio.size) }}</span>
+                                <button type="button" @click.stop="removeSelectedAudio" class="text-rose-500 hover:text-rose-700 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Footer buttons -->
@@ -537,6 +591,14 @@
                                     media.media_type === 'image' ? 'bg-blue-600' : 'bg-rose-600'
                                 ]">{{ media.media_type }}</span>
 
+                                <!-- Audio Badge -->
+                                <span v-if="media.audio_path" class="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[9px] font-bold text-white bg-emerald-600 shadow flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                    </svg>
+                                    AUDIO
+                                </span>
+
                                 <!-- Overlay expand au survol -->
                                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
                                     <div class="opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-75 group-hover:scale-100">
@@ -621,6 +683,22 @@
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Bouton Musique (Haut-parleur Play/Pause) -->
+                <button
+                    v-if="lightboxMedia.audio_path"
+                    @click="toggleAudioPlayback"
+                    class="absolute top-4 right-20 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-white transition-all hover:scale-110"
+                    :title="isAudioPlaying ? 'Mettre en pause la musique d\'ambiance' : 'Activer la musique d\'ambiance'"
+                >
+                    <svg v-if="isAudioPlaying" class="w-5.5 h-5.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.75V5.25L7.5 9H4.5v6h3L12 18.75z" />
+                    </svg>
+                    <svg v-else class="w-5.5 h-5.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                     </svg>
                 </button>
 
@@ -721,12 +799,77 @@
                         >
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Description</label>
+                            <button
+                                type="button"
+                                @click="generateAiDescriptionForEdit"
+                                :disabled="generatingDescription"
+                                class="text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition"
+                            >
+                                <svg v-if="generatingDescription" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                {{ generatingDescription ? 'Génération...' : 'Générer avec l\'IA' }}
+                            </button>
+                        </div>
                         <textarea
                             v-model="editForm.description"
                             rows="3"
-                            class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:border-transparent transition bg-white"
                         ></textarea>
+                    </div>
+
+                    <!-- Audio edit/replace -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Musique / Son (Facultatif)</label>
+                        <!-- Active sound info -->
+                        <div v-if="editingMedia && editingMedia.audio_path" class="mb-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between text-xs animate-scale-up">
+                            <div class="flex items-center gap-2 text-emerald-800">
+                                <svg class="w-4 h-4 text-emerald-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                </svg>
+                                <span class="font-semibold">Musique d'ambiance active</span>
+                            </div>
+                            <button
+                                type="button"
+                                @click="editForm.remove_audio = true; editingMedia.audio_path = null"
+                                class="text-rose-600 hover:text-rose-800 font-bold hover:bg-rose-50 px-2 py-1 rounded transition"
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                        <!-- Select new file -->
+                        <div class="flex gap-2">
+                            <input
+                                type="file"
+                                ref="editAudioInput"
+                                @change="handleEditAudioChange"
+                                class="hidden"
+                                accept="audio/*"
+                            >
+                            <button
+                                type="button"
+                                @click="triggerEditAudioInput"
+                                class="flex-1 px-4 py-2 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-50 transition min-h-[38px] text-left truncate cursor-pointer"
+                            >
+                                <span class="truncate">{{ editAudioFile ? 'Changer : ' + editAudioFile.name : 'Sélectionner un fichier audio' }}</span>
+                            </button>
+                            <button
+                                v-if="editAudioFile"
+                                type="button"
+                                @click="removeEditAudioFile"
+                                class="p-2 border border-slate-200 text-rose-500 hover:text-rose-700 rounded-xl hover:bg-slate-50 transition cursor-pointer"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -791,12 +934,24 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePage, router } from '@inertiajs/vue3';
+import axios from 'axios';
 
 const route = useRoute();
 const page = usePage();
 
 const isAgency = computed(() => route.name?.startsWith('agence.') || !!currentAgencyId.value);
 const currentAgencyId = computed(() => page.props.auth?.user?.employee?.agency_id || null);
+
+// Audio refs
+const selectedAudio = ref(null);
+const audioInput = ref(null);
+const editAudioInput = ref(null);
+const editAudioFile = ref(null);
+const audioPlayer = ref(null);
+const isAudioPlaying = ref(false);
+
+// AI Description generation ref
+const generatingDescription = ref(false);
 
 // Illustrations fetched via AJAX (not from Inertia props, since the page is an SPA sub-route)
 const illustrationsData = ref([]);
@@ -915,14 +1070,58 @@ watch(selectedAgencyFilter, () => {
 const lightboxMedia = ref(null);
 const lightboxIndex = ref(0);
 
+const playAudioForMedia = (media) => {
+    stopAudio();
+    if (media && media.audio_path) {
+        const audioSrc = media.audio_path.startsWith('http') ? media.audio_path : '/storage/' + media.audio_path;
+        audioPlayer.value = new Audio(audioSrc);
+        audioPlayer.value.loop = true;
+        audioPlayer.value.play().then(() => {
+            isAudioPlaying.value = true;
+        }).catch(err => {
+            console.warn('Audio playback failed or blocked:', err);
+            isAudioPlaying.value = false;
+        });
+    }
+};
+
+const stopAudio = () => {
+    if (audioPlayer.value) {
+        audioPlayer.value.pause();
+        audioPlayer.value = null;
+    }
+    isAudioPlaying.value = false;
+};
+
+const toggleAudioPlayback = () => {
+    if (!audioPlayer.value) {
+        if (lightboxMedia.value) {
+            playAudioForMedia(lightboxMedia.value);
+        }
+        return;
+    }
+    if (isAudioPlaying.value) {
+        audioPlayer.value.pause();
+        isAudioPlaying.value = false;
+    } else {
+        audioPlayer.value.play().then(() => {
+            isAudioPlaying.value = true;
+        }).catch(err => {
+            console.warn('Audio play failed:', err);
+        });
+    }
+};
+
 const openLightbox = (media) => {
     const idx = filteredGalleryMedias.value.findIndex(m => m.id === media.id);
     lightboxIndex.value = idx >= 0 ? idx : 0;
     lightboxMedia.value = media;
+    playAudioForMedia(media);
 };
 
 const closeLightbox = () => {
     lightboxMedia.value = null;
+    stopAudio();
 };
 
 const lightboxPrev = () => {
@@ -930,6 +1129,7 @@ const lightboxPrev = () => {
     if (!list.length) return;
     lightboxIndex.value = (lightboxIndex.value - 1 + list.length) % list.length;
     lightboxMedia.value = list[lightboxIndex.value];
+    playAudioForMedia(lightboxMedia.value);
 };
 
 const lightboxNext = () => {
@@ -937,6 +1137,7 @@ const lightboxNext = () => {
     if (!list.length) return;
     lightboxIndex.value = (lightboxIndex.value + 1) % list.length;
     lightboxMedia.value = list[lightboxIndex.value];
+    playAudioForMedia(lightboxMedia.value);
 };
 
 const lightboxGoTo = (idx) => {
@@ -944,6 +1145,7 @@ const lightboxGoTo = (idx) => {
     if (idx >= 0 && idx < list.length) {
         lightboxIndex.value = idx;
         lightboxMedia.value = list[idx];
+        playAudioForMedia(list[idx]);
     }
 };
 
@@ -966,6 +1168,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeydown);
+    stopAudio();
 });
 
 // Grouped items having illustrations
@@ -1055,6 +1258,10 @@ const triggerVideoInput = () => {
     videoInput.value?.click();
 };
 
+const triggerAudioInput = () => {
+    audioInput.value?.click();
+};
+
 const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (selectedPhotos.value.length + files.length > 100) {
@@ -1081,6 +1288,25 @@ const handleVideoChange = (e) => {
             selectedVideos.value.push(file);
         }
     });
+};
+
+const handleAudioChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+            errorMessage.value = "Le fichier audio ne doit pas dépasser 10 Mo.";
+            showError.value = true;
+            return;
+        }
+        selectedAudio.value = file;
+    }
+};
+
+const removeSelectedAudio = () => {
+    selectedAudio.value = null;
+    if (audioInput.value) {
+        audioInput.value.value = '';
+    }
 };
 
 const removeSelectedPhoto = (idx) => {
@@ -1110,7 +1336,63 @@ const openAddModal = () => {
     selectedTargetKey.value = '';
     selectedPhotos.value = [];
     selectedVideos.value = [];
+    selectedAudio.value = null;
+    if (audioInput.value) {
+        audioInput.value.value = '';
+    }
     showAddModal.value = true;
+};
+
+const generateAiDescriptionForNew = async () => {
+    const file = selectedPhotos.value[0] || selectedVideos.value[0];
+    if (!file) return;
+    
+    generatingDescription.value = true;
+    const formData = new FormData();
+    formData.append('media', file);
+    
+    try {
+        const response = await axios.post('/api/ai/describe-media', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+        if (response.data && response.data.success) {
+            newForm.value.description = response.data.description;
+        } else {
+            errorMessage.value = response.data?.message || "Erreur lors de la génération de la description.";
+            showError.value = true;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = err.response?.data?.message || "Une erreur est survenue lors de la génération de la description.";
+        showError.value = true;
+    } finally {
+        generatingDescription.value = false;
+    }
+};
+
+const generateAiDescriptionForEdit = async () => {
+    if (!editingMedia.value) return;
+    
+    generatingDescription.value = true;
+    try {
+        const response = await axios.post('/api/ai/describe-media', {
+            illustration_id: editingMedia.value.id
+        });
+        if (response.data && response.data.success) {
+            editForm.value.description = response.data.description;
+        } else {
+            errorMessage.value = response.data?.message || "Erreur lors de la génération de la description.";
+            showError.value = true;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMessage.value = err.response?.data?.message || "Une erreur est survenue lors de la génération de la description.";
+        showError.value = true;
+    } finally {
+        generatingDescription.value = false;
+    }
 };
 
 const closeAddModal = () => {
@@ -1140,6 +1422,10 @@ const submitForm = () => {
         data.append('videos[]', file);
     });
 
+    if (selectedAudio.value) {
+        data.append('audio', selectedAudio.value);
+    }
+
     uploading.value = true;
     router.post('/api/illustrations', data, {
         forceFormData: true,
@@ -1148,6 +1434,10 @@ const submitForm = () => {
             showAddModal.value = false;
             selectedPhotos.value = [];
             selectedVideos.value = [];
+            selectedAudio.value = null;
+            if (audioInput.value) {
+                audioInput.value.value = '';
+            }
             await fetchIllustrations();
             successMessage.value = 'Illustration affectée avec succès.';
             showSuccess.value = true;
@@ -1195,30 +1485,79 @@ const editingMedia = ref(null);
 const editForm = ref({
     target_name: '',
     description: '',
+    remove_audio: false,
 });
+
+const triggerEditAudioInput = () => {
+    editAudioInput.value?.click();
+};
+
+const handleEditAudioChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+            errorMessage.value = "Le fichier audio ne doit pas dépasser 10 Mo.";
+            showError.value = true;
+            return;
+        }
+        editAudioFile.value = file;
+        editForm.value.remove_audio = false;
+    }
+};
+
+const removeEditAudioFile = () => {
+    editAudioFile.value = null;
+    if (editAudioInput.value) {
+        editAudioInput.value.value = '';
+    }
+};
 
 const openEditModal = (media) => {
     editingMedia.value = media;
     editForm.value = {
         target_name: media.target_name,
         description: media.description || '',
+        remove_audio: false,
     };
+    editAudioFile.value = null;
+    if (editAudioInput.value) {
+        editAudioInput.value.value = '';
+    }
     showEditModal.value = true;
 };
 
 const closeEditModal = () => {
     showEditModal.value = false;
     editingMedia.value = null;
+    editAudioFile.value = null;
+    if (editAudioInput.value) {
+        editAudioInput.value.value = '';
+    }
 };
 
 const saveEdit = () => {
     if (!editingMedia.value) return;
     
-    router.put(`/api/illustrations/${editingMedia.value.id}`, editForm.value, {
+    const data = new FormData();
+    data.append('_method', 'PUT');
+    data.append('target_name', editForm.value.target_name);
+    data.append('description', editForm.value.description);
+    data.append('remove_audio', editForm.value.remove_audio ? '1' : '0');
+    
+    if (editAudioFile.value) {
+        data.append('audio', editAudioFile.value);
+    }
+
+    router.post(`/api/illustrations/${editingMedia.value.id}`, data, {
+        forceFormData: true,
         onSuccess: async () => {
             await fetchIllustrations();
             if (selectedTarget.value) {
                 selectedTarget.value.name = editForm.value.target_name;
+            }
+            editAudioFile.value = null;
+            if (editAudioInput.value) {
+                editAudioInput.value.value = '';
             }
             showEditModal.value = false;
             successMessage.value = 'Informations de l\'illustration mises à jour.';

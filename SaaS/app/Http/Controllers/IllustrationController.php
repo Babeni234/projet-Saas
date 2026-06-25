@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Gemini\Laravel\Facades\Gemini;
+use Gemini\Data\Blob;
 
 class IllustrationController extends Controller
 {
@@ -157,6 +159,7 @@ class IllustrationController extends Controller
             'videos' => 'nullable|array|max:5',
             'videos.*' => 'required|file|mimes:mp4,mov,avi,webm,ogg|max:51200', // 50MB max per video
             'description' => 'nullable|string',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,aac,m4a,mpga,wma|max:10240', // 10MB max for audio
         ]);
 
         if (!$request->hasFile('photos') && !$request->hasFile('videos')) {
@@ -173,6 +176,11 @@ class IllustrationController extends Controller
             $agencyId = $user->employee->agency_id;
         }
 
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('illustrations/audio', 'public');
+        }
+
         $uploadedCount = 0;
 
         if ($request->hasFile('photos')) {
@@ -185,6 +193,7 @@ class IllustrationController extends Controller
                     'target_id' => $request->input('target_id'),
                     'target_name' => $request->input('target_name'),
                     'file_path' => $path,
+                    'audio_path' => $audioPath,
                     'file_name' => $file->getClientOriginalName(),
                     'media_type' => 'image',
                     'mime_type' => $file->getMimeType(),
@@ -205,6 +214,7 @@ class IllustrationController extends Controller
                     'target_id' => $request->input('target_id'),
                     'target_name' => $request->input('target_name'),
                     'file_path' => $path,
+                    'audio_path' => $audioPath,
                     'file_name' => $file->getClientOriginalName(),
                     'media_type' => 'video',
                     'mime_type' => $file->getMimeType(),
@@ -226,11 +236,30 @@ class IllustrationController extends Controller
         $request->validate([
             'description' => 'nullable|string',
             'target_name' => 'nullable|string',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,aac,m4a,mpga,wma|max:10240',
+            'remove_audio' => 'nullable|boolean',
         ]);
+
+        $audioPath = $illustration->audio_path;
+
+        if ($request->boolean('remove_audio')) {
+            if ($audioPath && Storage::disk('public')->exists($audioPath)) {
+                Storage::disk('public')->delete($audioPath);
+            }
+            $audioPath = null;
+        }
+
+        if ($request->hasFile('audio')) {
+            if ($audioPath && Storage::disk('public')->exists($audioPath)) {
+                Storage::disk('public')->delete($audioPath);
+            }
+            $audioPath = $request->file('audio')->store('illustrations/audio', 'public');
+        }
 
         $illustration->update([
             'description' => $request->input('description', $illustration->description),
             'target_name' => $request->input('target_name', $illustration->target_name),
+            'audio_path' => $audioPath,
         ]);
 
         return redirect()->back()->with('success', 'Média mis à jour avec succès.');
@@ -245,8 +274,116 @@ class IllustrationController extends Controller
             Storage::disk('public')->delete($illustration->file_path);
         }
 
+        if ($illustration->audio_path && Storage::disk('public')->exists($illustration->audio_path)) {
+            Storage::disk('public')->delete($illustration->audio_path);
+        }
+
         $illustration->delete();
 
         return redirect()->back()->with('success', 'Média supprimé de la galerie avec succès.');
+    }
+
+    /**
+     * Describe media using Gemini AI Vision.
+     */
+    public function describeMedia(Request $request)
+    {
+        $request->validate([
+            'media' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,svg,mp4,mov,avi,webm,ogg|max:30720',
+            'illustration_id' => 'nullable|integer|exists:illustrations,id',
+        ]);
+
+        $fileContent = null;
+        $mimeType = null;
+        $fileName = '';
+
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
+            $mimeType = $file->getMimeType();
+            $fileContent = $file->get();
+            $fileName = $file->getClientOriginalName();
+        } elseif ($request->has('illustration_id')) {
+            $illustration = Illustration::findOrFail($request->input('illustration_id'));
+            
+            if (str_starts_with($illustration->file_path, 'http')) {
+                try {
+                    $fileContent = file_get_contents($illustration->file_path);
+                    $mimeType = $illustration->mime_type ?? 'image/jpeg';
+                    $fileName = $illustration->file_name;
+                } catch (\Exception $urlEx) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Impossible de récupérer l\'image distante pour l\'analyse : ' . $urlEx->getMessage()
+                    ], 400);
+                }
+            } else {
+                if (!Storage::disk('public')->exists($illustration->file_path)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le fichier média n\'existe pas sur le serveur.'
+                    ], 400);
+                }
+                $fileContent = Storage::disk('public')->get($illustration->file_path);
+                $mimeType = $illustration->mime_type ?? Storage::disk('public')->mimeType($illustration->file_path);
+                $fileName = $illustration->file_name;
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Veuillez fournir un fichier média ou l\'identifiant d\'une illustration existante.'
+            ], 400);
+        }
+
+        $isImage = str_starts_with($mimeType, 'image/');
+        $apiKey = config('gemini.api_key');
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La clé API Gemini n\'est pas configurée.'
+            ], 400);
+        }
+
+        try {
+            $prompt = "Tu es un expert en gestion immobilière et marketing. Rédige une description très courte (maximum 2 phrases, environ 15-25 mots), attractive, professionnelle et précise en français pour cette image/vidéo d'un bien immobilier ou d'un bâtiment (par exemple : 'Salon lumineux avec parquet et grandes fenêtres', ou 'Façade moderne d'un immeuble résidentiel'). Décris ce que tu vois de manière valorisante. Réponds DIRECTEMENT avec la description, sans formule de politesse ni introduction.";
+
+            if ($isImage) {
+                $response = Gemini::generativeModel(model: config('ai.gemini_model', 'gemini-2.0-flash'))
+                    ->generateContent([
+                        $prompt,
+                        new Blob(
+                            mimeType: $mimeType,
+                            data: base64_encode($fileContent),
+                        )
+                    ]);
+                $description = trim($response->text());
+            } else {
+                try {
+                    $response = Gemini::generativeModel(model: config('ai.gemini_model', 'gemini-2.0-flash'))
+                        ->generateContent([
+                            $prompt,
+                            new Blob(
+                                mimeType: $mimeType,
+                                data: base64_encode($fileContent),
+                            )
+                        ]);
+                    $description = trim($response->text());
+                } catch (\Exception $vidEx) {
+                    $cleanName = str_replace(['_', '-'], ' ', pathinfo($fileName, PATHINFO_FILENAME));
+                    $description = "Vidéo de présentation montrant " . strtolower($cleanName) . ".";
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'description' => $description
+            ]);
+        } catch (\Exception $e) {
+            logger()->error("Error generating media description: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de l\'analyse par l\'IA : ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

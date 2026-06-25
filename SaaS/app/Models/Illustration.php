@@ -18,6 +18,7 @@ class Illustration extends Model
         'target_id',
         'target_name',
         'file_path',
+        'audio_path',
         'file_name',
         'media_type',
         'mime_type',
