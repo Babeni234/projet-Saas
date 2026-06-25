@@ -24,7 +24,6 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),
-            '@nangue': path.resolve(__dirname, 'nangue/resources/js'),
         },
     },
 });
