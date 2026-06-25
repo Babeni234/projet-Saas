@@ -16,7 +16,7 @@ const navigation = [
     { name: 'Contrats', href: route('landlord.contracts.index'), icon: 'document', pattern: 'landlord.contracts*' },
     { name: 'Visites', href: route('landlord.visits.index'), icon: 'calendar', pattern: 'landlord.visits*' },
     { name: 'Quittances', href: route('landlord.receipts.index'), icon: 'receipt', pattern: 'landlord.receipts*' },
-    { name: 'Messages', href: '#', icon: 'chat', pattern: null },
+    { name: 'Messages', href: route('landlord.messages.index'), icon: 'chat', pattern: 'landlord.messages*' },
 ];
 </script>
 
