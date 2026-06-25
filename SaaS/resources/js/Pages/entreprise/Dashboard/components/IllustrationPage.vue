@@ -204,11 +204,11 @@
 
         <!-- Add Illustration Modal -->
         <div v-if="showAddModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden animate-scale-up border border-slate-100">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden animate-scale-up border border-slate-100">
                 <!-- Header -->
-                <div :class="['px-6 py-5 border-b border-slate-100 flex items-center justify-between', isAgency ? 'bg-gradient-to-r from-amber-50 to-orange-50/50' : 'bg-gradient-to-r from-indigo-50 to-violet-50/50']">
+                <div :class="['px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0', isAgency ? 'bg-gradient-to-r from-amber-50 to-orange-50/50' : 'bg-gradient-to-r from-indigo-50 to-violet-50/50']">
                     <div class="flex items-center gap-3">
-                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', isAgency ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600']">
+                        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0', isAgency ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600']">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -226,229 +226,240 @@
                 </div>
 
                 <!-- Form Body -->
-                <form @submit.prevent="submitForm" class="p-6 space-y-4">
-                    <!-- Target Type selection -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Type de cible</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <button
-                                type="button"
-                                @click="newForm.target_type = 'batiment'; newForm.target_id = ''; newForm.target_name = ''"
-                                :class="[
-                                    'py-3 border-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2',
-                                    newForm.target_type === 'batiment'
-                                        ? (isAgency ? 'border-amber-600 bg-amber-50/50 text-amber-700' : 'border-indigo-600 bg-indigo-50/50 text-indigo-700')
-                                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                                ]"
-                            >
-                                Bâtiment
-                            </button>
-                            <button
-                                type="button"
-                                @click="newForm.target_type = 'logement'; newForm.target_id = ''; newForm.target_name = ''"
-                                :class="[
-                                    'py-3 border-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2',
-                                    newForm.target_type === 'logement'
-                                        ? (isAgency ? 'border-amber-600 bg-amber-50/50 text-amber-700' : 'border-indigo-600 bg-indigo-50/50 text-indigo-700')
-                                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                                ]"
-                            >
-                                Bien Immobilier
-                            </button>
-                        </div>
-                    </div>
+                <form @submit.prevent="submitForm" class="flex flex-col max-h-[85vh]">
+                    <!-- Scrollable Content -->
+                    <div class="p-6 overflow-y-auto space-y-4 max-h-[68vh] scrollbar-thin">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Left Column: Settings & Description -->
+                            <div class="space-y-4">
+                                <!-- Target Type selection -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Type de cible</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            @click="newForm.target_type = 'batiment'; newForm.target_id = ''; newForm.target_name = ''"
+                                            :class="[
+                                                'py-2.5 border-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2',
+                                                newForm.target_type === 'batiment'
+                                                    ? (isAgency ? 'border-amber-600 bg-amber-50/50 text-amber-700' : 'border-indigo-600 bg-indigo-50/50 text-indigo-700')
+                                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                            ]"
+                                        >
+                                            Bâtiment
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="newForm.target_type = 'logement'; newForm.target_id = ''; newForm.target_name = ''"
+                                            :class="[
+                                                'py-2.5 border-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2',
+                                                newForm.target_type === 'logement'
+                                                    ? (isAgency ? 'border-amber-600 bg-amber-50/50 text-amber-700' : 'border-indigo-600 bg-indigo-50/50 text-indigo-700')
+                                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                            ]"
+                                        >
+                                            Bien Immobilier
+                                        </button>
+                                    </div>
+                                </div>
 
-                    <!-- Target selection -->
-                    <div v-if="newForm.target_type">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">
-                            Sélectionner le {{ newForm.target_type === 'batiment' ? 'bâtiment' : 'bien immobilier' }}
-                        </label>
-                        <select
-                            v-model="selectedTargetKey"
-                            :class="[
-                                'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:border-transparent transition bg-white text-slate-700',
-                                isAgency ? 'focus:ring-amber-500' : 'focus:ring-indigo-500',
-                                selectedTargetKey ? 'border-slate-200' : 'border-rose-300 bg-rose-50/10'
-                            ]"
-                        >
-                            <option value="">-- Choisir un élément --</option>
-                            <template v-if="newForm.target_type === 'batiment'">
-                                <option v-for="b in localBatiments" :key="b.id" :value="JSON.stringify({id: b.id, name: b.nom})">
-                                    {{ b.nom }} ({{ b.ville }})
-                                </option>
-                            </template>
-                            <template v-else>
-                                <option v-for="l in localLogements" :key="l.id" :value="JSON.stringify({id: l.id, name: l.reference})">
-                                    {{ l.reference }} - {{ l.categorie }} ({{ l.batiment }})
-                                </option>
-                            </template>
-                        </select>
-                    </div>
+                                <!-- Target selection -->
+                                <div v-if="newForm.target_type">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">
+                                        Sélectionner le {{ newForm.target_type === 'batiment' ? 'bâtiment' : 'bien immobilier' }}
+                                    </label>
+                                    <select
+                                        v-model="selectedTargetKey"
+                                        :class="[
+                                            'w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:border-transparent transition bg-white text-slate-700',
+                                            isAgency ? 'focus:ring-amber-500' : 'focus:ring-indigo-500',
+                                            selectedTargetKey ? 'border-slate-200' : 'border-rose-300 bg-rose-50/10'
+                                        ]"
+                                    >
+                                        <option value="">-- Choisir un élément --</option>
+                                        <template v-if="newForm.target_type === 'batiment'">
+                                            <option v-for="b in localBatiments" :key="b.id" :value="JSON.stringify({id: b.id, name: b.nom})">
+                                                {{ b.nom }} ({{ b.ville }})
+                                            </option>
+                                        </template>
+                                        <template v-else>
+                                            <option v-for="l in localLogements" :key="l.id" :value="JSON.stringify({id: l.id, name: l.reference})">
+                                                {{ l.reference }} - {{ l.categorie }} ({{ l.batiment }})
+                                            </option>
+                                        </template>
+                                    </select>
+                                </div>
 
-                    <!-- Agency Selection (Enterprise dashboard only) -->
-                    <div v-if="!isAgency && agencies.length > 0">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rattacher à une agence (Facultatif)</label>
-                        <select
-                            v-model="newForm.agency_id"
-                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
-                        >
-                            <option value="">Aucune agence (Siège principal)</option>
-                            <option v-for="agency in agencies" :key="agency.id" :value="agency.id">
-                                {{ agency.name }} ({{ agency.city }})
-                            </option>
-                        </select>
-                    </div>
+                                <!-- Agency Selection (Enterprise dashboard only) -->
+                                <div v-if="!isAgency && agencies.length > 0">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Rattacher à une agence (Facultatif)</label>
+                                    <select
+                                        v-model="newForm.agency_id"
+                                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white text-slate-700"
+                                    >
+                                        <option value="">Aucune agence (Siège principal)</option>
+                                        <option v-for="agency in agencies" :key="agency.id" :value="agency.id">
+                                            {{ agency.name }} ({{ agency.city }})
+                                        </option>
+                                    </select>
+                                </div>
 
-                    <!-- Photos upload field -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photos (Images)</label>
-                        <div
-                            @click="triggerPhotoInput"
-                            :class="[
-                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
-                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
-                            ]"
-                        >
-                            <input
-                                type="file"
-                                ref="photoInput"
-                                @change="handlePhotoChange"
-                                multiple
-                                class="hidden"
-                                accept="image/*"
-                            >
-                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <p class="text-xs font-bold text-slate-700">Sélectionner des Photos</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Maximum 100 photos simultanées (JPG, PNG, WEBP)</p>
-                        </div>
-                        <!-- Photos Selected listing -->
-                        <div v-if="selectedPhotos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1">
-                            <div v-for="(file, idx) in selectedPhotos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
-                                <span class="truncate text-slate-700 max-w-[280px]">{{ file.name }}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
-                                    <button type="button" @click="removeSelectedPhoto(idx)" class="text-rose-500 hover:text-rose-700 transition">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                <!-- Description -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="block text-xs font-bold text-slate-500 uppercase">Description (Facultatif)</label>
+                                        <button
+                                            type="button"
+                                            @click="generateAiDescriptionForNew"
+                                            :disabled="generatingDescription || (selectedPhotos.length === 0 && selectedVideos.length === 0)"
+                                            :class="['text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition', isAgency ? 'text-amber-600 hover:text-amber-800' : 'text-indigo-600 hover:text-indigo-800']"
+                                        >
+                                            <svg v-if="generatingDescription" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            {{ generatingDescription ? 'Génération...' : 'Générer avec l\'IA' }}
+                                        </button>
+                                    </div>
+                                    <textarea
+                                        v-model="newForm.description"
+                                        rows="4"
+                                        placeholder="Entrez une brève description ou un commentaire pour ces fichiers..."
+                                        :class="[
+                                            'w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:border-transparent transition bg-white',
+                                            isAgency ? 'focus:ring-amber-500' : 'focus:ring-indigo-500'
+                                        ]"
+                                    ></textarea>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Videos upload field -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vidéos</label>
-                        <div
-                            @click="triggerVideoInput"
-                            :class="[
-                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
-                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
-                            ]"
-                        >
-                            <input
-                                type="file"
-                                ref="videoInput"
-                                @change="handleVideoChange"
-                                multiple
-                                class="hidden"
-                                accept="video/*"
-                            >
-                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z" />
-                            </svg>
-                            <p class="text-xs font-bold text-slate-700">Sélectionner des Vidéos</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Maximum 5 vidéos simultanées (MP4, WEBM, MOV)</p>
-                        </div>
-                        <!-- Videos Selected listing -->
-                        <div v-if="selectedVideos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1">
-                            <div v-for="(file, idx) in selectedVideos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
-                                <span class="truncate text-slate-700 max-w-[280px]">{{ file.name }}</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
-                                    <button type="button" @click="removeSelectedVideo(idx)" class="text-rose-500 hover:text-rose-700 transition">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <!-- Right Column: Media Uploads -->
+                            <div class="space-y-4">
+                                <!-- Photos upload field -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photos (Images)</label>
+                                    <div
+                                        @click="triggerPhotoInput"
+                                        :class="[
+                                            'border-2 border-dashed rounded-xl p-3.5 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                            isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
+                                        ]"
+                                    >
+                                        <input
+                                            type="file"
+                                            ref="photoInput"
+                                            @change="handlePhotoChange"
+                                            multiple
+                                            class="hidden"
+                                            accept="image/*"
+                                        >
+                                        <svg :class="['w-5 h-5 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                    </button>
+                                        <p class="text-xs font-bold text-slate-700">Sélectionner des Photos</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WEBP (Max 10 Mo)</p>
+                                    </div>
+                                    <!-- Photos Selected listing -->
+                                    <div v-if="selectedPhotos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin">
+                                        <div v-for="(file, idx) in selectedPhotos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
+                                            <span class="truncate text-slate-700 max-w-[200px]">{{ file.name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
+                                                <button type="button" @click.stop="removeSelectedPhoto(idx)" class="text-rose-500 hover:text-rose-700 transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Description -->
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Description (Facultatif)</label>
-                            <button
-                                type="button"
-                                @click="generateAiDescriptionForNew"
-                                :disabled="generatingDescription || (selectedPhotos.length === 0 && selectedVideos.length === 0)"
-                                class="text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition"
-                            >
-                                <svg v-if="generatingDescription" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                {{ generatingDescription ? 'Génération...' : 'Générer avec l\'IA' }}
-                            </button>
-                        </div>
-                        <textarea
-                            v-model="newForm.description"
-                            rows="2"
-                            placeholder="Entrez une brève description ou un commentaire pour ces fichiers..."
-                            :class="[
-                                'w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:border-transparent transition bg-white',
-                                isAgency ? 'focus:ring-amber-500' : 'focus:ring-indigo-500'
-                            ]"
-                        ></textarea>
-                    </div>
+                                <!-- Videos upload field -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vidéos</label>
+                                    <div
+                                        @click="triggerVideoInput"
+                                        :class="[
+                                            'border-2 border-dashed rounded-xl p-3.5 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                            isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
+                                        ]"
+                                    >
+                                        <input
+                                            type="file"
+                                            ref="videoInput"
+                                            @change="handleVideoChange"
+                                            multiple
+                                            class="hidden"
+                                            accept="video/*"
+                                        >
+                                        <svg :class="['w-5 h-5 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 00-2 2z" />
+                                        </svg>
+                                        <p class="text-xs font-bold text-slate-700">Sélectionner des Vidéos</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">MP4, WEBM, MOV (Max 50 Mo)</p>
+                                    </div>
+                                    <!-- Videos Selected listing -->
+                                    <div v-if="selectedVideos.length > 0" class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin">
+                                        <div v-for="(file, idx) in selectedVideos" :key="idx" class="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium">
+                                            <span class="truncate text-slate-700 max-w-[200px]">{{ file.name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(file.size) }}</span>
+                                                <button type="button" @click.stop="removeSelectedVideo(idx)" class="text-rose-500 hover:text-rose-700 transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <!-- Audio upload field -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Musique / Son d'ambiance (Facultatif)</label>
-                        <div
-                            @click="triggerAudioInput"
-                            :class="[
-                                'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
-                                isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
-                            ]"
-                        >
-                            <input
-                                type="file"
-                                ref="audioInput"
-                                @change="handleAudioChange"
-                                class="hidden"
-                                accept="audio/*"
-                            >
-                            <svg :class="['w-6 h-6 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                            </svg>
-                            <p class="text-xs font-bold text-slate-700">Sélectionner une Musique</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Fichier audio (MP3, WAV, M4A, etc.) - Max 10 Mo</p>
-                        </div>
-                        <!-- Audio Selected listing -->
-                        <div v-if="selectedAudio" class="mt-2 text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium flex items-center justify-between animate-scale-up">
-                            <span class="truncate text-slate-700 max-w-[280px]">{{ selectedAudio.name }}</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(selectedAudio.size) }}</span>
-                                <button type="button" @click.stop="removeSelectedAudio" class="text-rose-500 hover:text-rose-700 transition">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <!-- Audio upload field -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Musique / Son d'ambiance (Facultatif)</label>
+                                    <div
+                                        @click="triggerAudioInput"
+                                        :class="[
+                                            'border-2 border-dashed rounded-xl p-3.5 text-center cursor-pointer transition-all flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50',
+                                            isAgency ? 'border-amber-200 hover:border-amber-400' : 'border-indigo-200 hover:border-indigo-400'
+                                        ]"
+                                    >
+                                        <input
+                                            type="file"
+                                            ref="audioInput"
+                                            @change="handleAudioChange"
+                                            class="hidden"
+                                            accept="audio/*"
+                                        >
+                                        <svg :class="['w-5 h-5 mb-1', isAgency ? 'text-amber-500' : 'text-indigo-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                        <p class="text-xs font-bold text-slate-700">Sélectionner une Musique</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">MP3, WAV, M4A (Max 10 Mo)</p>
+                                    </div>
+                                    <!-- Audio Selected listing -->
+                                    <div v-if="selectedAudio" class="mt-2 text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 font-medium flex items-center justify-between animate-scale-up">
+                                        <span class="truncate text-slate-700 max-w-[200px]">{{ selectedAudio.name }}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[9px] text-slate-400 font-semibold uppercase">{{ formatSize(selectedAudio.size) }}</span>
+                                            <button type="button" @click.stop="removeSelectedAudio" class="text-rose-500 hover:text-rose-700 transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer buttons -->
-                    <div class="pt-4 border-t border-slate-100 flex gap-3 justify-end">
+                    <div class="p-6 border-t border-slate-100 flex gap-3 justify-end bg-slate-50/50 shrink-0">
                         <button
                             type="button"
                             @click="closeAddModal"
@@ -805,7 +816,7 @@
                                 type="button"
                                 @click="generateAiDescriptionForEdit"
                                 :disabled="generatingDescription"
-                                class="text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition"
+                                :class="['text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition', isAgency ? 'text-amber-600 hover:text-amber-800' : 'text-indigo-600 hover:text-indigo-800']"
                             >
                                 <svg v-if="generatingDescription" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -826,6 +837,7 @@
 
                     <!-- Audio edit/replace -->
                     <div>
+                    <div class="col-span-full">
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Musique / Son (Facultatif)</label>
                         <!-- Active sound info -->
                         <div v-if="editingMedia && editingMedia.audio_path" class="mb-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between text-xs animate-scale-up">
@@ -872,10 +884,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
                 <div class="mt-6 flex gap-3 justify-end">
                     <button @click="closeEditModal" class="px-4 py-2 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition text-sm">Annuler</button>
-                    <button @click="saveEdit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition text-sm">Enregistrer</button>
+                    <button @click="saveEdit" :class="['px-4 py-2 text-white font-medium rounded-xl transition text-sm shadow-md hover:scale-[1.02] active:scale-95', isAgency ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700']">Enregistrer</button>
                 </div>
             </div>
         </div>
