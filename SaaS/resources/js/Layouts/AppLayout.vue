@@ -20,6 +20,18 @@ const navigation = [
     { name: 'Quittances', href: route('landlord.receipts.index'), icon: 'receipt', pattern: 'landlord.receipts*' },
     { name: 'Messages', href: route('landlord.messages.index'), icon: 'chat', pattern: 'landlord.messages*' },
 ];
+
+const proNav = [
+    { name: 'Dashboard Pro', href: route('landlord.pro.dashboard'), icon: 'pro', pattern: 'landlord.pro.dashboard' },
+    { name: 'GED Documents', href: route('landlord.pro.ged.index'), icon: 'ged', pattern: 'landlord.pro.ged*' },
+    { name: 'Comptabilité', href: route('landlord.pro.accounting.index'), icon: 'accounting', pattern: 'landlord.pro.accounting*' },
+    { name: 'Portfolios', href: route('landlord.pro.portfolios.index'), icon: 'folder', pattern: 'landlord.pro.portfolios*' },
+    { name: 'Équipe', href: route('landlord.pro.team.index'), icon: 'team', pattern: 'landlord.pro.team*' },
+    { name: 'Workflows', href: route('landlord.pro.workflows.index'), icon: 'workflow', pattern: 'landlord.pro.workflows*' },
+    { name: 'Automatisations', href: route('landlord.pro.automation.index'), icon: 'automation', pattern: 'landlord.pro.automation*' },
+    { name: 'Juridiction', href: route('landlord.pro.jurisdiction.index'), icon: 'jurisdiction', pattern: 'landlord.pro.jurisdiction*' },
+    { name: 'Analytics IA', href: route('landlord.ai.analytics'), icon: 'analytics', pattern: 'landlord.ai.analytics' },
+];
 </script>
 
 <template>
@@ -71,12 +83,56 @@ const navigation = [
                         <template v-else-if="item.icon === 'chat'">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </template>
+                        <template v-else-if="item.icon === 'jurisdiction'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </template>
+                        <template v-else-if="item.icon === 'analytics'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </template>
                     </svg>
                     {{ item.name }}
                 </Link>
             </nav>
 
-            <div class="px-3 py-2 border-t border-gray-100">
+            <div class="border-t border-gray-100 pt-3 px-3">
+                <p class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Bailleur Pro</p>
+                <Link
+                    v-for="item in proNav"
+                    :key="item.name"
+                    :href="item.href"
+                    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
+                    :class="item.pattern && route().current(item.pattern)
+                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+                >
+                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <template v-if="item.icon === 'pro'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                        </template>
+                        <template v-else-if="item.icon === 'folder'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                        </template>
+                        <template v-else-if="item.icon === 'team'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </template>
+                        <template v-else-if="item.icon === 'automation'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+                        </template>
+                        <template v-else-if="item.icon === 'workflow'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                        </template>
+                        <template v-else-if="item.icon === 'ged'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </template>
+                        <template v-else-if="item.icon === 'accounting'">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v9.5m-15.5 3h15A1.5 1.5 0 0021 16.5V3.5A1.5 1.5 0 0019.5 2h-15A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18z" />
+                        </template>
+                    </svg>
+                    {{ item.name }}
+                </Link>
+            </div>
+
+            <div class="border-t border-gray-100 px-3 py-2">
                 <button @click="aiOpen = !aiOpen" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition">
                     <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
                     {{ aiOpen ? 'Fermer l\'assistant' : 'Assistant IA' }}

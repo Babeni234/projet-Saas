@@ -19,6 +19,8 @@ const messages = ref([
 ]);
 const input = ref('');
 const loading = ref(false);
+const streaming = ref(false);
+const streamText = ref('');
 const chatBody = ref(null);
 
 function scrollDown() {
@@ -27,16 +29,32 @@ function scrollDown() {
     });
 }
 
+function formatText(text) {
+    let html = (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    return html;
+}
+
 async function send() {
     const msg = input.value.trim();
     if (!msg || loading.value) return;
     messages.value.push({ role: 'user', text: msg });
     input.value = '';
     loading.value = true;
+    streaming.value = false;
+    streamText.value = '';
+    scrollDown();
+
+    const msgIdx = messages.value.length;
+    messages.value.push({ role: 'assistant', text: '', streaming: true });
     scrollDown();
 
     try {
-        const res = await fetch('/api/tenant/ai/chat', {
+        const res = await fetch('/api/tenant/ai/chat/stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -44,14 +62,43 @@ async function send() {
             },
             body: JSON.stringify({
                 message: msg,
-                history: messages.value.slice(-20).map(m => ({ role: m.role, content: m.text })),
+                history: messages.value.slice(0, -1).filter(m => !m.streaming).map(m => ({ role: m.role, content: m.text })),
             }),
         });
-        const data = await res.json();
-        messages.value.push({ role: 'assistant', text: data.text || 'Merci de reformuler.' });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        streaming.value = true;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const data = JSON.parse(line.slice(6));
+
+                if (data.type === 'text') {
+                    streamText.value += data.content;
+                    messages.value[msgIdx].text = streamText.value;
+                    scrollDown();
+                } else if (data.type === 'done') {
+                    streaming.value = false;
+                    messages.value[msgIdx].streaming = false;
+                    scrollDown();
+                }
+            }
+        }
     } catch {
-        messages.value.push({ role: 'assistant', text: 'Une erreur est survenue.' });
+        messages.value[msgIdx].text = 'Une erreur est survenue.';
+        messages.value[msgIdx].streaming = false;
     }
+    streaming.value = false;
     loading.value = false;
     scrollDown();
 }
@@ -98,11 +145,15 @@ async function send() {
                                 <div v-for="(m, i) in messages" :key="i" class="flex" :class="m.role === 'user' ? 'justify-end' : 'justify-start'">
                                     <div class="max-w-[90%] rounded-2xl px-3.5 py-2 text-sm"
                                         :class="m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'">
-                                        {{ m.text }}
+                                        <div v-if="m.role === 'assistant' && !m.text && m.streaming">
+                                            <span class="inline-flex gap-1">
+                                                <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style="animation-delay:0ms" />
+                                                <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style="animation-delay:150ms" />
+                                                <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" style="animation-delay:300ms" />
+                                            </span>
+                                        </div>
+                                        <div v-else v-html="formatText(m.text)" />
                                     </div>
-                                </div>
-                                <div v-if="loading" class="flex justify-start">
-                                    <div class="rounded-2xl bg-gray-100 px-3.5 py-2 text-sm text-gray-400">Réflexion...</div>
                                 </div>
                             </div>
                             <div class="border-t border-gray-100 p-3">
