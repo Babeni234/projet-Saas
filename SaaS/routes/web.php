@@ -167,6 +167,9 @@ Route::prefix('agence')->name('agence.')->middleware(['auth', 'verified'])->grou
     Route::get('/immobilier/immotok/messages', function () {
         return redirect()->route('agence.dashboard', ['route' => 'immobilier/immotok/messages']);
     })->name('agence.immobilier.immotok.messages');
+    Route::get('/immobilier/immotok/subscribers', function () {
+        return redirect()->route('agence.dashboard', ['route' => 'immobilier/immotok/subscribers']);
+    })->name('agence.immobilier.immotok.subscribers');
 });
 
 Route::middleware('auth')->group(function () {
@@ -502,6 +505,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/dashboard/immotok/chats/{client_id}', [\App\Http\Controllers\ImmotokDashboardController::class, 'getChatMessages']);
     Route::post('/api/dashboard/immotok/chats/{client_id}/reply', [\App\Http\Controllers\ImmotokDashboardController::class, 'replyMessage']);
     Route::post('/api/dashboard/immotok/chat-settings/toggle-ai', [\App\Http\Controllers\ImmotokDashboardController::class, 'toggleAi']);
+    Route::get('/api/dashboard/immotok/subscribers', [\App\Http\Controllers\ImmotokDashboardController::class, 'getSubscribers']);
 
     // Enterprise sub-navigation redirects for ImmoTok Vue pages
     Route::get('/immobilier/immotok/interactions', function () {
@@ -514,6 +518,11 @@ Route::middleware('auth')->group(function () {
             'initialRoute' => 'immobilier/immotok/messages'
         ]);
     })->name('entreprise.immobilier.immotok.messages');
+    Route::get('/immobilier/immotok/subscribers', function () {
+        return Inertia::render('entreprise/Dashboard/Dashboard', [
+            'initialRoute' => 'immobilier/immotok/subscribers'
+        ]);
+    })->name('entreprise.immobilier.immotok.subscribers');
 });
 
 
@@ -555,6 +564,9 @@ Route::post('/api/immotok/illustrations/{id}/comments', [\App\Http\Controllers\I
 Route::post('/api/immotok/reserve-visit', [\App\Http\Controllers\ImmotokFeedController::class, 'reserveVisit']);
 Route::get('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'getMessages']);
 Route::post('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'sendMessage']);
+Route::post('/api/immotok/companies/{id}/subscribe', [\App\Http\Controllers\ImmotokFeedController::class, 'subscribe']);
+Route::get('/api/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
+Route::get('/api/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
 
 
 require __DIR__.'/auth.php';

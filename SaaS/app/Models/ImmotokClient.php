@@ -48,4 +48,9 @@ class ImmotokClient extends Authenticatable
     {
         return $this->hasMany(ImmotokMessage::class, 'immotok_client_id');
     }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(ImmotokSubscription::class, 'immotok_client_id');
+    }
 }

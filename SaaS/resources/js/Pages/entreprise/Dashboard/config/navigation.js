@@ -66,6 +66,12 @@ export const navigation = [
                 icon: 'message-circle',
                 accent: 'rose',
             },
+            {
+                name: 'immobilier.immotok.subscribers',
+                label: 'Abonnés ImmoTok',
+                icon: 'users',
+                accent: 'rose',
+            },
             // { BLOCAGE TEMPORAIE DE CE MODULE
             //     id: 'hotel',
             //     label: 'Hôtellerie',

@@ -34,9 +34,104 @@
       class="flex-1 w-full h-full relative"
       @wheel="handleWheel"
       @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
     >
-      <div v-if="feed.length === 0" class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <!-- Pull to Refresh Spinner -->
+      <div 
+        v-if="isPullingRefresh || isRefreshing" 
+        class="absolute top-16 left-0 right-0 z-40 flex justify-center pointer-events-none transition-all duration-150"
+        :style="{ transform: `translateY(${pullDisplacement}px)` }"
+      >
+        <div class="px-4 py-2 rounded-full bg-black/80 border border-white/10 flex items-center gap-2 shadow-2xl text-xs font-bold text-white">
+          <i class="fas fa-spinner" :class="isRefreshing ? 'animate-spin' : ''" :style="{ transform: `rotate(${pullDisplacement * 3.6}deg)` }"></i>
+          <span>{{ isRefreshing ? 'Actualisation...' : 'Tirez pour actualiser' }}</span>
+        </div>
+      </div>
+
+      <!-- EXPLORE PAGE -->
+      <div v-if="activeTab === 'explore'" class="w-full h-full bg-[#07080d] overflow-y-auto px-4 pt-20 pb-20 flex flex-col gap-5">
+        <!-- Search Bar -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1 bg-[#181924] rounded-full px-4 py-2.5 flex items-center gap-2 border border-white/10">
+            <i class="fas fa-search text-gray-400"></i>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              class="flex-1 bg-transparent text-sm text-white focus:outline-none placeholder-gray-500" 
+              placeholder="Rechercher des biens, quartiers, villes..."
+              @keyup.enter="handleExploreSearch"
+            />
+            <button v-if="searchQuery" @click="searchQuery = ''; handleExploreSearch()" class="text-gray-400"><i class="fas fa-times-circle"></i></button>
+          </div>
+          <button @click="handleExploreSearch" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 font-bold rounded-full text-sm active:scale-95 transition">Rechercher</button>
+        </div>
+
+        <!-- Suggestions/Trending tags -->
+        <div class="flex flex-col gap-2">
+          <h4 class="text-xs font-bold text-gray-450 uppercase tracking-wider">Recherches populaires</h4>
+          <div class="flex gap-2 overflow-x-auto pb-1 select-none">
+            <button 
+              v-for="tag in ['Cocody', 'Studio', 'Appartement', 'Loyer < 500k', 'Plateau']"
+              :key="tag"
+              @click="selectTrendingTag(tag)"
+              class="px-3.5 py-1.5 bg-[#181924] border border-white/5 hover:bg-[#20212f] rounded-full text-xs font-semibold text-gray-300 transition whitespace-nowrap"
+            >
+              🔥 {{ tag }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Explore Grid -->
+        <div v-if="exploreLoading" class="flex-1 flex items-center justify-center py-20">
+          <i class="fas fa-spinner animate-spin text-3xl text-red-500"></i>
+        </div>
+        <div v-else-if="exploreResults.length === 0" class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 gap-2 py-20">
+          <i class="fas fa-search-minus text-4xl"></i>
+          <p class="text-sm">Aucun bien correspondant à votre recherche.</p>
+        </div>
+        <div v-else class="grid grid-cols-2 gap-3">
+          <div 
+            v-for="(item, idx) in exploreResults" 
+            :key="item.id"
+            @click="playExploreItem(idx)"
+            class="bg-[#181924] rounded-xl overflow-hidden border border-white/5 shadow-lg active:scale-[0.98] transition cursor-pointer flex flex-col"
+          >
+            <!-- Card Thumbnail -->
+            <div class="aspect-[3/4] bg-black relative flex items-center justify-center overflow-hidden">
+              <img v-if="item.media_type === 'image'" :src="item.media_url" class="w-full h-full object-cover" />
+              <video v-else :src="item.media_url" class="w-full h-full object-cover" muted></video>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+              
+              <!-- Price Badge -->
+              <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-red-650/90 text-[10px] font-bold text-white shadow-md">
+                {{ item.property.price_label.split(' ')[0] }} F
+              </div>
+              <!-- Play Icon for Video -->
+              <div v-if="item.media_type === 'video'" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 flex items-center justify-center text-[10px] text-white">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+
+            <!-- Card info -->
+            <div class="p-2 flex flex-col gap-1.5">
+              <p class="text-xs text-gray-200 line-clamp-2 font-medium leading-relaxed">{{ item.description }}</p>
+              <div class="flex items-center justify-between border-t border-white/5 pt-2">
+                <div class="flex items-center gap-1.5 truncate max-w-[65%]">
+                  <img :src="item.company.logo" class="w-4.5 h-4.5 rounded-full object-cover" />
+                  <span class="text-[10px] font-bold text-gray-400 truncate">@{{ item.company.name.split(' ')[0] }}</span>
+                </div>
+                <div class="flex items-center gap-1 text-[10px] text-gray-400 font-bold">
+                  <i class="fas fa-heart text-red-500"></i> {{ item.likes_count }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEED SLIDESHOW -->
+      <div v-else-if="feed.length === 0" class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
         <i class="fas fa-video-slash text-5xl text-gray-600 animate-pulse"></i>
         <p class="text-gray-400 text-lg">Aucun bien ne correspond aux filtres de recherche.</p>
         <button @click="resetFilters" class="px-6 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold rounded-full shadow-lg transition">
@@ -45,13 +140,17 @@
       </div>
 
       <div v-else class="w-full h-full relative flex items-center justify-center">
-        <!-- Active Slide -->
-        <div class="w-full h-full relative flex items-center justify-center bg-black overflow-hidden">
-          <!-- Media Player -->
+        <!-- Active Slide with TikTok-like transition -->
+        <Transition name="slide-vertical" mode="out-in">
           <div 
-            class="w-full h-full flex items-center justify-center relative cursor-pointer"
-            @click="handleMediaClick"
+            :key="feed.length === 1 ? 'single-' + singleItemKeySuffix : currentIndex"
+            class="w-full h-full absolute inset-0 flex items-center justify-center bg-black overflow-hidden"
           >
+            <!-- Media Player -->
+            <div 
+              class="w-full h-full flex items-center justify-center relative cursor-pointer"
+              @click="handleMediaClick"
+            >
             <!-- Image Player -->
             <img 
               v-if="currentItem.media_type === 'image'" 
@@ -92,10 +191,10 @@
             >
               <i class="fas fa-heart text-6xl"></i>
             </div>
-          </div>
+            </div>
 
-          <!-- Bottom & Side Overlays -->
-          <div class="absolute inset-x-0 bottom-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-3 z-10 pointer-events-none">
+            <!-- Bottom & Side Overlays -->
+            <div class="absolute inset-x-0 bottom-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-3 z-10 pointer-events-none">
             
             <!-- Timeline (Progress Bar) -->
             <div class="w-full flex items-center gap-3 pointer-events-auto" v-if="currentItem.media_type === 'video'">
@@ -148,7 +247,11 @@
                 <!-- Profile Avatar -->
                 <button @click="openProfile(currentItem.company)" class="relative group active:scale-90 transition">
                   <img :src="currentItem.company.logo" class="w-12 h-12 rounded-full border-2 border-white/95 object-cover shadow-xl" alt="avatar"/>
-                  <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-[#07080d]">
+                  <span 
+                    v-if="!currentItem.has_subscribed" 
+                    @click.stop="toggleSubscribe(currentItem.company.id)"
+                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-[#07080d] hover:scale-115 transition"
+                  >
                     <i class="fas fa-plus text-[9px] text-white"></i>
                   </span>
                 </button>
@@ -224,21 +327,30 @@
                   </div>
                 </div>
 
-              </div>
+            </div>
             </div>
 
+            </div>
           </div>
-        </div>
+        </Transition>
       </div>
     </main>
 
     <!-- BOTTOM NAV -->
     <nav class="w-full z-30 bg-[#07080d]/95 backdrop-blur-md border-t border-white/5 py-2 px-6 flex items-center justify-between pb-safe">
-      <button @click="navigateToHome" class="flex flex-col items-center gap-1 transition active:scale-95 text-red-500">
+      <button 
+        @click="activeTab = 'foryou'" 
+        class="flex flex-col items-center gap-1 transition active:scale-95 text-gray-450"
+        :class="activeTab !== 'explore' ? 'text-red-500' : 'hover:text-white'"
+      >
         <i class="fas fa-home text-lg"></i>
         <span class="text-[10px] font-semibold">Accueil</span>
       </button>
-      <button @click="openFilterSheet" class="flex flex-col items-center gap-1 transition active:scale-95 text-gray-400 hover:text-white">
+      <button 
+        @click="activeTab = 'explore'" 
+        class="flex flex-col items-center gap-1 transition active:scale-95 text-gray-450"
+        :class="activeTab === 'explore' ? 'text-red-500' : 'hover:text-white'"
+      >
         <i class="fas fa-compass text-lg"></i>
         <span class="text-[10px] font-semibold">Explorer</span>
       </button>
@@ -596,30 +708,28 @@
         </div>
         <div class="flex flex-col gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-xs text-gray-400">Transaction</label>
-            <div class="flex gap-2 mt-1">
-              <button 
-                v-for="mode in ['all', 'location', 'vente']" 
-                :key="mode"
-                @click="filterOptions.transaction = mode"
-                class="flex-1 py-2 text-xs font-semibold rounded-full border transition"
-                :class="filterOptions.transaction === mode ? 'bg-red-600 border-red-600 text-white' : 'bg-transparent border-white/10 text-gray-400'"
-              >
-                {{ mode === 'all' ? 'Tout' : (mode === 'location' ? 'Location' : 'Vente') }}
-              </button>
+            <div class="py-2.5 px-4 bg-red-600/10 border border-red-500/20 rounded-xl text-center">
+              <span class="text-xs font-bold text-red-400"><i class="fas fa-lock mr-2"></i>Mode : Location uniquement</span>
             </div>
           </div>
-          <div class="flex flex-col gap-1 mt-1">
-            <label class="text-xs text-gray-400">Type de bien</label>
-            <div class="flex flex-wrap gap-2 mt-1">
+          <div class="flex flex-col gap-1 mt-2">
+            <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Type de bien</label>
+            <div class="flex flex-wrap gap-2 mt-1.5 max-h-[140px] overflow-y-auto p-1 bg-black/10 rounded-lg">
               <button 
-                v-for="type in ['all', 'villa', 'appartement', 'studio', 'bureau', 'terrain']" 
-                :key="type"
-                @click="filterOptions.type = type"
-                class="px-4 py-1.5 text-xs rounded-full border transition"
-                :class="filterOptions.type === type ? 'bg-red-600 border-red-600 text-white' : 'bg-transparent border-white/10 text-gray-400'"
+                @click="filterOptions.type = 'all'"
+                class="px-3.5 py-1.5 text-xs rounded-full border transition font-bold"
+                :class="filterOptions.type === 'all' ? 'bg-red-600 border-red-600 text-white' : 'bg-transparent border-white/10 text-gray-400 hover:text-white'"
               >
-                {{ type === 'all' ? 'Tout' : type.toUpperCase() }}
+                Tout
+              </button>
+              <button 
+                v-for="cat in categories" 
+                :key="cat"
+                @click="filterOptions.type = cat"
+                class="px-3.5 py-1.5 text-xs rounded-full border transition font-bold"
+                :class="filterOptions.type === cat ? 'bg-red-600 border-red-600 text-white' : 'bg-transparent border-white/10 text-gray-400 hover:text-white'"
+              >
+                {{ cat.toUpperCase() }}
               </button>
             </div>
           </div>
@@ -717,6 +827,85 @@
       </div>
     </Transition>
 
+    <!-- COMPANY PROFILE SHEET (FULL SCREEN) -->
+    <Transition name="slide-up">
+      <div v-if="activeSheet === 'profile' && profileCompany" class="absolute inset-0 bg-[#07080d] z-50 flex flex-col text-white pb-safe overflow-hidden" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+        <!-- Profile Header -->
+        <header class="w-full bg-[#181924] border-b border-white/5 py-4 px-4 flex items-center justify-between">
+          <button @click="closeActiveSheet" class="text-gray-400 hover:text-white flex items-center gap-1.5"><i class="fas fa-arrow-left text-lg"></i> Retour</button>
+          <span class="font-bold text-sm tracking-wide">Profil</span>
+          <button @click="toggleSubscribe(profileCompany.id)" class="text-xs font-bold text-red-500 hover:text-red-650 transition">
+            {{ profileHasSubscribed ? 'Se désabonner' : "S'abonner" }}
+          </button>
+        </header>
+
+        <!-- Profile content (scrollable) -->
+        <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center gap-6">
+          <!-- Logo and Name -->
+          <div class="flex flex-col items-center gap-3">
+            <img :src="profileCompany.logo" class="w-24 h-24 rounded-full object-cover border-4 border-white/10 shadow-2xl" alt="logo"/>
+            <div class="text-center">
+              <h2 class="text-xl font-extrabold text-white">@{{ profileCompany.name }}</h2>
+              <span class="px-2 py-0.5 rounded bg-red-600/90 text-[10px] font-bold uppercase tracking-wider text-white mt-1.5 inline-block">PRO</span>
+            </div>
+            <p class="text-xs text-gray-400 flex items-center gap-1"><i class="fas fa-map-marker-alt text-red-500"></i> {{ profileCompany.city || 'Côte d\'Ivoire' }}</p>
+          </div>
+
+          <!-- Profile Stats -->
+          <div class="flex justify-around w-full max-w-sm border-y border-white/5 py-4">
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ profileSubscribersCount }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Abonnés</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ profileLikesCount }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">J'aime</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ profileIllustrations.length }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Vidéos</div>
+            </div>
+          </div>
+
+          <!-- Follow & Message buttons -->
+          <div class="flex gap-3 w-full max-w-sm">
+            <button 
+              @click="toggleSubscribe(profileCompany.id)"
+              class="flex-1 h-11 rounded-lg font-bold text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-1.5"
+              :class="profileHasSubscribed ? 'bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/10'"
+            >
+              <i :class="profileHasSubscribed ? 'fas fa-check-circle text-green-500' : 'fas fa-user-plus'"></i>
+              {{ profileHasSubscribed ? 'Abonné' : 'S\'abonner' }}
+            </button>
+            <button @click="openChatFromProfile" class="flex-1 h-11 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-white active:scale-95 transition flex items-center justify-center gap-1.5">
+              <i class="fas fa-comment-dots"></i> Message
+            </button>
+          </div>
+
+          <!-- Grid of company illustrations -->
+          <div class="w-full flex flex-col gap-3 mt-4">
+            <h3 class="font-black text-sm text-gray-400 uppercase tracking-wider self-start"><i class="fas fa-th mr-2 text-red-500"></i>Publications</h3>
+            <div v-if="profileIllustrations.length === 0" class="py-10 text-center text-gray-500 text-sm">
+              Cette entreprise n'a pas encore publié d'illustrations.
+            </div>
+            <div v-else class="grid grid-cols-3 gap-1.5 w-full">
+              <div 
+                v-for="img in profileIllustrations" 
+                :key="img.id"
+                @click="playProfileIllustration(img.id)"
+                class="aspect-[3/4] bg-black relative rounded-md overflow-hidden cursor-pointer group hover:opacity-85 transition"
+              >
+                <img v-if="img.media_type === 'image'" :src="img.media_url" class="w-full h-full object-cover" />
+                <video v-else :src="img.media_url" class="w-full h-full object-cover" muted></video>
+                <div v-if="img.media_type === 'video'" class="absolute bottom-1 right-1 text-white text-[9px] bg-black/40 px-1 rounded flex items-center gap-0.5"><i class="fas fa-play"></i></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </Transition>
+
     <!-- Global Mute Info Banner -->
     <Transition name="fade">
       <div v-if="showMuteInfoBanner" class="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-black/75 backdrop-blur-sm text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
@@ -739,6 +928,7 @@ const activeTab = ref('foryou');
 const currentLang = ref('fr');
 const client = ref(null);
 const activeSheet = ref(null);
+const unreadCount = ref(0);
 
 // Audio & Video Controls
 const isMuted = ref(true);
@@ -779,11 +969,30 @@ const registerForm = ref({ name: '', email: '', phone: '', password: '', passwor
 
 // Filter options
 const filterOptions = ref({
-  transaction: 'all',
+  transaction: 'location',
   type: 'all',
   budget: 0,
   city: '',
 });
+
+// Categories & Explorer state
+const categories = ref([]);
+const searchQuery = ref('');
+const exploreResults = ref([]);
+const exploreLoading = ref(false);
+
+// Company Profile state
+const profileCompany = ref(null);
+const profileSubscribersCount = ref(0);
+const profileLikesCount = ref(0);
+const profileHasSubscribed = ref(false);
+const profileIllustrations = ref([]);
+
+// Infinite loop & pull-to-refresh
+const singleItemKeySuffix = ref(0);
+const isPullingRefresh = ref(false);
+const pullDisplacement = ref(0);
+const isRefreshing = ref(false);
 
 // Chatbot messages
 const chatMessages = ref([]);
@@ -823,10 +1032,24 @@ watch(currentItem, (newItem) => {
   }
 });
 
+watch(activeTab, (newTab) => {
+  if (newTab === 'subs' && !client.value) {
+    activeSheet.value = 'auth';
+    activeTab.value = 'foryou';
+    return;
+  }
+  if (newTab === 'explore') {
+    handleExploreSearch();
+  } else {
+    fetchFeed();
+  }
+});
+
 // Fetch feed from backend
 const fetchFeed = async () => {
   try {
-    const res = await axios.get('/api/immotok/feed', { params: filterOptions.value });
+    const params = { ...filterOptions.value, tab: activeTab.value };
+    const res = await axios.get('/api/immotok/feed', { params });
     feed.value = res.data;
     currentIndex.value = 0;
     nextTick(() => {
@@ -1042,29 +1265,133 @@ const seekVideo = (e) => {
 
 // Wheel & touch scroll transitions (Feed swipe)
 let touchStartY = 0;
+let touchStartX = 0;
+let touchStartTime = 0;
+let isScrolling = false;
+let swipeVelocity = 0;
+
 const handleTouchStart = (e) => {
   touchStartY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+  touchStartTime = Date.now();
+  isScrolling = false;
+  isPullingRefresh.value = false;
+  pullDisplacement.value = 0;
+};
+
+const handleTouchMove = (e) => {
+  if (activeSheet.value && activeSheet.value !== 'profile') return;
+  if (activeTab.value === 'explore') return;
+
+  const currentY = e.touches[0].clientY;
+  const currentX = e.touches[0].clientX;
+  const diffY = currentY - touchStartY;
+  const diffX = currentX - touchStartX;
+
+  // Pull-to-refresh: only if at first slide, moving down, and mostly vertical
+  if (currentIndex.value === 0 && diffY > 0 && Math.abs(diffX) < 40) {
+    pullDisplacement.value = Math.min(diffY * 0.4, 90);
+    if (pullDisplacement.value > 15) {
+      isPullingRefresh.value = true;
+    }
+  }
 };
 
 const handleTouchEnd = (e) => {
-  const touchEndY = e.changedTouches[0].clientY;
-  const diffY = touchStartY - touchEndY;
-  const threshold = 60;
+  // If pull to refresh triggered
+  if (isPullingRefresh.value && pullDisplacement.value > 55) {
+    triggerRefresh();
+    isPullingRefresh.value = false;
+    pullDisplacement.value = 0;
+    return;
+  }
+  isPullingRefresh.value = false;
+  pullDisplacement.value = 0;
 
-  if (diffY > threshold && currentIndex.value < feed.value.length - 1) {
-    currentIndex.value++;
-  } else if (diffY < -threshold && currentIndex.value > 0) {
-    currentIndex.value--;
+  const touchEndY = e.changedTouches[0].clientY;
+  const touchEndX = e.changedTouches[0].clientX;
+  const diffY = touchStartY - touchEndY;
+  const diffX = touchStartX - touchEndX;
+  const diffTime = Date.now() - touchStartTime;
+  swipeVelocity = Math.abs(diffY / diffTime);
+
+  // Swipe X: Horizontal swiping to/from profile
+  if (Math.abs(diffX) > 85 && Math.abs(diffY) < 65) {
+    if (diffX > 85) {
+      // Left swipe -> Open profile
+      if (currentItem.value && currentItem.value.company) {
+        openProfile(currentItem.value.company);
+      }
+    } else if (diffX < -85) {
+      // Right swipe -> Close profile if open
+      if (activeSheet.value === 'profile') {
+        closeActiveSheet();
+      }
+    }
+    return;
+  }
+
+  // Swipe Y: Vertical swiping through feed
+  const threshold = swipeVelocity > 0.5 ? 25 : 55;
+
+  if (feed.value.length <= 1) {
+    if (feed.value.length === 1 && Math.abs(diffY) > threshold) {
+      singleItemKeySuffix.value = Date.now();
+    }
+    return;
+  }
+
+  if (diffY > threshold) {
+    if (currentIndex.value < feed.value.length - 1) {
+      currentIndex.value++;
+    } else {
+      currentIndex.value = 0; // Infinite loop forward
+    }
+  } else if (diffY < -threshold) {
+    if (currentIndex.value > 0) {
+      currentIndex.value--;
+    } else {
+      currentIndex.value = feed.value.length - 1; // Infinite loop backward
+    }
   }
 };
 
 const handleWheel = (e) => {
-  // Simple throttle to avoid multiple scrolls
-  if (e.deltaY > 30 && currentIndex.value < feed.value.length - 1) {
-    currentIndex.value++;
-  } else if (e.deltaY < -30 && currentIndex.value > 0) {
-    currentIndex.value--;
+  if (feed.value.length <= 1) {
+    if (feed.value.length === 1 && Math.abs(e.deltaY) > 10) {
+      singleItemKeySuffix.value = Date.now();
+    }
+    return;
   }
+  if (isScrolling) return;
+
+  if (Math.abs(e.deltaY) > 10) {
+    isScrolling = true;
+    if (e.deltaY > 0) {
+      if (currentIndex.value < feed.value.length - 1) {
+        currentIndex.value++;
+      } else {
+        currentIndex.value = 0; // Infinite loop forward
+      }
+    } else {
+      if (currentIndex.value > 0) {
+        currentIndex.value--;
+      } else {
+        currentIndex.value = feed.value.length - 1; // Infinite loop backward
+      }
+    }
+    setTimeout(() => {
+      isScrolling = false;
+    }, 850); // Restore 850ms mouse wheel throttle lock
+  }
+};
+
+const triggerRefresh = async () => {
+  isRefreshing.value = true;
+  await fetchFeed();
+  setTimeout(() => {
+    isRefreshing.value = false;
+  }, 800);
 };
 
 // Comments management
@@ -1214,9 +1541,108 @@ const submitRegister = async () => {
   }
 };
 
-// Public profile click
-const openProfile = (company) => {
-  alert(`Bienvenue sur le profil de ${company.name}.\nTél : ${company.phone}`);
+// Public profile click & subscriptions
+const openProfile = async (company) => {
+  activeSheet.value = 'profile';
+  profileCompany.value = company;
+  profileSubscribersCount.value = 0;
+  profileLikesCount.value = 0;
+  profileHasSubscribed.value = false;
+  profileIllustrations.value = [];
+  try {
+    const res = await axios.get(`/api/immotok/companies/${company.id}/profile`);
+    if (res.data.success) {
+      profileCompany.value = res.data.company;
+      profileSubscribersCount.value = res.data.subscribers_count;
+      profileLikesCount.value = res.data.likes_count;
+      profileHasSubscribed.value = res.data.has_subscribed;
+      profileIllustrations.value = res.data.illustrations;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const toggleSubscribe = async (companyId) => {
+  if (!client.value) {
+    activeSheet.value = 'auth';
+    return;
+  }
+  try {
+    const res = await axios.post(`/api/immotok/companies/${companyId}/subscribe`);
+    if (res.data.success) {
+      const subbed = res.data.subscribed;
+      if (profileCompany.value && profileCompany.value.id === companyId) {
+        profileHasSubscribed.value = subbed;
+        profileSubscribersCount.value = res.data.subscribers_count;
+      }
+      // Update in feed
+      feed.value.forEach(item => {
+        if (item.company.id === companyId) {
+          item.has_subscribed = subbed;
+        }
+      });
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Explore & Search Page handlers
+const handleExploreSearch = async () => {
+  exploreLoading.value = true;
+  try {
+    const res = await axios.get('/api/immotok/feed', { params: { q: searchQuery.value, transaction: filterOptions.value.transaction } });
+    exploreResults.value = res.data;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    exploreLoading.value = false;
+  }
+};
+
+const selectTrendingTag = (tag) => {
+  if (tag === 'Loyer < 500k') {
+    searchQuery.value = '';
+    filterOptions.value.budget = 500000;
+  } else {
+    searchQuery.value = tag;
+  }
+  handleExploreSearch();
+};
+
+const playExploreItem = (idx) => {
+  feed.value = [...exploreResults.value];
+  currentIndex.value = idx;
+  activeTab.value = 'foryou';
+};
+
+const playProfileIllustration = async (illustrationId) => {
+  if (!profileCompany.value) return;
+  try {
+    const res = await axios.get('/api/immotok/feed', { params: { company_id: profileCompany.value.id } });
+    feed.value = res.data;
+    const idx = feed.value.findIndex(item => item.id === illustrationId);
+    currentIndex.value = idx >= 0 ? idx : 0;
+    activeSheet.value = null; // Close profile sheet
+    activeTab.value = 'foryou';
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const openChatFromProfile = () => {
+  activeSheet.value = 'chat';
+  loadChatHistory();
+};
+
+const fetchCategories = async () => {
+  try {
+    const res = await axios.get('/api/immotok/categories');
+    categories.value = res.data;
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 // Filters
@@ -1231,7 +1657,7 @@ const applyFilters = () => {
 
 const resetFilters = () => {
   filterOptions.value = {
-    transaction: 'all',
+    transaction: 'location',
     type: 'all',
     budget: 0,
     city: '',
@@ -1366,6 +1792,7 @@ const toggleLang = () => {
 // LifeCycle hooks
 onMounted(() => {
   checkAuth();
+  fetchCategories();
   fetchFeed();
 });
 
@@ -1418,6 +1845,32 @@ onUnmounted(() => {
 
 .animate-heart-float {
   animation: heart-float 0.8s ease-out forwards;
+}
+
+/* TIKTOK-LIKE VERTICAL SLIDE TRANSITION */
+.slide-vertical-enter-active,
+.slide-vertical-leave-active {
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-vertical-enter-from {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.slide-vertical-leave-to {
+  opacity: 0;
+  transform: translateY(-30%);
+}
+
+.slide-vertical-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-vertical-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* CUSTOM SWIPE FADE */

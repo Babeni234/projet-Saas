@@ -52,6 +52,12 @@ export const navigation = [
                 icon: 'message-circle',
                 accent: 'rose',
             },
+            {
+                name: 'agence.immobilier.immotok.subscribers',
+                label: 'Abonnés ImmoTok',
+                icon: 'users',
+                accent: 'rose',
+            },
         ],
     },
     {
@@ -86,6 +92,7 @@ export const routeTitles = {
     'agence.immobilier.illustrations': 'Gestion des illustrations',
     'agence.immobilier.immotok.interactions': 'Interactions ImmoTok',
     'agence.immobilier.immotok.messages': 'Messagerie ImmoTok',
+    'agence.immobilier.immotok.subscribers': 'Abonnés ImmoTok',
     'agence.immobilier.affectations': 'Affectation des biens immobiliers',
     'agence.immobilier.contrats': 'Contrats de bail',
     'agence.immobilier.locataires': 'Gestion des locataires',

@@ -287,4 +287,34 @@ class ImmotokDashboardController extends Controller
             }) : [],
         ];
     }
+
+    public function getSubscribers(Request $request)
+    {
+        $scope = $this->getScope($request);
+        $companyId = $scope['company_profile_id'];
+
+        $subs = \App\Models\ImmotokSubscription::with('client')
+            ->where('company_profile_id', $companyId)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($sub) {
+                if (!$sub->client) return null;
+                return [
+                    'id' => $sub->id,
+                    'client' => [
+                        'id' => $sub->client->id,
+                        'name' => $sub->client->name,
+                        'email' => $sub->client->email,
+                        'phone' => $sub->client->phone,
+                        'avatar' => $sub->client->avatar ? asset('storage/' . $sub->client->avatar) : null,
+                    ],
+                    'subscribed_at' => $sub->created_at ? \Carbon\Carbon::parse($sub->created_at)->diffForHumans() : '',
+                ];
+            })->filter()->values();
+
+        return response()->json([
+            'subscribers' => $subs,
+            'count' => $subs->count(),
+        ]);
+    }
 }

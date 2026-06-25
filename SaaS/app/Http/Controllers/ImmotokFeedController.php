@@ -28,6 +28,20 @@ class ImmotokFeedController extends Controller
         $client = $this->getClient();
         $query = Illustration::with(['companyProfile', 'agency'])->orderBy('id', 'desc');
 
+        if ($request->filled('tab') && $request->tab === 'subs') {
+            if (!$client) {
+                return response()->json([]);
+            }
+            $subscribedCompanyIds = \App\Models\ImmotokSubscription::where('immotok_client_id', $client->id)
+                ->pluck('company_profile_id')
+                ->toArray();
+            $query->whereIn('company_profile_id', $subscribedCompanyIds);
+        }
+
+        if ($request->filled('company_id')) {
+            $query->where('company_profile_id', $request->company_id);
+        }
+
         // Apply filters
         if ($request->filled('q')) {
             $q = $request->q;
@@ -109,6 +123,12 @@ class ImmotokFeedController extends Controller
 
             $hasLiked = $client ? ImmotokLike::where('immotok_client_id', $client->id)->where('illustration_id', $item->id)->exists() : false;
             $hasFavorited = $client ? ImmotokFavorite::where('immotok_client_id', $client->id)->where('illustration_id', $item->id)->exists() : false;
+            $hasSubscribed = false;
+            if ($client && $company) {
+                $hasSubscribed = \App\Models\ImmotokSubscription::where('immotok_client_id', $client->id)
+                    ->where('company_profile_id', $company->id)
+                    ->exists();
+            }
 
             return [
                 'id' => $item->id,
@@ -128,6 +148,7 @@ class ImmotokFeedController extends Controller
                 'comments_count' => $comsCount,
                 'has_liked' => $hasLiked,
                 'has_favorited' => $hasFavorited,
+                'has_subscribed' => $hasSubscribed,
                 'created_at' => $item->created_at->diffForHumans(),
             ];
         });
@@ -327,5 +348,90 @@ class ImmotokFeedController extends Controller
                 return $this->formatComment($reply);
             }) : [],
         ];
+    }
+
+    public function getCategories()
+    {
+        $categories = \App\Models\Categorie::where('deleted', false)
+            ->orWhereNull('deleted')
+            ->pluck('nom')
+            ->unique()
+            ->values()
+            ->toArray();
+        return response()->json($categories);
+    }
+
+    public function subscribe($id)
+    {
+        $client = $this->getClient();
+        if (!$client) {
+            return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour vous abonner.'], 401);
+        }
+
+        $sub = \App\Models\ImmotokSubscription::where('immotok_client_id', $client->id)
+            ->where('company_profile_id', $id)
+            ->first();
+
+        if ($sub) {
+            $sub->delete();
+            $subscribed = false;
+        } else {
+            \App\Models\ImmotokSubscription::create([
+                'immotok_client_id' => $client->id,
+                'company_profile_id' => $id,
+            ]);
+            $subscribed = true;
+        }
+
+        return response()->json([
+            'success' => true,
+            'subscribed' => $subscribed,
+            'subscribers_count' => \App\Models\ImmotokSubscription::where('company_profile_id', $id)->count()
+        ]);
+    }
+
+    public function getCompanyProfile($id)
+    {
+        $client = $this->getClient();
+        $company = \App\Models\CompanyProfile::findOrFail($id);
+
+        $logoUrl = $company->logo_path ? asset('storage/' . $company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+
+        $subscribersCount = \App\Models\ImmotokSubscription::where('company_profile_id', $company->id)->count();
+        $likesCount = \App\Models\ImmotokLike::where('company_profile_id', $company->id)->count();
+        $hasSubscribed = $client ? \App\Models\ImmotokSubscription::where('immotok_client_id', $client->id)->where('company_profile_id', $company->id)->exists() : false;
+
+        $illustrations = Illustration::where('company_profile_id', $company->id)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($item) {
+                $mediaUrl = $item->file_path;
+                if (!str_starts_with($mediaUrl, 'http')) {
+                    $mediaUrl = asset('storage/' . $mediaUrl);
+                }
+                return [
+                    'id' => $item->id,
+                    'media_url' => $mediaUrl,
+                    'media_type' => $item->media_type,
+                    'description' => $item->description,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->legal_name,
+                'logo' => $logoUrl,
+                'business_type' => $company->business_type,
+                'city' => $company->city,
+                'country' => $company->country,
+                'phone' => $company->phone,
+            ],
+            'subscribers_count' => $subscribersCount,
+            'likes_count' => $likesCount,
+            'has_subscribed' => $hasSubscribed,
+            'illustrations' => $illustrations,
+        ]);
     }
 }

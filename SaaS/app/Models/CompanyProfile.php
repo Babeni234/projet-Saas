@@ -63,4 +63,9 @@ class CompanyProfile extends Model
     {
         return $this->hasMany(Locataire::class);
     }
+
+    public function subscribers(): HasMany
+    {
+        return $this->hasMany(ImmotokSubscription::class, 'company_profile_id');
+    }
 }
