@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('properties', \App\Http\Controllers\Landlord\PropertyController::class);
         Route::resource('tenants', \App\Http\Controllers\Landlord\TenantController::class);
         Route::resource('contracts', \App\Http\Controllers\Landlord\ContractController::class);
+        Route::resource('visits', \App\Http\Controllers\Landlord\VisitController::class);
+        Route::resource('receipts', \App\Http\Controllers\Landlord\ReceiptController::class);
     });
 });
 

@@ -14,8 +14,8 @@ const navigation = [
     { name: 'Mes biens', href: route('landlord.properties.index'), icon: 'building', pattern: 'landlord.properties*' },
     { name: 'Locataires', href: route('landlord.tenants.index'), icon: 'users', pattern: 'landlord.tenants*' },
     { name: 'Contrats', href: route('landlord.contracts.index'), icon: 'document', pattern: 'landlord.contracts*' },
-    { name: 'Visites', href: '#', icon: 'calendar', pattern: null },
-    { name: 'Quittances', href: '#', icon: 'receipt', pattern: null },
+    { name: 'Visites', href: route('landlord.visits.index'), icon: 'calendar', pattern: 'landlord.visits*' },
+    { name: 'Quittances', href: route('landlord.receipts.index'), icon: 'receipt', pattern: 'landlord.receipts*' },
     { name: 'Messages', href: '#', icon: 'chat', pattern: null },
 ];
 </script>
