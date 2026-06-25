@@ -12,7 +12,7 @@ const sidebarOpen = ref(false);
 const navigation = [
     { name: 'Tableau de bord', href: route('dashboard'), icon: 'dashboard', pattern: 'dashboard' },
     { name: 'Mes biens', href: route('landlord.properties.index'), icon: 'building', pattern: 'landlord.properties*' },
-    { name: 'Locataires', href: '#', icon: 'users', pattern: null },
+    { name: 'Locataires', href: route('landlord.tenants.index'), icon: 'users', pattern: 'landlord.tenants*' },
     { name: 'Contrats', href: '#', icon: 'document', pattern: null },
     { name: 'Visites', href: '#', icon: 'calendar', pattern: null },
     { name: 'Quittances', href: '#', icon: 'receipt', pattern: null },
