@@ -1,29 +1,57 @@
 <template>
   <div class="h-screen w-screen bg-[#07080d] text-white overflow-hidden flex flex-col font-sans select-none relative">
     
+    <!-- SPLASH SCREEN (TikTok-style loading) -->
+    <Transition name="fade">
+      <div v-if="showSplash" class="absolute inset-0 z-[9999] bg-[#07080d] flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center gap-6">
+          <!-- Logo ImmoTok -->
+          <div class="relative flex items-center gap-2">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 p-[3px] shadow-2xl shadow-red-500/30 animate-pulse">
+              <div class="w-full h-full rounded-[13px] bg-[#07080d] flex items-center justify-center">
+                <span class="text-4xl font-black text-white">I</span>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-4xl font-black tracking-tight">Immo<span class="text-red-500">Tok</span></span>
+              <span class="text-[10px] text-gray-500 font-semibold tracking-widest uppercase">Immobilier & Découverte</span>
+            </div>
+          </div>
+          <!-- Progress bar style YouTube -->
+          <div class="w-48 h-1 rounded-full bg-white/10 overflow-hidden">
+            <div 
+              class="h-full rounded-full bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-200 ease-out"
+              :style="{ width: splashProgress + '%' }"
+            ></div>
+          </div>
+          <span class="text-[11px] text-gray-600 font-mono">{{ Math.round(splashProgress) }}%</span>
+        </div>
+      </div>
+    </Transition>
+
     <!-- TOP NAV -->
-    <header class="absolute top-0 left-0 w-full z-30 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent">
-      <div class="flex items-center gap-2">
-        <button @click="openFilterSheet" class="w-10 h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 transition active:scale-95 text-xl">
+    <header class="absolute top-0 left-0 w-full z-30 flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-b from-black/80 to-transparent">
+      <div class="flex items-center gap-1 sm:gap-2">
+        <button @click="openFilterSheet" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 transition active:scale-95 text-base sm:text-xl">
           <i class="fas fa-sliders-h text-white"></i>
         </button>
       </div>
-      <nav class="flex items-center gap-4">
+      <nav class="flex items-center gap-2 sm:gap-4">
         <button 
           v-for="tab in ['foryou', 'subs', 'explore']" 
           :key="tab" 
           @click="activeTab = tab"
-          class="text-sm font-semibold tracking-wider transition relative pb-1 border-b-2"
+          class="text-[11px] sm:text-sm font-semibold tracking-wider transition relative pb-1 border-b-2 whitespace-nowrap"
           :class="activeTab === tab ? 'text-white border-red-500 scale-105' : 'text-gray-400 border-transparent hover:text-white'"
         >
           {{ tab === 'foryou' ? 'Pour vous' : (tab === 'subs' ? 'Abonnements' : 'Explorer') }}
         </button>
       </nav>
-      <div class="flex items-center gap-3">
-        <button @click="toggleMute" class="w-10 h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 transition active:scale-95 text-lg">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button @click="toggleMute" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 transition active:scale-95 text-sm sm:text-lg">
           <i :class="isMuted ? 'fas fa-volume-mute text-red-500' : 'fas fa-volume-up text-white'"></i>
         </button>
-        <button @click="toggleLang" class="px-3 h-8 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 border border-white/20 text-xs font-bold transition active:scale-95 text-white">
+        <button @click="toggleLang" class="px-2 sm:px-3 h-7 sm:h-8 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 border border-white/20 text-[10px] sm:text-xs font-bold transition active:scale-95 text-white">
           {{ currentLang.toUpperCase() }}
         </button>
       </div>
@@ -50,32 +78,32 @@
       </div>
 
       <!-- EXPLORE PAGE -->
-      <div v-if="activeTab === 'explore'" class="w-full h-full bg-[#07080d] overflow-y-auto px-4 pt-20 pb-20 flex flex-col gap-5">
+      <div v-if="activeTab === 'explore'" class="w-full h-full bg-[#07080d] overflow-y-auto px-3 sm:px-4 pt-16 sm:pt-20 pb-20 flex flex-col gap-4 sm:gap-5">
         <!-- Search Bar -->
-        <div class="flex items-center gap-3">
-          <div class="flex-1 bg-[#181924] rounded-full px-4 py-2.5 flex items-center gap-2 border border-white/10">
-            <i class="fas fa-search text-gray-400"></i>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex-1 bg-[#181924] rounded-full px-3 sm:px-4 py-2 sm:py-2.5 flex items-center gap-2 border border-white/10">
+            <i class="fas fa-search text-gray-400 text-sm sm:text-base"></i>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="flex-1 bg-transparent text-sm text-white focus:outline-none placeholder-gray-500" 
+              class="flex-1 bg-transparent text-xs sm:text-sm text-white focus:outline-none placeholder-gray-500" 
               placeholder="Rechercher des biens, quartiers, villes..."
               @keyup.enter="handleExploreSearch"
             />
             <button v-if="searchQuery" @click="searchQuery = ''; handleExploreSearch()" class="text-gray-400"><i class="fas fa-times-circle"></i></button>
           </div>
-          <button @click="handleExploreSearch" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 font-bold rounded-full text-sm active:scale-95 transition">Rechercher</button>
+          <button @click="handleExploreSearch" class="px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 font-bold rounded-full text-xs sm:text-sm active:scale-95 transition">Rechercher</button>
         </div>
 
         <!-- Suggestions/Trending tags -->
-        <div class="flex flex-col gap-2">
-          <h4 class="text-xs font-bold text-gray-450 uppercase tracking-wider">Recherches populaires</h4>
-          <div class="flex gap-2 overflow-x-auto pb-1 select-none">
+        <div class="flex flex-col gap-1.5 sm:gap-2">
+          <h4 class="text-[10px] sm:text-xs font-bold text-gray-450 uppercase tracking-wider">Recherches populaires</h4>
+          <div class="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 select-none">
             <button 
               v-for="tag in ['Cocody', 'Studio', 'Appartement', 'Loyer < 500k', 'Plateau']"
               :key="tag"
               @click="selectTrendingTag(tag)"
-              class="px-3.5 py-1.5 bg-[#181924] border border-white/5 hover:bg-[#20212f] rounded-full text-xs font-semibold text-gray-300 transition whitespace-nowrap"
+              class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-[#181924] border border-white/5 hover:bg-[#20212f] rounded-full text-[10px] sm:text-xs font-semibold text-gray-300 transition whitespace-nowrap"
             >
               🔥 {{ tag }}
             </button>
@@ -86,11 +114,11 @@
         <div v-if="exploreLoading" class="flex-1 flex items-center justify-center py-20">
           <i class="fas fa-spinner animate-spin text-3xl text-red-500"></i>
         </div>
-        <div v-else-if="exploreResults.length === 0" class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 gap-2 py-20">
-          <i class="fas fa-search-minus text-4xl"></i>
-          <p class="text-sm">Aucun bien correspondant à votre recherche.</p>
+        <div v-else-if="exploreResults.length === 0" class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 gap-2 py-16 sm:py-20 px-4">
+          <i class="fas fa-search-minus text-3xl sm:text-4xl"></i>
+          <p class="text-xs sm:text-sm">Aucun bien correspondant à votre recherche.</p>
         </div>
-        <div v-else class="grid grid-cols-2 gap-3">
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
           <div 
             v-for="(item, idx) in exploreResults" 
             :key="item.id"
@@ -99,8 +127,8 @@
           >
             <!-- Card Thumbnail -->
             <div class="aspect-[3/4] bg-black relative flex items-center justify-center overflow-hidden">
-              <img v-if="item.media_type === 'image'" :src="item.media_url" class="w-full h-full object-cover" />
-              <video v-else :src="item.media_url" class="w-full h-full object-cover" muted></video>
+              <img v-if="item.media_type === 'image'" :src="item.media_url" class="w-full h-full object-contain" />
+              <video v-else :src="item.media_url" class="w-full h-full object-contain" muted></video>
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
               
               <!-- Price Badge -->
@@ -115,13 +143,13 @@
 
             <!-- Card info -->
             <div class="p-2 flex flex-col gap-1.5">
-              <p class="text-xs text-gray-200 line-clamp-2 font-medium leading-relaxed">{{ item.description }}</p>
+              <p class="text-[11px] sm:text-xs text-gray-200 line-clamp-2 font-medium leading-relaxed">{{ item.description }}</p>
               <div class="flex items-center justify-between border-t border-white/5 pt-2">
                 <div class="flex items-center gap-1.5 truncate max-w-[65%]">
-                  <img :src="item.company.logo" class="w-4.5 h-4.5 rounded-full object-cover" />
-                  <span class="text-[10px] font-bold text-gray-400 truncate">@{{ item.company.name.split(' ')[0] }}</span>
+                  <img :src="item.company.logo" class="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full object-cover" />
+                  <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 truncate">@{{ item.company.name.split(' ')[0] }}</span>
                 </div>
-                <div class="flex items-center gap-1 text-[10px] text-gray-400 font-bold">
+                <div class="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400 font-bold">
                   <i class="fas fa-heart text-red-500"></i> {{ item.likes_count }}
                 </div>
               </div>
@@ -155,7 +183,7 @@
             <img 
               v-if="currentItem.media_type === 'image'" 
               :src="currentItem.media_url" 
-              class="w-full h-full object-cover md:object-contain select-none pointer-events-none"
+              class="w-full h-full object-contain select-none pointer-events-none"
               alt="Propriété"
             />
 
@@ -164,7 +192,7 @@
               v-else 
               ref="videoRef"
               :src="currentItem.media_url"
-              class="w-full h-full object-cover md:object-contain"
+              class="w-full h-full object-contain"
               loop
               playsinline
               webkit-playsinline
@@ -194,13 +222,13 @@
             </div>
 
             <!-- Bottom & Side Overlays -->
-            <div class="absolute inset-x-0 bottom-0 p-4 pt-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-3 z-10 pointer-events-none">
+            <div class="absolute inset-x-0 bottom-0 px-3 sm:px-4 pb-3 sm:pb-4 pt-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-2 sm:gap-3 z-10 pointer-events-none">
             
             <!-- Timeline (Progress Bar) -->
-            <div class="w-full flex items-center gap-3 pointer-events-auto" v-if="currentItem.media_type === 'video'">
-              <span class="text-xs font-mono text-gray-300">{{ formatTime(currentTime) }}</span>
+            <div class="w-full flex items-center gap-2 sm:gap-3 pointer-events-auto" v-if="currentItem.media_type === 'video'">
+              <span class="text-[10px] sm:text-xs font-mono text-gray-300">{{ formatTime(currentTime) }}</span>
               <div 
-                class="flex-1 h-1.5 rounded-full bg-white/20 relative cursor-pointer group"
+                class="flex-1 h-1 sm:h-1.5 rounded-full bg-white/20 relative cursor-pointer group"
                 @mousedown="startDragProgress"
                 @touchstart="startDragProgress"
                 ref="progressBarRef"
@@ -210,107 +238,107 @@
                   :style="{ width: progressPercentage + '%' }"
                 ></div>
                 <div 
-                  class="w-3.5 h-3.5 rounded-full bg-white absolute top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white absolute top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                   :style="{ left: progressPercentage + '%' }"
                 ></div>
               </div>
-              <span class="text-xs font-mono text-gray-300">{{ formatTime(duration) }}</span>
+              <span class="text-[10px] sm:text-xs font-mono text-gray-300">{{ formatTime(duration) }}</span>
             </div>
 
             <!-- Client/Owner Info and Caption Overlay -->
-            <div class="flex items-end justify-between gap-4">
+            <div class="flex items-end justify-between gap-2 sm:gap-4">
               <!-- Text Info -->
-              <div class="flex flex-col gap-2 max-w-[80%] pointer-events-auto">
-                <div class="flex items-center gap-2">
-                  <h2 class="font-bold text-lg tracking-wide text-white drop-shadow-md">@{{ currentItem.company.name }}</h2>
-                  <span class="px-2 py-0.5 rounded bg-red-600/90 text-[10px] font-bold uppercase tracking-wider text-white">PRO</span>
+              <div class="flex flex-col gap-1 sm:gap-2 max-w-[70%] sm:max-w-[80%] pointer-events-auto">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <h2 class="font-bold text-sm sm:text-lg tracking-wide text-white drop-shadow-md truncate">@{{ currentItem.company.name }}</h2>
+                  <span class="px-1.5 sm:px-2 py-0.5 rounded bg-red-600/90 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-white shrink-0">PRO</span>
                 </div>
-                <p class="text-sm text-gray-200 line-clamp-2 leading-relaxed drop-shadow-md">
+                <p class="text-[11px] sm:text-sm text-gray-200 line-clamp-1 sm:line-clamp-2 leading-relaxed drop-shadow-md">
                   {{ currentItem.description }}
                 </p>
                 <!-- Property Badges -->
-                <div class="flex flex-wrap items-center gap-2 mt-1">
-                  <span class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs font-bold text-red-400 border border-red-500/20">
+                <div class="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+                  <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] sm:text-xs font-bold text-red-400 border border-red-500/20">
                     💰 {{ currentItem.property.price_label }}
                   </span>
-                  <span v-if="currentItem.property.city" class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs font-bold text-blue-400 border border-blue-500/20">
+                  <span v-if="currentItem.property.city" class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] sm:text-xs font-bold text-blue-400 border border-blue-500/20">
                     📍 {{ currentItem.property.city }}
                   </span>
-                  <span v-if="currentItem.property.surface" class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-xs font-bold text-green-400 border border-green-500/20">
+                  <span v-if="currentItem.property.surface" class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] sm:text-xs font-bold text-green-400 border border-green-500/20">
                     📐 {{ currentItem.property.surface }} m²
                   </span>
                 </div>
               </div>
 
               <!-- Action Buttons (Right Sidebar) -->
-              <div class="flex flex-col items-center gap-4 pb-2 pointer-events-auto z-20">
+              <div class="flex flex-col items-center gap-2 sm:gap-4 pb-1 sm:pb-2 pointer-events-auto z-20">
                 <!-- Profile Avatar -->
                 <button @click="openProfile(currentItem.company)" class="relative group active:scale-90 transition">
-                  <img :src="currentItem.company.logo" class="w-12 h-12 rounded-full border-2 border-white/95 object-cover shadow-xl" alt="avatar"/>
+                  <img :src="currentItem.company.logo" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white/95 object-contain bg-black shadow-xl" alt="avatar"/>
                   <span 
                     v-if="!currentItem.has_subscribed" 
                     @click.stop="toggleSubscribe(currentItem.company.id)"
-                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-[#07080d] hover:scale-115 transition"
+                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-[#07080d] hover:scale-115 transition"
                   >
-                    <i class="fas fa-plus text-[9px] text-white"></i>
+                    <i class="fas fa-plus text-[7px] sm:text-[9px] text-white"></i>
                   </span>
                 </button>
 
                 <!-- Likes -->
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-0.5 sm:gap-1">
                   <button 
                     @click="toggleLike(currentItem)" 
-                    class="w-11 h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-xl transition active:scale-75 shadow-lg"
+                    class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-base sm:text-xl transition active:scale-75 shadow-lg"
                     :class="currentItem.has_liked ? 'text-red-500' : 'text-white hover:text-red-400'"
                   >
                     <i class="fas fa-heart"></i>
                   </button>
-                  <span class="text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.likes_count }}</span>
+                  <span class="text-[10px] sm:text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.likes_count }}</span>
                 </div>
 
                 <!-- Comments -->
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-0.5 sm:gap-1">
                   <button 
                     @click="openComments" 
-                    class="w-11 h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-xl text-white hover:text-blue-400 transition active:scale-75 shadow-lg"
+                    class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-base sm:text-xl text-white hover:text-blue-400 transition active:scale-75 shadow-lg"
                   >
                     <i class="fas fa-comment-dots"></i>
                   </button>
-                  <span class="text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.comments_count }}</span>
+                  <span class="text-[10px] sm:text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.comments_count }}</span>
                 </div>
 
                 <!-- Favorites -->
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-0.5 sm:gap-1">
                   <button 
                     @click="toggleFavorite(currentItem)" 
-                    class="w-11 h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-xl transition active:scale-75 shadow-lg"
+                    class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-base sm:text-xl transition active:scale-75 shadow-lg"
                     :class="currentItem.has_favorited ? 'text-yellow-400' : 'text-white hover:text-yellow-400'"
                   >
                     <i class="fas fa-bookmark"></i>
                   </button>
-                  <span class="text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.favorites_count }}</span>
+                  <span class="text-[10px] sm:text-xs font-semibold text-gray-200 drop-shadow-md">{{ currentItem.favorites_count }}</span>
                 </div>
 
                 <!-- Details CTA -->
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-0.5 sm:gap-1">
                   <button 
                     @click="openDetails" 
-                    class="w-11 h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-xl text-white hover:text-green-400 transition active:scale-75 shadow-lg"
+                    class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-base sm:text-xl text-white hover:text-green-400 transition active:scale-75 shadow-lg"
                   >
                     <i class="fas fa-info-circle"></i>
                   </button>
-                  <span class="text-[10px] font-semibold text-gray-200 drop-shadow-md">Détails</span>
+                  <span class="text-[8px] sm:text-[10px] font-semibold text-gray-200 drop-shadow-md">Détails</span>
                 </div>
 
                 <!-- Share -->
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-0.5 sm:gap-1">
                   <button 
                     @click="openShare" 
-                    class="w-11 h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-xl text-white hover:text-pink-400 transition active:scale-75 shadow-lg"
+                    class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center text-base sm:text-xl text-white hover:text-pink-400 transition active:scale-75 shadow-lg"
                   >
                     <i class="fas fa-share-alt"></i>
                   </button>
-                  <span class="text-[10px] font-semibold text-gray-200 drop-shadow-md">Partager</span>
+                  <span class="text-[8px] sm:text-[10px] font-semibold text-gray-200 drop-shadow-md">Partager</span>
                 </div>
 
                 <!-- Rotating Audio Disk -->
@@ -708,8 +736,28 @@
         </div>
         <div class="flex flex-col gap-3">
           <div class="flex flex-col gap-1">
-            <div class="py-2.5 px-4 bg-red-600/10 border border-red-500/20 rounded-xl text-center">
-              <span class="text-xs font-bold text-red-400"><i class="fas fa-lock mr-2"></i>Mode : Location uniquement</span>
+            <div class="flex gap-2">
+              <button 
+                @click="filterOptions.transaction = 'all'"
+                class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition"
+                :class="filterOptions.transaction === 'all' ? 'bg-red-600 border-red-600 text-white' : 'bg-black/20 border-white/10 text-gray-400'"
+              >
+                Tous
+              </button>
+              <button 
+                @click="filterOptions.transaction = 'location'"
+                class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition"
+                :class="filterOptions.transaction === 'location' ? 'bg-red-600 border-red-600 text-white' : 'bg-black/20 border-white/10 text-gray-400'"
+              >
+                Location
+              </button>
+              <button 
+                @click="filterOptions.transaction = 'vente'"
+                class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition"
+                :class="filterOptions.transaction === 'vente' ? 'bg-red-600 border-red-600 text-white' : 'bg-black/20 border-white/10 text-gray-400'"
+              >
+                Vente
+              </button>
             </div>
           </div>
           <div class="flex flex-col gap-1 mt-2">
@@ -904,8 +952,8 @@
                 @click="playProfileIllustration(img.id)"
                 class="aspect-[3/4] bg-black relative rounded-md overflow-hidden cursor-pointer group hover:opacity-85 transition"
               >
-                <img v-if="img.media_type === 'image'" :src="img.media_url" class="w-full h-full object-cover" />
-                <video v-else :src="img.media_url" class="w-full h-full object-cover" muted></video>
+                <img v-if="img.media_type === 'image'" :src="img.media_url" class="w-full h-full object-contain" />
+                <video v-else :src="img.media_url" class="w-full h-full object-contain" muted></video>
                 <div v-if="img.media_type === 'video'" class="absolute bottom-1 right-1 text-white text-[9px] bg-black/40 px-1 rounded flex items-center gap-0.5"><i class="fas fa-play"></i></div>
               </div>
             </div>
@@ -1028,8 +1076,8 @@
                 @click="playFavoriteItem(fav.id)"
                 class="aspect-[3/4] bg-black relative rounded-md overflow-hidden cursor-pointer group hover:opacity-85 transition"
               >
-                <img v-if="fav.media_type === 'image'" :src="fav.media_url" class="w-full h-full object-cover" />
-                <video v-else :src="fav.media_url" class="w-full h-full object-cover" muted></video>
+                <img v-if="fav.media_type === 'image'" :src="fav.media_url" class="w-full h-full object-contain" />
+                <video v-else :src="fav.media_url" class="w-full h-full object-contain" muted></video>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
                 <div v-if="fav.media_type === 'video'" class="absolute top-1.5 right-1.5 text-white text-[9px] bg-black/40 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fas fa-play"></i></div>
                 <div class="absolute bottom-1.5 left-1.5 right-1.5">
@@ -1046,44 +1094,48 @@
       </div>
     </Transition>
 
-    <!-- INBOX INFO SHEET -->
+    <!-- INBOX NOTIFICATIONS SHEET -->
     <Transition name="slide-up">
-      <div v-if="activeSheet === 'inbox'" class="absolute inset-x-0 bottom-0 bg-[#181924] rounded-t-2xl z-50 flex flex-col text-white p-6 pb-safe gap-5">
-        <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto cursor-pointer" @click="closeActiveSheet"></div>
-        <div class="flex flex-col items-center gap-4 py-4">
+      <div v-if="activeSheet === 'inbox'" class="absolute inset-0 bg-[#07080d] z-50 flex flex-col text-white pb-safe">
+        <header class="w-full bg-[#181924] border-b border-white/5 py-4 px-4 flex items-center justify-between">
+          <button @click="closeActiveSheet" class="text-gray-400 hover:text-white flex items-center gap-1.5"><i class="fas fa-arrow-left text-lg"></i> Retour</button>
+          <div class="flex items-center gap-1.5">
+            <i class="fas fa-bell text-red-500 text-base"></i>
+            <span class="font-bold text-sm">Alertes</span>
+          </div>
+          <button v-if="notifications.length > 0" @click="markAllNotifsRead" class="text-xs font-bold text-red-500 hover:text-red-400 transition">Tout lu</button>
+        </header>
+        <div v-if="notifsLoading" class="flex-1 flex items-center justify-center">
+          <i class="fas fa-spinner animate-spin text-2xl text-red-500"></i>
+        </div>
+        <div v-else-if="notifications.length === 0" class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 gap-3 px-8">
           <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-400 p-[3px] shadow-2xl">
             <div class="w-full h-full rounded-[14px] bg-[#07080d] flex items-center justify-center">
-              <i class="fas fa-play-circle text-red-500 text-3xl"></i>
+              <i class="fas fa-bell text-red-500 text-3xl"></i>
             </div>
           </div>
-          <div class="text-center">
-            <h3 class="font-extrabold text-xl">Immo<span class="text-red-500">Tok</span></h3>
-            <p class="text-xs text-gray-400 mt-1">Alertes & Notifications</p>
+          <h3 class="font-extrabold text-xl">Immo<span class="text-red-500">Tok</span></h3>
+          <p class="text-sm text-gray-400">Aucune notification pour le moment.</p>
+          <p class="text-xs text-gray-600">Suivez des entreprises pour recevoir leurs nouvelles publications.</p>
+        </div>
+        <div v-else class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2">
+          <div 
+            v-for="notif in notifications" 
+            :key="notif.id"
+            @click="handleNotifClick(notif)"
+            class="flex items-start gap-3 p-3 rounded-xl transition cursor-pointer"
+            :class="notif.is_read ? 'bg-transparent hover:bg-white/5' : 'bg-red-600/5 border border-red-500/10 hover:bg-red-600/10'"
+          >
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-home text-white text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-white truncate">{{ notif.title }}</p>
+              <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+              <span class="text-[10px] text-gray-600 mt-1 block">{{ notif.created_at }}</span>
+            </div>
+            <div v-if="!notif.is_read" class="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-2"></div>
           </div>
-          <div class="w-full bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col gap-3">
-            <div class="flex items-center gap-3 text-sm text-gray-300">
-              <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center"><i class="fas fa-bell text-blue-400"></i></div>
-              <div class="flex-1">
-                <p class="font-semibold text-white">Notifications en temps réel</p>
-                <p class="text-xs text-gray-500">Recevez des alertes quand une entreprise publie un nouveau bien.</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-sm text-gray-300">
-              <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center"><i class="fas fa-calendar-check text-green-400"></i></div>
-              <div class="flex-1">
-                <p class="font-semibold text-white">Suivi de vos demandes</p>
-                <p class="text-xs text-gray-500">Consultez l'état de vos réservations de visites.</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 text-sm text-gray-300">
-              <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><i class="fas fa-heart text-red-400"></i></div>
-              <div class="flex-1">
-                <p class="font-semibold text-white">Activité</p>
-                <p class="text-xs text-gray-500">Likes, réponses à vos commentaires et nouveaux abonnés.</p>
-              </div>
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 text-center italic"><i class="fas fa-info-circle text-red-400 mr-1"></i>Cette fonctionnalité sera disponible prochainement.</p>
         </div>
       </div>
     </Transition>
@@ -1139,6 +1191,25 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import axios from 'axios';
+
+// ── Splash Screen ──────────────────────────────────────────────────────────────
+const showSplash = ref(true);
+const splashProgress = ref(0);
+
+// ── Toast notifications ────────────────────────────────────────────────────────
+const toast = ref({ show: false, message: '', icon: 'fa-bell', color: '#ff2d55' });
+let toastTimer = null;
+
+const showToast = (message, icon = 'fa-bell', color = '#ff2d55', duration = 3000) => {
+  if (toastTimer) clearTimeout(toastTimer);
+  toast.value = { show: true, message, icon, color };
+  toastTimer = setTimeout(() => { toast.value.show = false; }, duration);
+};
+
+// ── Notification polling ───────────────────────────────────────────────────────
+let notificationTimer = null;
+const notifications = ref([]);
+const notifsLoading = ref(false);
 
 // Component State
 const feed = ref([]);
@@ -1990,8 +2061,23 @@ const openCreatePostHint = () => {
   activeSheet.value = 'createpost';
 };
 
-const openInbox = () => {
+const openInbox = async () => {
+  if (!client.value) {
+    activeSheet.value = 'auth';
+    return;
+  }
   activeSheet.value = 'inbox';
+  notifsLoading.value = true;
+  try {
+    const res = await axios.get('/api/immotok/notifications');
+    if (res.data.success) {
+      notifications.value = res.data.notifications;
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    notifsLoading.value = false;
+  }
 };
 
 const openMe = async () => {
@@ -2011,6 +2097,28 @@ const openMe = async () => {
     console.error(e);
   } finally {
     myProfileLoading.value = false;
+  }
+};
+
+const handleNotifClick = (notif) => {
+  if (!notif.is_read) {
+    axios.post('/api/immotok/notifications/mark-read', { id: notif.id }).catch(() => {});
+    notif.is_read = true;
+    if (unreadCount.value > 0) unreadCount.value--;
+  }
+  activeSheet.value = null;
+  if (notif.illustration_id) {
+    playFavoriteItem(notif.illustration_id);
+  }
+};
+
+const markAllNotifsRead = async () => {
+  try {
+    await axios.post('/api/immotok/notifications/mark-read', { all: true });
+    notifications.value.forEach(n => n.is_read = true);
+    unreadCount.value = 0;
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -2056,15 +2164,78 @@ const toggleLang = () => {
   currentLang.value = currentLang.value === 'fr' ? 'en' : 'fr';
 };
 
+// ── Title & Favicon ───────────────────────────────────────────────────────────
+const setupPageMeta = () => {
+  // Titre de l'onglet
+  document.title = 'Immo ToK';
+  // Favicon SVG inline ImmoToK
+  const existingFavicon = document.querySelector('link[rel="icon"]');
+  if (existingFavicon) existingFavicon.remove();
+  const svgFavicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill="#07080d"/>
+    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+      font-family="Arial Black,sans-serif" font-weight="900" font-size="36" fill="white">I</text>
+    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+      font-family="Arial Black,sans-serif" font-weight="900" font-size="36"
+      fill="#ff2d55" dx="18">T</text>
+  </svg>`;
+  const blob = new Blob([svgFavicon], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'icon'; link.href = url;
+  document.head.appendChild(link);
+};
+
+// ── Splash Screen logic ────────────────────────────────────────────────────────
+const runSplash = () => {
+  // Animate progress bar 0 → 100% in ~2s
+  let progress = 0;
+  const step = () => {
+    progress += Math.random() * 18 + 8;
+    if (progress >= 100) {
+      splashProgress.value = 100;
+      setTimeout(() => { showSplash.value = false; }, 300);
+    } else {
+      splashProgress.value = progress;
+      setTimeout(step, 120 + Math.random() * 80);
+    }
+  };
+  setTimeout(step, 200);
+};
+
+// ── New publication notification polling ───────────────────────────────────────
+const pollNotifications = () => {
+  notificationTimer = setInterval(async () => {
+    try {
+      const res = await axios.get('/api/immotok/notifications/unread-count');
+      if (res.data && typeof res.data.count === 'number') {
+        const prev = unreadCount.value;
+        unreadCount.value = res.data.count;
+        // Si de nouvelles notifs arrivent, afficher un toast
+        if (res.data.count > prev && res.data.latest) {
+          showToast('🏠 ' + res.data.latest, 'fa-bell', '#ff2d55', 4000);
+        }
+      }
+    } catch (_) {
+      // endpoint absent : on ignore silencieusement
+    }
+  }, 60000); // toutes les 60s
+};
+
 // LifeCycle hooks
 onMounted(() => {
+  setupPageMeta();
+  runSplash();
   checkAuth();
   fetchCategories();
   fetchFeed();
+  pollNotifications();
 });
 
 onUnmounted(() => {
   stopAllMedia();
+  if (notificationTimer) clearInterval(notificationTimer);
+  if (toastTimer) clearTimeout(toastTimer);
 });
 </script>
 

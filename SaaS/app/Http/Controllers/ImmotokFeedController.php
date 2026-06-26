@@ -10,6 +10,7 @@ use App\Models\ImmotokComment;
 use App\Models\Logement;
 use App\Models\Batiment;
 use App\Models\Evenement;
+use App\Models\ImmotokNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -543,5 +544,78 @@ class ImmotokFeedController extends Controller
                 'likes_count' => ImmotokLike::where('immotok_client_id', $client->id)->count(),
             ],
         ]);
+    }
+
+    public function getNotifications()
+    {
+        $client = $this->getClient();
+        if (!$client) {
+            return response()->json(['success' => false, 'message' => 'Non connecté.'], 401);
+        }
+
+        $notifications = ImmotokNotification::where('immotok_client_id', $client->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get()
+            ->map(function ($n) {
+                return [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'image_url' => $n->image_url,
+                    'is_read' => $n->is_read,
+                    'created_at' => $n->created_at->diffForHumans(),
+                    'company_profile_id' => $n->company_profile_id,
+                    'illustration_id' => $n->illustration_id,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'notifications' => $notifications,
+        ]);
+    }
+
+    public function getUnreadCount()
+    {
+        $client = $this->getClient();
+        if (!$client) {
+            return response()->json(['count' => 0, 'latest' => null]);
+        }
+
+        $count = ImmotokNotification::where('immotok_client_id', $client->id)
+            ->where('is_read', false)
+            ->count();
+
+        $latest = ImmotokNotification::where('immotok_client_id', $client->id)
+            ->where('is_read', false)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        return response()->json([
+            'count' => $count,
+            'latest' => $latest ? $latest->title : null,
+        ]);
+    }
+
+    public function markNotificationsRead(Request $request)
+    {
+        $client = $this->getClient();
+        if (!$client) {
+            return response()->json(['success' => false], 401);
+        }
+
+        if ($request->input('all') === true) {
+            ImmotokNotification::where('immotok_client_id', $client->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+        } elseif ($request->has('id')) {
+            ImmotokNotification::where('immotok_client_id', $client->id)
+                ->where('id', $request->id)
+                ->update(['is_read' => true]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

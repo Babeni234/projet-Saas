@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Illustration;
 use App\Models\Agency;
+use App\Models\CompanyProfile;
+use App\Models\ImmotokSubscription;
+use App\Models\ImmotokNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -226,7 +229,40 @@ class IllustrationController extends Controller
             }
         }
 
+        // Notify subscribers when at least one illustration is uploaded
+        if ($uploadedCount > 0) {
+            $this->notifySubscribers($companyProfileId, $request->input('description', ''));
+        }
+
         return redirect()->back()->with('success', "{$uploadedCount} fichier(s) affecté(s) avec succès.");
+    }
+
+    /**
+     * Notify all subscribers of a company about new illustrations.
+     */
+    private function notifySubscribers($companyProfileId, $description)
+    {
+        $company = CompanyProfile::find($companyProfileId);
+        if (!$company) return;
+
+        $subscribers = ImmotokSubscription::where('company_profile_id', $companyProfileId)->get();
+        if ($subscribers->isEmpty()) return;
+
+        $title = 'Nouvelle publication de ' . ($company->legal_name ?? 'une agence');
+        $message = $description ?: 'Découvrez les nouveaux biens disponibles !';
+
+        foreach ($subscribers as $sub) {
+            ImmotokNotification::create([
+                'immotok_client_id' => $sub->immotok_client_id,
+                'company_profile_id' => $companyProfileId,
+                'illustration_id' => null,
+                'type' => 'publication',
+                'title' => $title,
+                'message' => $message,
+                'image_url' => $company->logo_path ? asset('storage/' . $company->logo_path) : null,
+                'is_read' => false,
+            ]);
+        }
     }
 
     /**

@@ -9,65 +9,64 @@
 'use strict';
 
 /* ══════════════════════════════════════════════════════════════════
-   0. SPLASH SCREEN — s'exécute immédiatement au chargement
+   0. SPLASH SCREEN — YouTube-style avec barre de chargement
 ══════════════════════════════════════════════════════════════════ */
 (function initSplash() {
   var s = document.createElement('div');
   s.id = 'splashScreen';
   s.style.cssText = [
     'position:fixed','inset:0','z-index:99999',
-    'background:linear-gradient(135deg,#07080d 0%,#0d0a1a 50%,#07080d 100%)',
-    'display:flex','flex-direction:column','align-items:center','justify-content:center','gap:18px',
+    'background:#07080d',
+    'display:flex','flex-direction:column','align-items:center','justify-content:center','gap:16px',
     "font-family:'Bricolage Grotesque',system-ui,sans-serif",
-    'transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)',
+    'transition:opacity .5s ease,transform .5s ease',
     'overflow:hidden'
   ].join(';');
 
-  // Particules de fond
-  var particlesHTML = '';
-  for (var pi = 0; pi < 12; pi++) {
-    var px = Math.random() * 100, py = Math.random() * 100;
-    var ps = (Math.random() * 4 + 2).toFixed(1);
-    var pa = (Math.random() * 0.3 + 0.05).toFixed(2);
-    var pd = (Math.random() * 3 + 1).toFixed(1);
-    particlesHTML += '<div style="position:absolute;left:'+px+'%;top:'+py+'%;width:'+ps+'px;height:'+ps+'px;background:#ff2d55;border-radius:50%;opacity:'+pa+';animation:splashFloat '+pd+'s ease-in-out infinite alternate"></div>';
-  }
-
-  s.innerHTML = '<style>@keyframes splashFloat{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-20px) scale(1.3)}}'
-    + '@keyframes splashPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,45,85,.4)}50%{box-shadow:0 0 0 20px rgba(255,45,85,0)}}'
-    + '@keyframes splashBar{0%{width:0}100%{width:130px}}</style>'
-    + particlesHTML
-    + '<div id="_si" style="font-size:80px;color:#ff2d55;opacity:0;transform:scale(.2) rotate(-20deg);transition:all .7s cubic-bezier(.34,1.56,.64,1);animation:splashPulse 2s ease-in-out infinite .8s;filter:drop-shadow(0 0 20px rgba(255,45,85,.5))">'
-    + '<i class="fas fa-play-circle"></i></div>'
-    + '<div id="_st" style="font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;opacity:0;transform:translateY(20px);transition:all .55s .2s cubic-bezier(.4,0,.2,1)">'
-    + 'Immo<span style="color:#ff2d55;text-shadow:0 0 20px rgba(255,45,85,.6)">Tok</span></div>'
-    + '<div id="_ss" style="font-size:14px;color:#5a6280;letter-spacing:.5px;opacity:0;transition:opacity .45s .4s;text-transform:uppercase">L\'immobilier en vidéo</div>'
-    + '<div id="_sb" style="height:3px;background:linear-gradient(90deg,#ff2d55,#ff6b8a);border-radius:3px;margin-top:8px;opacity:0;width:0;transition:opacity .3s .6s,width 1s .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(255,45,85,.4)"></div>'
-    + '<div id="_sv" style="font-size:11px;color:#3a4060;opacity:0;transition:opacity .3s .9s">v4.0 — Abidjan, Côte d\'Ivoire</div>';
+  s.innerHTML = '<style>'
+    + '@keyframes ytBar{0%{width:0%;opacity:1}85%{width:85%;opacity:1}100%{width:100%;opacity:0}}'
+    + '@keyframes splashFadeIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}'
+    + '@keyframes splashPulse{0%,100%{opacity:.6}50%{opacity:1}}'
+    + '@keyframes particleFloat{0%{transform:translateY(0) scale(1);opacity:.4}100%{transform:translateY(-30px) scale(1.4);opacity:0}}'
+    + '</style>'
+    /* Barre YouTube rouge en haut */
+    + '<div id="_ytbar" style="position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,#ff2d55,#ff6b35);border-radius:0 3px 3px 0;animation:ytBar 2.2s cubic-bezier(.4,0,.2,1) forwards;box-shadow:0 0 12px rgba(255,45,85,.7)"></div>'
+    /* Particules de fond */
+    + (function(){var p='';for(var i=0;i<8;i++){var x=Math.random()*100,y=Math.random()*100,sz=(Math.random()*3+1).toFixed(1),d=(Math.random()*2+1.5).toFixed(1);p+='<div style="position:absolute;left:'+x+'%;top:'+y+'%;width:'+sz+'px;height:'+sz+'px;background:#ff2d55;border-radius:50%;animation:particleFloat '+d+'s ease-in-out infinite alternate"></div>';}return p;}())
+    /* Logo ImmoToK — bloc principal */
+    + '<div id="_slogo" style="animation:splashFadeIn .6s ease forwards;opacity:0;text-align:center">'
+    + '<div style="font-size:56px;font-weight:900;letter-spacing:-2px;line-height:1">'
+    + '<span style="color:#fff">Immo</span><span style="color:#ff2d55;text-shadow:0 0 30px rgba(255,45,85,.8)">ToK</span>'
+    + '</div>'
+    + '<div style="width:50px;height:3px;background:linear-gradient(90deg,#ff2d55,#ff6b8a);border-radius:3px;margin:10px auto 0;animation:splashPulse 1.2s ease-in-out infinite"></div>'
+    + '</div>'
+    /* Sous-titre */
+    + '<div id="_ssub" style="font-size:13px;color:#5a6280;letter-spacing:.5px;text-transform:uppercase;opacity:0;transition:opacity .4s .5s">L\'immobilier en vidéo</div>'
+    /* Spinner YouTube-style (petit) */
+    + '<div id="_spin" style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .3s .7s">'
+    + '<div style="width:28px;height:28px;border:2px solid rgba(255,45,85,.2);border-top-color:#ff2d55;border-radius:50%;animation:spin 0.8s linear infinite"></div>'
+    + '</div>'
+    + '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
 
   document.body.appendChild(s);
 
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
-      var ico = document.getElementById('_si');
-      var txt = document.getElementById('_st');
-      var sub = document.getElementById('_ss');
-      var bar = document.getElementById('_sb');
-      var ver = document.getElementById('_sv');
-      if (ico) { ico.style.opacity = '1'; ico.style.transform = 'scale(1) rotate(0)'; }
-      if (txt) { txt.style.opacity = '1'; txt.style.transform = 'translateY(0)'; }
+      var sub = document.getElementById('_ssub');
+      var spin = document.getElementById('_spin');
       if (sub) sub.style.opacity = '1';
-      if (bar) { bar.style.opacity = '1'; bar.style.width = '130px'; }
-      if (ver) ver.style.opacity = '1';
+      if (spin) spin.style.opacity = '1';
     });
   });
 
+  // La barre dure 2.2s, on ferme à 2.6s pour laisser la barre finir
   setTimeout(function () {
     s.style.opacity = '0';
-    s.style.transform = 'scale(1.06)';
-    setTimeout(function () { if (s.parentNode) s.remove(); }, 650);
-  }, 2800);
+    s.style.transform = 'scale(1.04)';
+    setTimeout(function () { if (s.parentNode) s.remove(); }, 550);
+  }, 2600);
 })();
+
 
 /* ══════════════════════════════════════════════════════════════════
    1. TRADUCTIONS FR / EN
@@ -404,6 +403,7 @@ var STATE = {
   searchHistory: JSON.parse(localStorage.getItem('immotok_history') || '[]'),
   savedItems: JSON.parse(localStorage.getItem('immotok_saved') || '[]'),
   likedItems: JSON.parse(localStorage.getItem('immotok_liked') || '[]'),
+  subscribedAccounts: JSON.parse(localStorage.getItem('immotok_subs') || '[]'), // IDs des comptes abonnés
   filters: { trans: 'all', type: 'all', budget: 500000000, surface: 0, city: '' },
   user: JSON.parse(localStorage.getItem('immotok_user') || 'null'),
   settings: JSON.parse(localStorage.getItem('immotok_settings') || JSON.stringify({
@@ -423,6 +423,33 @@ var STATE = {
   // Mémorisation de la position de scroll pour ne pas la perturber lors du changement de langue
   feedScrollTop: 0
 };
+
+// Restaurer les abonnements persistants depuis localStorage
+(function restoreSubscriptions() {
+  var savedSubs = STATE.subscribedAccounts;
+  if (savedSubs && savedSubs.length > 0) {
+    STATE.accounts.forEach(function (acc) {
+      if (savedSubs.indexOf(acc.id) > -1) {
+        acc.subscribed = true;
+      }
+    });
+  }
+  // Restaurer les propriétés liked depuis localStorage
+  var savedLiked = STATE.likedItems;
+  if (savedLiked && savedLiked.length > 0) {
+    STATE.properties.forEach(function (p) {
+      p.liked = savedLiked.indexOf(p.id) > -1;
+    });
+  }
+  // Restaurer les propriétés saved depuis localStorage
+  var savedSaved = STATE.savedItems;
+  if (savedSaved && savedSaved.length > 0) {
+    STATE.properties.forEach(function (p) {
+      p.saved = savedSaved.indexOf(p.id) > -1;
+    });
+  }
+})();
+
 
 /* ══════════════════════════════════════════════════════════════════
    4. UTILITAIRES
@@ -465,9 +492,14 @@ function saveStorage() {
     localStorage.setItem('immotok_liked', JSON.stringify(STATE.likedItems));
     localStorage.setItem('immotok_history', JSON.stringify(STATE.searchHistory));
     localStorage.setItem('immotok_settings', JSON.stringify(STATE.settings));
+    // Persister les abonnements (IDs des comptes)
+    var subIds = STATE.accounts.filter(function (a) { return a.subscribed; }).map(function (a) { return a.id; });
+    STATE.subscribedAccounts = subIds;
+    localStorage.setItem('immotok_subs', JSON.stringify(subIds));
     if (STATE.user) localStorage.setItem('immotok_user', JSON.stringify(STATE.user));
   } catch (e) { }
 }
+
 
 /* ══════════════════════════════════════════════════════════════════
    5. i18n
@@ -1146,12 +1178,59 @@ function toggleFollowById(accountId) {
   acc.subscribed = !acc.subscribed;
   if (acc.subscribed) {
     acc.followers++;
-    showToast('Abonné à ' + acc.name + ' ✅', 'fa-check-circle', '#00dfc8', 2000);
+    showToast('Abonn\u00e9 \u00e0 ' + acc.name + ' \u2705', 'fa-check-circle', '#00dfc8', 2000);
+    // Notification: tu recevras les alertes de ce compte
+    STATE.notifications.unshift({
+      id: 'n_sub_' + Date.now(), type: 'follow', icon: '\uD83D\uDD14', iconBg: 'rgba(0,223,200,.1)',
+      title: STATE.lang === 'fr' ? 'Abonnement activ\u00e9' : 'Subscription activated',
+      text: (STATE.lang === 'fr' ? 'Vous serez alert\u00e9 des nouvelles publications de ' : 'You will be notified of new publications from ') + acc.name,
+      time: STATE.lang === 'fr' ? 'À l\'instant' : 'Just now',
+      unread: true, category: 'alerts'
+    });
+    updateAlertBadge();
   } else {
     acc.followers--;
-    showToast('Désabonné', 'fa-user-minus', '#8890b5', 1800);
+    showToast('D\u00e9sabonn\u00e9', 'fa-user-minus', '#8890b5', 1800);
   }
+  saveStorage();
   syncFollowUI(accountId);
+}
+
+// Simuler une alerte de nouvelle publication d'un compte abonn\u00e9
+function notifyNewPublication(accountId, propertyTitle) {
+  var acc = getAccount(accountId);
+  if (!acc || !acc.subscribed) return;
+  if (!STATE.settings.newListings) return; // Respect\u00e9 si l'utilisateur a d\u00e9sactiv\u00e9 les alertes
+  STATE.notifications.unshift({
+    id: 'n_pub_' + Date.now(), type: 'alert', icon: '\uD83C\uDFE0', iconBg: 'rgba(255,45,85,.12)',
+    title: STATE.lang === 'fr' ? 'Nouvelle publication !' : 'New publication!',
+    text: acc.name + (STATE.lang === 'fr' ? ' vient de publier : ' : ' just published: ') + (propertyTitle || 'Un nouveau bien'),
+    time: STATE.lang === 'fr' ? 'À l\'instant' : 'Just now',
+    unread: true, category: 'alerts'
+  });
+  updateAlertBadge();
+  showToast(
+    (STATE.lang === 'fr' ? '\uD83C\uDFE0 Nouveau bien de ' : '\uD83C\uDFE0 New from ') + acc.name,
+    'fa-bell', '#ff2d55', 3500
+  );
+}
+
+// D\u00e9marrer les alertes de simulation apr\u00e8s le chargement (simuler des publications de comptes abonn\u00e9s)
+function startPublicationAlerts() {
+  // Toutes les 90 secondes, v\u00e9rifier s'il y a des comptes abonn\u00e9s et simuler une alerte
+  setInterval(function () {
+    var subscribedAccounts = STATE.accounts.filter(function (a) { return a.subscribed; });
+    if (subscribedAccounts.length === 0) return;
+    var randomAcc = subscribedAccounts[Math.floor(Math.random() * subscribedAccounts.length)];
+    var fakeProps = [
+      'Nouvelle villa de luxe disponible',
+      'Appartement T4 en exclusivit\u00e9',
+      'Studio meubl\u00e9 - Disponible maintenant',
+      'Terrain constructible - Offre limit\u00e9e'
+    ];
+    var fakeProp = fakeProps[Math.floor(Math.random() * fakeProps.length)];
+    notifyNewPublication(randomAcc.id, fakeProp);
+  }, 90000); // 90 secondes
 }
 
 function syncFollowUI(accountId) {
@@ -1165,16 +1244,17 @@ function syncFollowUI(accountId) {
   $$('.av-wrap[data-account="' + accountId + '"] .av-ring').forEach(function (r) {
     r.classList.toggle('following', isSub);
   });
-  // Mettre à jour le bouton dans le panel profil si ouvert
+  // Mettre \u00e0 jour le bouton dans le panel profil si ouvert
   var sb = $('profileSubBtn');
   if (sb && sb.getAttribute('data-account-id') === accountId) {
     sb.classList.toggle('subscribed', isSub);
     sb.innerHTML = '<i class="fas ' + (isSub ? 'fa-check' : 'fa-bell') + '"></i> ' + (isSub ? t('following') : t('follow'));
   }
-  // Mettre à jour compteur abonnés dans le panel
+  // Mettre \u00e0 jour compteur abonn\u00e9s dans le panel
   var fc = $('profileFollowerCount');
   if (fc) fc.textContent = fmtN(acc.followers);
 }
+
 
 /* ══════════════════════════════════════════════════════════════════
    12. COMMENTAIRES
@@ -1611,31 +1691,33 @@ function sendDmRequest(accountId) {
   var input = $('dmFirstMsg');
   if (!input) return;
   var text = input.value.trim();
-  if (!text) { showToast(STATE.lang === 'fr' ? 'Écrivez un message' : 'Write a message', 'fa-exclamation-circle', '#ff2d55'); return; }
+  if (!text) { showToast(STATE.lang === 'fr' ? '\u00c9crivez un message' : 'Write a message', 'fa-exclamation-circle', '#ff2d55'); return; }
 
   var conv = STATE.dmConversations[accountId];
   conv.requestSent = true;
   conv.messages.push({ sender: 'me', text: text, time: timeNow() });
 
   var acc = getAccount(accountId);
-  showToast(STATE.lang === 'fr' ? 'Demande envoyée à ' + (acc ? acc.name : '') + ' ✅' : 'Request sent to ' + (acc ? acc.name : '') + ' ✅', 'fa-check-circle', '#2ac97a', 2500);
+  showToast(STATE.lang === 'fr' ? 'Demande envoy\u00e9e \u00e0 ' + (acc ? acc.name : '') + ' \u2705' : 'Request sent to ' + (acc ? acc.name : '') + ' \u2705', 'fa-check-circle', '#2ac97a', 2500);
 
-  // Simuler une réponse après 4 secondes (acceptation automatique pour la démo)
+  // Pour les comptes entreprise : acceptation rapide + un message de bienvenue initial
+  // Ensuite la conversation reste ouverte pour des r\u00e9ponses manuelles
+  var delay = acc && acc.type === 'enterprise' ? 2000 : 4000;
   setTimeout(function () {
     var c = STATE.dmConversations[accountId];
     if (c) {
       c.status = 'accepted';
       var a = getAccount(accountId);
-      var autoReply = STATE.lang === 'fr'
-        ? 'Bonjour ! Merci de nous contacter via ImmoTok. Comment puis-je vous aider ?'
-        : 'Hello! Thank you for contacting us via ImmoTok. How can I help you?';
-      c.messages.push({ sender: 'them', text: autoReply, time: timeNow() });
-      showToast((a ? a.name : '') + ' ' + (STATE.lang === 'fr' ? 'a accepté votre demande ✅' : 'accepted your request ✅'), 'fa-check-circle', '#2ac97a', 2500);
+      var welcomeMsg = STATE.lang === 'fr'
+        ? 'Bonjour ! Merci de nous contacter via ImmoTok \uD83C\uDFE0\nNous avons bien re\u00e7u votre message et notre \u00e9quipe vous r\u00e9pondra tr\u00e8s prochainement.\nN\'h\u00e9sitez pas \u00e0 pr\u00e9ciser votre demande ici.'
+        : 'Hello! Thank you for contacting us via ImmoTok \uD83C\uDFE0\nWe received your message and our team will reply shortly.\nFeel free to add more details here.';
+      c.messages.push({ sender: 'them', text: welcomeMsg, time: timeNow() });
+      showToast((a ? a.name : '') + ' ' + (STATE.lang === 'fr' ? 'a accept\u00e9 votre demande \u2705' : 'accepted your request \u2705'), 'fa-check-circle', '#2ac97a', 2500);
       STATE.notifications.unshift({
-        id: 'n_dm_' + Date.now(), type: 'comment', icon: '💬', iconBg: 'rgba(168,85,247,.12)',
-        title: STATE.lang === 'fr' ? 'Demande acceptée' : 'Request accepted',
-        text: (a ? a.name : '') + (STATE.lang === 'fr' ? ' a accepté votre demande de message' : ' accepted your message request'),
-        time: STATE.lang === 'fr' ? 'À l\'instant' : 'Just now',
+        id: 'n_dm_' + Date.now(), type: 'comment', icon: '\uD83D\uDCAC', iconBg: 'rgba(168,85,247,.12)',
+        title: STATE.lang === 'fr' ? 'Demande accept\u00e9e' : 'Request accepted',
+        text: (a ? a.name : '') + (STATE.lang === 'fr' ? ' a accept\u00e9 votre demande de message' : ' accepted your message request'),
+        time: STATE.lang === 'fr' ? '\u00c0 l\'instant' : 'Just now',
         unread: true, category: 'messages'
       });
       updateAlertBadge();
@@ -1644,7 +1726,7 @@ function sendDmRequest(accountId) {
         setTimeout(function () { var list = $('dmMsgList'); if (list) list.scrollTop = list.scrollHeight; }, 100);
       }
     }
-  }, 4000);
+  }, delay);
 
   renderDmPanel(acc);
 }
@@ -1659,7 +1741,7 @@ function sendDmMsg(accountId) {
   conv.messages.push({ sender: 'me', text: text, time: timeNow() });
   input.value = '';
   var acc = getAccount(accountId);
-  // Re-render messages only
+  // Ajouter le message visuellement
   var list = $('dmMsgList');
   if (list) {
     var msgDiv = document.createElement('div');
@@ -1669,8 +1751,34 @@ function sendDmMsg(accountId) {
     list.appendChild(msgDiv);
     list.scrollTop = list.scrollHeight;
   }
-  // Réponse automatique simulée
-  if (acc) {
+  // Pour les comptes entreprise : pas de r\u00e9ponse auto, juste un indicateur "vu"
+  if (acc && acc.type === 'enterprise') {
+    // Afficher brièvement l'indicateur "en cours de r\u00e9daction"
+    if (list) {
+      var typingDiv = document.createElement('div');
+      typingDiv.id = 'dmTypingIndicator';
+      typingDiv.style.cssText = 'display:flex;justify-content:flex-start;gap:8px;align-items:flex-end;margin-top:4px';
+      typingDiv.innerHTML = '<img src="' + acc.avatar + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'">'
+        + '<div style="background:var(--s2);padding:10px 14px;border-radius:18px 18px 18px 4px;font-size:12px;color:var(--t3)">'
+        + (STATE.lang === 'fr' ? acc.name + ' r\u00e9dige une r\u00e9ponse...' : acc.name + ' is typing...')
+        + '</div>';
+      list.appendChild(typingDiv);
+      list.scrollTop = list.scrollHeight;
+      // Retirer l'indicateur apr\u00e8s 8 secondes (l'agent prend son temps)
+      setTimeout(function () {
+        var ti = document.getElementById('dmTypingIndicator');
+        if (ti) ti.remove();
+      }, 8000);
+    }
+    // Ajouter une notification que l'agence a re\u00e7u le message
+    STATE.notifications.unshift({
+      id: 'n_dmr_' + Date.now(), type: 'comment', icon: '\uD83D\uDCAC', iconBg: 'rgba(168,85,247,.12)',
+      title: STATE.lang === 'fr' ? 'Message envoy\u00e9' : 'Message sent',
+      text: (STATE.lang === 'fr' ? 'Votre message a \u00e9t\u00e9 transmis \u00e0 ' : 'Your message was sent to ') + acc.name,
+      time: timeNow(), unread: false, category: 'messages'
+    });
+  } else if (acc) {
+    // Pour les particuliers : r\u00e9ponse auto contextualis\u00e9e
     setTimeout(function () {
       var reply = generateDmAutoReply(acc, text);
       conv.messages.push({ sender: 'them', text: reply, time: timeNow() });
@@ -1686,17 +1794,17 @@ function sendDmMsg(accountId) {
 
 function generateDmAutoReply(acc, msg) {
   var m = msg.toLowerCase();
-  if (m.includes('prix') || m.includes('price') || m.includes('combien') || m.includes('coût') || m.includes('tarif')) {
-    return STATE.lang === 'fr' ? 'Le prix dépend du bien qui vous intéresse. Pouvez-vous me préciser lequel ?' : 'The price depends on the property you\'re interested in. Could you specify which one?';
+  if (m.includes('prix') || m.includes('price') || m.includes('combien') || m.includes('co\u00fbt') || m.includes('tarif')) {
+    return STATE.lang === 'fr' ? 'Le prix d\u00e9pend du bien qui vous int\u00e9resse. Pouvez-vous me pr\u00e9ciser lequel ?' : 'The price depends on the property you\'re interested in. Could you specify which one?';
   }
   if (m.includes('visite') || m.includes('visit') || m.includes('voir') || m.includes('rendez')) {
-    return STATE.lang === 'fr' ? 'Bien sûr, nous organisons des visites du lundi au samedi. Quelle est votre disponibilité ?' : 'Of course, we organize visits Monday to Saturday. What is your availability?';
+    return STATE.lang === 'fr' ? 'Bien s\u00fbr, nous organisons des visites du lundi au samedi. Quelle est votre disponibilit\u00e9 ?' : 'Of course, we organize visits Monday to Saturday. What is your availability?';
   }
   if (m.includes('disponible') || m.includes('available') || m.includes('libre') || m.includes('louer') || m.includes('acheter')) {
     return STATE.lang === 'fr' ? 'Ce bien est actuellement disponible. Souhaitez-vous planifier une visite ?' : 'This property is currently available. Would you like to schedule a visit?';
   }
   if (m.includes('merci') || m.includes('thanks') || m.includes('parfait') || m.includes('super')) {
-    return STATE.lang === 'fr' ? 'Avec plaisir ! N\'hésitez pas si vous avez d\'autres questions. 😊' : 'My pleasure! Don\'t hesitate if you have more questions. 😊';
+    return STATE.lang === 'fr' ? 'Avec plaisir ! N\'h\u00e9sitez pas si vous avez d\'autres questions. \uD83D\uDE0A' : 'My pleasure! Don\'t hesitate if you have more questions. \uD83D\uDE0A';
   }
   if (m.includes('bonjour') || m.includes('hello') || m.includes('salut') || m.includes('bonsoir')) {
     return STATE.lang === 'fr' ? 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?' : 'Hello! How can I help you today?';
@@ -1704,11 +1812,11 @@ function generateDmAutoReply(acc, msg) {
   if (m.includes('agent') || m.includes('contact') || m.includes('parler') || m.includes('appel')) {
     return STATE.lang === 'fr' ? 'Vous pouvez nous appeler directement au ' + (acc.phone || '+225 07 00 00 00') + '. Nous sommes disponibles 7j/7.' : 'You can call us directly at ' + (acc.phone || '+225 07 00 00 00') + '. We\'re available 7 days a week.';
   }
-  // Réponse générique personnalisée avec le nom de l'agence
   return STATE.lang === 'fr'
-    ? 'Merci pour votre message ! Notre équipe ' + acc.name + ' traite votre demande. Un conseiller reviendra vers vous très prochainement. 🏠'
-    : 'Thank you for your message! Our ' + acc.name + ' team is processing your request. An advisor will get back to you very soon. 🏠';
+    ? 'Merci pour votre message ! Notre \u00e9quipe ' + acc.name + ' traite votre demande. Un conseiller reviendra vers vous tr\u00e8s prochainement. \uD83C\uDFE0'
+    : 'Thank you for your message! Our ' + acc.name + ' team is processing your request. An advisor will get back to you very soon. \uD83C\uDFE0';
 }
+
 
 /* ══════════════════════════════════════════════════════════════════
    18. PROFIL PANEL (Entreprise & Particulier) — corrigé
@@ -1775,6 +1883,7 @@ function buildEnterpriseProfileHTML(account, props, isFollowing) {
     + '<div class="profile-tabs" style="position:sticky;top:0;z-index:10;background:var(--bg)">'
     + '<button class="ptab active" data-tab="videos"><i class="fas fa-play"></i>' + (STATE.lang === 'fr' ? 'Vidéos' : 'Videos') + '</button>'
     + '<button class="ptab" data-tab="biens"><i class="fas fa-home"></i>' + (STATE.lang === 'fr' ? 'Biens' : 'Props') + '</button>'
+    + '<button class="ptab" data-tab="activite"><i class="fas fa-chart-bar"></i>' + (STATE.lang === 'fr' ? 'Activité' : 'Activity') + '</button>'
     + '<button class="ptab" data-tab="infos"><i class="fas fa-info-circle"></i>Info</button></div>'
     + '<div data-tab-content="videos"><div class="vgrid">' + props.map(function (p) {
       return '<div class="vgi" data-vid="' + p.id + '">'
@@ -1785,15 +1894,72 @@ function buildEnterpriseProfileHTML(account, props, isFollowing) {
       return '<div style="display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer" data-prop-link="' + p.id + '">'
         + '<img src="' + p.poster + '" style="width:72px;height:72px;border-radius:10px;object-fit:cover;flex-shrink:0">'
         + '<div style="flex:1"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">' + p.title + '</div>'
-        + '<div style="font-size:12px;color:var(--t3)">' + p.neighborhood + ' · ' + p.city + '</div>'
+        + '<div style="font-size:12px;color:var(--t3)">' + p.neighborhood + ' \u00b7 ' + p.city + '</div>'
         + '<div style="font-weight:700;color:var(--red);margin-top:4px">' + p.priceLabel + '</div></div></div>';
     }).join('') + '</div>'
+    /* Onglet Activit\u00e9 — likes/comments/saves re\u00e7us sur les publications */
+    + (function () {
+      var act = getAccountActivity(account.id);
+      var actHTML = '<div data-tab-content="activite" style="display:none;padding:14px">'
+        + '<div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">'
+        + (STATE.lang === 'fr' ? 'Activit\u00e9 re\u00e7ue sur vos publications' : 'Engagement received on your posts') + '</div>'
+        /* Cartes r\u00e9sum\u00e9 */
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+        + '<div style="background:rgba(255,45,85,.1);border:1px solid rgba(255,45,85,.2);border-radius:12px;padding:14px;text-align:center">'
+        + '<div style="font-size:24px;font-weight:800;color:var(--red)">' + fmtN(act.likes) + '</div>'
+        + '<div style="font-size:11px;color:var(--t3);margin-top:3px"><i class="fas fa-heart"></i> ' + (STATE.lang === 'fr' ? 'J\'aimes totaux' : 'Total likes') + '</div></div>'
+        + '<div style="background:rgba(0,223,200,.1);border:1px solid rgba(0,223,200,.2);border-radius:12px;padding:14px;text-align:center">'
+        + '<div style="font-size:24px;font-weight:800;color:var(--teal)">' + fmtN(act.comments) + '</div>'
+        + '<div style="font-size:11px;color:var(--t3);margin-top:3px"><i class="fas fa-comment"></i> ' + (STATE.lang === 'fr' ? 'Commentaires' : 'Comments') + '</div></div>'
+        + '<div style="background:rgba(255,201,60,.1);border:1px solid rgba(255,201,60,.2);border-radius:12px;padding:14px;text-align:center">'
+        + '<div style="font-size:24px;font-weight:800;color:var(--gold)">' + fmtN(act.saves) + '</div>'
+        + '<div style="font-size:11px;color:var(--t3);margin-top:3px"><i class="fas fa-bookmark"></i> ' + (STATE.lang === 'fr' ? 'Sauvegardes' : 'Saves') + '</div></div>'
+        + '<div style="background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.2);border-radius:12px;padding:14px;text-align:center">'
+        + '<div style="font-size:24px;font-weight:800;color:var(--blue)">' + fmtN(act.views) + '</div>'
+        + '<div style="font-size:11px;color:var(--t3);margin-top:3px"><i class="fas fa-eye"></i> ' + (STATE.lang === 'fr' ? 'Vues' : 'Views') + '</div></div>'
+        + '</div>'
+        /* D\u00e9tail par bien */
+        + '<div style="font-size:12px;font-weight:600;color:var(--t3);margin-bottom:8px;text-transform:uppercase">'
+        + (STATE.lang === 'fr' ? 'D\u00e9tail par publication' : 'Per publication breakdown') + '</div>'
+        + act.props.slice(0, 5).map(function (p) {
+          var pComments = (STATE.comments[p.id] || []).length;
+          return '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
+            + '<img src="' + p.poster + '" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0">'
+            + '<div style="flex:1">'
+            + '<div style="font-size:12.5px;font-weight:600;margin-bottom:4px">' + p.title + '</div>'
+            + '<div style="display:flex;gap:12px;font-size:11px;color:var(--t3)">'
+            + '<span><i class="fas fa-heart" style="color:var(--red)"></i> ' + fmtN(p.likes || 0) + '</span>'
+            + '<span><i class="fas fa-comment" style="color:var(--teal)"></i> ' + pComments + '</span>'
+            + '<span><i class="fas fa-bookmark" style="color:var(--gold)"></i> ' + fmtN(p.saves || 0) + '</span>'
+            + '<span><i class="fas fa-eye" style="color:var(--blue)"></i> ' + fmtN(p.views || 0) + '</span>'
+            + '</div></div></div>';
+        }).join('')
+        + '</div>';
+      return actHTML;
+    }())
+
     + '<div data-tab-content="infos" style="display:none;padding:14px">'
     + '<div style="font-size:13.5px;color:var(--t2);line-height:1.7">' + account.bio + '</div>'
     + (account.website ? '<a href="' + account.website + '" target="_blank" style="display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--teal)"><i class="fas fa-globe"></i>' + account.website + '</a>' : '')
     + (account.licenseNo ? '<div style="margin-top:12px;font-size:12px;color:var(--t3)"><i class="fas fa-id-card"></i> Licence: ' + account.licenseNo + '</div>' : '')
     + '</div></div>';
 }
+
+// Calcule les totaux d'activit\u00e9 (likes, commentaires, saves) pour les biens d'un compte
+function getAccountActivity(accountId) {
+  var props = STATE.properties.filter(function (p) { return p.accountId === accountId; });
+  var totalLikes = 0, totalComments = 0, totalSaves = 0, totalViews = 0;
+  props.forEach(function (p) {
+    totalLikes += p.likes || 0;
+    totalSaves += p.saves || 0;
+    totalViews += p.views || 0;
+    var comments = STATE.comments[p.id] || [];
+    totalComments += comments.length;
+  });
+  return { likes: totalLikes, comments: totalComments, saves: totalSaves, views: totalViews, props: props };
+}
+
+
 
 function buildParticulierProfileHTML(account, props, isFollowing) {
   return '<div style="display:flex;flex-direction:column;min-height:100vh">'
@@ -3000,6 +3166,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bl) bl.textContent += '\nDOMContentLoaded: done';
 
     console.log('%cImmoTok v4.0 — Initialized 🏡🇨🇮', 'color:#ff2d55;font-size:16px;font-weight:bold');
+
+    // D\u00e9marrer le syst\u00e8me d'alertes de nouvelles publications
+    startPublicationAlerts();
+
   } catch (e) {
     var bl2 = document.getElementById('bootLog');
     if (bl2) bl2.textContent += '\n\n*** CATCH ***\n' + e.message + '\n' + e.stack;
@@ -3066,6 +3236,10 @@ window.openShareSheet = openShareSheet;
 window.openMoreSheet = openMoreSheet;
 window.openMusicSheet = openMusicSheet;
 window.toggleFollowById = toggleFollowById;
+window.notifyNewPublication = notifyNewPublication;
+window.startPublicationAlerts = startPublicationAlerts;
+window.getAccountActivity = getAccountActivity;
+
 
 /* ══════════════════════════════════════════════════════════════════
    FIN — ImmoTok v4.0 JS Complet (~3600 lignes)

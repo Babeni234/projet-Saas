@@ -568,6 +568,9 @@ Route::post('/api/immotok/companies/{id}/subscribe', [\App\Http\Controllers\Immo
 Route::get('/api/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
 Route::get('/api/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
 Route::get('/api/immotok/me/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getMyProfile']);
+Route::get('/api/immotok/notifications', [\App\Http\Controllers\ImmotokFeedController::class, 'getNotifications']);
+Route::get('/api/immotok/notifications/unread-count', [\App\Http\Controllers\ImmotokFeedController::class, 'getUnreadCount']);
+Route::post('/api/immotok/notifications/mark-read', [\App\Http\Controllers\ImmotokFeedController::class, 'markNotificationsRead']);
 
 
 require __DIR__.'/auth.php';
