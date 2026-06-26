@@ -1188,7 +1188,7 @@ const registerForm = ref({ name: '', email: '', phone: '', password: '', passwor
 
 // Filter options
 const filterOptions = ref({
-  transaction: 'location',
+  transaction: 'all',
   type: 'all',
   budget: 0,
   city: '',
@@ -1888,7 +1888,7 @@ const applyFilters = () => {
 
 const resetFilters = () => {
   filterOptions.value = {
-    transaction: 'location',
+    transaction: 'all',
     type: 'all',
     budget: 0,
     city: '',
