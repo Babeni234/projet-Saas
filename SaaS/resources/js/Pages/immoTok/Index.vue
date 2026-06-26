@@ -1256,6 +1256,7 @@ const rsvForm = ref({
 const authTab = ref('login');
 const authForm = ref({ email: '', password: '' });
 const registerForm = ref({ name: '', email: '', phone: '', password: '', password_confirmation: '' });
+const pendingAction = ref(null);
 
 // Filter options
 const filterOptions = ref({
@@ -1478,6 +1479,7 @@ const handleDoubleTap = (e) => {
 // Likes & Favorites Toggles
 const toggleLike = async (item) => {
   if (!client.value) {
+    pendingAction.value = () => toggleLike(item);
     activeSheet.value = 'auth';
     return;
   }
@@ -1494,6 +1496,7 @@ const toggleLike = async (item) => {
 
 const toggleFavorite = async (item) => {
   if (!client.value) {
+    pendingAction.value = () => toggleFavorite(item);
     activeSheet.value = 'auth';
     return;
   }
@@ -1712,6 +1715,7 @@ const insertEmoji = (emoji) => {
 
 const sendComment = async () => {
   if (!client.value) {
+    pendingAction.value = () => sendComment();
     activeSheet.value = 'auth';
     return;
   }
@@ -1813,6 +1817,11 @@ const submitLogin = async () => {
     if (res.data.success) {
       client.value = res.data.client;
       activeSheet.value = null;
+      if (pendingAction.value) {
+        const fn = pendingAction.value;
+        pendingAction.value = null;
+        fn();
+      }
     }
   } catch (e) {
     alert(e.response?.data?.message || "Identifiants incorrects.");
@@ -1825,6 +1834,11 @@ const submitRegister = async () => {
     if (res.data.success) {
       client.value = res.data.client;
       activeSheet.value = null;
+      if (pendingAction.value) {
+        const fn = pendingAction.value;
+        pendingAction.value = null;
+        fn();
+      }
     }
   } catch (e) {
     const errs = e.response?.data?.errors;
@@ -1860,6 +1874,7 @@ const openProfile = async (company) => {
 
 const toggleSubscribe = async (companyId) => {
   if (!client.value) {
+    pendingAction.value = () => toggleSubscribe(companyId);
     activeSheet.value = 'auth';
     return;
   }
@@ -1992,6 +2007,7 @@ const loadChatHistory = async () => {
 
 const sendChatMessage = async () => {
   if (!client.value) {
+    pendingAction.value = () => sendChatMessage();
     activeSheet.value = 'auth';
     return;
   }
@@ -2051,6 +2067,7 @@ const scrollToBottom = () => {
 const closeActiveSheet = () => {
   activeSheet.value = null;
   replyCommentTarget.value = null;
+  pendingAction.value = null;
 };
 
 const navigateToHome = () => {
@@ -2063,6 +2080,7 @@ const openCreatePostHint = () => {
 
 const openInbox = async () => {
   if (!client.value) {
+    pendingAction.value = () => openInbox();
     activeSheet.value = 'auth';
     return;
   }
@@ -2082,6 +2100,7 @@ const openInbox = async () => {
 
 const openMe = async () => {
   if (!client.value) {
+    pendingAction.value = () => openMe();
     activeSheet.value = 'auth';
     return;
   }
