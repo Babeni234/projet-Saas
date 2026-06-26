@@ -567,6 +567,7 @@ Route::post('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChat
 Route::post('/api/immotok/companies/{id}/subscribe', [\App\Http\Controllers\ImmotokFeedController::class, 'subscribe']);
 Route::get('/api/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
 Route::get('/api/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
+Route::get('/api/immotok/me/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getMyProfile']);
 
 
 require __DIR__.'/auth.php';

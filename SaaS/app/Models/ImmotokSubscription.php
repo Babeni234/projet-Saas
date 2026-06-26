@@ -12,7 +12,8 @@ class ImmotokSubscription extends Model
 
     protected $table = 'immotok_subscriptions';
 
-    public $timestamps = false;
+    public $timestamps = true;
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'immotok_client_id',

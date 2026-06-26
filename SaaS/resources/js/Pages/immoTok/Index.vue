@@ -915,6 +915,216 @@
       </div>
     </Transition>
 
+    <!-- MY PROFILE SHEET (FULL SCREEN - TIKTOK STYLE) -->
+    <Transition name="slide-up">
+      <div v-if="activeSheet === 'myprofile'" class="absolute inset-0 bg-[#07080d] z-50 flex flex-col text-white pb-safe overflow-hidden">
+        <!-- Profile Header -->
+        <header class="w-full bg-[#181924] border-b border-white/5 py-4 px-4 flex items-center justify-between">
+          <button @click="closeActiveSheet" class="text-gray-400 hover:text-white flex items-center gap-1.5"><i class="fas fa-arrow-left text-lg"></i> Retour</button>
+          <div class="flex items-center gap-1.5">
+            <i class="fas fa-play-circle text-red-500 text-base"></i>
+            <span class="font-extrabold text-sm">Immo<span class="text-red-500">Tok</span></span>
+          </div>
+          <button @click="handleLogout" class="text-xs font-bold text-red-500 hover:text-red-400 transition">Déconnexion</button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto">
+          <!-- Profile Card -->
+          <div class="flex flex-col items-center gap-3 py-6 px-6">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-red-500 via-pink-500 to-orange-400 p-[3px] shadow-2xl">
+              <div class="w-full h-full rounded-full bg-[#07080d] flex items-center justify-center text-4xl font-black text-white">
+                {{ client ? client.name.charAt(0).toUpperCase() : '?' }}
+              </div>
+            </div>
+            <h2 class="text-xl font-extrabold text-white">{{ client?.name || 'Utilisateur' }}</h2>
+            <p class="text-xs text-gray-400 flex items-center gap-1.5">
+              <i class="fas fa-envelope text-red-400"></i> {{ client?.email || '' }}
+            </p>
+            <p v-if="client?.phone" class="text-xs text-gray-400 flex items-center gap-1.5">
+              <i class="fas fa-phone text-green-400"></i> {{ client.phone }}
+            </p>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="flex justify-around border-y border-white/5 py-4 mx-6">
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ myProfileData.stats?.subscriptions_count || 0 }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Abonnements</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ myProfileData.stats?.favorites_count || 0 }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Favoris</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-black text-white">{{ myProfileData.stats?.likes_count || 0 }}</div>
+              <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">J'aime</div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex border-b border-white/5 mt-2">
+            <button 
+              @click="myProfileTab = 'subs'" 
+              class="flex-1 py-3 text-sm font-bold border-b-2 transition flex items-center justify-center gap-2"
+              :class="myProfileTab === 'subs' ? 'border-red-500 text-white' : 'border-transparent text-gray-400'"
+            >
+              <i class="fas fa-building"></i> Abonnements
+            </button>
+            <button 
+              @click="myProfileTab = 'favs'" 
+              class="flex-1 py-3 text-sm font-bold border-b-2 transition flex items-center justify-center gap-2"
+              :class="myProfileTab === 'favs' ? 'border-red-500 text-white' : 'border-transparent text-gray-400'"
+            >
+              <i class="fas fa-bookmark"></i> Favoris
+            </button>
+          </div>
+
+          <!-- Loading -->
+          <div v-if="myProfileLoading" class="py-16 flex items-center justify-center">
+            <i class="fas fa-spinner animate-spin text-2xl text-red-500"></i>
+          </div>
+
+          <!-- Subscriptions Tab -->
+          <div v-else-if="myProfileTab === 'subs'" class="px-4 py-4">
+            <div v-if="myProfileData.subscriptions?.length === 0" class="py-16 flex flex-col items-center justify-center text-center text-gray-500 gap-3">
+              <i class="fas fa-users text-4xl"></i>
+              <p class="text-sm">Vous n'êtes abonné à aucune entreprise.</p>
+              <button @click="closeActiveSheet(); activeTab = 'explore'" class="px-5 py-2 bg-red-600 hover:bg-red-700 rounded-full text-sm font-bold text-white active:scale-95 transition">Explorer</button>
+            </div>
+            <div v-else class="flex flex-col gap-3">
+              <div 
+                v-for="sub in myProfileData.subscriptions" 
+                :key="sub.id"
+                @click="closeActiveSheet(); openProfile(sub)"
+                class="flex items-center gap-3 p-3 bg-[#181924] rounded-xl border border-white/5 hover:bg-[#1e202d] active:scale-[0.98] transition cursor-pointer"
+              >
+                <img :src="sub.logo" class="w-12 h-12 rounded-full object-cover border-2 border-white/10" alt="logo"/>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-sm font-bold text-white truncate">{{ sub.name }}</h4>
+                  <p class="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
+                    <i class="fas fa-tag text-red-400"></i> {{ sub.business_type }}
+                    <span v-if="sub.city"> · <i class="fas fa-map-marker-alt text-blue-400"></i> {{ sub.city }}</span>
+                  </p>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="text-[9px] text-gray-500">{{ sub.subscribed_at }}</span>
+                  <i class="fas fa-chevron-right text-xs text-gray-600"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Favorites Tab -->
+          <div v-else-if="myProfileTab === 'favs'" class="px-4 py-4">
+            <div v-if="myProfileData.favorites?.length === 0" class="py-16 flex flex-col items-center justify-center text-center text-gray-500 gap-3">
+              <i class="fas fa-bookmark text-4xl"></i>
+              <p class="text-sm">Vous n'avez aucun favori pour le moment.</p>
+              <p class="text-xs text-gray-600">Appuyez sur <i class="fas fa-bookmark text-yellow-400"></i> pour sauvegarder des biens.</p>
+            </div>
+            <div v-else class="grid grid-cols-3 gap-1.5">
+              <div 
+                v-for="fav in myProfileData.favorites" 
+                :key="fav.id"
+                @click="playFavoriteItem(fav.id)"
+                class="aspect-[3/4] bg-black relative rounded-md overflow-hidden cursor-pointer group hover:opacity-85 transition"
+              >
+                <img v-if="fav.media_type === 'image'" :src="fav.media_url" class="w-full h-full object-cover" />
+                <video v-else :src="fav.media_url" class="w-full h-full object-cover" muted></video>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div v-if="fav.media_type === 'video'" class="absolute top-1.5 right-1.5 text-white text-[9px] bg-black/40 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fas fa-play"></i></div>
+                <div class="absolute bottom-1.5 left-1.5 right-1.5">
+                  <div class="flex items-center gap-1 mb-0.5">
+                    <img :src="fav.company_logo" class="w-3.5 h-3.5 rounded-full object-cover" />
+                    <span class="text-[8px] font-bold text-gray-300 truncate">{{ fav.company_name }}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-[9px] text-gray-300"><i class="fas fa-heart text-red-500"></i> {{ fav.likes_count }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- INBOX INFO SHEET -->
+    <Transition name="slide-up">
+      <div v-if="activeSheet === 'inbox'" class="absolute inset-x-0 bottom-0 bg-[#181924] rounded-t-2xl z-50 flex flex-col text-white p-6 pb-safe gap-5">
+        <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto cursor-pointer" @click="closeActiveSheet"></div>
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500 via-pink-500 to-orange-400 p-[3px] shadow-2xl">
+            <div class="w-full h-full rounded-[14px] bg-[#07080d] flex items-center justify-center">
+              <i class="fas fa-play-circle text-red-500 text-3xl"></i>
+            </div>
+          </div>
+          <div class="text-center">
+            <h3 class="font-extrabold text-xl">Immo<span class="text-red-500">Tok</span></h3>
+            <p class="text-xs text-gray-400 mt-1">Alertes & Notifications</p>
+          </div>
+          <div class="w-full bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col gap-3">
+            <div class="flex items-center gap-3 text-sm text-gray-300">
+              <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center"><i class="fas fa-bell text-blue-400"></i></div>
+              <div class="flex-1">
+                <p class="font-semibold text-white">Notifications en temps réel</p>
+                <p class="text-xs text-gray-500">Recevez des alertes quand une entreprise publie un nouveau bien.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-sm text-gray-300">
+              <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center"><i class="fas fa-calendar-check text-green-400"></i></div>
+              <div class="flex-1">
+                <p class="font-semibold text-white">Suivi de vos demandes</p>
+                <p class="text-xs text-gray-500">Consultez l'état de vos réservations de visites.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-sm text-gray-300">
+              <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><i class="fas fa-heart text-red-400"></i></div>
+              <div class="flex-1">
+                <p class="font-semibold text-white">Activité</p>
+                <p class="text-xs text-gray-500">Likes, réponses à vos commentaires et nouveaux abonnés.</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 text-center italic"><i class="fas fa-info-circle text-red-400 mr-1"></i>Cette fonctionnalité sera disponible prochainement.</p>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- CREATE POST INFO SHEET -->
+    <Transition name="slide-up">
+      <div v-if="activeSheet === 'createpost'" class="absolute inset-x-0 bottom-0 bg-[#181924] rounded-t-2xl z-50 flex flex-col text-white p-6 pb-safe gap-5">
+        <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto cursor-pointer" @click="closeActiveSheet"></div>
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#25F4EE] via-white to-[#FE2C55] p-[3px] shadow-2xl">
+            <div class="w-full h-full rounded-[14px] bg-[#07080d] flex items-center justify-center">
+              <i class="fas fa-camera text-white text-3xl"></i>
+            </div>
+          </div>
+          <div class="text-center">
+            <h3 class="font-extrabold text-xl">Immo<span class="text-red-500">Tok</span></h3>
+            <p class="text-xs text-gray-400 mt-1">Publier du contenu</p>
+          </div>
+          <div class="w-full bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col gap-4">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-building text-purple-400"></i></div>
+              <div>
+                <p class="font-semibold text-white text-sm">Espace Gestionnaire</p>
+                <p class="text-xs text-gray-400 mt-1 leading-relaxed">Pour publier vos propres vidéos et illustrations de biens immobiliers, connectez-vous à votre <strong class="text-red-400">espace Gestionnaire Entreprise</strong> ou <strong class="text-red-400">Agence</strong>.</p>
+              </div>
+            </div>
+            <div class="border-t border-white/5 pt-3 flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-upload text-cyan-400"></i></div>
+              <div>
+                <p class="font-semibold text-white text-sm">Comment ça marche ?</p>
+                <p class="text-xs text-gray-400 mt-1 leading-relaxed">Rendez-vous dans le menu <strong class="text-white">Illustrations</strong> de votre dashboard pour importer vos photos et vidéos. Elles apparaîtront automatiquement sur ImmoTok !</p>
+              </div>
+            </div>
+          </div>
+          <a href="/login" class="w-full h-12 bg-red-600 hover:bg-red-700 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 active:scale-95 transition">
+            <i class="fas fa-sign-in-alt"></i> Connexion Gestionnaire
+          </a>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Global Mute Info Banner -->
     <Transition name="fade">
       <div v-if="showMuteInfoBanner" class="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-black/75 backdrop-blur-sm text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
@@ -996,6 +1206,11 @@ const profileSubscribersCount = ref(0);
 const profileLikesCount = ref(0);
 const profileHasSubscribed = ref(false);
 const profileIllustrations = ref([]);
+
+// My Profile state
+const myProfileTab = ref('subs');
+const myProfileLoading = ref(false);
+const myProfileData = ref({ subscriptions: [], favorites: [], stats: {} });
 
 // Infinite loop & pull-to-refresh
 const singleItemKeySuffix = ref(0);
@@ -1772,18 +1987,54 @@ const navigateToHome = () => {
 };
 
 const openCreatePostHint = () => {
-  alert("Pour publier vos propres vidéos d'illustrations, connectez-vous à votre espace Gestionnaire Entreprise ou Agence, puis rendez-vous dans le menu Illustrations pour importer vos fichiers médias.");
+  activeSheet.value = 'createpost';
 };
 
 const openInbox = () => {
-  alert("Vous n'avez pas de nouvelles alertes ou réservations.");
+  activeSheet.value = 'inbox';
 };
 
-const openMe = () => {
-  if (client.value) {
-    alert(`Espace Client : connecté en tant que ${client.value.name} (${client.value.email}).`);
-  } else {
+const openMe = async () => {
+  if (!client.value) {
     activeSheet.value = 'auth';
+    return;
+  }
+  activeSheet.value = 'myprofile';
+  myProfileTab.value = 'subs';
+  myProfileLoading.value = true;
+  try {
+    const res = await axios.get('/api/immotok/me/profile');
+    if (res.data.success) {
+      myProfileData.value = res.data;
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    myProfileLoading.value = false;
+  }
+};
+
+const handleLogout = async () => {
+  try {
+    await axios.post('/api/immotok/auth/logout');
+    client.value = null;
+    activeSheet.value = null;
+    fetchFeed();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const playFavoriteItem = async (illustrationId) => {
+  closeActiveSheet();
+  try {
+    const res = await axios.get('/api/immotok/feed');
+    feed.value = res.data;
+    const idx = feed.value.findIndex(item => item.id === illustrationId);
+    currentIndex.value = idx >= 0 ? idx : 0;
+    activeTab.value = 'foryou';
+  } catch (e) {
+    console.error(e);
   }
 };
 

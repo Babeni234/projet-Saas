@@ -467,4 +467,81 @@ class ImmotokFeedController extends Controller
             'illustrations' => $illustrations,
         ]);
     }
+    public function getMyProfile()
+    {
+        $client = $this->getClient();
+        if (!$client) {
+            return response()->json(['success' => false, 'message' => 'Non connecté.'], 401);
+        }
+
+        // Get subscribed companies
+        $subscriptions = \App\Models\ImmotokSubscription::where('immotok_client_id', $client->id)
+            ->with('companyProfile')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($sub) {
+                $company = $sub->companyProfile;
+                if (!$company) return null;
+                $logoUrl = $company->logo_path
+                    ? asset('storage/' . $company->logo_path)
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+                return [
+                    'id' => $company->id,
+                    'name' => $company->legal_name,
+                    'logo' => $logoUrl,
+                    'business_type' => $company->business_type,
+                    'city' => $company->city,
+                    'subscribed_at' => $sub->created_at->diffForHumans(),
+                ];
+            })->filter()->values();
+
+        // Get favorited illustrations
+        $favorites = ImmotokFavorite::where('immotok_client_id', $client->id)
+            ->with(['illustration.companyProfile'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($fav) {
+                $item = $fav->illustration;
+                if (!$item) return null;
+                $company = $item->companyProfile;
+                $mediaUrl = $item->file_path;
+                if (!str_starts_with($mediaUrl, 'http')) {
+                    $mediaUrl = asset('storage/' . $mediaUrl);
+                }
+                $logoUrl = null;
+                if ($company) {
+                    $logoUrl = $company->logo_path
+                        ? asset('storage/' . $company->logo_path)
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+                }
+                return [
+                    'id' => $item->id,
+                    'media_url' => $mediaUrl,
+                    'media_type' => $item->media_type,
+                    'description' => $item->description ?? '',
+                    'company_name' => $company->legal_name ?? '',
+                    'company_logo' => $logoUrl,
+                    'likes_count' => ImmotokLike::where('illustration_id', $item->id)->count(),
+                    'favorited_at' => $fav->created_at->diffForHumans(),
+                ];
+            })->filter()->values();
+
+        return response()->json([
+            'success' => true,
+            'client' => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'email' => $client->email,
+                'phone' => $client->phone ?? '',
+                'created_at' => $client->created_at->diffForHumans(),
+            ],
+            'subscriptions' => $subscriptions,
+            'favorites' => $favorites,
+            'stats' => [
+                'subscriptions_count' => $subscriptions->count(),
+                'favorites_count' => $favorites->count(),
+                'likes_count' => ImmotokLike::where('immotok_client_id', $client->id)->count(),
+            ],
+        ]);
+    }
 }
