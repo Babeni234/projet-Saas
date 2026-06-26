@@ -45,9 +45,31 @@ class ImmotokFeedController extends Controller
         // Apply filters
         if ($request->filled('q')) {
             $q = $request->q;
-            $query->where(function ($sub) use ($q) {
+            
+            // Find batiment IDs matching city or neighborhood
+            $batimentIds = \App\Models\Batiment::where('ville', 'like', "%{$q}%")
+                ->orWhere('quartier', 'like', "%{$q}%")
+                ->pluck('id')
+                ->toArray();
+                
+            // Find logement IDs matching category name
+            $logementIds = \App\Models\Logement::whereHas('categorie', function ($catQuery) use ($q) {
+                    $catQuery->where('nom', 'like', "%{$q}%");
+                })
+                ->pluck('id')
+                ->toArray();
+
+            $query->where(function ($sub) use ($q, $batimentIds, $logementIds) {
                 $sub->where('description', 'like', "%{$q}%")
-                    ->orWhere('target_name', 'like', "%{$q}%");
+                    ->orWhere('target_name', 'like', "%{$q}%")
+                    ->orWhere(function ($s1) use ($batimentIds) {
+                        $s1->where('target_type', 'batiment')
+                           ->whereIn('target_id', $batimentIds);
+                    })
+                    ->orWhere(function ($s2) use ($logementIds) {
+                        $s2->where('target_type', 'logement')
+                           ->whereIn('target_id', $logementIds);
+                    });
             });
         }
 
@@ -172,6 +194,17 @@ class ImmotokFeedController extends Controller
             $illustrations = $illustrations->filter(function ($item) use ($city) {
                 return str_contains(strtolower($item['property']['city']), $city) || 
                        str_contains(strtolower($item['property']['neighborhood']), $city);
+            });
+        }
+        if ($request->filled('q')) {
+            $qLower = strtolower($request->q);
+            $illustrations = $illustrations->filter(function ($item) use ($qLower) {
+                return str_contains(strtolower($item['description']), $qLower) ||
+                       str_contains(strtolower($item['company']['name']), $qLower) ||
+                       str_contains(strtolower($item['property']['city']), $qLower) ||
+                       str_contains(strtolower($item['property']['neighborhood']), $qLower) ||
+                       str_contains(strtolower($item['property']['type']), $qLower) ||
+                       str_contains(strtolower($item['property']['price_label']), $qLower);
             });
         }
 

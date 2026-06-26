@@ -57,18 +57,6 @@ class ImmotokTest extends TestCase
 
     public function test_get_categories()
     {
-        \App\Models\Categorie::create([
-            'nom' => 'Studio',
-            'description' => 'Un studio',
-        ]);
-
-        $response = $this->getJson('/api/immotok/categories');
-        $response->assertStatus(200)
-                 ->assertJsonFragment(['Studio']);
-    }
-
-    public function test_toggle_subscribe()
-    {
         $user = User::create([
             'name' => 'Company Manager',
             'email' => 'manager@test.com',
@@ -81,6 +69,49 @@ class ImmotokTest extends TestCase
             'legal_name' => 'Test Company',
             'business_type' => 'Agency',
             'phone' => '123456',
+            'registration_number' => 'REG-12345',
+            'tax_id' => 'TAX-12345',
+            'country' => 'CM',
+            'address' => '123 Test Street',
+            'city' => 'Douala',
+            'postal_code' => '00000',
+            'legal_representative_name' => 'John Manager',
+            'legal_representative_id_number' => 'ID-12345',
+        ]);
+
+        \App\Models\Categorie::create([
+            'company_profile_id' => $company->id,
+            'nom' => 'Studio',
+            'description' => 'Un studio',
+        ]);
+
+        $response = $this->getJson('/api/immotok/categories');
+        $response->assertStatus(200)
+                 ->assertJsonFragment(['Studio']);
+    }
+
+    public function test_toggle_subscribe()
+    {
+        $user = User::create([
+            'name' => 'Company Manager 2',
+            'email' => 'manager2@test.com',
+            'password' => bcrypt('password'),
+            'account_type' => 'Entreprise',
+        ]);
+
+        $company = CompanyProfile::create([
+            'user_id' => $user->id,
+            'legal_name' => 'Test Company 2',
+            'business_type' => 'Agency',
+            'phone' => '1234567',
+            'registration_number' => 'REG-12346',
+            'tax_id' => 'TAX-12346',
+            'country' => 'CM',
+            'address' => '456 Test Avenue',
+            'city' => 'Yaoundé',
+            'postal_code' => '00001',
+            'legal_representative_name' => 'Jane Manager',
+            'legal_representative_id_number' => 'ID-12346',
         ]);
 
         $client = ImmotokClient::create([

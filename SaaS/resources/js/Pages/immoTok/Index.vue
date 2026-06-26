@@ -843,7 +843,16 @@
         <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center gap-6">
           <!-- Logo and Name -->
           <div class="flex flex-col items-center gap-3">
-            <img :src="profileCompany.logo" class="w-24 h-24 rounded-full object-cover border-4 border-white/10 shadow-2xl" alt="logo"/>
+            <div class="relative">
+              <img :src="profileCompany.logo" class="w-24 h-24 rounded-full object-cover border-4 border-white/10 shadow-2xl" alt="logo"/>
+              <span 
+                v-if="!profileHasSubscribed" 
+                @click.stop="toggleSubscribe(profileCompany.id)"
+                class="absolute bottom-0 right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center border-2 border-[#07080d] hover:scale-110 active:scale-95 transition cursor-pointer shadow-lg"
+              >
+                <i class="fas fa-plus text-[10px] text-white"></i>
+              </span>
+            </div>
             <div class="text-center">
               <h2 class="text-xl font-extrabold text-white">@{{ profileCompany.name }}</h2>
               <span class="px-2 py-0.5 rounded bg-red-600/90 text-[10px] font-bold uppercase tracking-wider text-white mt-1.5 inline-block">PRO</span>
@@ -1592,7 +1601,14 @@ const toggleSubscribe = async (companyId) => {
 const handleExploreSearch = async () => {
   exploreLoading.value = true;
   try {
-    const res = await axios.get('/api/immotok/feed', { params: { q: searchQuery.value, transaction: filterOptions.value.transaction } });
+    const params = {
+      q: searchQuery.value,
+      transaction: filterOptions.value.transaction,
+      type: filterOptions.value.type,
+      budget: filterOptions.value.budget,
+      city: filterOptions.value.city
+    };
+    const res = await axios.get('/api/immotok/feed', { params });
     exploreResults.value = res.data;
   } catch (e) {
     console.error(e);
