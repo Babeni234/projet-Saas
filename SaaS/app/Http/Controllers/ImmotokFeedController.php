@@ -523,7 +523,7 @@ class ImmotokFeedController extends Controller
                     'company_name' => $company->legal_name ?? '',
                     'company_logo' => $logoUrl,
                     'likes_count' => ImmotokLike::where('illustration_id', $item->id)->count(),
-                    'favorited_at' => $fav->created_at->diffForHumans(),
+                    'favorited_at' => $fav->created_at ? \Carbon\Carbon::parse($fav->created_at)->diffForHumans() : '',
                 ];
             })->filter()->values();
 

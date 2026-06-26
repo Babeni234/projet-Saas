@@ -73,7 +73,7 @@ class ImmotokDashboardController extends Controller
                     'media_url' => $mediaUrl,
                     'media_type' => $l->illustration->media_type,
                 ],
-                'created_at' => $l->created_at ? $l->created_at->diffForHumans() : '',
+                'created_at' => $l->created_at ? \Carbon\Carbon::parse($l->created_at)->diffForHumans() : '',
             ];
         });
 
@@ -100,7 +100,7 @@ class ImmotokDashboardController extends Controller
                     'media_url' => $mediaUrl,
                     'media_type' => $f->illustration->media_type,
                 ],
-                'created_at' => $f->created_at ? $f->created_at->diffForHumans() : '',
+                'created_at' => $f->created_at ? \Carbon\Carbon::parse($f->created_at)->diffForHumans() : '',
             ];
         });
 
