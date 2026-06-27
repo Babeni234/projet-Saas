@@ -1,9 +1,22 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
-  // Pour émulateur Android: http://10.0.2.2:8000
-  // Pour appareil physique: http://VOTRE_IP:8000
-  // Pour iOS simulator: http://localhost:8000
-  // Pour web (localhost): http://127.0.0.1:8000
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String _defaultBaseUrl = 'http://127.0.0.1:8000';
+
+  static String get baseUrl {
+    if (kIsWeb) {
+      try {
+        final queryParams = Uri.base.queryParameters;
+        if (queryParams.containsKey('api') && queryParams['api']!.isNotEmpty) {
+          return queryParams['api']!;
+        }
+        if (Uri.base.host != 'localhost' && Uri.base.host != '127.0.0.1' && Uri.base.host.isNotEmpty) {
+          return Uri.base.origin;
+        }
+      } catch (_) {}
+    }
+    return _defaultBaseUrl;
+  }
 
   static String normalizeUrl(String? url) {
     if (url == null || url.isEmpty) return '';
