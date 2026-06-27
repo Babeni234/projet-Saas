@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../config/theme.dart';
 import '../providers/app_state.dart';
 
@@ -37,11 +38,49 @@ class _FeedPlayerState extends State<FeedPlayer> {
   Duration _currentTime = Duration.zero;
   Duration _duration = Duration.zero;
   final Map<int, GlobalKey<VideoPlayerWidgetState>> _videoKeys = {};
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _currentAudioUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _updateAudio(String? audioUrl, bool isMuted, bool isPlaying) async {
+    if (audioUrl == null || audioUrl.isEmpty || !isPlaying) {
+      if (_currentAudioUrl != null) {
+        _currentAudioUrl = null;
+        try {
+          await _audioPlayer.stop();
+        } catch (_) {}
+      }
+      return;
+    }
+
+    try {
+      await _audioPlayer.setVolume(isMuted ? 0.0 : 1.0);
+      if (_currentAudioUrl != audioUrl) {
+        _currentAudioUrl = audioUrl;
+        await _audioPlayer.stop();
+        await _audioPlayer.play(UrlSource(audioUrl));
+      } else {
+        if (isPlaying) {
+          await _audioPlayer.resume();
+        } else {
+          await _audioPlayer.pause();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating audio: $e');
+    }
   }
 
   void _handleDoubleTap(TapDownDetails details) {
@@ -100,6 +139,13 @@ class _FeedPlayerState extends State<FeedPlayer> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, state, _) {
+        final currentItem = state.currentItem;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _updateAudio(currentItem?.audioUrl, state.isMuted, _isPlaying);
+          }
+        });
+
         if (state.feed.isEmpty) {
           return Center(
             child: Column(

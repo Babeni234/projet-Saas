@@ -5,6 +5,23 @@ class ApiConfig {
   // Pour web (localhost): http://127.0.0.1:8000
   static const String baseUrl = 'http://127.0.0.1:8000';
 
+  static String normalizeUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (!url.startsWith('http')) return url;
+    try {
+      final uri = Uri.parse(url);
+      if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
+        final baseUri = Uri.parse(baseUrl);
+        return uri.replace(
+          scheme: baseUri.scheme,
+          host: baseUri.host,
+          port: baseUri.port,
+        ).toString();
+      }
+    } catch (_) {}
+    return url;
+  }
+
   // API Endpoints
   static const String feed = '/api/immotok/feed';
   static const String authMe = '/api/immotok/auth/me';

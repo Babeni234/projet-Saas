@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../config/theme.dart';
 import '../providers/app_state.dart';
 import '../models/company.dart';
+import '../config/api_config.dart';
 
 class MyProfileSheet extends StatefulWidget {
   const MyProfileSheet({super.key});
@@ -29,7 +30,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
       builder: (context, state, _) {
         final client = state.client;
         final data = state.myProfileData;
-        final stats = data['stats'] as Map<String, dynamic>? ?? {};
+        final stats = data['stats'] != null ? Map<String, dynamic>.from(data['stats'] as Map) : <String, dynamic>{};
         final subs = data['subscriptions'] as List? ?? [];
         final favs = data['favorites'] as List? ?? [];
 
@@ -177,7 +178,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
             ),
             child: Row(
               children: [
-                ClipOval(child: CachedNetworkImage(imageUrl: sub['logo'] ?? '', width: 48, height: 48, fit: BoxFit.cover,
+                ClipOval(child: CachedNetworkImage(imageUrl: ApiConfig.normalizeUrl(sub['logo']), width: 48, height: 48, fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => Container(width: 48, height: 48, color: ImmoTokTheme.gray600))),
                 const SizedBox(width: 12),
                 Expanded(
@@ -245,7 +246,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
-                child: CachedNetworkImage(imageUrl: fav['media_url'] ?? '', fit: BoxFit.cover,
+                child: CachedNetworkImage(imageUrl: ApiConfig.normalizeUrl(fav['media_url']), fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => Container(color: Colors.black)),
               ),
               Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(
@@ -260,7 +261,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    ClipOval(child: CachedNetworkImage(imageUrl: fav['company_logo'] ?? '', width: 14, height: 14, fit: BoxFit.cover,
+                    ClipOval(child: CachedNetworkImage(imageUrl: ApiConfig.normalizeUrl(fav['company_logo']), width: 14, height: 14, fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => Container(width: 14, height: 14, color: ImmoTokTheme.gray600))),
                     const SizedBox(width: 4),
                     Expanded(child: Text(fav['company_name'] ?? '', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: ImmoTokTheme.gray300), overflow: TextOverflow.ellipsis)),
@@ -306,7 +307,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
-                child: CachedNetworkImage(imageUrl: item['media_url'] ?? '', fit: BoxFit.cover,
+                child: CachedNetworkImage(imageUrl: ApiConfig.normalizeUrl(item['media_url']), fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => Container(color: Colors.black)),
               ),
               Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(
@@ -321,7 +322,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    ClipOval(child: CachedNetworkImage(imageUrl: item['company_logo'] ?? '', width: 14, height: 14, fit: BoxFit.cover,
+                    ClipOval(child: CachedNetworkImage(imageUrl: ApiConfig.normalizeUrl(item['company_logo']), width: 14, height: 14, fit: BoxFit.cover,
                       errorWidget: (_, __, ___) => Container(width: 14, height: 14, color: ImmoTokTheme.gray600))),
                     const SizedBox(width: 4),
                     Expanded(child: Text(item['company_name'] ?? '', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: ImmoTokTheme.gray300), overflow: TextOverflow.ellipsis)),

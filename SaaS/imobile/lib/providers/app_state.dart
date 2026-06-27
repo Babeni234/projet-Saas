@@ -152,32 +152,60 @@ class AppState extends ChangeNotifier {
   // ─── Like / Favorite ───────────────────────────────────────────────────────
   Future<bool> toggleLike(Illustration item) async {
     if (!isAuthenticated) return false;
+    final oldHasLiked = item.hasLiked;
+    final oldLikesCount = item.likesCount;
+
+    item.hasLiked = !oldHasLiked;
+    item.likesCount = oldHasLiked ? oldLikesCount - 1 : oldLikesCount + 1;
+    notifyListeners();
+
     try {
       final res = await api.toggleLike(item.id);
       if (res['success'] == true) {
-        item.hasLiked = res['liked'] ?? false;
+        item.hasLiked = res['liked'] ?? !oldHasLiked;
         item.likesCount = res['likes_count'] ?? item.likesCount;
         notifyListeners();
         return true;
+      } else {
+        item.hasLiked = oldHasLiked;
+        item.likesCount = oldLikesCount;
+        notifyListeners();
       }
     } catch (e) {
       debugPrint('Like error: $e');
+      item.hasLiked = oldHasLiked;
+      item.likesCount = oldLikesCount;
+      notifyListeners();
     }
     return false;
   }
 
   Future<bool> toggleFavorite(Illustration item) async {
     if (!isAuthenticated) return false;
+    final oldHasFavorited = item.hasFavorited;
+    final oldFavoritesCount = item.favoritesCount;
+
+    item.hasFavorited = !oldHasFavorited;
+    item.favoritesCount = oldHasFavorited ? oldFavoritesCount - 1 : oldFavoritesCount + 1;
+    notifyListeners();
+
     try {
       final res = await api.toggleFavorite(item.id);
       if (res['success'] == true) {
-        item.hasFavorited = res['favorited'] ?? false;
+        item.hasFavorited = res['favorited'] ?? !oldHasFavorited;
         item.favoritesCount = res['favorites_count'] ?? item.favoritesCount;
         notifyListeners();
         return true;
+      } else {
+        item.hasFavorited = oldHasFavorited;
+        item.favoritesCount = oldFavoritesCount;
+        notifyListeners();
       }
     } catch (e) {
       debugPrint('Favorite error: $e');
+      item.hasFavorited = oldHasFavorited;
+      item.favoritesCount = oldFavoritesCount;
+      notifyListeners();
     }
     return false;
   }
@@ -228,10 +256,40 @@ class AppState extends ChangeNotifier {
   // ─── Subscribe ─────────────────────────────────────────────────────────────
   Future<bool> toggleSubscribe(int companyId) async {
     if (!isAuthenticated) return false;
+    
+    // Determine current subbed state
+    bool isCurrentlySubbed = false;
+    if (profileCompany != null && profileCompany!.id == companyId) {
+      isCurrentlySubbed = profileHasSubscribed;
+    } else {
+      final match = feed.indexWhere((x) => x.company.id == companyId);
+      if (match >= 0) {
+        isCurrentlySubbed = feed[match].hasSubscribed;
+      }
+    }
+
+    final newSubbed = !isCurrentlySubbed;
+
+    // Save old state
+    final oldHasSubscribed = profileHasSubscribed;
+    final oldSubscribersCount = profileSubscribersCount;
+
+    // Optimistic UI Update
+    if (profileCompany != null && profileCompany!.id == companyId) {
+      profileHasSubscribed = newSubbed;
+      profileSubscribersCount = newSubbed ? oldSubscribersCount + 1 : oldSubscribersCount - 1;
+    }
+    for (var item in feed) {
+      if (item.company.id == companyId) {
+        item.hasSubscribed = newSubbed;
+      }
+    }
+    notifyListeners();
+
     try {
       final res = await api.toggleSubscribe(companyId);
       if (res['success'] == true) {
-        final subbed = res['subscribed'] ?? false;
+        final subbed = res['subscribed'] ?? newSubbed;
         if (profileCompany != null && profileCompany!.id == companyId) {
           profileHasSubscribed = subbed;
           profileSubscribersCount = res['subscribers_count'] ?? profileSubscribersCount;
@@ -243,9 +301,32 @@ class AppState extends ChangeNotifier {
         }
         notifyListeners();
         return true;
+      } else {
+        // Revert on failure
+        if (profileCompany != null && profileCompany!.id == companyId) {
+          profileHasSubscribed = oldHasSubscribed;
+          profileSubscribersCount = oldSubscribersCount;
+        }
+        for (var item in feed) {
+          if (item.company.id == companyId) {
+            item.hasSubscribed = oldHasSubscribed;
+          }
+        }
+        notifyListeners();
       }
     } catch (e) {
       debugPrint('Subscribe error: $e');
+      // Revert on error
+      if (profileCompany != null && profileCompany!.id == companyId) {
+        profileHasSubscribed = oldHasSubscribed;
+        profileSubscribersCount = oldSubscribersCount;
+      }
+      for (var item in feed) {
+        if (item.company.id == companyId) {
+          item.hasSubscribed = oldHasSubscribed;
+        }
+      }
+      notifyListeners();
     }
     return false;
   }

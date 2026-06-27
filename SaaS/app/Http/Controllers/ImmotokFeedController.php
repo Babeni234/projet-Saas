@@ -21,6 +21,16 @@ class ImmotokFeedController extends Controller
         if ($request->attributes->has('immotok_client')) {
             return $request->attributes->get('immotok_client');
         }
+
+        // Try to get token from Authorization header for optional auth routes
+        $token = $request->bearerToken();
+        if ($token) {
+            $client = \App\Models\ImmotokClient::where('api_token', $token)->first();
+            if ($client) {
+                $request->attributes->set('immotok_client', $client);
+                return $client;
+            }
+        }
         return null;
     }
 

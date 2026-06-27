@@ -1,3 +1,4 @@
+import '../config/api_config.dart';
 import 'company.dart';
 
 class PropertyInfo {
@@ -74,8 +75,8 @@ class Illustration {
     return Illustration(
       id: json['id'] ?? 0,
       mediaType: json['media_type'] ?? 'image',
-      mediaUrl: json['media_url'] ?? '',
-      audioUrl: json['audio_url'],
+      mediaUrl: ApiConfig.normalizeUrl(json['media_url']),
+      audioUrl: json['audio_url'] != null ? ApiConfig.normalizeUrl(json['audio_url']) : null,
       description: json['description'] ?? '',
       company: Company.fromJson(json['company'] ?? {}),
       property: PropertyInfo.fromJson(json['property'] ?? {}),

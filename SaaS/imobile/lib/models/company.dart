@@ -1,3 +1,5 @@
+import '../config/api_config.dart';
+
 class Company {
   final int id;
   final String name;
@@ -19,7 +21,7 @@ class Company {
     return Company(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
-      logo: json['logo'] ?? '',
+      logo: ApiConfig.normalizeUrl(json['logo']),
       phone: json['phone'],
       city: json['city'],
       businessType: json['business_type'],

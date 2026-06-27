@@ -1531,14 +1531,25 @@ const toggleLike = async (item) => {
     activeSheet.value = 'auth';
     return;
   }
+  const oldHasLiked = item.has_liked;
+  const oldLikesCount = item.likes_count;
+  
+  item.has_liked = !oldHasLiked;
+  item.likes_count = oldHasLiked ? oldLikesCount - 1 : oldLikesCount + 1;
+
   try {
     const res = await axios.post(`/api/immotok/illustrations/${item.id}/like`);
     if (res.data.success) {
       item.has_liked = res.data.liked;
       item.likes_count = res.data.likes_count;
+    } else {
+      item.has_liked = oldHasLiked;
+      item.likes_count = oldLikesCount;
     }
   } catch (e) {
     console.error(e);
+    item.has_liked = oldHasLiked;
+    item.likes_count = oldLikesCount;
   }
 };
 
@@ -1548,14 +1559,25 @@ const toggleFavorite = async (item) => {
     activeSheet.value = 'auth';
     return;
   }
+  const oldHasFavorited = item.has_favorited;
+  const oldFavoritesCount = item.favorites_count;
+  
+  item.has_favorited = !oldHasFavorited;
+  item.favorites_count = oldHasFavorited ? oldFavoritesCount - 1 : oldFavoritesCount + 1;
+
   try {
     const res = await axios.post(`/api/immotok/illustrations/${item.id}/favorite`);
     if (res.data.success) {
       item.has_favorited = res.data.favorited;
       item.favorites_count = res.data.favorites_count;
+    } else {
+      item.has_favorited = oldHasFavorited;
+      item.favorites_count = oldFavoritesCount;
     }
   } catch (e) {
     console.error(e);
+    item.has_favorited = oldHasFavorited;
+    item.favorites_count = oldFavoritesCount;
   }
 };
 
@@ -1936,6 +1958,23 @@ const toggleSubscribe = async (companyId) => {
     activeSheet.value = 'auth';
     return;
   }
+  const oldHasSubscribed = profileCompany.value && profileCompany.value.id === companyId ? profileHasSubscribed.value : false;
+  const oldSubscribersCount = profileCompany.value && profileCompany.value.id === companyId ? profileSubscribersCount.value : 0;
+  
+  const firstMatch = feed.value.find(item => item.company.id === companyId);
+  const isCurrentlySubbed = firstMatch ? firstMatch.has_subscribed : oldHasSubscribed;
+  const newSubbed = !isCurrentlySubbed;
+
+  if (profileCompany.value && profileCompany.value.id === companyId) {
+    profileHasSubscribed.value = newSubbed;
+    profileSubscribersCount.value = newSubbed ? oldSubscribersCount + 1 : oldSubscribersCount - 1;
+  }
+  feed.value.forEach(item => {
+    if (item.company.id === companyId) {
+      item.has_subscribed = newSubbed;
+    }
+  });
+
   try {
     const res = await axios.post(`/api/immotok/companies/${companyId}/subscribe`);
     if (res.data.success) {
@@ -1944,15 +1983,33 @@ const toggleSubscribe = async (companyId) => {
         profileHasSubscribed.value = subbed;
         profileSubscribersCount.value = res.data.subscribers_count;
       }
-      // Update in feed
       feed.value.forEach(item => {
         if (item.company.id === companyId) {
           item.has_subscribed = subbed;
         }
       });
+    } else {
+      if (profileCompany.value && profileCompany.value.id === companyId) {
+        profileHasSubscribed.value = isCurrentlySubbed;
+        profileSubscribersCount.value = oldSubscribersCount;
+      }
+      feed.value.forEach(item => {
+        if (item.company.id === companyId) {
+          item.has_subscribed = isCurrentlySubbed;
+        }
+      });
     }
   } catch (e) {
     console.error(e);
+    if (profileCompany.value && profileCompany.value.id === companyId) {
+      profileHasSubscribed.value = isCurrentlySubbed;
+      profileSubscribersCount.value = oldSubscribersCount;
+    }
+    feed.value.forEach(item => {
+      if (item.company.id === companyId) {
+        item.has_subscribed = isCurrentlySubbed;
+      }
+    });
   }
 };
 
