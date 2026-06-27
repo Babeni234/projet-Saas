@@ -38,39 +38,42 @@ class TopNavBar extends StatelessWidget {
                 icon: Icons.tune,
                 onTap: onFilterTap,
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               // Tabs
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _TabBtn(
-                      label: 'Pour vous',
-                      isActive: state.activeTab == 'foryou',
-                      onTap: () => state.setActiveTab('foryou'),
-                    ),
-                    const SizedBox(width: 8),
-                    _TabBtn(
-                      label: 'Abonnements',
-                      isActive: state.activeTab == 'subs',
-                      onTap: () {
-                        if (!state.isAuthenticated) {
-                          _showAuthNeeded(context);
-                          return;
-                        }
-                        state.setActiveTab('subs');
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _TabBtn(
-                      label: 'Explorer',
-                      isActive: state.activeTab == 'explore',
-                      onTap: () => state.setActiveTab('explore'),
-                    ),
-                  ],
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _TabBtn(
+                        label: 'Pour vous',
+                        isActive: state.activeTab == 'foryou',
+                        onTap: () => state.setActiveTab('foryou'),
+                      ),
+                      const SizedBox(width: 8),
+                      _TabBtn(
+                        label: 'Abonnements',
+                        isActive: state.activeTab == 'subs',
+                        onTap: () {
+                          if (!state.isAuthenticated) {
+                            _showAuthNeeded(context);
+                            return;
+                          }
+                          state.setActiveTab('subs');
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _TabBtn(
+                        label: 'Explorer',
+                        isActive: state.activeTab == 'explore',
+                        onTap: () => state.setActiveTab('explore'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               // Mute button
               _CircleBtn(
                 icon: state.isMuted ? Icons.volume_off : Icons.volume_up,

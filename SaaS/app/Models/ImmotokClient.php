@@ -19,6 +19,7 @@ class ImmotokClient extends Authenticatable
         'phone',
         'password',
         'avatar',
+        'api_token',
     ];
 
     protected $hidden = [

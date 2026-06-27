@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'locataire' => \App\Http\Middleware\EnsureIsLocataire::class,
             'superadmin' => \App\Http\Middleware\EnsureIsSuperAdmin::class,
+            'immotok.token' => \App\Http\Middleware\ImmotokTokenAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

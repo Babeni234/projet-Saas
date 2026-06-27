@@ -6,6 +6,7 @@ use App\Models\ImmotokClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ImmotokAuthController extends Controller
 {
@@ -32,11 +33,14 @@ class ImmotokAuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        session()->put('immotok_client_id', $client->id);
+        $token = Str::random(60);
+        $client->api_token = $token;
+        $client->save();
 
         return response()->json([
             'success' => true,
             'client' => $client,
+            'token' => $token,
             'message' => 'Compte créé avec succès.'
         ]);
     }
@@ -64,34 +68,39 @@ class ImmotokAuthController extends Controller
             ], 401);
         }
 
-        session()->put('immotok_client_id', $client->id);
+        $token = Str::random(60);
+        $client->api_token = $token;
+        $client->save();
 
         return response()->json([
             'success' => true,
             'client' => $client,
+            'token' => $token,
             'message' => 'Connexion réussie.'
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        session()->forget('immotok_client_id');
+        $client = $request->attributes->get('immotok_client');
+        if ($client) {
+            $client->api_token = null;
+            $client->save();
+        }
         return response()->json([
             'success' => true,
             'message' => 'Déconnexion réussie.'
         ]);
     }
 
-    public function me()
+    public function me(Request $request)
     {
-        if (session()->has('immotok_client_id')) {
-            $client = ImmotokClient::find(session()->get('immotok_client_id'));
-            if ($client) {
-                return response()->json([
-                    'success' => true,
-                    'client' => $client
-                ]);
-            }
+        $client = $request->attributes->get('immotok_client');
+        if ($client) {
+            return response()->json([
+                'success' => true,
+                'client' => $client
+            ]);
         }
 
         return response()->json([

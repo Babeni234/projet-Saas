@@ -16,17 +16,17 @@ use Illuminate\Support\Facades\Storage;
 
 class ImmotokFeedController extends Controller
 {
-    protected function getClient()
+    protected function getClient(Request $request)
     {
-        if (session()->has('immotok_client_id')) {
-            return ImmotokClient::find(session()->get('immotok_client_id'));
+        if ($request->attributes->has('immotok_client')) {
+            return $request->attributes->get('immotok_client');
         }
         return null;
     }
 
     public function getFeed(Request $request)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         $query = Illustration::with(['companyProfile', 'agency'])->orderBy('id', 'desc');
 
         if ($request->filled('tab') && $request->tab === 'subs') {
@@ -214,7 +214,7 @@ class ImmotokFeedController extends Controller
 
     public function like($id)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour aimer.'], 401);
         }
@@ -246,7 +246,7 @@ class ImmotokFeedController extends Controller
 
     public function favorite($id)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour sauvegarder.'], 401);
         }
@@ -294,7 +294,7 @@ class ImmotokFeedController extends Controller
 
     public function comment(Request $request, $id)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour commenter.'], 401);
         }
@@ -397,7 +397,7 @@ class ImmotokFeedController extends Controller
 
     public function subscribe($id)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour vous abonner.'], 401);
         }
@@ -426,7 +426,7 @@ class ImmotokFeedController extends Controller
 
     public function getCompanyProfile($id)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         $company = \App\Models\CompanyProfile::findOrFail($id);
 
         $logoUrl = $company->logo_path ? asset('storage/' . $company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
@@ -470,7 +470,7 @@ class ImmotokFeedController extends Controller
     }
     public function getMyProfile()
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Non connecté.'], 401);
         }
@@ -548,7 +548,7 @@ class ImmotokFeedController extends Controller
 
     public function getNotifications()
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Non connecté.'], 401);
         }
@@ -579,7 +579,7 @@ class ImmotokFeedController extends Controller
 
     public function getUnreadCount()
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['count' => 0, 'latest' => null]);
         }
@@ -601,7 +601,7 @@ class ImmotokFeedController extends Controller
 
     public function markNotificationsRead(Request $request)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false], 401);
         }
@@ -619,3 +619,4 @@ class ImmotokFeedController extends Controller
         return response()->json(['success' => true]);
     }
 }
+

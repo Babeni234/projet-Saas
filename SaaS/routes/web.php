@@ -554,25 +554,7 @@ Route::get('/immotok', function () {
     return Inertia::render('immoTok/Index');
 })->name('immotok.feed');
 
-Route::get('/api/immotok/feed', [\App\Http\Controllers\ImmotokFeedController::class, 'getFeed']);
-Route::post('/api/immotok/auth/register', [\App\Http\Controllers\ImmotokAuthController::class, 'register']);
-Route::post('/api/immotok/auth/login', [\App\Http\Controllers\ImmotokAuthController::class, 'login']);
-Route::post('/api/immotok/auth/logout', [\App\Http\Controllers\ImmotokAuthController::class, 'logout']);
-Route::get('/api/immotok/auth/me', [\App\Http\Controllers\ImmotokAuthController::class, 'me']);
-Route::post('/api/immotok/illustrations/{id}/like', [\App\Http\Controllers\ImmotokFeedController::class, 'like']);
-Route::post('/api/immotok/illustrations/{id}/favorite', [\App\Http\Controllers\ImmotokFeedController::class, 'favorite']);
-Route::get('/api/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'getComments']);
-Route::post('/api/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'comment']);
-Route::post('/api/immotok/reserve-visit', [\App\Http\Controllers\ImmotokFeedController::class, 'reserveVisit']);
-Route::get('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'getMessages']);
-Route::post('/api/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'sendMessage']);
-Route::post('/api/immotok/companies/{id}/subscribe', [\App\Http\Controllers\ImmotokFeedController::class, 'subscribe']);
-Route::get('/api/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
-Route::get('/api/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
-Route::get('/api/immotok/me/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getMyProfile']);
-Route::get('/api/immotok/notifications', [\App\Http\Controllers\ImmotokFeedController::class, 'getNotifications']);
-Route::get('/api/immotok/notifications/unread-count', [\App\Http\Controllers\ImmotokFeedController::class, 'getUnreadCount']);
-Route::post('/api/immotok/notifications/mark-read', [\App\Http\Controllers\ImmotokFeedController::class, 'markNotificationsRead']);
+
 
 
 require __DIR__.'/auth.php';

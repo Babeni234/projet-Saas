@@ -42,3 +42,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/locataire/wallet/transfer', [LocataireController::class, 'transferFunds']);
     Route::post('/locataire/contract-fee/pay', [LocataireController::class, 'payContractFee']);
 });
+
+// Immotok mobile API (public)
+Route::get('/immotok/feed', [\App\Http\Controllers\ImmotokFeedController::class, 'getFeed']);
+Route::post('/immotok/auth/register', [\App\Http\Controllers\ImmotokAuthController::class, 'register']);
+Route::post('/immotok/auth/login', [\App\Http\Controllers\ImmotokAuthController::class, 'login']);
+Route::get('/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
+Route::get('/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
+
+// Immotok mobile API (authenticated)
+Route::middleware('immotok.token')->group(function () {
+    Route::post('/immotok/auth/logout', [\App\Http\Controllers\ImmotokAuthController::class, 'logout']);
+    Route::get('/immotok/auth/me', [\App\Http\Controllers\ImmotokAuthController::class, 'me']);
+    Route::post('/immotok/illustrations/{id}/like', [\App\Http\Controllers\ImmotokFeedController::class, 'like']);
+    Route::post('/immotok/illustrations/{id}/favorite', [\App\Http\Controllers\ImmotokFeedController::class, 'favorite']);
+    Route::get('/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'getComments']);
+    Route::post('/immotok/illustrations/{id}/comments', [\App\Http\Controllers\ImmotokFeedController::class, 'comment']);
+    Route::post('/immotok/reserve-visit', [\App\Http\Controllers\ImmotokFeedController::class, 'reserveVisit']);
+    Route::get('/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'getMessages']);
+    Route::post('/immotok/chat/{company_id}', [\App\Http\Controllers\ImmotokChatController::class, 'sendMessage']);
+    Route::post('/immotok/companies/{id}/subscribe', [\App\Http\Controllers\ImmotokFeedController::class, 'subscribe']);
+    Route::get('/immotok/me/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getMyProfile']);
+    Route::get('/immotok/notifications', [\App\Http\Controllers\ImmotokFeedController::class, 'getNotifications']);
+    Route::get('/immotok/notifications/unread-count', [\App\Http\Controllers\ImmotokFeedController::class, 'getUnreadCount']);
+    Route::post('/immotok/notifications/mark-read', [\App\Http\Controllers\ImmotokFeedController::class, 'markNotificationsRead']);
+});

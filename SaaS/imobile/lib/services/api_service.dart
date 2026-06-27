@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import '../config/api_config.dart';
 import '../models/illustration.dart';
 import '../models/comment.dart';
@@ -10,6 +12,7 @@ class ApiService {
   late final Dio _dio;
 
   ApiService() {
+    final cookieJar = CookieJar();
     _dio = Dio(BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 15),
@@ -19,6 +22,8 @@ class ApiService {
         'Content-Type': 'application/json',
       },
     ));
+    _dio.interceptors.add(CookieManager(cookieJar));
+    _dio.options.extra['withCredentials'] = true;
   }
 
   void setAuthToken(String? token) {
