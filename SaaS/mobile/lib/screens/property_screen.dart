@@ -19,7 +19,7 @@ class _PropertyScreenState extends State<PropertyScreen> {
     final fees = api.contractFees;
     if (fees.isNotEmpty) {
       final fee = fees[0];
-      await api.payContractFee(fee['id'] as int? ?? 0, fee['amount'] as num? ?? 50000);
+      await api.payContractFee(fee['id'] as int? ?? 0, (fee['amount'] as num? ?? 50000).toDouble());
     }
     setState(() => _renewalLoading = false);
     if (mounted) {
@@ -395,7 +395,7 @@ class _PropertyScreenState extends State<PropertyScreen> {
               if (!paid)
                 GestureDetector(
                   onTap: () async {
-                    await api.payContractFee(fee['id'] as int? ?? 0, fee['amount'] as num? ?? 0);
+                    await api.payContractFee(fee['id'] as int? ?? 0, (fee['amount'] as num? ?? 0).toDouble());
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -79,8 +79,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { RouterView, RouterLink } from 'vue-router';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router';
 import { usePage } from '@inertiajs/vue3';
 import EnterpriseSidebar from './partials/EnterpriseSidebar.vue';
 import EnterpriseHeader from './partials/EnterpriseHeader.vue';
@@ -93,6 +93,28 @@ provideEnterpriseProps();
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+const route = useRoute();
+const router = useRouter();
+
+const checkRouteAccess = () => {
+    const roleSlug = user.value?.role?.slug;
+    if (!roleSlug) return;
+
+    if (roleSlug === 'comptable') {
+        if (route.name === 'dashboard.master' || String(route.name || '').startsWith('immobilier.')) {
+            // Keep reports if they can access reports
+            if (route.name !== 'dashboard.reports') {
+                router.replace({ name: 'dashboard.accounting' });
+            }
+        }
+    } else if (roleSlug === 'gestionnaire' || roleSlug === 'gestionnaire_immo') {
+        if (route.name === 'dashboard.master' || String(route.name || '').startsWith('accounting.') || route.name === 'dashboard.accounting' || route.name === 'dashboard.reports') {
+            router.replace({ name: 'immobilier.batiments' });
+        }
+    }
+};
+
+watch(() => route.name, checkRouteAccess, { immediate: true });
 
 const trialCountdownText = ref('');
 let timer = null;

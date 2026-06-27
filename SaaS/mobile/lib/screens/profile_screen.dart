@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(width: 12),
                           GestureDetector(
-                            onTap: () => _showChangePinModal(apiService),
+                            onTap: () => setState(() => _showPinChange = true),
                             child: _buildHeaderAction(Icons.lock_rounded, 'PIN'),
                           ),
                         ],
@@ -311,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => GlassContainer(
         padding: const EdgeInsets.all(24),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: 32,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

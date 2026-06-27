@@ -26,8 +26,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { RouterView } from 'vue-router';
+import { ref, computed, watch } from 'vue';
+import { RouterView, useRoute, useRouter } from 'vue-router';
+import { usePage } from '@inertiajs/vue3';
 import AgencySidebar from './partials/AgencySidebar.vue';
 import AgencyHeader from './partials/AgencyHeader.vue';
 import EnterpriseAssistant from '../../../entreprise/Dashboard/layouts/partials/EnterpriseAssistant.vue';
@@ -36,6 +37,30 @@ import { provideEnterpriseProps } from '../../../entreprise/Dashboard/composable
 
 const { sidebarCollapsed } = provideEnterpriseLayout();
 provideEnterpriseProps();
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+const route = useRoute();
+const router = useRouter();
+
+const checkRouteAccess = () => {
+    const roleSlug = user.value?.role?.slug;
+    if (!roleSlug) return;
+
+    if (roleSlug === 'comptable') {
+        if (route.name === 'agence.master' || String(route.name || '').startsWith('agence.immobilier.')) {
+            if (route.name !== 'agence.reports') {
+                router.replace({ name: 'agence.accounting' });
+            }
+        }
+    } else if (roleSlug === 'gestionnaire' || roleSlug === 'gestionnaire_immo') {
+        if (route.name === 'agence.master' || String(route.name || '').startsWith('agence.accounting') || route.name === 'agence.reports') {
+            router.replace({ name: 'agence.immobilier.batiments' });
+        }
+    }
+};
+
+watch(() => route.name, checkRouteAccess, { immediate: true });
 
 const refreshing = ref(false);
 

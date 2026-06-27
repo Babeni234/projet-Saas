@@ -37,7 +37,7 @@
 
         <!-- Nav -->
         <nav class="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin">
-            <div v-for="section in navigation" :key="section.id" class="mb-6">
+            <div v-for="section in dynamicNavigation" :key="section.id" class="mb-6">
                 <p
                     v-show="!sidebarCollapsed"
                     class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700"
@@ -188,6 +188,61 @@ const groupActive = (item) => {
     if (!item.children) return false;
     return item.children.some((c) => c.name === route.name);
 };
+
+const dynamicNavigation = computed(() => {
+    const roleSlug = page.props.auth?.user?.role?.slug;
+    const userBlockedModules = page.props.auth?.user?.blocked_modules || [];
+
+    return navigation.map(section => {
+        const filteredItems = section.items.map(item => {
+            let isBlocked = false;
+            if (item.id === 'accounting' && userBlockedModules.includes('accounting')) {
+                isBlocked = true;
+            } else if (item.name === 'agence.maintenance' && userBlockedModules.includes('maintenance')) {
+                isBlocked = true;
+            } else if (item.name === 'agence.reports' && userBlockedModules.includes('reports')) {
+                isBlocked = true;
+            }
+
+            return {
+                ...item,
+                blocked: isBlocked
+            };
+        }).filter(item => {
+            // Apply role-based filtering
+            if (roleSlug === 'comptable') {
+                // Comptable ONLY sees accounting module and reports
+                return item.id === 'accounting' || item.name === 'agence.reports';
+            }
+            if (roleSlug === 'gestionnaire' || roleSlug === 'gestionnaire_immo') {
+                // Gestionnaire does NOT see accounting, reports, maintenance, or dashboard index
+                if (item.id === 'accounting' || 
+                    item.name === 'agence.reports' || 
+                    item.name === 'agence.maintenance' ||
+                    item.name === 'agence.master' ||
+                    item.name === 'agence.employees' ||
+                    item.name === 'agence.permissions') {
+                    return false;
+                }
+                
+                // If it has children, remove vue d'ensemble child
+                if (item.children) {
+                    item.children = item.children.filter(child => {
+                        return child.name !== 'agence.immobilier.index';
+                    });
+                }
+            }
+            return true;
+        });
+
+        return {
+            ...section,
+            items: filteredItems
+        };
+    }).filter(section => {
+        return section.items.length > 0;
+    });
+});
 
 watch(
     () => route.name,

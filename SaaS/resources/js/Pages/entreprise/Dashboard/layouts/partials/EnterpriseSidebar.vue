@@ -247,50 +247,82 @@ const userBlockedModules = computed(() => page.props.auth?.user?.blocked_modules
 
 // Compute dynamic navigation list with blocked flags added dynamically based on user subscription
 const dynamicNavigation = computed(() => {
+    const roleSlug = page.props.auth?.user?.role?.slug;
+
     return navigation.map(section => {
-        return {
-            ...section,
-            items: section.items.map(item => {
-                let isBlocked = false;
-                let blockedName = '';
+        const filteredItems = section.items.map(item => {
+            let isBlocked = false;
+            let blockedName = '';
 
-                if (item.id === 'hotel' && userBlockedModules.value.includes('hotel')) {
-                    isBlocked = true;
-                    blockedName = 'Hôtellerie';
-                } else if (item.id === 'accounting' && userBlockedModules.value.includes('accounting')) {
-                    isBlocked = true;
-                    blockedName = 'Comptabilité';
-                } else if (item.name === 'dashboard.maintenance' && userBlockedModules.value.includes('maintenance')) {
-                    isBlocked = true;
-                    blockedName = 'Maintenance';
-                } else if (item.name === 'dashboard.reports' && userBlockedModules.value.includes('reports')) {
-                    isBlocked = true;
-                    blockedName = 'Rapports';
+            if (item.id === 'hotel' && userBlockedModules.value.includes('hotel')) {
+                isBlocked = true;
+                blockedName = 'Hôtellerie';
+            } else if (item.id === 'accounting' && userBlockedModules.value.includes('accounting')) {
+                isBlocked = true;
+                blockedName = 'Comptabilité';
+            } else if (item.name === 'dashboard.maintenance' && userBlockedModules.value.includes('maintenance')) {
+                isBlocked = true;
+                blockedName = 'Maintenance';
+            } else if (item.name === 'dashboard.reports' && userBlockedModules.value.includes('reports')) {
+                isBlocked = true;
+                blockedName = 'Rapports';
+            }
+
+            // Sub-items
+            let children = item.children;
+            if (children) {
+                children = children.map(child => {
+                    let childBlocked = false;
+                    if (child.name === 'dashboard.agencies' && userBlockedModules.value.includes('agencies')) {
+                        childBlocked = true;
+                    }
+                    return {
+                        ...child,
+                        blocked: childBlocked
+                    };
+                });
+            }
+
+            return {
+                ...item,
+                blocked: isBlocked || (item.id === 'hotel' && !item.children), // Keep static hotel block fallback
+                blockedName: blockedName || (item.id === 'hotel' ? 'Hôtellerie' : ''),
+                children: children
+            };
+        }).filter(item => {
+            // Apply role-based filtering
+            if (roleSlug === 'comptable') {
+                // Comptable ONLY sees accounting module and reports
+                return item.id === 'accounting' || item.name === 'dashboard.reports';
+            }
+            if (roleSlug === 'gestionnaire' || roleSlug === 'gestionnaire_immo') {
+                // Gestionnaire does NOT see accounting, reports, maintenance, or main dashboard index/settings
+                if (item.id === 'accounting' || 
+                    item.name === 'dashboard.reports' || 
+                    item.name === 'dashboard.maintenance' ||
+                    item.name === 'dashboard.master' ||
+                    item.name === 'dashboard.regles' ||
+                    item.name === 'dashboard.company.upgrade' ||
+                    item.name === 'dashboard.roles') {
+                    return false;
                 }
-
-                // Sub-items
-                let children = item.children;
-                if (children) {
-                    children = children.map(child => {
-                        let childBlocked = false;
-                        if (child.name === 'dashboard.agencies' && userBlockedModules.value.includes('agencies')) {
-                            childBlocked = true;
-                        }
-                        return {
-                            ...child,
-                            blocked: childBlocked
-                        };
+                
+                // If it has children, remove vue d'ensemble child & agencies
+                if (item.children) {
+                    item.children = item.children.filter(child => {
+                        return child.name !== 'immobilier.index' && child.name !== 'dashboard.agencies';
                     });
                 }
+            }
+            return true;
+        });
 
-                return {
-                    ...item,
-                    blocked: isBlocked || (item.id === 'hotel' && !item.children), // Keep static hotel block fallback
-                    blockedName: blockedName || (item.id === 'hotel' ? 'Hôtellerie' : ''),
-                    children: children
-                };
-            })
+        return {
+            ...section,
+            items: filteredItems
         };
+    }).filter(section => {
+        return section.items.length > 0;
     });
 });
 

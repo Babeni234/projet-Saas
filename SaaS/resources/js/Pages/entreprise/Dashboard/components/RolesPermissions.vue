@@ -1846,6 +1846,33 @@ const finePermissions = [
         ]
     },
     {
+        category: 'Renouvellements',
+        items: [
+            { id: 'renouvellements.view', label: 'Voir les renouvellements', desc: 'Permet de consulter les demandes de renouvellement de bail' },
+            { id: 'renouvellements.create', label: 'Créer un renouvellement', desc: 'Permet d\'enregistrer un renouvellement de contrat' },
+            { id: 'renouvellements.edit', label: 'Modifier un renouvellement', desc: 'Permet d\'éditer les conditions d\'un renouvellement' },
+            { id: 'renouvellements.delete', label: 'Supprimer un renouvellement', desc: 'Permet d\'annuler ou supprimer un renouvellement' },
+        ]
+    },
+    {
+        category: 'Engagements',
+        items: [
+            { id: 'engagements.view', label: 'Voir les engagements', desc: 'Permet de consulter le registre des engagements' },
+            { id: 'engagements.create', label: 'Créer un engagement', desc: 'Permet d\'enregistrer un nouvel engagement' },
+            { id: 'engagements.edit', label: 'Modifier un engagement', desc: 'Permet de modifier les détails d\'un engagement' },
+            { id: 'engagements.delete', label: 'Supprimer un engagement', desc: 'Permet d\'effacer un engagement' },
+        ]
+    },
+    {
+        category: 'États des lieux',
+        items: [
+            { id: 'etats_lieux.view', label: 'Voir les états des lieux', desc: 'Permet de lister et lire les rapports d\'état des lieux' },
+            { id: 'etats_lieux.create', label: 'Créer un état des lieux', desc: 'Permet de générer un état des lieux d\'entrée ou de sortie' },
+            { id: 'etats_lieux.edit', label: 'Modifier un état des lieux', desc: 'Permet de modifier un rapport d\'état des lieux' },
+            { id: 'etats_lieux.delete', label: 'Supprimer un état des lieux', desc: 'Permet de supprimer un état des lieux' },
+        ]
+    },
+    {
         category: 'Rapports & Statistiques',
         items: [
             { id: 'reports.view', label: 'Accéder aux statistiques', desc: 'Donne accès aux rapports d\'analyse, graphiques et finances globales' },
@@ -1876,7 +1903,15 @@ const openPermissionsModal = (user) => {
                 // Check if role has wildcard '*' or explicitly lists the permission
                 const rolePerms = user.role.permissions || [];
                 active = rolePerms.includes('*') || rolePerms.includes(item.id) || 
-                         (rolePerms.includes('manage_properties') && (item.id.startsWith('batiments') || item.id.startsWith('logements') || item.id.startsWith('contrats') || item.id.startsWith('locataires'))) ||
+                         (rolePerms.includes('manage_properties') && (
+                             item.id.startsWith('batiments') || 
+                             item.id.startsWith('logements') || 
+                             item.id.startsWith('contrats') || 
+                             item.id.startsWith('locataires') ||
+                             item.id.startsWith('renouvellements') ||
+                             item.id.startsWith('engagements') ||
+                             item.id.startsWith('etats_lieux')
+                         )) ||
                          (rolePerms.includes('manage_accounting') && (item.id.startsWith('factures') || item.id.startsWith('paiements') || item.id.startsWith('depenses') || item.id.startsWith('entrees'))) ||
                          (rolePerms.includes('manage_maintenance') && item.id.startsWith('maintenance')) ||
                          (rolePerms.includes('manage_users') && item.id.startsWith('employees'));
