@@ -187,16 +187,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {},
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppColors.primary,
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: () => _showContactModal(context, 'mot de passe'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.primary,
+                                    ),
+                                    child: const Text('Mot de passe oublié ?', style: TextStyle(fontWeight: FontWeight.w600)),
+                                  ),
                                 ),
-                                child: const Text('Mot de passe oublié ?', style: TextStyle(fontWeight: FontWeight.w600)),
-                              ),
-                            ),
                             const SizedBox(height: 24),
                             
                             SizedBox(
@@ -239,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         children: [
                           Text('Nouveau locataire ? ', style: Theme.of(context).textTheme.bodyMedium),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () => _showContactModal(context, 'compte'),
                             child: const Text(
                               'Créer un compte',
                               style: TextStyle(
@@ -257,6 +257,121 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showContactModal(BuildContext context, String type) {
+    final isPassword = type == 'mot de passe';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 70, height: 70,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.actionGradient,
+                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+              ),
+              child: Icon(isPassword ? Icons.lock_reset_rounded : Icons.person_add_rounded, color: Colors.white, size: 32),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              isPassword ? 'Réinitialisation mot de passe' : 'Création de compte',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, letterSpacing: -0.5),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.contact_support_rounded, color: AppColors.primary, size: 24),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isPassword
+                              ? 'Pour réinitialiser votre mot de passe, veuillez contacter votre agence de gestion.'
+                              : 'Pour créer un compte, veuillez contacter votre agence de gestion.',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.email_rounded, color: AppColors.primary, size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('contact@habitatum.fr', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 14)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.phone_rounded, color: AppColors.success, size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('+33 1 23 45 67 89', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 14)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+                child: const Text('Fermer', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
