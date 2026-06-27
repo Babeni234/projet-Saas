@@ -224,26 +224,7 @@
             <!-- Bottom & Side Overlays -->
             <div class="absolute inset-x-0 bottom-0 px-3 sm:px-4 pb-3 sm:pb-4 pt-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col gap-2 sm:gap-3 z-10 pointer-events-none">
             
-            <!-- Timeline (Progress Bar) -->
-            <div class="w-full flex items-center gap-2 sm:gap-3 pointer-events-auto" v-if="currentItem.media_type === 'video'">
-              <span class="text-[10px] sm:text-xs font-mono text-gray-300">{{ formatTime(currentTime) }}</span>
-              <div 
-                class="flex-1 h-1 sm:h-1.5 rounded-full bg-white/20 relative cursor-pointer group"
-                @mousedown="startDragProgress"
-                @touchstart="startDragProgress"
-                ref="progressBarRef"
-              >
-                <div 
-                  class="h-full rounded-full bg-red-500 absolute top-0 left-0" 
-                  :style="{ width: progressPercentage + '%' }"
-                ></div>
-                <div 
-                  class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white absolute top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  :style="{ left: progressPercentage + '%' }"
-                ></div>
-              </div>
-              <span class="text-[10px] sm:text-xs font-mono text-gray-300">{{ formatTime(duration) }}</span>
-            </div>
+
 
             <!-- Client/Owner Info and Caption Overlay -->
             <div class="flex items-end justify-between gap-2 sm:gap-4">
@@ -358,6 +339,24 @@
             </div>
             </div>
 
+            </div>
+
+            <!-- TikTok-style thin timeline at the bottom edge of the player area -->
+            <div 
+              v-if="currentItem.media_type === 'video'"
+              class="absolute bottom-0 left-0 w-full h-1 sm:h-1.5 bg-white/10 z-20 cursor-pointer pointer-events-auto group"
+              @mousedown="startDragProgress"
+              @touchstart="startDragProgress"
+              ref="progressBarRef"
+            >
+              <div 
+                class="h-full bg-red-500 transition-all duration-75"
+                :style="{ width: progressPercentage + '%' }"
+              ></div>
+              <div 
+                class="w-2.5 h-2.5 rounded-full bg-white absolute top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                :style="{ left: progressPercentage + '%' }"
+              ></div>
             </div>
           </div>
         </Transition>
@@ -1025,6 +1024,13 @@
             >
               <i class="fas fa-bookmark"></i> Favoris
             </button>
+            <button 
+              @click="myProfileTab = 'likes'" 
+              class="flex-1 py-3 text-sm font-bold border-b-2 transition flex items-center justify-center gap-2"
+              :class="myProfileTab === 'likes' ? 'border-red-500 text-white' : 'border-transparent text-gray-400'"
+            >
+              <i class="fas fa-heart"></i> J'aime
+            </button>
           </div>
 
           <!-- Loading -->
@@ -1086,6 +1092,34 @@
                     <span class="text-[8px] font-bold text-gray-300 truncate">{{ fav.company_name }}</span>
                   </div>
                   <div class="flex items-center gap-1 text-[9px] text-gray-300"><i class="fas fa-heart text-red-500"></i> {{ fav.likes_count }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Likes Tab -->
+          <div v-else-if="myProfileTab === 'likes'" class="px-4 py-4">
+            <div v-if="myProfileData.likes?.length === 0" class="py-16 flex flex-col items-center justify-center text-center text-gray-500 gap-3">
+              <i class="fas fa-heart text-4xl"></i>
+              <p class="text-sm">Vous n'avez aimé aucun bien pour le moment.</p>
+            </div>
+            <div v-else class="grid grid-cols-3 gap-1.5">
+              <div 
+                v-for="like in myProfileData.likes" 
+                :key="like.id"
+                @click="playFavoriteItem(like.id)"
+                class="aspect-[3/4] bg-black relative rounded-md overflow-hidden cursor-pointer group hover:opacity-85 transition"
+              >
+                <img v-if="like.media_type === 'image'" :src="like.media_url" class="w-full h-full object-contain" />
+                <video v-else :src="like.media_url" class="w-full h-full object-contain" muted></video>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div v-if="like.media_type === 'video'" class="absolute top-1.5 right-1.5 text-white text-[9px] bg-black/40 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fas fa-play"></i></div>
+                <div class="absolute bottom-1.5 left-1.5 right-1.5">
+                  <div class="flex items-center gap-1 mb-0.5">
+                    <img :src="like.company_logo" class="w-3.5 h-3.5 rounded-full object-cover" />
+                    <span class="text-[8px] font-bold text-gray-300 truncate">{{ like.company_name }}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-[9px] text-gray-300"><i class="fas fa-heart text-red-500"></i> {{ like.likes_count }}</div>
                 </div>
               </div>
             </div>
@@ -1358,13 +1392,27 @@ const fetchFeed = async () => {
 
 // Check client auth state
 const checkAuth = async () => {
+  const token = localStorage.getItem('immotok_token');
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete axios.defaults.headers.common['Authorization'];
+    client.value = null;
+    return;
+  }
   try {
     const res = await axios.get('/api/immotok/auth/me');
     if (res.data.success) {
       client.value = res.data.client;
+    } else {
+      client.value = null;
+      localStorage.removeItem('immotok_token');
+      delete axios.defaults.headers.common['Authorization'];
     }
   } catch (e) {
     client.value = null;
+    localStorage.removeItem('immotok_token');
+    delete axios.defaults.headers.common['Authorization'];
   }
 };
 
@@ -1816,7 +1864,12 @@ const submitLogin = async () => {
     const res = await axios.post('/api/immotok/auth/login', authForm.value);
     if (res.data.success) {
       client.value = res.data.client;
+      if (res.data.token) {
+        localStorage.setItem('immotok_token', res.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      }
       activeSheet.value = null;
+      fetchFeed(); // Refresh the feed with the user's states!
       if (pendingAction.value) {
         const fn = pendingAction.value;
         pendingAction.value = null;
@@ -1833,7 +1886,12 @@ const submitRegister = async () => {
     const res = await axios.post('/api/immotok/auth/register', registerForm.value);
     if (res.data.success) {
       client.value = res.data.client;
+      if (res.data.token) {
+        localStorage.setItem('immotok_token', res.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      }
       activeSheet.value = null;
+      fetchFeed(); // Refresh the feed with the user's states!
       if (pendingAction.value) {
         const fn = pendingAction.value;
         pendingAction.value = null;
@@ -2144,12 +2202,15 @@ const markAllNotifsRead = async () => {
 const handleLogout = async () => {
   try {
     await axios.post('/api/immotok/auth/logout');
+  } catch (e) {
+    console.error(e);
+  } finally {
     client.value = null;
+    localStorage.removeItem('immotok_token');
+    delete axios.defaults.headers.common['Authorization'];
     activeSheet.value = null;
     pendingAction.value = null;
     fetchFeed();
-  } catch (e) {
-    console.error(e);
   }
 };
 
@@ -2243,10 +2304,10 @@ const pollNotifications = () => {
 };
 
 // LifeCycle hooks
-onMounted(() => {
+onMounted(async () => {
   setupPageMeta();
   runSplash();
-  checkAuth();
+  await checkAuth();
   fetchCategories();
   fetchFeed();
   pollNotifications();

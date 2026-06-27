@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../config/theme.dart';
 import '../providers/app_state.dart';
-import '../models/illustration.dart';
+
 import 'video_player_widget.dart';
 import 'action_sidebar.dart';
 import 'overlay_info.dart';
@@ -94,11 +94,7 @@ class _FeedPlayerState extends State<FeedPlayer> {
     setState(() => _isPlaying = !_isPlaying);
   }
 
-  String _formatTime(Duration d) {
-    final minutes = d.inMinutes;
-    final seconds = d.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -218,44 +214,7 @@ class _FeedPlayerState extends State<FeedPlayer> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Video progress bar
-                            if (item.mediaType == 'video' && isCurrentPage)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  children: [
-                                    Text(_formatTime(_currentTime),
-                                      style: const TextStyle(fontSize: 10, color: ImmoTokTheme.gray300, fontFamily: 'monospace'),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: SliderTheme(
-                                        data: SliderThemeData(
-                                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                                          trackHeight: 3,
-                                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                                          activeTrackColor: ImmoTokTheme.redPrimary,
-                                          inactiveTrackColor: Colors.white.withOpacity(0.2),
-                                          thumbColor: Colors.white,
-                                        ),
-                                        child: Slider(
-                                          value: _duration.inMilliseconds > 0
-                                              ? _currentTime.inMilliseconds / _duration.inMilliseconds
-                                              : 0,
-                                          onChanged: (val) {
-                                            final seekPos = Duration(milliseconds: (val * _duration.inMilliseconds).toInt());
-                                            _videoKeys[index]?.currentState?.seekTo(seekPos);
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(_formatTime(_duration),
-                                      style: const TextStyle(fontSize: 10, color: ImmoTokTheme.gray300, fontFamily: 'monospace'),
-                                    ),
-                                  ],
-                                ),
-                              ),
+
 
                             // Info + Actions row
                             Row(
@@ -302,6 +261,46 @@ class _FeedPlayerState extends State<FeedPlayer> {
                         ),
                       ),
                     ),
+                    // TikTok style progress bar at the very bottom edge of the player area
+                    if (item.mediaType == 'video' && isCurrentPage && _duration.inMilliseconds > 0)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (details) {
+                            final width = MediaQuery.of(context).size.width;
+                            final percent = (details.localPosition.dx / width).clamp(0.0, 1.0);
+                            final seekPos = Duration(milliseconds: (percent * _duration.inMilliseconds).toInt());
+                            _videoKeys[index]?.currentState?.seekTo(seekPos);
+                          },
+                          onHorizontalDragUpdate: (details) {
+                            final width = MediaQuery.of(context).size.width;
+                            final percent = (details.localPosition.dx / width).clamp(0.0, 1.0);
+                            final seekPos = Duration(milliseconds: (percent * _duration.inMilliseconds).toInt());
+                            _videoKeys[index]?.currentState?.seekTo(seekPos);
+                          },
+                          child: Container(
+                            height: 10,
+                            color: Colors.transparent,
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                height: 3,
+                                color: Colors.white.withOpacity(0.15),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                    widthFactor: (_currentTime.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0),
+                                    child: Container(color: ImmoTokTheme.redPrimary),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

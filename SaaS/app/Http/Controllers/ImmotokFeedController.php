@@ -212,7 +212,7 @@ class ImmotokFeedController extends Controller
         return response()->json(array_values($illustrations->toArray()));
     }
 
-    public function like($id)
+    public function like(Request $request, $id)
     {
         $client = $this->getClient($request);
         if (!$client) {
@@ -244,7 +244,7 @@ class ImmotokFeedController extends Controller
         ]);
     }
 
-    public function favorite($id)
+    public function favorite(Request $request, $id)
     {
         $client = $this->getClient($request);
         if (!$client) {
@@ -395,7 +395,7 @@ class ImmotokFeedController extends Controller
         return response()->json($categories);
     }
 
-    public function subscribe($id)
+    public function subscribe(Request $request, $id)
     {
         $client = $this->getClient($request);
         if (!$client) {
@@ -424,7 +424,7 @@ class ImmotokFeedController extends Controller
         ]);
     }
 
-    public function getCompanyProfile($id)
+    public function getCompanyProfile(Request $request, $id)
     {
         $client = $this->getClient($request);
         $company = \App\Models\CompanyProfile::findOrFail($id);
@@ -468,7 +468,7 @@ class ImmotokFeedController extends Controller
             'illustrations' => $illustrations,
         ]);
     }
-    public function getMyProfile()
+    public function getMyProfile(Request $request)
     {
         $client = $this->getClient($request);
         if (!$client) {
@@ -527,6 +527,37 @@ class ImmotokFeedController extends Controller
                 ];
             })->filter()->values();
 
+        // Get liked illustrations
+        $likes = ImmotokLike::where('immotok_client_id', $client->id)
+            ->with(['illustration.companyProfile'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($like) {
+                $item = $like->illustration;
+                if (!$item) return null;
+                $company = $item->companyProfile;
+                $mediaUrl = $item->file_path;
+                if (!str_starts_with($mediaUrl, 'http')) {
+                    $mediaUrl = asset('storage/' . $mediaUrl);
+                }
+                $logoUrl = null;
+                if ($company) {
+                    $logoUrl = $company->logo_path
+                        ? asset('storage/' . $company->logo_path)
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+                }
+                return [
+                    'id' => $item->id,
+                    'media_url' => $mediaUrl,
+                    'media_type' => $item->media_type,
+                    'description' => $item->description ?? '',
+                    'company_name' => $company->legal_name ?? '',
+                    'company_logo' => $logoUrl,
+                    'likes_count' => ImmotokLike::where('illustration_id', $item->id)->count(),
+                    'liked_at' => $like->created_at ? \Carbon\Carbon::parse($like->created_at)->diffForHumans() : '',
+                ];
+            })->filter()->values();
+
         return response()->json([
             'success' => true,
             'client' => [
@@ -538,15 +569,16 @@ class ImmotokFeedController extends Controller
             ],
             'subscriptions' => $subscriptions,
             'favorites' => $favorites,
+            'likes' => $likes,
             'stats' => [
                 'subscriptions_count' => $subscriptions->count(),
                 'favorites_count' => $favorites->count(),
-                'likes_count' => ImmotokLike::where('immotok_client_id', $client->id)->count(),
+                'likes_count' => $likes->count(),
             ],
         ]);
     }
 
-    public function getNotifications()
+    public function getNotifications(Request $request)
     {
         $client = $this->getClient($request);
         if (!$client) {
@@ -577,7 +609,7 @@ class ImmotokFeedController extends Controller
         ]);
     }
 
-    public function getUnreadCount()
+    public function getUnreadCount(Request $request)
     {
         $client = $this->getClient($request);
         if (!$client) {

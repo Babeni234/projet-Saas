@@ -116,6 +116,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                 children: [
                   _TabBtn(label: 'Abonnements', icon: Icons.business, isActive: _tab == 'subs', onTap: () => setState(() => _tab = 'subs')),
                   _TabBtn(label: 'Favoris', icon: Icons.bookmark, isActive: _tab == 'favs', onTap: () => setState(() => _tab = 'favs')),
+                  _TabBtn(label: "J'aime", icon: Icons.favorite, isActive: _tab == 'likes', onTap: () => setState(() => _tab = 'likes')),
                 ],
               ),
               // Content
@@ -124,7 +125,9 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                     ? const Center(child: CircularProgressIndicator(color: ImmoTokTheme.redPrimary))
                     : _tab == 'subs'
                         ? _buildSubsList(subs, state)
-                        : _buildFavsList(favs, state),
+                        : _tab == 'favs'
+                            ? _buildFavsList(favs, state)
+                            : _buildLikesList(data['likes'] as List? ?? [], state),
               ),
             ],
           ),
@@ -267,6 +270,67 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                     const Icon(Icons.favorite, size: 10, color: ImmoTokTheme.redPrimary),
                     const SizedBox(width: 2),
                     Text('${fav['likes_count'] ?? 0}', style: const TextStyle(fontSize: 9, color: ImmoTokTheme.gray300)),
+                  ]),
+                ],
+              )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLikesList(List likes, AppState state) {
+    if (likes.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.favorite, size: 40, color: ImmoTokTheme.gray500),
+          const SizedBox(height: 8),
+          const Text("Vous n'avez aimé aucun bien.", style: TextStyle(color: ImmoTokTheme.gray500, fontSize: 13)),
+        ]),
+      );
+    }
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.75, crossAxisSpacing: 6, mainAxisSpacing: 6),
+      itemCount: likes.length,
+      itemBuilder: (context, idx) {
+        final item = likes[idx] as Map<String, dynamic>;
+        return GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+            state.playFavoriteItem(item['id'] ?? 0);
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: CachedNetworkImage(imageUrl: item['media_url'] ?? '', fit: BoxFit.cover,
+                  errorWidget: (_, __, ___) => Container(color: Colors.black)),
+              ),
+              Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)])))),
+              if (item['media_type'] == 'video')
+                Positioned(top: 4, right: 4, child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.4), borderRadius: BorderRadius.circular(4)),
+                  child: const Icon(Icons.play_arrow, size: 10, color: Colors.white))),
+              Positioned(bottom: 6, left: 6, right: 6, child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    ClipOval(child: CachedNetworkImage(imageUrl: item['company_logo'] ?? '', width: 14, height: 14, fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Container(width: 14, height: 14, color: ImmoTokTheme.gray600))),
+                    const SizedBox(width: 4),
+                    Expanded(child: Text(item['company_name'] ?? '', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: ImmoTokTheme.gray300), overflow: TextOverflow.ellipsis)),
+                  ]),
+                  const SizedBox(height: 2),
+                  Row(children: [
+                    const Icon(Icons.favorite, size: 10, color: ImmoTokTheme.redPrimary),
+                    const SizedBox(width: 2),
+                    Text('${item['likes_count'] ?? 0}', style: const TextStyle(fontSize: 9, color: ImmoTokTheme.gray300)),
                   ]),
                 ],
               )),

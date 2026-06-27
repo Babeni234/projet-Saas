@@ -365,6 +365,7 @@ class AppState extends ChangeNotifier {
   Future<String?> login(String email, String password) async {
     try {
       await auth.login(email, password);
+      await fetchFeed();
       notifyListeners();
       return null;
     } catch (e) {
@@ -375,6 +376,7 @@ class AppState extends ChangeNotifier {
   Future<String?> register(Map<String, dynamic> data) async {
     try {
       await auth.register(data);
+      await fetchFeed();
       notifyListeners();
       return null;
     } catch (e) {
