@@ -34,6 +34,17 @@ class ImmotokFeedController extends Controller
         return null;
     }
 
+    protected function getMediaUrl($path)
+    {
+        if (!$path) {
+            return null;
+        }
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+        return url('/api/immotok/media/' . $path);
+    }
+
     public function getFeed(Request $request)
     {
         $client = $this->getClient($request);
@@ -92,20 +103,14 @@ class ImmotokFeedController extends Controller
             // Build absolute URL for logo
             $logoUrl = null;
             if ($company) {
-                $logoUrl = $company->logo_path ? asset('storage/' . $company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+                $logoUrl = $company->logo_path ? $this->getMediaUrl($company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
             }
 
             // Build media URL
-            $mediaUrl = $item->file_path;
-            if (!str_starts_with($mediaUrl, 'http')) {
-                $mediaUrl = asset('storage/' . $mediaUrl);
-            }
+            $mediaUrl = $this->getMediaUrl($item->file_path);
 
             // Build audio URL
-            $audioUrl = $item->audio_path;
-            if ($audioUrl && !str_starts_with($audioUrl, 'http')) {
-                $audioUrl = asset('storage/' . $audioUrl);
-            }
+            $audioUrl = $this->getMediaUrl($item->audio_path);
 
             // Load property metadata
             $propertyDetails = [
@@ -385,7 +390,7 @@ class ImmotokFeedController extends Controller
         return [
             'id' => $comment->id,
             'name' => $name,
-            'avatar' => $avatar ? asset('storage/' . $avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=000&color=fff',
+            'avatar' => $avatar ? $this->getMediaUrl($avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=000&color=fff',
             'text' => $comment->text,
             'created_at' => $comment->created_at->diffForHumans(),
             'replies' => $comment->replies ? $comment->replies->map(function ($reply) {
@@ -439,7 +444,7 @@ class ImmotokFeedController extends Controller
         $client = $this->getClient($request);
         $company = \App\Models\CompanyProfile::findOrFail($id);
 
-        $logoUrl = $company->logo_path ? asset('storage/' . $company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
+        $logoUrl = $company->logo_path ? $this->getMediaUrl($company->logo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
 
         $subscribersCount = \App\Models\ImmotokSubscription::where('company_profile_id', $company->id)->count();
         $likesCount = \App\Models\ImmotokLike::where('company_profile_id', $company->id)->count();
@@ -449,10 +454,7 @@ class ImmotokFeedController extends Controller
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($item) {
-                $mediaUrl = $item->file_path;
-                if (!str_starts_with($mediaUrl, 'http')) {
-                    $mediaUrl = asset('storage/' . $mediaUrl);
-                }
+                $mediaUrl = $this->getMediaUrl($item->file_path);
                 return [
                     'id' => $item->id,
                     'media_url' => $mediaUrl,
@@ -494,7 +496,7 @@ class ImmotokFeedController extends Controller
                 $company = $sub->companyProfile;
                 if (!$company) return null;
                 $logoUrl = $company->logo_path
-                    ? asset('storage/' . $company->logo_path)
+                    ? $this->getMediaUrl($company->logo_path)
                     : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
                 return [
                     'id' => $company->id,
@@ -515,14 +517,11 @@ class ImmotokFeedController extends Controller
                 $item = $fav->illustration;
                 if (!$item) return null;
                 $company = $item->companyProfile;
-                $mediaUrl = $item->file_path;
-                if (!str_starts_with($mediaUrl, 'http')) {
-                    $mediaUrl = asset('storage/' . $mediaUrl);
-                }
+                $mediaUrl = $this->getMediaUrl($item->file_path);
                 $logoUrl = null;
                 if ($company) {
                     $logoUrl = $company->logo_path
-                        ? asset('storage/' . $company->logo_path)
+                        ? $this->getMediaUrl($company->logo_path)
                         : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
                 }
                 return [
@@ -546,14 +545,11 @@ class ImmotokFeedController extends Controller
                 $item = $like->illustration;
                 if (!$item) return null;
                 $company = $item->companyProfile;
-                $mediaUrl = $item->file_path;
-                if (!str_starts_with($mediaUrl, 'http')) {
-                    $mediaUrl = asset('storage/' . $mediaUrl);
-                }
+                $mediaUrl = $this->getMediaUrl($item->file_path);
                 $logoUrl = null;
                 if ($company) {
                     $logoUrl = $company->logo_path
-                        ? asset('storage/' . $company->logo_path)
+                        ? $this->getMediaUrl($company->logo_path)
                         : 'https://ui-avatars.com/api/?name=' . urlencode($company->legal_name) . '&background=random&color=fff';
                 }
                 return [

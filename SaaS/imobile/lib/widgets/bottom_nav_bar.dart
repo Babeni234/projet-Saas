@@ -27,8 +27,8 @@ class BottomNavBar extends StatelessWidget {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).padding.bottom + 4,
         top: 8,
-        left: 24,
-        right: 24,
+        left: 8,
+        right: 8,
       ),
       decoration: BoxDecoration(
         color: ImmoTokTheme.bgDark.withOpacity(0.95),
@@ -37,80 +37,94 @@ class BottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _NavItem(
-            icon: Icons.home,
-            label: 'Accueil',
-            isActive: activeTab != 'explore',
-            activeColor: ImmoTokTheme.redPrimary,
-            onTap: onHomeTap,
+          Expanded(
+            child: _NavItem(
+              icon: Icons.home,
+              label: 'Accueil',
+              isActive: activeTab != 'explore',
+              activeColor: ImmoTokTheme.redPrimary,
+              onTap: onHomeTap,
+            ),
           ),
-          _NavItem(
-            icon: Icons.explore,
-            label: 'Explorer',
-            isActive: activeTab == 'explore',
-            activeColor: ImmoTokTheme.redPrimary,
-            onTap: onExploreTap,
+          Expanded(
+            child: _NavItem(
+              icon: Icons.explore,
+              label: 'Explorer',
+              isActive: activeTab == 'explore',
+              activeColor: ImmoTokTheme.redPrimary,
+              onTap: onExploreTap,
+            ),
           ),
           // Create button (TikTok-style gradient)
-          GestureDetector(
-            onTap: onCreateTap,
-            child: Container(
-              width: 48,
-              height: 32,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(
-                  colors: [ImmoTokTheme.cyanTok, Colors.white, ImmoTokTheme.redPrimary],
-                ),
-              ),
-              padding: const EdgeInsets.all(2),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: ImmoTokTheme.bgDark,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: Icon(Icons.add, color: Colors.white, size: 16),
+          Expanded(
+            child: Center(
+              child: GestureDetector(
+                onTap: onCreateTap,
+                child: Container(
+                  width: 48,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: const LinearGradient(
+                      colors: [ImmoTokTheme.cyanTok, Colors.white, ImmoTokTheme.redPrimary],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: ImmoTokTheme.bgDark,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.add, color: Colors.white, size: 16),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
           // Inbox with badge
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              _NavItem(
-                icon: Icons.notifications_none,
-                label: 'Alertes',
-                isActive: false,
-                onTap: onInboxTap,
-              ),
-              if (unreadCount > 0)
-                Positioned(
-                  top: -4,
-                  right: -6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: ImmoTokTheme.redPrimary,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: ImmoTokTheme.bgDark, width: 1.5),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      '$unreadCount',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
-                    ),
+          Expanded(
+            child: Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _NavItem(
+                    icon: Icons.notifications_none,
+                    label: 'Alertes',
+                    isActive: false,
+                    onTap: onInboxTap,
                   ),
-                ),
-            ],
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: -4,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: ImmoTokTheme.redPrimary,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ImmoTokTheme.bgDark, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          '$unreadCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-          _NavItem(
-            icon: Icons.person_outline,
-            label: 'Moi',
-            isActive: false,
-            onTap: onProfileTap,
+          Expanded(
+            child: _NavItem(
+              icon: Icons.person_outline,
+              label: 'Moi',
+              isActive: false,
+              onTap: onProfileTap,
+            ),
           ),
         ],
       ),
@@ -144,7 +158,13 @@ class _NavItem extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+          ),
         ],
       ),
     );

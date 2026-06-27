@@ -49,6 +49,38 @@ Route::post('/immotok/auth/register', [\App\Http\Controllers\ImmotokAuthControll
 Route::post('/immotok/auth/login', [\App\Http\Controllers\ImmotokAuthController::class, 'login']);
 Route::get('/immotok/companies/{id}/profile', [\App\Http\Controllers\ImmotokFeedController::class, 'getCompanyProfile']);
 Route::get('/immotok/categories', [\App\Http\Controllers\ImmotokFeedController::class, 'getCategories']);
+Route::get('/immotok/media/{path}', function (\Illuminate\Http\Request $request, $path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+    $fileSize = filesize($filePath);
+    $mime = mime_content_type($filePath);
+    $headers = [
+        'Content-Type' => $mime,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+    ];
+    if ($request->headers->has('Range')) {
+        $range = $request->header('Range');
+        list($param, $range) = explode('=', $range, 2);
+        if ($param == 'bytes') {
+            list($rangeStart, $rangeEnd) = explode('-', $range, 2);
+            $rangeStart = intval($rangeStart);
+            $rangeEnd = $rangeEnd === '' ? $fileSize - 1 : intval($rangeEnd);
+            $length = $rangeEnd - $rangeStart + 1;
+            $fp = fopen($filePath, 'rb');
+            fseek($fp, $rangeStart);
+            $data = fread($fp, $length);
+            fclose($fp);
+            $headers['Content-Range'] = "bytes $rangeStart-$rangeEnd/$fileSize";
+            $headers['Accept-Ranges'] = 'bytes';
+            return response($data, 206, $headers);
+        }
+    }
+    return response()->file($filePath, $headers);
+})->where('path', '.*');
 
 // Immotok mobile API (authenticated)
 Route::middleware('immotok.token')->group(function () {
