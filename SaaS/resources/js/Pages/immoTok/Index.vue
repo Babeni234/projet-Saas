@@ -2146,6 +2146,7 @@ const handleLogout = async () => {
     await axios.post('/api/immotok/auth/logout');
     client.value = null;
     activeSheet.value = null;
+    pendingAction.value = null;
     fetchFeed();
   } catch (e) {
     console.error(e);
