@@ -816,6 +816,18 @@ const routes = [
             ],
         },
     },
+    {
+        path: '/agence/dashboard/permissions',
+        name: 'agence.permissions',
+        component: () => import('../Pages/agence/Dashboard/components/AgencyPermissionsPage.vue'),
+        meta: {
+            title: 'Permissions des collaborateurs',
+            breadcrumbs: [
+                { label: 'Accueil', to: { name: 'agence.master' } },
+                { label: 'Permissions', to: { name: 'agence.permissions' } },
+            ],
+        },
+    },
 ];
 
 const router = createRouter({

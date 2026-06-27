@@ -312,4 +312,35 @@ class RoleController extends Controller
 
         return redirect()->back()->with('success', 'Statut de l\'utilisateur mis à jour avec succès.');
     }
+
+    /**
+     * Update user specific permissions overrides.
+     */
+    public function updateUserPermissions(Request $request, User $user)
+    {
+        $currentUser = auth()->user();
+        $companyProfileId = $currentUser->company_profile_id;
+
+        // Check company match
+        if ($user->company_profile_id !== $companyProfileId) {
+            abort(403, "Action non autorisée.");
+        }
+
+        // Agency scope security check: if the editor is an agency employee, they can only edit employees in their agency
+        if ($currentUser->employee && $currentUser->employee->agency_id !== null) {
+            if (!$user->employee || $user->employee->agency_id !== $currentUser->employee->agency_id) {
+                abort(403, "Vous ne pouvez gérer que les permissions des collaborateurs de votre agence.");
+            }
+        }
+
+        $validated = $request->validate([
+            'permissions' => 'nullable|array',
+        ]);
+
+        $user->update([
+            'permissions' => $validated['permissions'],
+        ]);
+
+        return redirect()->back()->with('success', 'Permissions personnalisées mises à jour avec succès.');
+    }
 }

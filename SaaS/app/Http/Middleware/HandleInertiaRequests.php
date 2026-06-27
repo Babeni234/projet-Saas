@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
         $agencies = [];
         $companyName = 'Property AI';
         $companyLogo = asset('icons/property-ai-logo.svg');
+        $allPermissions = [];
 
         if ($user) {
             $user->load(['company', 'role', 'employee.agency', 'planRelation']);
@@ -50,12 +51,36 @@ class HandleInertiaRequests extends Middleware
                     $companyLogo = asset('storage/' . $company->logo_path);
                 }
             }
+
+            // Calcul des permissions fines
+            $permissionKeys = [
+                'locataires.view', 'locataires.create', 'locataires.edit', 'locataires.delete',
+                'batiments.view', 'batiments.create', 'batiments.edit', 'batiments.delete',
+                'logements.view', 'logements.create', 'logements.edit', 'logements.delete',
+                'contrats.view', 'contrats.create', 'contrats.edit', 'contrats.delete',
+                'factures.view', 'factures.create', 'factures.delete',
+                'paiements.view', 'paiements.create',
+                'depenses.view', 'depenses.create', 'depenses.delete',
+                'entrees.view', 'entrees.create',
+                'maintenance.view', 'maintenance.create', 'maintenance.edit', 'maintenance.delete',
+                'employees.view', 'employees.create', 'employees.edit', 'employees.delete',
+                'reports.view'
+            ];
+            foreach ($permissionKeys as $key) {
+                $allPermissions[$key] = $user->hasPermission($key);
+            }
         }
 
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $user,
+                'user' => $user ? array_merge($user->toArray(), [
+                    'all_permissions' => $allPermissions,
+                    'employee' => $user->employee ? array_merge($user->employee->toArray(), [
+                        'agency' => $user->employee->agency ? $user->employee->agency->toArray() : null
+                    ]) : null,
+                    'role' => $user->role ? $user->role->toArray() : null
+                ]) : null,
             ],
             'branding' => [
                 'name' => $companyName,
@@ -63,7 +88,6 @@ class HandleInertiaRequests extends Middleware
             ],
             'agencies' => $agencies,
             'vapidPublicKey' => env('VAPID_PUBLIC_KEY'),
-
         ];
     }
 }

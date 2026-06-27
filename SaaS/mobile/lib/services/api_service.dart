@@ -1,12 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService extends ChangeNotifier {
-  // Use localhost for Flutter Web/Chrome testing
-  // Use 10.0.2.2 for Android emulator
-  // Use your computer's IP for physical device
   final String baseUrl = 'http://localhost:8000/api';
   final _storage = const FlutterSecureStorage();
 
@@ -20,13 +18,54 @@ class ApiService extends ChangeNotifier {
   Map<String, dynamic>? _locataireData;
   Map<String, dynamic>? get locataireData => _locataireData;
 
+  // Locally persisted data (mirrors web localStorage behavior)
+  Map<String, dynamic> _localProfile = {};
+  Map<String, dynamic> _localPrefs = {};
+  List<Map<String, dynamic>> _localTickets = [];
+  bool _twoFAEnabled = false;
+  List<String> _backupCodes = [];
+
   // Error message storage
   String? _lastError;
   String? get lastError => _lastError;
 
   ApiService() {
     _checkAuth();
+    _loadLocalData();
   }
+
+  Future<void> _loadLocalData() async {
+    try {
+      final profile = await _storage.read(key: 'local_profile');
+      if (profile != null) _localProfile = jsonDecode(profile);
+      final prefs = await _storage.read(key: 'local_prefs');
+      if (prefs != null) _localPrefs = jsonDecode(prefs);
+      final tickets = await _storage.read(key: 'local_tickets');
+      if (tickets != null) _localTickets = List<Map<String, dynamic>>.from(jsonDecode(tickets));
+      final twoFA = await _storage.read(key: '2fa_enabled');
+      if (twoFA != null) _twoFAEnabled = twoFA == 'true';
+      final codes = await _storage.read(key: 'backup_codes');
+      if (codes != null) _backupCodes = List<String>.from(jsonDecode(codes));
+    } catch (_) {}
+  }
+
+  Future<void> _saveLocalProfile() async {
+    await _storage.write(key: 'local_profile', value: jsonEncode(_localProfile));
+  }
+
+  Future<void> _saveLocalPrefs() async {
+    await _storage.write(key: 'local_prefs', value: jsonEncode(_localPrefs));
+  }
+
+  Future<void> _saveLocalTickets() async {
+    await _storage.write(key: 'local_tickets', value: jsonEncode(_localTickets));
+  }
+
+  Map<String, dynamic> get localProfile => _localProfile;
+  Map<String, dynamic> get localPrefs => _localPrefs;
+  List<Map<String, dynamic>> get localTickets => _localTickets;
+  bool get twoFAEnabled => _twoFAEnabled;
+  List<String> get backupCodes => _backupCodes;
 
   Future<void> _checkAuth() async {
     try {
@@ -45,9 +84,18 @@ class ApiService extends ChangeNotifier {
     return await _storage.read(key: 'token');
   }
 
+  Future<Map<String, String>> _authHeaders() async {
+    final token = await _getToken();
+    return {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+  }
+
   Future<bool> login(String email, String password) async {
     try {
-      _lastError = null; // Clear previous error
+      _lastError = null;
       
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
@@ -71,7 +119,6 @@ class ApiService extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        // Parse error message from backend
         final data = jsonDecode(response.body);
         _lastError = data['message'] ?? 
                      (data['errors'] != null ? data['errors']['email']?.join(', ') : null) ?? 
@@ -324,7 +371,96 @@ class ApiService extends ChangeNotifier {
     }
   }
 
-  // Getters for locataire data
+  // ═══ WALLET PIN CHANGE (real API) ═══
+  Future<Map<String, dynamic>> changePin(String currentPin, String newPin) async {
+    try {
+      final headers = await _authHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/locataire/wallet/change-pin'),
+        headers: headers,
+        body: jsonEncode({'current_pin': currentPin, 'new_pin': newPin}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'PIN modifié avec succès'};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Erreur lors du changement de PIN'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur: $e'};
+    }
+  }
+
+  // ═══ PROFILE OPERATIONS (local storage, matching web behavior) ═══
+  void updateLocalProfile(Map<String, dynamic> profile) {
+    _localProfile.addAll(profile);
+    _saveLocalProfile();
+    notifyListeners();
+  }
+
+  void changePassword(String current, String newPass) {
+    // Web mock: just store locally
+    _localProfile['password_changed_at'] = DateTime.now().toIso8601String();
+    _saveLocalProfile();
+    notifyListeners();
+  }
+
+  // ═══ 2FA (local storage, matching web behavior) ═══
+  void enable2FA() {
+    _twoFAEnabled = true;
+    _storage.write(key: '2fa_enabled', value: 'true');
+    notifyListeners();
+  }
+
+  void disable2FA() {
+    _twoFAEnabled = false;
+    _storage.write(key: '2fa_enabled', value: 'false');
+    notifyListeners();
+  }
+
+  void saveBackupCodes(List<String> codes) {
+    _backupCodes = codes;
+    _storage.write(key: 'backup_codes', value: jsonEncode(codes));
+    notifyListeners();
+  }
+
+  // ═══ NOTIFICATION PREFERENCES (local storage) ═══
+  void updateNotificationPrefs(Map<String, dynamic> prefs) {
+    _localPrefs = prefs;
+    _saveLocalPrefs();
+    notifyListeners();
+  }
+
+  // ═══ TICKET MESSAGING (local storage, matching web behavior) ═══
+  void addLocalTicket(Map<String, dynamic> ticket) {
+    _localTickets.insert(0, ticket);
+    _saveLocalTickets();
+    notifyListeners();
+  }
+
+  void addLocalMessage(int ticketIndex, Map<String, dynamic> message) {
+    if (ticketIndex >= 0 && ticketIndex < _localTickets.length) {
+      _localTickets[ticketIndex]['messages'].add(message);
+      _saveLocalTickets();
+      notifyListeners();
+    }
+  }
+
+  void closeLocalTicket(int ticketIndex) {
+    if (ticketIndex >= 0 && ticketIndex < _localTickets.length) {
+      _localTickets[ticketIndex]['status'] = 'closed';
+      _saveLocalTickets();
+      notifyListeners();
+    }
+  }
+
+  // ═══ DOCUMENT DOWNLOAD URL helper ═══
+  Future<String?> downloadDocument(String url) async {
+    // Returns the full URL for document download
+    if (url.startsWith('http')) return url;
+    return '$baseUrl/../storage/$url';
+  }
+
+  // ═══ GETTERS ═══
   double? get walletBalance {
     if (_locataireData == null || _locataireData!['wallet'] == null) return null;
     return (_locataireData!['wallet']['solde'] as num?)?.toDouble();
@@ -348,6 +484,10 @@ class ApiService extends ChangeNotifier {
 
   List<dynamic> get contractFees {
     return _locataireData?['contract_fees'] ?? [];
+  }
+
+  List<dynamic> get oldContracts {
+    return _locataireData?['old_contracts'] ?? [];
   }
 
   Map<String, dynamic>? get summary {
@@ -388,11 +528,11 @@ class ApiService extends ChangeNotifier {
   }
 
   String get tenantFirstName {
-    return _locataireData?['user']?['first_name'] ?? '';
+    return _locataireData?['user']?['first_name'] ?? _localProfile['first_name'] ?? '';
   }
 
   String get tenantLastName {
-    return _locataireData?['user']?['last_name'] ?? _user?['name'] ?? '';
+    return _locataireData?['user']?['last_name'] ?? _localProfile['last_name'] ?? _user?['name'] ?? '';
   }
 
   String get tenantFullName {
@@ -400,5 +540,17 @@ class ApiService extends ChangeNotifier {
       return '$tenantFirstName $tenantLastName';
     }
     return _user?['name'] ?? '';
+  }
+
+  String get tenantEmail {
+    return _locataireData?['user']?['email'] ?? _localProfile['email'] ?? _user?['email'] ?? '';
+  }
+
+  String get tenantPhone {
+    return _locataireData?['telephone'] ?? _localProfile['phone'] ?? '';
+  }
+
+  String get tenantAvatar {
+    return _localProfile['avatar'] ?? _locataireData?['user']?['avatar'] ?? '';
   }
 }

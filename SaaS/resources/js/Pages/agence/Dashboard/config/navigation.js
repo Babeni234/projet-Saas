@@ -78,6 +78,7 @@ export const navigation = [
             { name: 'agence.maintenance', label: 'Maintenance', icon: 'wrench', accent: 'orange', badgeKey: 'maintenance' },
             { name: 'agence.reports', label: 'Rapports', icon: 'chart', accent: 'cyan' },
             { name: 'agence.employees', label: 'Collaborateurs', icon: 'users', accent: 'emerald' },
+            { name: 'agence.permissions', label: 'Permissions', icon: 'shield', accent: 'rose' },
         ],
     },
 ];
@@ -106,4 +107,5 @@ export const routeTitles = {
     'agence.maintenance': 'Maintenance / SAV',
     'agence.reports': 'Rapports & statistiques',
     'agence.employees': 'Collaborateurs',
+    'agence.permissions': 'Permissions des collaborateurs',
 };

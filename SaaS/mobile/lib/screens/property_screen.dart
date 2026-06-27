@@ -4,13 +4,41 @@ import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/glass_container.dart';
 
-class PropertyScreen extends StatelessWidget {
+class PropertyScreen extends StatefulWidget {
   const PropertyScreen({super.key});
+
+  @override
+  State<PropertyScreen> createState() => _PropertyScreenState();
+}
+
+class _PropertyScreenState extends State<PropertyScreen> {
+  bool _renewalLoading = false;
+
+  void _submitRenewal(ApiService api) async {
+    setState(() => _renewalLoading = true);
+    final fees = api.contractFees;
+    if (fees.isNotEmpty) {
+      final fee = fees[0];
+      await api.payContractFee(fee['id'] as int? ?? 0, fee['amount'] as num? ?? 50000);
+    }
+    setState(() => _renewalLoading = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Demande de renouvellement soumise'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final apiService = context.watch<ApiService>();
     final contracts = apiService.contracts;
+    final contractFees = apiService.contractFees;
 
     if (contracts.isEmpty) {
       return SafeArea(
@@ -197,7 +225,16 @@ class PropertyScreen extends StatelessWidget {
               _buildDocItem(context, 'État des lieux', 'PDF • 1.8 Mo', Icons.assignment_rounded, AppColors.success),
               const SizedBox(height: 12),
               _buildDocItem(context, 'Règlement', 'PDF • 0.5 Mo', Icons.gavel_rounded, AppColors.warning),
-            ]
+            ],
+            const SizedBox(height: 32),
+
+            _buildSectionHeader('FRAIS DE CONTRAT'),
+            const SizedBox(height: 12),
+            ..._buildContractFees(apiService),
+            const SizedBox(height: 16),
+            _buildSectionHeader('RENOUVELLEMENT'),
+            const SizedBox(height: 12),
+            _buildRenewalCard(context, apiService),
           ],
         ),
       ),
@@ -314,4 +351,104 @@ class PropertyScreen extends StatelessWidget {
     );
   }
 
+  List<Widget> _buildContractFees(ApiService api) {
+    final fees = api.contractFees;
+    if (fees.isEmpty) {
+      return [
+        GlassContainer(
+          padding: const EdgeInsets.all(20),
+          borderRadius: 24,
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: AppColors.success, size: 28),
+              const SizedBox(width: 16),
+              const Expanded(child: Text('Aucun frais de contrat en attente', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
+            ],
+          ),
+        ),
+      ];
+    }
+    return fees.map((fee) {
+      final paid = fee['status']?.toString() == 'paid';
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: GlassContainer(
+          padding: const EdgeInsets.all(18),
+          borderRadius: 24,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: (paid ? AppColors.success : AppColors.warning).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(paid ? Icons.check_rounded : Icons.pending_rounded, color: paid ? AppColors.success : AppColors.warning, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(fee['label'] ?? 'Frais de contrat', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                    Text('${(fee['amount'] as num?)?.toStringAsFixed(0) ?? '0'} €', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  ],
+                ),
+              ),
+              if (!paid)
+                GestureDetector(
+                  onTap: () async {
+                    await api.payContractFee(fee['id'] as int? ?? 0, fee['amount'] as num? ?? 0);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(16)),
+                    child: const Text('Payer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildRenewalCard(BuildContext context, ApiService api) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      borderRadius: 24,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.replay_rounded, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Demande de renouvellement', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    Text('Soumettez une demande pour prolonger votre bail', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _renewalLoading ? null : () => _submitRenewal(api),
+              child: _renewalLoading
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Soumettre', style: TextStyle(fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -44,6 +44,7 @@ class User extends Authenticatable
         'account_type',
         'subscription_plan',
         'role_id',
+        'permissions',
         'status',
         'last_login_at',
         'company_profile_id',
@@ -75,6 +76,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'trial_ends_at' => 'datetime',
             'trial_started_at' => 'datetime',
+            'permissions' => 'array',
         ];
     }
 
@@ -210,5 +212,41 @@ class User extends Authenticatable
     public function getBlockedModulesAttribute(): array
     {
         return $this->blockedModules();
+    }
+
+    /**
+     * Check if user has a specific permission (with override support)
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // Superadmin has all permissions
+        if (in_array(strtolower($this->account_type), ['superadmin', 'super_admin'])) {
+            return true;
+        }
+
+        // Company owner has all permissions
+        if ($this->account_type === 'company') {
+            return true;
+        }
+
+        // Check user-specific permissions (overrides)
+        if ($this->permissions !== null && is_array($this->permissions)) {
+            if (isset($this->permissions[$permission])) {
+                return (bool) $this->permissions[$permission];
+            }
+        }
+
+        // Fallback to role permissions
+        if ($this->role) {
+            $rolePermissions = $this->role->permissions;
+            if (is_array($rolePermissions)) {
+                if (in_array('*', $rolePermissions)) {
+                    return true;
+                }
+                return in_array($permission, $rolePermissions);
+            }
+        }
+
+        return false;
     }
 }

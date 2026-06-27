@@ -182,17 +182,25 @@
                                 {{ formatLastLogin(user.last_login_at) }}
                             </td>
                             <td class="px-6 py-4">
-                                <button
-                                    @click="toggleUserStatus(user)"
-                                    :class="[
-                                        'px-4 py-2 rounded-xl text-xs font-bold border transition-all shadow-sm transform hover:scale-105',
-                                        user.status === 'active'
-                                            ? 'bg-white border-slate-350 text-slate-700 hover:bg-slate-50'
-                                            : 'bg-emerald-500 text-white border-transparent hover:bg-emerald-600'
-                                    ]"
-                                >
-                                    {{ user.status === 'active' ? 'Désactiver' : 'Activer' }}
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        @click="openPermissionsModal(user)"
+                                        class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-all shadow-sm transform hover:scale-105"
+                                    >
+                                        Permissions
+                                    </button>
+                                    <button
+                                        @click="toggleUserStatus(user)"
+                                        :class="[
+                                            'px-4 py-2 rounded-xl text-xs font-bold border transition-all shadow-sm transform hover:scale-105',
+                                            user.status === 'active'
+                                                ? 'bg-white border-slate-350 text-slate-700 hover:bg-slate-50'
+                                                : 'bg-emerald-500 text-white border-transparent hover:bg-emerald-600'
+                                        ]"
+                                    >
+                                        {{ user.status === 'active' ? 'Désactiver' : 'Activer' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="users.length === 0">
@@ -1467,6 +1475,77 @@
             </form>
         </ModalPremium>
 
+        <!-- Individual User Permissions Modal -->
+        <ModalPremium
+            :show="showUserPermissionsModal"
+            title="Permissions Personnalisées du Collaborateur"
+            :subtitle="selectedUserForPermissions ? `Définissez les autorisations d'accès spécifiques pour ${selectedUserForPermissions.name}` : ''"
+            size="lg"
+            type="default"
+            @close="showUserPermissionsModal = false"
+        >
+            <div v-if="selectedUserForPermissions" class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-800 flex gap-2">
+                    <svg class="w-5 h-5 shrink-0 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <span class="font-bold">Note de configuration :</span> Les permissions cochées ici surchargent les permissions par défaut définies par le rôle <strong>{{ selectedUserForPermissions.role?.name || 'Aucun rôle' }}</strong> de ce collaborateur.
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div v-for="group in finePermissions" :key="group.category" class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                        <h4 class="font-bold text-slate-800 text-sm mb-4 pb-2 border-b border-slate-200 flex items-center justify-between">
+                            <span>{{ group.category }}</span>
+                            <span class="text-xs text-slate-500 font-medium">Droits opérationnels</span>
+                        </h4>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div 
+                                v-for="item in group.items" 
+                                :key="item.id"
+                                class="flex items-start justify-between gap-4 p-3 bg-white border border-slate-150 rounded-xl hover:shadow-sm transition-all"
+                            >
+                                <div class="flex-1 min-w-0">
+                                    <span class="block text-xs font-bold text-slate-700 truncate">{{ item.label }}</span>
+                                    <span class="block text-[10px] text-slate-500 mt-1 leading-relaxed">{{ item.desc }}</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer mt-1 shrink-0">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="userPermissionsForm[item.id]" 
+                                        class="sr-only peer"
+                                    />
+                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="flex gap-4 justify-end pt-4 border-t border-slate-100 mt-6">
+                <button
+                    type="button"
+                    @click="showUserPermissionsModal = false"
+                    class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                >
+                    Annuler
+                </button>
+                <button
+                    type="button"
+                    @click="saveUserPermissions"
+                    :disabled="isSavingUserPermissions"
+                    class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                    <span v-if="isSavingUserPermissions" class="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span>Enregistrer</span>
+                </button>
+            </div>
+        </ModalPremium>
+
         <!-- Notification -->
         <NotificationPremium
             :show="notification.show"
@@ -1689,6 +1768,157 @@ const availablePermissions = [
     { id: 'manage_users', label: 'Gérer les utilisateurs', desc: 'Permet de gérer les utilisateurs, rôles et permissions' },
     { id: 'basic_access', label: 'Accès de base', desc: 'Accès limité en lecture aux fonctionnalités de base' },
 ];
+
+// Fine-grained operations permissions
+const finePermissions = [
+    {
+        category: 'Locataires',
+        items: [
+            { id: 'locataires.view', label: 'Voir les locataires', desc: 'Permet de consulter la liste et les détails des locataires' },
+            { id: 'locataires.create', label: 'Ajouter un locataire', desc: 'Permet d\'ajouter un nouveau locataire' },
+            { id: 'locataires.edit', label: 'Modifier un locataire', desc: 'Permet de modifier les informations d\'un locataire' },
+            { id: 'locataires.delete', label: 'Supprimer un locataire', desc: 'Permet de supprimer un locataire' },
+        ]
+    },
+    {
+        category: 'Bâtiments',
+        items: [
+            { id: 'batiments.view', label: 'Voir les bâtiments', desc: 'Permet de lister et voir les détails des bâtiments' },
+            { id: 'batiments.create', label: 'Ajouter un bâtiment', desc: 'Permet de créer un nouveau bâtiment' },
+            { id: 'batiments.edit', label: 'Modifier un bâtiment', desc: 'Permet de modifier les détails d\'un bâtiment' },
+            { id: 'batiments.delete', label: 'Supprimer un bâtiment', desc: 'Permet de supprimer un bâtiment' },
+        ]
+    },
+    {
+        category: 'Logements (Biens)',
+        items: [
+            { id: 'logements.view', label: 'Voir les logements', desc: 'Permet de lister et consulter les caractéristiques des logements' },
+            { id: 'logements.create', label: 'Ajouter un logement', desc: 'Permet de déclarer un nouveau logement dans un bâtiment' },
+            { id: 'logements.edit', label: 'Modifier un logement', desc: 'Permet de modifier la description d\'un logement' },
+            { id: 'logements.delete', label: 'Supprimer un logement', desc: 'Permet de supprimer un logement' },
+        ]
+    },
+    {
+        category: 'Contrats de bail',
+        items: [
+            { id: 'contrats.view', label: 'Voir les contrats', desc: 'Permet de lister et lire les contrats de bail' },
+            { id: 'contrats.create', label: 'Créer un contrat', desc: 'Permet de générer et signer un nouveau contrat de bail' },
+            { id: 'contrats.edit', label: 'Modifier un contrat', desc: 'Permet de modifier les clauses d\'un contrat existant' },
+            { id: 'contrats.delete', label: 'Supprimer/Résilier', desc: 'Permet d\'archiver, supprimer ou résilier un contrat de bail' },
+        ]
+    },
+    {
+        category: 'Factures & Paiements',
+        items: [
+            { id: 'factures.view', label: 'Voir les factures', desc: 'Permet de lister et voir les factures/quittances générées' },
+            { id: 'factures.create', label: 'Créer des factures', desc: 'Permet de générer des factures de loyer' },
+            { id: 'factures.delete', label: 'Supprimer des factures', desc: 'Permet de rejeter ou supprimer une facture erronée' },
+            { id: 'paiements.view', label: 'Voir les paiements', desc: 'Permet de consulter l\'historique des paiements de loyer' },
+            { id: 'paiements.create', label: 'Enregistrer un paiement', desc: 'Permet de saisir un paiement de loyer manuel' },
+        ]
+    },
+    {
+        category: 'Comptabilité (Trésorerie)',
+        items: [
+            { id: 'depenses.view', label: 'Voir les dépenses', desc: 'Permet d\'afficher le journal des dépenses' },
+            { id: 'depenses.create', label: 'Enregistrer une dépense', desc: 'Permet de déclarer une nouvelle dépense' },
+            { id: 'depenses.delete', label: 'Supprimer une dépense', desc: 'Permet de supprimer un enregistrement de dépense' },
+            { id: 'entrees.view', label: 'Voir les autres entrées', desc: 'Permet d\'afficher les autres rentrées de fonds' },
+            { id: 'entrees.create', label: 'Enregistrer une entrée', desc: 'Permet d\'ajouter une entrée de fonds' },
+        ]
+    },
+    {
+        category: 'Maintenance & SAV',
+        items: [
+            { id: 'maintenance.view', label: 'Voir les pannes', desc: 'Permet de consulter la liste des interventions de maintenance' },
+            { id: 'maintenance.create', label: 'Déclarer un incident', desc: 'Permet de créer un nouveau ticket de panne' },
+            { id: 'maintenance.edit', label: 'Résoudre/Assigner', desc: 'Permet d\'assigner un maintenancier ou clore un incident' },
+            { id: 'maintenance.delete', label: 'Supprimer un ticket', desc: 'Permet d\'effacer définitivement une demande de maintenance' },
+        ]
+    },
+    {
+        category: 'Collaborateurs & Rôles',
+        items: [
+            { id: 'employees.view', label: 'Voir le personnel', desc: 'Permet de lister les collaborateurs de l\'agence ou du siège' },
+            { id: 'employees.create', label: 'Recruter', desc: 'Permet de créer des comptes d\'employés' },
+            { id: 'employees.edit', label: 'Gérer les profils', desc: 'Permet d\'attribuer des postes et affecter des agences' },
+            { id: 'employees.delete', label: 'Suspendre/Résilier', desc: 'Permet de désactiver un utilisateur' },
+        ]
+    },
+    {
+        category: 'Rapports & Statistiques',
+        items: [
+            { id: 'reports.view', label: 'Accéder aux statistiques', desc: 'Donne accès aux rapports d\'analyse, graphiques et finances globales' },
+        ]
+    }
+];
+
+const showUserPermissionsModal = ref(false);
+const selectedUserForPermissions = ref(null);
+const userPermissionsForm = ref({});
+const isSavingUserPermissions = ref(false);
+
+const openPermissionsModal = (user) => {
+    selectedUserForPermissions.value = user;
+    
+    // Initialize permissions object
+    const basePermissions = {};
+    
+    // Flatten finePermissions
+    finePermissions.forEach(cat => {
+        cat.items.forEach(item => {
+            let active = false;
+            
+            // Check custom override on the user model
+            if (user.permissions && typeof user.permissions === 'object' && user.permissions[item.id] !== undefined) {
+                active = !!user.permissions[item.id];
+            } else if (user.role) {
+                // Check if role has wildcard '*' or explicitly lists the permission
+                const rolePerms = user.role.permissions || [];
+                active = rolePerms.includes('*') || rolePerms.includes(item.id) || 
+                         (rolePerms.includes('manage_properties') && (item.id.startsWith('batiments') || item.id.startsWith('logements') || item.id.startsWith('contrats') || item.id.startsWith('locataires'))) ||
+                         (rolePerms.includes('manage_accounting') && (item.id.startsWith('factures') || item.id.startsWith('paiements') || item.id.startsWith('depenses') || item.id.startsWith('entrees'))) ||
+                         (rolePerms.includes('manage_maintenance') && item.id.startsWith('maintenance')) ||
+                         (rolePerms.includes('manage_users') && item.id.startsWith('employees'));
+            }
+            basePermissions[item.id] = active;
+        });
+    });
+    
+    userPermissionsForm.value = basePermissions;
+    showUserPermissionsModal.value = true;
+};
+
+const saveUserPermissions = async () => {
+    isSavingUserPermissions.value = true;
+    try {
+        const response = await fetch(`/dashboard/users/${selectedUserForPermissions.value.id}/permissions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify({
+                permissions: userPermissionsForm.value
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('success', 'Succès', 'Permissions personnalisées enregistrées avec succès.');
+            showUserPermissionsModal.value = false;
+            loadData(); // Reload users list
+        } else {
+            const data = await response.json();
+            showNotification('error', 'Erreur', data.message || 'Une erreur est survenue.');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Erreur', 'Impossible d\'enregistrer les permissions.');
+    } finally {
+        isSavingUserPermissions.value = false;
+    }
+};
 
 const activeUsersCount = computed(() => {
     return users.value.filter(u => u.status === 'active').length;

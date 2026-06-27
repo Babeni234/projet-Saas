@@ -32,6 +32,21 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final api = context.watch<ApiService>();
+    final invoices = api.invoices.where((inv) {
+      final type = inv['type']?.toString() ?? '';
+      return type == 'water' || type == 'electricity' || type == 'WATER' || type == 'ELECTRIC';
+    }).toList();
+
+    final waterInvoices = invoices.where((i) => (i['type']?.toString() ?? '').toLowerCase().contains('water')).toList();
+    final elecInvoices = invoices.where((i) => (i['type']?.toString() ?? '').toLowerCase().contains('electric')).toList();
+    final pendingTotal = invoices.fold<double>(0, (sum, i) => i['status']?.toString() == 'paid' ? sum : sum + ((i['amount'] as num?)?.toDouble() ?? 0));
+    final lastPeriod = invoices.isNotEmpty ? invoices.last['period']?.toString() ?? '---' : '---';
+
+    List<dynamic> filteredInvoices = invoices;
+    if (_filter == 'water') filteredInvoices = waterInvoices;
+    else if (_filter == 'elec') filteredInvoices = elecInvoices;
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -50,46 +65,55 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
             ),
             const SizedBox(height: 28),
 
-            _buildConsumptionCard(
-              context,
-              icon: Icons.water_drop_rounded,
-              label: 'Eau',
-              conso: '12 m³',
-              cost: '45,00 €',
-              period: 'Mai 2026',
-              status: 'Payé',
-              statusColor: AppColors.success,
-              progress: 0.65,
-              barColor: const Color(0xFF3B82F6),
-            ),
-            const SizedBox(height: 16),
-            _buildConsumptionCard(
-              context,
-              icon: Icons.bolt_rounded,
-              label: 'Électricité',
-              conso: '245 kWh',
-              cost: '89,00 €',
-              period: 'Mai 2026',
-              status: 'En attente',
-              statusColor: AppColors.warning,
-              progress: 0.72,
-              barColor: const Color(0xFFD97706),
-            ),
+            if (waterInvoices.isNotEmpty)
+              _buildConsumptionCard(
+                context,
+                icon: Icons.water_drop_rounded,
+                label: 'Eau',
+                conso: '${waterInvoices.last['conso'] ?? '---'}',
+                cost: '${(waterInvoices.last['amount'] as num?)?.toStringAsFixed(2) ?? '0'} €',
+                period: waterInvoices.last['period']?.toString() ?? '---',
+                status: waterInvoices.last['status']?.toString() == 'paid' ? 'Payé' : 'En attente',
+                statusColor: waterInvoices.last['status']?.toString() == 'paid' ? AppColors.success : AppColors.warning,
+                progress: 0.6,
+                barColor: const Color(0xFF3B82F6),
+              ),
+            if (elecInvoices.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: waterInvoices.isNotEmpty ? 16 : 0),
+                child: _buildConsumptionCard(
+                  context,
+                  icon: Icons.bolt_rounded,
+                  label: 'Électricité',
+                  conso: '${elecInvoices.last['conso'] ?? '---'}',
+                  cost: '${(elecInvoices.last['amount'] as num?)?.toStringAsFixed(2) ?? '0'} €',
+                  period: elecInvoices.last['period']?.toString() ?? '---',
+                  status: elecInvoices.last['status']?.toString() == 'paid' ? 'Payé' : 'En attente',
+                  statusColor: elecInvoices.last['status']?.toString() == 'paid' ? AppColors.success : AppColors.warning,
+                  progress: 0.7,
+                  barColor: const Color(0xFFD97706),
+                ),
+              ),
+            if (invoices.isEmpty) ...[
+              _buildConsumptionCard(context, icon: Icons.water_drop_rounded, label: 'Eau', conso: '---', cost: '0 €', period: '---', status: 'Aucune', statusColor: AppColors.textSecondary, progress: 0, barColor: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              _buildConsumptionCard(context, icon: Icons.bolt_rounded, label: 'Électricité', conso: '---', cost: '0 €', period: '---', status: 'Aucune', statusColor: AppColors.textSecondary, progress: 0, barColor: AppColors.textSecondary),
+            ],
             const SizedBox(height: 28),
 
             Row(
               children: [
-                Expanded(child: _buildSummaryCard(context, 'Eau', '2', Icons.water_drop_rounded, AppColors.primary)),
+                Expanded(child: _buildSummaryCard(context, 'Eau', '${waterInvoices.length}', Icons.water_drop_rounded, AppColors.primary)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildSummaryCard(context, 'Électricité', '1', Icons.bolt_rounded, AppColors.warning)),
+                Expanded(child: _buildSummaryCard(context, 'Électricité', '${elecInvoices.length}', Icons.bolt_rounded, AppColors.warning)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildSummaryCard(context, 'Total dû', '134,00 €', Icons.payments_rounded, AppColors.error)),
+                Expanded(child: _buildSummaryCard(context, 'Total dû', '${pendingTotal.toStringAsFixed(2)} €', Icons.payments_rounded, AppColors.error)),
                 const SizedBox(width: 12),
-                Expanded(child: _buildSummaryCard(context, 'Dernière facture', 'Mai 2026', Icons.calendar_today_rounded, AppColors.success)),
+                Expanded(child: _buildSummaryCard(context, 'Dernière facture', lastPeriod, Icons.calendar_today_rounded, AppColors.success)),
               ],
             ),
             const SizedBox(height: 28),
@@ -117,11 +141,29 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
             ),
             const SizedBox(height: 16),
 
-            _buildInvoiceRow(context, 'FAC-2026-05-W', 'Eau', 'Mai 2026', '12 m³', '45,00 €', 'paid'),
-            const SizedBox(height: 10),
-            _buildInvoiceRow(context, 'FAC-2026-05-E', 'Électricité', 'Mai 2026', '245 kWh', '89,00 €', 'pending'),
-            const SizedBox(height: 10),
-            _buildInvoiceRow(context, 'FAC-2026-04-W', 'Eau', 'Avril 2026', '10 m³', '42,00 €', 'paid'),
+            if (filteredInvoices.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Aucune facture disponible', style: TextStyle(color: AppColors.textSecondary)),
+              )
+            else
+              ...filteredInvoices.map((inv) {
+                final isWater = (inv['type']?.toString() ?? '').toLowerCase().contains('water');
+                final status = inv['status']?.toString() ?? 'pending';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildInvoiceRow(
+                    context,
+                    inv['reference']?.toString() ?? '---',
+                    isWater ? 'Eau' : 'Électricité',
+                    inv['period']?.toString() ?? '---',
+                    inv['conso']?.toString() ?? '',
+                    '${(inv['amount'] as num?)?.toStringAsFixed(2) ?? '0'} €',
+                    status,
+                    isWater,
+                  ),
+                );
+              }),
           ],
         ),
       ),
@@ -249,9 +291,9 @@ class _UtilitiesScreenState extends State<UtilitiesScreen> {
     );
   }
 
-  Widget _buildInvoiceRow(BuildContext context, String ref, String type, String period, String conso, String amount, String status) {
+  Widget _buildInvoiceRow(BuildContext context, String ref, String type, String period, String conso, String amount, String status, [bool? isWater]) {
     final isPaid = status == 'paid';
-    final typeColor = type == 'Eau' ? AppColors.primary : AppColors.warning;
+    final typeColor = (isWater ?? type == 'Eau') ? AppColors.primary : AppColors.warning;
     return GlassContainer(
       padding: const EdgeInsets.all(16),
       borderRadius: 18,

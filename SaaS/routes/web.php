@@ -308,6 +308,8 @@ Route::middleware('auth')->group(function () {
     });
     Route::post('dashboard/users/{user}/role', [\App\Http\Controllers\RoleController::class, 'updateUserRole'])->name('users.update-role');
     Route::post('dashboard/users/{user}/status', [\App\Http\Controllers\RoleController::class, 'updateUserStatus'])->name('users.update-status');
+    Route::post('dashboard/users/{user}/permissions', [\App\Http\Controllers\RoleController::class, 'updateUserPermissions'])->name('users.update-permissions');
+
 
     // Illustrations API routes
     Route::get('/api/illustrations', [\App\Http\Controllers\IllustrationController::class, 'fetchJson'])->name('illustrations.json');

@@ -13,23 +13,34 @@ class ReceiptsScreen extends StatefulWidget {
 
 class _ReceiptsScreenState extends State<ReceiptsScreen> {
   String _filter = 'all';
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final apiService = context.watch<ApiService>();
     final receipts = apiService.receipts;
 
-    // Filter receipts based on selected filter
-    List<dynamic> filteredReceipts = receipts;
-    if (_filter != 'all') {
-      filteredReceipts = receipts.where((r) {
-        final type = r['type']?.toString() ?? '';
-        if (_filter == 'rent') return type == 'rent';
-        if (_filter == 'invoice') return type == 'water' || type == 'electricity';
-        if (_filter == 'contract') return type == 'contract_fee';
-        return true;
-      }).toList();
-    }
+    List<dynamic> filteredReceipts = receipts.where((r) {
+      final type = r['type']?.toString() ?? '';
+      if (_filter == 'rent' && type != 'rent') return false;
+      if (_filter == 'invoice' && type != 'water' && type != 'electricity') return false;
+      if (_filter == 'contract' && type != 'contract_fee') return false;
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final ref = (r['reference']?.toString() ?? '').toLowerCase();
+        final period = (r['period']?.toString() ?? '').toLowerCase();
+        final title = (r['title']?.toString() ?? '').toLowerCase();
+        if (!ref.contains(q) && !period.contains(q) && !title.contains(q)) return false;
+      }
+      return true;
+    }).toList();
 
     return SafeArea(
       bottom: false,
@@ -42,6 +53,22 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
             Text('Documents', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1)),
             Text('Quittances et reçus officiels', style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500)),
             const SizedBox(height: 32),
+
+            GlassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              borderRadius: 20,
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Rechercher un document...',
+                  prefixIcon: Icon(Icons.search_rounded, size: 20),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                onChanged: (v) => setState(() => _searchQuery = v),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
