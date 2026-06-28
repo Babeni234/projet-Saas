@@ -66,7 +66,7 @@ class BottomNavBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     gradient: const LinearGradient(
-                      colors: [ImmoTokTheme.cyanTok, Colors.white, ImmoTokTheme.redPrimary],
+                      colors: [ImmoTokTheme.blueAccent, Colors.white, ImmoTokTheme.pinkAccent],
                     ),
                   ),
                   padding: const EdgeInsets.all(2),

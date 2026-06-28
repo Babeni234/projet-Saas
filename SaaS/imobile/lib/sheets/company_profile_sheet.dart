@@ -75,14 +75,14 @@ class CompanyProfileSheet extends StatelessWidget {
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: ImmoTokTheme.redPrimary.withOpacity(0.9), borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(color: ImmoTokTheme.blueAccent.withOpacity(0.9), borderRadius: BorderRadius.circular(4)),
                     child: const Text('PRO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1)),
                   ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.location_on, size: 14, color: ImmoTokTheme.redPrimary),
+                      const Icon(Icons.location_on, size: 14, color: ImmoTokTheme.blueAccent),
                       const SizedBox(width: 4),
                       Text(state.profileCompany?.city ?? company.city ?? "Côte d'Ivoire",
                         style: const TextStyle(fontSize: 12, color: ImmoTokTheme.gray400)),

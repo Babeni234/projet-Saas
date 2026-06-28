@@ -3,16 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 
 class ImmoTokTheme {
   // Colors
-  static const Color bgDark = Color(0xFF07080D);
+  static const Color bgDark = Color(0xFF030712);
   static const Color cardDark = Color(0xFF181924);
   static const Color cardDarkAlt = Color(0xFF1E202D);
-  static const Color redPrimary = Color(0xFFFF2D55);
-  static const Color redDark = Color(0xFFDC2626);
-  static const Color pinkAccent = Color(0xFFEC4899);
-  static const Color greenOnline = Color(0xFF22C55E);
+  static const Color redPrimary = Color(0xFF3B82F6);
+  static const Color redDark = Color(0xFF1D4ED8);
+  static const Color pinkAccent = Color(0xFF10B981);
+  static const Color greenOnline = Color(0xFF10B981);
   static const Color yellowFav = Color(0xFFFACC15);
-  static const Color blueAccent = Color(0xFF60A5FA);
-  static const Color cyanTok = Color(0xFF25F4EE);
+  static const Color blueAccent = Color(0xFF3B82F6);
+  static const Color cyanTok = Color(0xFF60A5FA);
   static const Color whiteText = Color(0xFFFFFFFF);
   static const Color gray200 = Color(0xFFE5E7EB);
   static const Color gray300 = Color(0xFFD1D5DB);

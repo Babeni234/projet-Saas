@@ -66,7 +66,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                       width: 96, height: 96,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(colors: [ImmoTokTheme.redPrimary, ImmoTokTheme.pinkAccent, Color(0xFFFB923C)]),
+                        gradient: const LinearGradient(colors: [ImmoTokTheme.blueAccent, Colors.white, ImmoTokTheme.pinkAccent]),
                       ),
                       padding: const EdgeInsets.all(3),
                       child: Container(
@@ -268,7 +268,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                   ]),
                   const SizedBox(height: 2),
                   Row(children: [
-                    const Icon(Icons.favorite, size: 10, color: ImmoTokTheme.redPrimary),
+                    const Icon(Icons.favorite, size: 10, color: Color(0xFFEF4444)),
                     const SizedBox(width: 2),
                     Text('${fav['likes_count'] ?? 0}', style: const TextStyle(fontSize: 9, color: ImmoTokTheme.gray300)),
                   ]),
@@ -329,7 +329,7 @@ class _MyProfileSheetState extends State<MyProfileSheet> {
                   ]),
                   const SizedBox(height: 2),
                   Row(children: [
-                    const Icon(Icons.favorite, size: 10, color: ImmoTokTheme.redPrimary),
+                    const Icon(Icons.favorite, size: 10, color: Color(0xFFEF4444)),
                     const SizedBox(width: 2),
                     Text('${item['likes_count'] ?? 0}', style: const TextStyle(fontSize: 9, color: ImmoTokTheme.gray300)),
                   ]),

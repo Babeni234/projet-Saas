@@ -52,7 +52,7 @@ class _InboxSheetState extends State<InboxSheet> {
                           width: 80, height: 80,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
-                            gradient: const LinearGradient(colors: [ImmoTokTheme.redPrimary, ImmoTokTheme.pinkAccent, Color(0xFFFB923C)]),
+                            gradient: const LinearGradient(colors: [ImmoTokTheme.blueAccent, Colors.white, ImmoTokTheme.pinkAccent]),
                           ),
                           padding: const EdgeInsets.all(3),
                           child: Container(
@@ -100,7 +100,7 @@ class _InboxSheetState extends State<InboxSheet> {
                                   width: 40, height: 40,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    gradient: const LinearGradient(colors: [ImmoTokTheme.redPrimary, ImmoTokTheme.pinkAccent]),
+                                    gradient: const LinearGradient(colors: [ImmoTokTheme.blueAccent, ImmoTokTheme.pinkAccent]),
                                   ),
                                   child: const Icon(Icons.home, color: Colors.white, size: 18),
                                 ),

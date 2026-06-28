@@ -85,7 +85,7 @@ class ActionSidebar extends StatelessWidget {
         _ActionButton(
           icon: Icons.favorite,
           label: '${item.likesCount}',
-          color: item.hasLiked ? ImmoTokTheme.redPrimary : Colors.white,
+          color: item.hasLiked ? const Color(0xFFEF4444) : Colors.white,
           onTap: onLikeTap,
         ),
         const SizedBox(height: 12),

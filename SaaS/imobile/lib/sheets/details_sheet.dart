@@ -52,7 +52,7 @@ class DetailsSheet extends StatelessWidget {
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ImmoTokTheme.gray400, letterSpacing: 1),
                       ),
                       const SizedBox(height: 4),
-                      Text(item.property.priceLabel, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ImmoTokTheme.redPrimary)),
+                      Text(item.property.priceLabel, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ImmoTokTheme.greenOnline)),
                       const SizedBox(height: 8),
                       const Divider(color: Colors.white10),
                       const SizedBox(height: 4),
@@ -61,7 +61,7 @@ class DetailsSheet extends StatelessWidget {
                         runSpacing: 8,
                         children: [
                           if (item.property.rooms != null)
-                            _InfoChip(icon: Icons.door_sliding, text: '${item.property.rooms} ${item.property.type == 'Immeuble' ? 'Étages' : 'Chambres'}', color: ImmoTokTheme.redPrimary),
+                            _InfoChip(icon: Icons.door_sliding, text: '${item.property.rooms} ${item.property.type == 'Immeuble' ? 'Étages' : 'Chambres'}', color: ImmoTokTheme.blueAccent),
                           if (item.property.surface != null)
                             _InfoChip(icon: Icons.square_foot, text: '${item.property.surface} m²', color: ImmoTokTheme.blueAccent),
                           _InfoChip(icon: Icons.label, text: item.property.type ?? 'N/A', color: ImmoTokTheme.greenOnline),
@@ -72,7 +72,7 @@ class DetailsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // Location
-                _SectionTitle(icon: Icons.location_on, text: 'Localisation', color: ImmoTokTheme.redPrimary),
+                _SectionTitle(icon: Icons.location_on, text: 'Localisation', color: ImmoTokTheme.blueAccent),
                 const SizedBox(height: 4),
                 Text(
                   '${item.property.neighborhood != null ? '${item.property.neighborhood}, ' : ''}${item.property.city ?? ''}',

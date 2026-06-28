@@ -22,7 +22,7 @@ class CreatePostSheet extends StatelessWidget {
             width: 80, height: 80,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(colors: [ImmoTokTheme.cyanTok, Colors.white, ImmoTokTheme.redPrimary]),
+              gradient: const LinearGradient(colors: [ImmoTokTheme.blueAccent, Colors.white, ImmoTokTheme.pinkAccent]),
             ),
             padding: const EdgeInsets.all(3),
             child: Container(
