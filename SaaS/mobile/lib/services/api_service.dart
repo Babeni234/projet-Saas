@@ -553,4 +553,49 @@ class ApiService extends ChangeNotifier {
   String get tenantAvatar {
     return _localProfile['avatar'] ?? _locataireData?['user']?['avatar'] ?? '';
   }
+
+  // ═══ PENDING PAYMENT VALIDATION (real API) ═══
+  Future<Map<String, dynamic>?> fetchPendingPayment(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/wallet/pending-payment/$token'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['pendingPayment'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Fetch Pending Payment Error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> validatePendingPayment(String token, String pin) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/wallet/validate-payment/$token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'pin': pin}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        // Validation success - refresh dashboard data in background
+        await fetchLocataireData();
+        return {'success': true, 'message': data['message'] ?? 'Paiement validé avec succès.'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Code secret incorrect ou solde insuffisant.'};
+      }
+    } catch (e) {
+      debugPrint('Validate Pending Payment Error: $e');
+      return {'success': false, 'message': 'Une erreur de connexion est survenue.'};
+    }
+  }
 }
+

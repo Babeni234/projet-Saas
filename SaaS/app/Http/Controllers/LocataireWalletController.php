@@ -755,4 +755,52 @@ class LocataireWalletController extends Controller
             return response()->json(['message' => 'Une erreur est survenue lors de la validation du paiement.', 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Retourne les détails de la demande de paiement en attente sous format JSON.
+     */
+    public function getPendingPaymentDetailsJson($token)
+    {
+        $pending = \App\Models\PendingWalletPayment::where('token', $token)
+            ->where('status', 'pending')
+            ->with('locataire.user')
+            ->first();
+
+        if (!$pending) {
+            return response()->json(['message' => 'Cette demande de paiement est introuvable, déjà validée ou expirée.'], 404);
+        }
+
+        $locataire = $pending->locataire;
+        $companyName = $locataire->company ? ($locataire->company->legal_name ?? 'PropertyAI') : 'PropertyAI';
+        $agencyName = $locataire->agency ? $locataire->agency->name : 'N/A';
+
+        if ($pending->type === 'loyer') {
+            $months = data_get($pending->data, 'months', []);
+            $periodNames = array_map(function($m) {
+                $parts = explode('-', $m['periode']);
+                if (count($parts) >= 2) {
+                    $monthsList = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                    return $monthsList[intval($parts[1]) - 1] . ' ' . $parts[0];
+                }
+                return $m['periode'];
+            }, $months);
+            $description = 'Règlement de loyer pour : ' . implode(', ', $periodNames);
+        } else {
+            $invoiceNum = data_get($pending->data, 'invoice_num', 'N/A');
+            $description = 'Règlement de la facture N° ' . $invoiceNum;
+        }
+
+        return response()->json([
+            'pendingPayment' => [
+                'token' => $pending->token,
+                'amount' => (float)$pending->amount,
+                'type' => $pending->type,
+                'description' => $description,
+                'locataire_nom' => $locataire->nom,
+                'company_name' => $companyName,
+                'agency_name' => $agencyName,
+            ]
+        ]);
+    }
 }
+

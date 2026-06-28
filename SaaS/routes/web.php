@@ -531,6 +531,7 @@ Route::middleware('auth')->group(function () {
 // Public Wallet Payment Validation Flow
 Route::get('/wallet/validate-payment/{token}', [\App\Http\Controllers\LocataireWalletController::class, 'showValidationPage'])->name('wallet.validate_payment_page');
 Route::post('/api/wallet/validate-payment/{token}', [\App\Http\Controllers\LocataireWalletController::class, 'validatePendingPayment'])->name('wallet.validate_payment');
+Route::get('/api/wallet/pending-payment/{token}', [\App\Http\Controllers\LocataireWalletController::class, 'getPendingPaymentDetailsJson'])->name('wallet.pending_payment_details');
 
 
 // ─── Espace Locataire ───────────────────────────────────────────────────────

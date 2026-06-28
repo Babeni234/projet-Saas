@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import '../providers/theme_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
@@ -12,6 +14,7 @@ import 'profile_screen.dart';
 import 'utilities_screen.dart';
 import 'receipts_screen.dart';
 import 'support_screen.dart';
+import 'wallet_validation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,16 +27,26 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentScreenIndex = 0;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _screens = [
-    const DashboardView(),
-    const PropertyScreen(),
-    const RentsScreen(),
-    const UtilitiesScreen(),
-    const ReceiptsScreen(),
-    const _OldContractsPlaceholder(),
-    const SupportScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      DashboardView(onNavigate: (index) {
+        setState(() {
+          _currentScreenIndex = index;
+        });
+      }),
+      const PropertyScreen(),
+      const RentsScreen(),
+      const UtilitiesScreen(),
+      const ReceiptsScreen(),
+      const _OldContractsPlaceholder(),
+      const SupportScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   static const _screenToBottomNav = {0: 0, 2: 1, 6: 2, 7: 3};
 
@@ -346,7 +359,8 @@ class _OldContractsPlaceholderState extends State<_OldContractsPlaceholder> {
 }
 
 class DashboardView extends StatefulWidget {
-  const DashboardView({super.key});
+  final Function(int)? onNavigate;
+  const DashboardView({super.key, this.onNavigate});
 
   @override
   State<DashboardView> createState() => _DashboardViewState();
@@ -357,11 +371,107 @@ class _DashboardViewState extends State<DashboardView> {
   final _transferAmountCtrl = TextEditingController();
   final _transferMemoCtrl = TextEditingController();
 
+  bool _hideBalance = true;
+  Timer? _balanceRevealTimer;
+
   @override
   void dispose() {
     _transferAmountCtrl.dispose();
     _transferMemoCtrl.dispose();
+    _balanceRevealTimer?.cancel();
     super.dispose();
+  }
+
+  void _toggleBalanceVisibility() {
+    if (!_hideBalance) {
+      setState(() {
+        _hideBalance = true;
+      });
+      _balanceRevealTimer?.cancel();
+      return;
+    }
+    _showPinGateDialog('Afficher le solde', () {
+      setState(() {
+        _hideBalance = false;
+      });
+      _balanceRevealTimer?.cancel();
+      _balanceRevealTimer = Timer(const Duration(seconds: 15), () {
+        if (mounted) {
+          setState(() {
+            _hideBalance = true;
+          });
+        }
+      });
+    });
+  }
+
+  void _showPinGateDialog(String label, VoidCallback onSuccess) {
+    final pinCtrl = TextEditingController();
+    bool pinError = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassContainer(
+            padding: const EdgeInsets.all(28),
+            borderRadius: 32,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 40),
+                const SizedBox(height: 16),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Entrez votre code PIN secret (1234)',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: pinCtrl,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  maxLength: 4,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    errorText: pinError ? 'Code PIN incorrect' : null,
+                  ),
+                  onChanged: (val) {
+                    if (val.length == 4) {
+                      if (val == '1234') {
+                        Navigator.pop(ctx);
+                        onSuccess();
+                      } else {
+                        setDialogState(() {
+                          pinCtrl.clear();
+                          pinError = true;
+                        });
+                        HapticFeedback.heavyImpact();
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _executeTransfer() async {
@@ -459,11 +569,25 @@ class _DashboardViewState extends State<DashboardView> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('PORTÉFEUILLE', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-                          Icon(Icons.nfc_rounded, color: Colors.white.withValues(alpha: 0.4)),
+                          if (walletBalance != null)
+                            GestureDetector(
+                              onTap: _toggleBalanceVisibility,
+                              child: Text(
+                                _hideBalance ? 'Afficher' : 'Masquer',
+                                style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              ),
+                            )
+                          else
+                            Icon(Icons.nfc_rounded, color: Colors.white.withValues(alpha: 0.4)),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(walletBalance != null ? '${walletBalance.toStringAsFixed(2)} €' : '--- €', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900, letterSpacing: -1.5)),
+                      Text(
+                        walletBalance == null
+                            ? '--- €'
+                            : (_hideBalance ? '•••••• €' : '${walletBalance.toStringAsFixed(2)} €'),
+                        style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900, letterSpacing: -1.5),
+                      ),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -568,13 +692,17 @@ class _DashboardViewState extends State<DashboardView> {
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildQuickAction(context, Icons.receipt_long_rounded, 'Payer', AppColors.primary),
+                      _buildQuickAction(context, Icons.receipt_long_rounded, 'Payer', AppColors.primary, () => widget.onNavigate?.call(2)),
                       const SizedBox(width: 16),
-                      _buildQuickAction(context, Icons.build_rounded, 'Signaler', AppColors.warning),
+                      _buildQuickAction(context, Icons.security_rounded, 'Valider', AppColors.primary, () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletValidationScreen()));
+                      }),
                       const SizedBox(width: 16),
-                      _buildQuickAction(context, Icons.history_rounded, 'Historique', AppColors.success),
+                      _buildQuickAction(context, Icons.build_rounded, 'Signaler', AppColors.warning, () => widget.onNavigate?.call(6)),
                       const SizedBox(width: 16),
-                      _buildQuickAction(context, Icons.chat_bubble_rounded, 'Support', AppColors.primaryLight),
+                      _buildQuickAction(context, Icons.history_rounded, 'Historique', AppColors.success, () => widget.onNavigate?.call(4)),
+                      const SizedBox(width: 16),
+                      _buildQuickAction(context, Icons.chat_bubble_rounded, 'Support', AppColors.primaryLight, () => widget.onNavigate?.call(6)),
                     ],
                   ),
                 ),
@@ -685,17 +813,20 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, IconData icon, String label, Color color) {
-    return Column(
-      children: [
-        GlassContainer(
-          padding: const EdgeInsets.all(20),
-          borderRadius: 24,
-          child: Icon(icon, color: color, size: 28),
-        ),
-        const SizedBox(height: 10),
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-      ],
+  Widget _buildQuickAction(BuildContext context, IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          GlassContainer(
+            padding: const EdgeInsets.all(20),
+            borderRadius: 24,
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ],
+      ),
     );
   }
 
@@ -816,95 +947,513 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   void _showRechargeModal(BuildContext context) {
-    double? selectedAmount;
-    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      builder: (ctx) => const RechargeModal(),
+    );
+  }
+}
+
+class RechargeModal extends StatefulWidget {
+  const RechargeModal({super.key});
+
+  @override
+  State<RechargeModal> createState() => _RechargeModalState();
+}
+
+class _RechargeModalState extends State<RechargeModal> {
+  String _activeTab = 'orange'; // 'orange', 'mtn', 'card', 'paypal'
+  bool _processing = false;
+
+  // Orange Money
+  final _orangePhoneCtrl = TextEditingController();
+  final _orangeAmountCtrl = TextEditingController();
+  final _orangeOtpCtrl = TextEditingController();
+  bool _orangeOtpSent = false;
+  int _orangeOtpCountdown = 0;
+  Timer? _orangeOtpTimer;
+
+  // MTN MoMo
+  final _mtnPhoneCtrl = TextEditingController();
+  final _mtnPinCtrl = TextEditingController();
+  final _mtnAmountCtrl = TextEditingController();
+
+  // Card
+  final _cardNumberCtrl = TextEditingController();
+  final _cardHolderCtrl = TextEditingController();
+  final _cardExpiryCtrl = TextEditingController();
+  final _cardCvvCtrl = TextEditingController();
+  final _cardAmountCtrl = TextEditingController();
+
+  // PayPal
+  final _paypalAmountCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _orangePhoneCtrl.dispose();
+    _orangeAmountCtrl.dispose();
+    _orangeOtpCtrl.dispose();
+    _orangeOtpTimer?.cancel();
+    _mtnPhoneCtrl.dispose();
+    _mtnPinCtrl.dispose();
+    _mtnAmountCtrl.dispose();
+    _cardNumberCtrl.dispose();
+    _cardHolderCtrl.dispose();
+    _cardExpiryCtrl.dispose();
+    _cardCvvCtrl.dispose();
+    _cardAmountCtrl.dispose();
+    _paypalAmountCtrl.dispose();
+    super.dispose();
+  }
+
+  void _startOrangeOtpTimer() {
+    setState(() {
+      _orangeOtpSent = true;
+      _orangeOtpCountdown = 20;
+    });
+    _orangeOtpTimer?.cancel();
+    _orangeOtpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_orangeOtpCountdown > 0) {
+        setState(() {
+          _orangeOtpCountdown--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void _initiateOrangePayment() {
+    final phone = _orangePhoneCtrl.text.trim();
+    final amount = _orangeAmountCtrl.text.trim();
+    if (phone.isEmpty || amount.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez remplir tous les champs requis.')),
+      );
+      return;
+    }
+    setState(() => _processing = true);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        setState(() => _processing = false);
+        _startOrangeOtpTimer();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Code OTP envoyé sur votre mobile !')),
+        );
+      }
+    });
+  }
+
+  void _confirmOrangePayment() {
+    final otp = _orangeOtpCtrl.text.trim();
+    final amount = double.tryParse(_orangeAmountCtrl.text) ?? 0.0;
+    if (otp == '8842') {
+      _executeRecharge(amount, 'Orange Money');
+    } else {
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Code OTP incorrect. Veuillez utiliser 8842.')),
+      );
+    }
+  }
+
+  void _executeRecharge(double amount, String method) async {
+    setState(() => _processing = true);
+    final apiService = context.read<ApiService>();
+    final success = await apiService.rechargeWallet(amount);
+
+    if (mounted) {
+      setState(() => _processing = false);
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success 
+              ? 'Recharge de ${amount.toStringAsFixed(0)} € via $method effectuée avec succès.' 
+              : 'Erreur lors de la recharge.'),
+          backgroundColor: success ? AppColors.success : AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
+    }
+  }
+
+  void _submitMtnPayment() {
+    final phone = _mtnPhoneCtrl.text.trim();
+    final pin = _mtnPinCtrl.text.trim();
+    final amountText = _mtnAmountCtrl.text.trim();
+    final amount = double.tryParse(amountText) ?? 0.0;
+
+    if (phone.isEmpty || pin.isEmpty || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez remplir tous les champs.')),
+      );
+      return;
+    }
+    _executeRecharge(amount, 'MTN MoMo');
+  }
+
+  void _submitCardPayment() {
+    final num = _cardNumberCtrl.text.trim();
+    final holder = _cardHolderCtrl.text.trim();
+    final exp = _cardExpiryCtrl.text.trim();
+    final cvv = _cardCvvCtrl.text.trim();
+    final amountText = _cardAmountCtrl.text.trim();
+    final amount = double.tryParse(amountText) ?? 0.0;
+
+    if (num.length < 12 || holder.isEmpty || exp.isEmpty || cvv.length < 3 || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Champs de carte invalides.')),
+      );
+      return;
+    }
+    _executeRecharge(amount, 'Carte Bancaire');
+  }
+
+  void _submitPaypalPayment() {
+    final amountText = _paypalAmountCtrl.text.trim();
+    final amount = double.tryParse(amountText) ?? 0.0;
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez entrer un montant valide.')),
+      );
+      return;
+    }
+    _executeRecharge(amount, 'PayPal');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 40),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          const SizedBox(height: 20),
+          Row(
             children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
-                ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.primary),
               ),
-              const SizedBox(height: 20),
-              const Text('Recharger le portefeuille', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20)),
-              const SizedBox(height: 8),
-              const Text('Choisissez un montant à ajouter à votre portefeuille.', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(child: _rechargeAmountChip('500 €', 500, selectedAmount, (amount) => setModalState(() => selectedAmount = amount))),
-                  const SizedBox(width: 12),
-                  Expanded(child: _rechargeAmountChip('1 000 €', 1000, selectedAmount, (amount) => setModalState(() => selectedAmount = amount))),
-                ],
+              const SizedBox(width: 12),
+              const Text('Recharger le Wallet', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Tab Bar
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildTabButton('Orange Money', 'orange'),
+                const SizedBox(width: 8),
+                _buildTabButton('MTN MoMo', 'mtn'),
+                const SizedBox(width: 8),
+                _buildTabButton('Carte Bancaire', 'card'),
+                const SizedBox(width: 8),
+                _buildTabButton('PayPal', 'paypal'),
+              ],
+            ),
+          ),
+          const Divider(height: 32),
+
+          // Panels
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            child: _buildActivePanel(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String label, String id) {
+    final isActive = _activeTab == id;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _activeTab = id;
+          _processing = false;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.white : AppColors.primary,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivePanel() {
+    if (_processing) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    switch (_activeTab) {
+      case 'orange':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _orangePhoneCtrl,
+              keyboardType: TextInputType.phone,
+              maxLength: 9,
+              decoration: const InputDecoration(
+                labelText: 'Numéro Orange Money (+237)',
+                hintText: '69X XX XX XX',
+                prefixText: '+237 ',
+                counterText: '',
+                prefixIcon: Icon(Icons.phone_android_rounded),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _rechargeAmountChip('2 500 €', 2500, selectedAmount, (amount) => setModalState(() => selectedAmount = amount))),
-                  const SizedBox(width: 12),
-                  Expanded(child: _rechargeAmountChip('5 000 €', 5000, selectedAmount, (amount) => setModalState(() => selectedAmount = amount))),
-                ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _orangeAmountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Montant (€)',
+                prefixIcon: Icon(Icons.euro_rounded),
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: selectedAmount != null ? () async {
-                    final apiService = context.read<ApiService>();
-                    final success = await apiService.rechargeWallet(selectedAmount!);
-                    if (ctx.mounted) {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(success ? 'Recharge effectuée avec succès' : 'Erreur lors de la recharge'),
-                          backgroundColor: success ? AppColors.success : AppColors.error,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                      );
-                    }
-                  } : null,
-                  child: const Text('Confirmer la recharge'),
+            ),
+            if (_orangeOtpSent) ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _orangeOtpCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                decoration: InputDecoration(
+                  labelText: 'Code de validation OTP (8842)',
+                  hintText: 'Entrez le code OTP',
+                  counterText: '',
+                  prefixIcon: const Icon(Icons.sms_rounded),
+                  suffixText: _orangeOtpCountdown > 0 ? '${_orangeOtpCountdown}s' : 'Renvoyer',
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _orangeOtpSent ? _confirmOrangePayment : _initiateOrangePayment,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(
+                  _orangeOtpSent ? 'Confirmer le paiement' : 'Initier le paiement',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        );
+      case 'mtn':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _mtnPhoneCtrl,
+              keyboardType: TextInputType.phone,
+              maxLength: 9,
+              decoration: const InputDecoration(
+                labelText: 'Numéro MTN MoMo (+237)',
+                hintText: '67X XX XX XX',
+                prefixText: '+237 ',
+                counterText: '',
+                prefixIcon: Icon(Icons.phone_android_rounded),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _mtnPinCtrl,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 5,
+              decoration: const InputDecoration(
+                labelText: 'Code PIN MoMo',
+                counterText: '',
+                prefixIcon: Icon(Icons.lock_rounded),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _mtnAmountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Montant (€)',
+                prefixIcon: Icon(Icons.euro_rounded),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _submitMtnPayment,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Payer via MTN MoMo', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        );
+      case 'card':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _cardNumberCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Numéro de Carte',
+                hintText: 'XXXX XXXX XXXX XXXX',
+                prefixIcon: Icon(Icons.credit_card_rounded),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _cardExpiryCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Expiration',
+                      hintText: 'MM/AA',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _cardCvvCtrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 3,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'CVV',
+                      counterText: '',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _cardHolderCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Titulaire de la Carte',
+                prefixIcon: Icon(Icons.person_rounded),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _cardAmountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Montant (€)',
+                prefixIcon: Icon(Icons.euro_rounded),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _submitCardPayment,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Payer par Carte', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        );
+      case 'paypal':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF003087).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.paypal_rounded, color: Color(0xFF003087), size: 48),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'PayPal Checkout',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            const Text(
+              'Paiement sécurisé international',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _paypalAmountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Montant (€)',
+                prefixIcon: Icon(Icons.euro_rounded),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _submitPaypalPayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFC439),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.paypal_rounded, color: Color(0xFF003087)),
+                    SizedBox(width: 8),
+                    Text('Payer avec PayPal', style: TextStyle(fontWeight: FontWeight.w900)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      default:
+        return const SizedBox();
+    }
   }
-
-  Widget _rechargeAmountChip(String label, double amount, double? selectedAmount, Function(double) onTap) {
-    final isSelected = selectedAmount == amount;
-    return GestureDetector(
-      onTap: () => onTap(amount),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.2)),
-        ),
-        child: Text(label, textAlign: TextAlign.center, style: TextStyle(
-          fontWeight: FontWeight.w700, fontSize: 15, color: isSelected ? Colors.white : AppColors.primary,
-        )),
-      ),
-    );
-  }
-
-
 }
