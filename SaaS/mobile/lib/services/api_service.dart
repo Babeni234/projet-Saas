@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService extends ChangeNotifier {
-  final String baseUrl = 'http://localhost:8000/api';
+  final String baseUrl = 'https://unseeking-troy-floggingly.ngrok-free.dev/api';
   final _storage = const FlutterSecureStorage();
 
   bool _isAuthenticated = false;

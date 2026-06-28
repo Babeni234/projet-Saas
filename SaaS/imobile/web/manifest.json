@@ -1,6 +1,6 @@
 {
-    "name": "imobile",
-    "short_name": "imobile",
+    "name": "ImmoTok",
+    "short_name": "ImmoTok",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

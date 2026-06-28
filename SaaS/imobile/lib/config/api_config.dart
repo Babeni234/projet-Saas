@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  static const String _defaultBaseUrl = 'http://127.0.0.1:8000';
+  static const String _defaultBaseUrl = 'https://unseeking-troy-floggingly.ngrok-free.dev';
 
   static String get baseUrl {
     if (kIsWeb) {
