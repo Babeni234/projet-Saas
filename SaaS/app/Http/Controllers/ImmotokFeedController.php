@@ -48,7 +48,12 @@ class ImmotokFeedController extends Controller
     public function getFeed(Request $request)
     {
         $client = $this->getClient($request);
-        $query = Illustration::with(['companyProfile', 'agency'])->orderBy('id', 'desc');
+        
+        if ($request->filled('random') && $request->random == 1) {
+            $query = Illustration::with(['companyProfile', 'agency'])->inRandomOrder();
+        } else {
+            $query = Illustration::with(['companyProfile', 'agency'])->orderBy('id', 'desc');
+        }
 
         if ($request->filled('tab') && $request->tab === 'subs') {
             if (!$client) {
@@ -222,6 +227,13 @@ class ImmotokFeedController extends Controller
                        str_contains(strtolower($item['property']['type']), $qLower) ||
                        str_contains(strtolower($item['property']['price_label']), $qLower);
             });
+        }
+
+        if ($request->has('page')) {
+            $page = (int) $request->input('page', 1);
+            $perPage = (int) $request->input('per_page', 5);
+            $sliced = array_slice($illustrations->toArray(), ($page - 1) * $perPage, $perPage);
+            return response()->json(array_values($sliced));
         }
 
         return response()->json(array_values($illustrations->toArray()));

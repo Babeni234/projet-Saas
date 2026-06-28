@@ -139,14 +139,20 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
 
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Icon(Icons.logout_rounded, size: 18, color: AppColors.textSecondary),
-                  const SizedBox(width: 12),
-                  const Text('Déconnexion', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                ],
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                apiService.logout();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Icon(Icons.logout_rounded, size: 18, color: AppColors.textSecondary),
+                    const SizedBox(width: 12),
+                    const Text('Déconnexion', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
             ),
           ],

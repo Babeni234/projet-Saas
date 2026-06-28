@@ -84,7 +84,7 @@ class _ChatSheetState extends State<ChatSheet> {
                       children: [
                         Container(width: 6, height: 6, decoration: const BoxDecoration(shape: BoxShape.circle, color: ImmoTokTheme.greenOnline)),
                         const SizedBox(width: 4),
-                        const Text('Assistant en ligne', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ImmoTokTheme.greenOnline)),
+                        Text(state.tr('assistant_online'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: ImmoTokTheme.greenOnline)),
                       ],
                     ),
                   ],
@@ -114,7 +114,7 @@ class _ChatSheetState extends State<ChatSheet> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Bienvenue sur la messagerie de ${widget.item.company.name}. Notre conseiller IA peut répondre instantanément à vos questions sur nos offres.',
+                          '${state.tr('chat_welcome_1')}${widget.item.company.name}${state.tr('chat_welcome_2')}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 12, color: ImmoTokTheme.gray400, height: 1.4),
                         ),
@@ -223,9 +223,9 @@ class _ChatSheetState extends State<ChatSheet> {
                           child: TextField(
                             controller: _textController,
                             style: const TextStyle(color: Colors.white, fontSize: 13),
-                            decoration: const InputDecoration(
-                              hintText: 'Écrivez votre message...',
-                              hintStyle: TextStyle(color: ImmoTokTheme.gray500),
+                            decoration: InputDecoration(
+                              hintText: state.tr('write_message'),
+                              hintStyle: const TextStyle(color: ImmoTokTheme.gray500),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             ),

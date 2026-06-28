@@ -21,6 +21,94 @@ class AppState extends ChangeNotifier {
   bool isPlaying = true;
   int unreadCount = 0;
 
+  // Pagination states
+  int _currentPage = 1;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+
+  // Translation map
+  final Map<String, Map<String, String>> _translations = {
+    'fr': {
+      'foryou': 'Pour vous',
+      'subs': 'Abonnements',
+      'explore': 'Explorer',
+      'filter': 'Filtrer',
+      'no_items': 'Aucun bien ne correspond aux filtres.',
+      'reset': 'Réinitialiser',
+      'buy': 'Acheter',
+      'rent': 'Louer',
+      'budget': 'Budget Max',
+      'city': 'Ville / Quartier',
+      'type': 'Type de bien',
+      'apply': 'Appliquer',
+      'comments': 'Commentaires',
+      'write_comment': 'Écrire un commentaire...',
+      'reserve': 'Réserver une visite',
+      'details': 'Détails du bien',
+      'contact': 'Contacter',
+      'favorite': 'Favoris',
+      'share': 'Partager',
+      'subscribe': 'S\'abonner',
+      'subscribed': 'Abonné',
+      'moi': 'Moi',
+      'alertes': 'Alertes',
+      'accueil': 'Accueil',
+      'audio_on': 'Audio activé en boucle',
+      'audio_off': 'Audio désactivé',
+      'auth_needed_subs': 'Connectez-vous pour voir vos abonnements',
+      'search_placeholder': 'Rechercher des biens, quartiers, villes...',
+      'search_btn': 'Rechercher',
+      'popular_searches': 'RECHERCHES POPULAIRES',
+      'no_matching_items': 'Aucun bien correspondant.',
+      'assistant_online': 'Assistant en ligne',
+      'chat_welcome_1': 'Bienvenue sur la messagerie de ',
+      'chat_welcome_2': '. Notre conseiller IA peut répondre instantanément à vos questions sur nos offres.',
+      'write_message': 'Écrivez votre message...',
+    },
+    'en': {
+      'foryou': 'For You',
+      'subs': 'Subscriptions',
+      'explore': 'Explore',
+      'filter': 'Filter',
+      'no_items': 'No properties match the filters.',
+      'reset': 'Reset',
+      'buy': 'Buy',
+      'rent': 'Rent',
+      'budget': 'Max Budget',
+      'city': 'City / Area',
+      'type': 'Property Type',
+      'apply': 'Apply Filters',
+      'comments': 'Comments',
+      'write_comment': 'Add a comment...',
+      'reserve': 'Book a visit',
+      'details': 'Property Details',
+      'contact': 'Contact',
+      'favorite': 'Favorites',
+      'share': 'Share',
+      'subscribe': 'Subscribe',
+      'subscribed': 'Subscribed',
+      'moi': 'Me',
+      'alertes': 'Alertes',
+      'accueil': 'Home',
+      'audio_on': 'Audio enabled (loop)',
+      'audio_off': 'Audio disabled',
+      'auth_needed_subs': 'Log in to see your subscriptions',
+      'search_placeholder': 'Search properties, areas, cities...',
+      'search_btn': 'Search',
+      'popular_searches': 'POPULAR SEARCHES',
+      'no_matching_items': 'No matching properties found.',
+      'assistant_online': 'Assistant online',
+      'chat_welcome_1': 'Welcome to the chat of ',
+      'chat_welcome_2': '. Our AI advisor can instantly answer your questions about our offers.',
+      'write_message': 'Type your message...',
+    }
+  };
+
+  String tr(String key) {
+    return _translations[currentLang]?[key] ?? key;
+  }
+
   // Filter options
   String filterTransaction = 'all';
   String filterType = 'all';
@@ -91,15 +179,53 @@ class AppState extends ChangeNotifier {
 
   // ─── Feed ──────────────────────────────────────────────────────────────────
   Future<void> fetchFeed() async {
+    _currentPage = 1;
+    _hasMore = true;
+    _isLoadingMore = false;
     feed = await api.fetchFeed(
       tab: activeTab,
       transaction: filterTransaction,
       type: filterType,
       budget: filterBudget,
       city: filterCity,
+      page: _currentPage,
+      perPage: 5,
+      random: 1, // Randomized display enabled
     );
     currentIndex = 0;
     notifyListeners();
+  }
+
+  Future<void> fetchMoreFeed() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      final nextPage = _currentPage + 1;
+      final newItems = await api.fetchFeed(
+        tab: activeTab,
+        transaction: filterTransaction,
+        type: filterType,
+        budget: filterBudget,
+        city: filterCity,
+        page: nextPage,
+        perPage: 5,
+        random: 1,
+      );
+
+      if (newItems.isEmpty) {
+        _hasMore = false;
+      } else {
+        _currentPage = nextPage;
+        feed.addAll(newItems);
+      }
+    } catch (e) {
+      debugPrint('Error fetching more feed: $e');
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   void navigateToIndex(int idx) {

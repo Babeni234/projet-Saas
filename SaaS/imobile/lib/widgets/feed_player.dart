@@ -171,18 +171,28 @@ class _FeedPlayerState extends State<FeedPlayer> {
           );
         }
 
-        return PageView.builder(
-          controller: _pageController,
-          scrollDirection: Axis.vertical,
-          itemCount: state.feed.length,
-          onPageChanged: (index) {
-            state.navigateToIndex(index);
-            setState(() {
-              _isPlaying = true;
-              _currentTime = Duration.zero;
-              _duration = Duration.zero;
-            });
-          },
+        return RefreshIndicator(
+          onRefresh: () => state.fetchFeed(),
+          color: ImmoTokTheme.redPrimary,
+          backgroundColor: ImmoTokTheme.bgDark.withOpacity(0.8),
+          displacement: 60,
+          strokeWidth: 3,
+          child: PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            itemCount: state.feed.length,
+            onPageChanged: (index) {
+              state.navigateToIndex(index);
+              setState(() {
+                _isPlaying = true;
+                _currentTime = Duration.zero;
+                _duration = Duration.zero;
+              });
+              if (index >= state.feed.length - 2) {
+                state.fetchMoreFeed();
+              }
+            },
           itemBuilder: (context, index) {
             final item = state.feed[index];
             final isCurrentPage = index == state.currentIndex;
@@ -352,10 +362,11 @@ class _FeedPlayerState extends State<FeedPlayer> {
               ),
             );
           },
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   void _showAuthSheet(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(

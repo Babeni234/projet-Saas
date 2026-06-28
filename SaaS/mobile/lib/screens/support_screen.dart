@@ -108,41 +108,46 @@ class _SupportScreenState extends State<SupportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text('Support & Messagerie', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 28)),
-              ),
-              GestureDetector(
-                onTap: () => setState(() => _showNewTicketModal = true),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.actionGradient,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text('Support & Messagerie', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 28)),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Icon(Icons.add_rounded, color: Colors.white, size: 18), SizedBox(width: 4), Text('Nouveau', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13))],
+                  GestureDetector(
+                    onTap: () => setState(() => _showNewTicketModal = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.actionGradient,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [Icon(Icons.add_rounded, color: Colors.white, size: 18), SizedBox(width: 4), Text('Nouveau', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13))],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
+              const SizedBox(height: 8),
+              Text('Discutez avec votre gestionnaire pour résoudre les incidents.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
+              const SizedBox(height: 28),
+              if (_selectedTicket != null) _buildChatArea() else _buildTicketList(),
             ],
           ),
-          const SizedBox(height: 8),
-          Text('Discutez avec votre gestionnaire pour résoudre les incidents.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15)),
-          const SizedBox(height: 28),
-          if (_selectedTicket != null) _buildChatArea() else _buildTicketList(),
-          if (_showNewTicketModal) _buildNewTicketOverlay(),
-        ],
-      ),
+        ),
+        if (_showNewTicketModal) _buildNewTicketOverlay(),
+      ],
     );
   }
 
@@ -244,7 +249,7 @@ class _SupportScreenState extends State<SupportScreen> {
             ),
           ),
           SizedBox(
-            height: 300,
+            height: MediaQuery.of(context).size.height * 0.45,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: messages.length,

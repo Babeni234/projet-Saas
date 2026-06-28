@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 import '../config/theme.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -23,6 +25,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = Provider.of<AppState>(context);
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).padding.bottom + 4,
@@ -40,7 +43,7 @@ class BottomNavBar extends StatelessWidget {
           Expanded(
             child: _NavItem(
               icon: Icons.home,
-              label: 'Accueil',
+              label: state.tr('accueil'),
               isActive: activeTab != 'explore',
               activeColor: ImmoTokTheme.redPrimary,
               onTap: onHomeTap,
@@ -49,7 +52,7 @@ class BottomNavBar extends StatelessWidget {
           Expanded(
             child: _NavItem(
               icon: Icons.explore,
-              label: 'Explorer',
+              label: state.tr('explore'),
               isActive: activeTab == 'explore',
               activeColor: ImmoTokTheme.redPrimary,
               onTap: onExploreTap,
@@ -91,7 +94,7 @@ class BottomNavBar extends StatelessWidget {
                 children: [
                   _NavItem(
                     icon: Icons.notifications_none,
-                    label: 'Alertes',
+                    label: state.tr('alertes'),
                     isActive: false,
                     onTap: onInboxTap,
                   ),
@@ -121,7 +124,7 @@ class BottomNavBar extends StatelessWidget {
           Expanded(
             child: _NavItem(
               icon: Icons.person_outline,
-              label: 'Moi',
+              label: state.tr('moi'),
               isActive: false,
               onTap: onProfileTap,
             ),

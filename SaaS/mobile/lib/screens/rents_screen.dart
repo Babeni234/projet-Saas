@@ -123,6 +123,7 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
     final walletBalance = apiService.walletBalance ?? 0;
     final invoices = apiService.invoices;
     final receipts = apiService.receipts;
+    final lateMonths = _rentMonths.where((m) => m['status'] == 'late').toList();
 
     return SafeArea(
       bottom: false,
@@ -178,34 +179,41 @@ class _RentsScreenState extends State<RentsScreen> with SingleTickerProviderStat
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  if (_selectedMonths.isEmpty) ...[
+                  if (_selectedMonths.isEmpty && lateMonths.isNotEmpty) ...[
                     _buildSectionHeader('ATTENTION'),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Retard : Mars 2026', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.warning)),
-                                const Text('Pénalité de 15% appliquée au loyer.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
+                    ...lateMonths.map((lm) {
+                      final label = lm['label']?.toString() ?? '';
+                      final rate = lm['penalty_rate'] ?? 0;
+                      final penalty = lm['penalty'] ?? 0.0;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Retard : $label', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.warning)),
+                                    Text('Pénalité de $rate% appliquée au loyer (+$penalty €).', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 20),
                   ],
 
                   _buildSectionHeader('SÉLECTIONNEUR DE LOYERS'),

@@ -38,6 +38,9 @@ class ApiService {
     String city = '',
     String q = '',
     int? companyId,
+    int? page,
+    int? perPage,
+    int? random,
   }) async {
     try {
       final params = <String, dynamic>{
@@ -49,6 +52,9 @@ class ApiService {
         'q': q,
       };
       if (companyId != null) params['company_id'] = companyId;
+      if (page != null) params['page'] = page;
+      if (perPage != null) params['per_page'] = perPage;
+      if (random != null) params['random'] = random;
 
       final res = await _dio.get(ApiConfig.feed, queryParameters: params);
       if (res.data is List) {

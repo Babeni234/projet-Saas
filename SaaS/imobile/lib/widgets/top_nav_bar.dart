@@ -47,13 +47,13 @@ class TopNavBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _TabBtn(
-                        label: 'Pour vous',
+                        label: state.tr('foryou'),
                         isActive: state.activeTab == 'foryou',
                         onTap: () => state.setActiveTab('foryou'),
                       ),
                       const SizedBox(width: 8),
                       _TabBtn(
-                        label: 'Abonnements',
+                        label: state.tr('subs'),
                         isActive: state.activeTab == 'subs',
                         onTap: () {
                           if (!state.isAuthenticated) {
@@ -65,7 +65,7 @@ class TopNavBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       _TabBtn(
-                        label: 'Explorer',
+                        label: state.tr('explore'),
                         isActive: state.activeTab == 'explore',
                         onTap: () => state.setActiveTab('explore'),
                       ),
@@ -105,8 +105,9 @@ class TopNavBar extends StatelessWidget {
   }
 
   void _showAuthNeeded(BuildContext context) {
+    final state = context.read<AppState>();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connectez-vous pour voir vos abonnements')),
+      SnackBar(content: Text(state.tr('auth_needed_subs'))),
     );
   }
 }

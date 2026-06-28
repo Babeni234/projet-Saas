@@ -13,17 +13,20 @@ use Gemini\Laravel\Facades\Gemini;
 
 class ImmotokChatController extends Controller
 {
-    protected function getClient()
+    protected function getClient(Request $request)
     {
+        if ($request->attributes->has('immotok_client')) {
+            return $request->attributes->get('immotok_client');
+        }
         if (session()->has('immotok_client_id')) {
             return ImmotokClient::find(session()->get('immotok_client_id'));
         }
         return null;
     }
 
-    public function getMessages($companyProfileId)
+    public function getMessages(Request $request, $companyProfileId)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Non authentifié.'], 401);
         }
@@ -38,7 +41,7 @@ class ImmotokChatController extends Controller
 
     public function sendMessage(Request $request, $companyProfileId)
     {
-        $client = $this->getClient();
+        $client = $this->getClient($request);
         if (!$client) {
             return response()->json(['success' => false, 'message' => 'Non authentifié.'], 401);
         }

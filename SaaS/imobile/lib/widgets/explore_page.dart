@@ -37,11 +37,11 @@ class ExplorePage extends StatelessWidget {
                               Expanded(
                                 child: TextField(
                                   style: const TextStyle(color: Colors.white, fontSize: 13),
-                                  decoration: const InputDecoration(
-                                    hintText: 'Rechercher des biens, quartiers, villes...',
-                                    hintStyle: TextStyle(color: ImmoTokTheme.gray500, fontSize: 13),
+                                  decoration: InputDecoration(
+                                    hintText: state.tr('search_placeholder'),
+                                    hintStyle: const TextStyle(color: ImmoTokTheme.gray500, fontSize: 13),
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                                   ),
                                   onChanged: (val) => state.searchQuery = val,
                                   onSubmitted: (_) => state.handleExploreSearch(),
@@ -68,7 +68,7 @@ class ExplorePage extends StatelessWidget {
                             color: ImmoTokTheme.redPrimary,
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text('Rechercher', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: Text(state.tr('search_btn'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
                     ],
@@ -80,8 +80,8 @@ class ExplorePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'RECHERCHES POPULAIRES',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: ImmoTokTheme.gray500, letterSpacing: 1.5),
+                        state.tr('popular_searches'),
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: ImmoTokTheme.gray500, letterSpacing: 1.5),
                       ),
                       const SizedBox(height: 8),
                       SingleChildScrollView(
@@ -127,7 +127,7 @@ class ExplorePage extends StatelessWidget {
                           children: [
                             Icon(Icons.search_off, size: 40, color: ImmoTokTheme.gray500),
                             const SizedBox(height: 8),
-                            Text('Aucun bien correspondant.', style: TextStyle(color: ImmoTokTheme.gray500, fontSize: 13)),
+                            Text(state.tr('no_matching_items'), style: const TextStyle(color: ImmoTokTheme.gray500, fontSize: 13)),
                           ],
                         ),
                       ),
